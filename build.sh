@@ -1,8 +1,7 @@
 #!/bin/bash
+source set_env.sh
+git submodule update --init --recursive
 cd firmware
-export IDF_PATH="../esp-idf"
-#bash submodules.sh
-#source set_env.sh
 bash mpy_cross.sh
 rm build -rf
 make clean
