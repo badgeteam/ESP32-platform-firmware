@@ -47,15 +47,6 @@ FROZEN_MPY_DIR =  $(COMPONENT_PATH)/modules/campzone2019
 ESPCOMP = $(IDF_PATH)/components
 MP_EXTRA_INC += -I.
 MP_EXTRA_INC += -I$(COMPONENT_PATH)
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/curl/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libssh2/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/zlib
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/espmqtt/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/espmqtt/lib/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/littlefs
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/badge
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/graph
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/resource-ssl-letsencrypt
 MP_EXTRA_INC += -I$(COMPONENT_PATH)/py
 MP_EXTRA_INC += -I$(COMPONENT_PATH)/lib/mp-readline
@@ -110,15 +101,8 @@ MP_EXTRA_INC += -I$(ESPCOMP)/mdns/include
 MP_EXTRA_INC += -I$(IDF_PATH)/components/freertos/include/freertos
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp_http_client/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp_http_client/lib/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_pipeline/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_hal/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_hal/board
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/adf_utils/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_sal/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_service/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_stream/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp-adf-libs/esp_codec/include/codec
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver-bus-i2c/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver-leds-hub75/include
 
 
 

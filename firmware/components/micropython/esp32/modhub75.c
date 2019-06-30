@@ -1,3 +1,5 @@
+#ifdef CONFIG_DRIVER_HUB75_ENABLE
+
 #include <string.h>
 
 #include "esp_log.h"
@@ -79,7 +81,7 @@ STATIC mp_obj_t hub75_text(size_t n_args, const mp_obj_t *args) {
 
     int x = mp_obj_get_int(args[4]);
     int y = mp_obj_get_int(args[5]);
-    
+
     compositor_addText(test, k, x, y);
     return mp_const_none;
 }
@@ -100,7 +102,7 @@ STATIC mp_obj_t hub75_scrolltext(size_t n_args, const mp_obj_t *args) {
     int x = mp_obj_get_int(args[4]);
     int y = mp_obj_get_int(args[5]);
     int sizex = mp_obj_get_int(args[6]);
-    
+
     compositor_addScrollText(test, k, x, y, sizex);
 
     return mp_const_none;
@@ -166,13 +168,13 @@ STATIC mp_obj_t hub75_frame(mp_obj_t arr_obj) {
   mp_obj_t *mp_arr;
   size_t len;
   mp_obj_get_array(arr_obj, &len, &mp_arr);
-  if(len != (WIDTH*HEIGHT)) {
+  if(len != (CONFIG_HUB75_WIDTH*CONFIG_HUB75_HEIGHT)) {
       mp_raise_ValueError("Array not the right size");
       return mp_const_none;
   }
 
   Color* frame = getFrameBuffer();
-  for(int i = 0; i < WIDTH*HEIGHT; i++) {
+  for(int i = 0; i < CONFIG_HUB75_WIDTH*CONFIG_HUB75_HEIGHT; i++) {
       Color k;
       k.value = mp_obj_get_int(mp_arr[i]);
       frame[i] = k;
@@ -199,5 +201,8 @@ STATIC const mp_rom_map_elem_t hub75_module_globals_table[] = {
 STATIC MP_DEFINE_CONST_DICT(hub75_module_globals, hub75_module_globals_table);
 
 const mp_obj_module_t hub75_module = {
-    .base = {&mp_type_module}, .globals = (mp_obj_dict_t *)&hub75_module_globals,
+    .base = {&mp_type_module},
+    .globals = (mp_obj_dict_t *)&hub75_module_globals,
 };
+
+#endif
