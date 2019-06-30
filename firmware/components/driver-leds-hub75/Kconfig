@@ -1,0 +1,57 @@
+menu "HUB75 LED panel driver"
+	config DRIVER_HUB75_ENABLE
+		bool "Enable the HUB75 LED driver, used for driving LED panels"
+		default n
+	
+	config PIN_NUM_HUB75_R0
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as R0 pin"
+
+	config PIN_NUM_HUB75_G0
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as G0 pin"
+
+	config PIN_NUM_HUB75_B0
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as B0 pin"
+
+	config PIN_NUM_HUB75_A
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as A (row selector) pin"
+
+	config PIN_NUM_HUB75_B
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as B (row selector) pin"
+
+	config PIN_NUM_HUB75_C
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as C (row selector) pin"
+
+	config PIN_NUM_HUB75_LAT
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as LAT (latch) pin"
+
+	config PIN_NUM_HUB75_CLK
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as CLK (clock) pin"
+
+	config PIN_NUM_HUB75_OE
+		depends on DRIVER_HUB75_ENABLE
+		int "GPIO to use as OE (output enable) pin"
+
+	config HUB75_HEIGHT
+		depends on DRIVER_HUB75_ENABLE
+		int "Number of rows of LED panel (max 8)"
+		default 8
+
+	config HUB75_WIDTH
+		depends on DRIVER_HUB75_ENABLE
+		int "Number of columns of LED panel (unlimited)"
+		default 32
+
+	config HUB75_CLOCK_SPEED
+		depends on DRIVER_HUB75_ENABLE
+		int "Clock speed to run the HUB75 I2S updates at"
+		default 2000000
+
+endmenu

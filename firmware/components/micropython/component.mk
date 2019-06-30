@@ -37,7 +37,10 @@ endif
 MICROPY_FATFS = 0
 
 FROZEN_DIR = $(COMPONENT_PATH)/esp32/scripts
-FROZEN_MPY_DIR =  $(COMPONENT_PATH)/modules/generic
+
+# TODO: for some reason this FROZEN_MPY_DIR config substition doesn't work and gives a compile error
+#FROZEN_MPY_DIR =  $(COMPONENT_PATH)/modules/$(CONFIG_BADGE_FROZEN_MPY_DIR)
+FROZEN_MPY_DIR =  $(COMPONENT_PATH)/modules/campzone2019
 
 # Includes for Qstr&Frozen modules
 #---------------------------------
@@ -192,6 +195,10 @@ SRC_C =  $(addprefix esp32/,\
 	modesp.c \
 	esprtcmem.c \
 	)
+
+ifdef CONFIG_DRIVER_HUB75_ENABLE
+SRC_C += esp32/modhub75.c
+endif
 
 ifdef CONFIG_MICROPY_USE_DISPLAY
 SRC_C += esp32/moddisplay.c

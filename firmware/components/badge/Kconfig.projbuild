@@ -1,0 +1,34 @@
+menu "Badge"
+
+    menu "Firmware"
+        config BADGE_FIRMWARE_NAME
+            string "Firmware version: name"
+            default "bleeding edge"
+            help
+                Name of the firmware
+
+        config BADGE_FIRMWARE_BUILD
+            int "Firmware version: build"
+            default 0
+            help
+                Build number of the firmware
+    endmenu
+
+    menu "Hardware"
+        config BADGE_NAME
+            string "Badge name"
+            default "Plain ESP32"
+            help
+                A semantic name for your badge
+
+        config BADGE_FROZEN_MPY_DIR
+            string "MicroPython modules directory"
+            default "generic"
+            help
+                The name of the directory in /components/micropython/modules to load into firmware image.
+    endmenu
+
+    menu "Drivers"
+    endmenu
+
+endmenu
