@@ -1,0 +1,21 @@
+menu "WiFi & OTA update"
+	config OTA_WEB_SERVER
+		string "Hostname of server for OTA updates"
+		default "www.sensorcloud.nl"
+
+	config OTA_WEB_PORT
+		string "Port of server for OTA updates"
+		default "443"
+
+	config OTA_WEB_PATH
+		string "Path on the server for OTA updates"
+		default "/firmware.bin"
+
+	config WIFI_SSID
+		string "Default WiFi ssid"
+		default ""
+
+	config WIFI_PASSWORD
+		string "Default WiFi password, leave empty for unsecure network"
+		default ""
+endmenu
