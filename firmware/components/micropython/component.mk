@@ -53,7 +53,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/littlefs
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/badge
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/graph
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/resource-ssl-letsencrypt
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/resource_ssl_letsencrypt
 MP_EXTRA_INC += -I$(COMPONENT_PATH)/py
 MP_EXTRA_INC += -I$(COMPONENT_PATH)/lib/mp-readline
 MP_EXTRA_INC += -I$(COMPONENT_PATH)/lib/netutils
@@ -115,7 +115,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_sal/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_service/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/audio_stream/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp-adf-libs/esp_codec/include/codec
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver-bus-i2c/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_bus_i2c/include
 
 
 

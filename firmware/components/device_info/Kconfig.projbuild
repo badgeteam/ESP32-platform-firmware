@@ -1,0 +1,21 @@
+menu "Build configuration"
+	menu "Firmware description"
+	config INFO_FIRMWARE_NAME
+		string "Code-name of the firmware"
+		default "Bleeding edge"
+	
+	config INFO_FIRMWARE_BUILD
+		int "Buildnumber of the firmware"
+		default 0
+	endmenu
+	
+	menu "Hardware description"
+	config INFO_HARDWARE_NAME
+		string "Name of the device"
+		default "Generic device"
+
+	config INFO_HARDWARE_FOLDER
+		string "Name of the folder for the MicroPython modules"
+		default "generic"
+	endmenu
+endmenu

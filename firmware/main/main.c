@@ -40,14 +40,12 @@ void logo()
 	fflush(stdout);
 }
 
+#define INIT_DRIVER(x) { extern esp_err_t driver_##x##_init(void); if (driver_##x##_init() != ESP_OK) restart(); }
+
 void platform_init()
 {
-#ifdef CONFIG_DRIVER_I2C_ENABLE
-	if (driver_i2c_init() != ESP_OK) {
-		printf("Could not start the I2C driver!\r\n");
-		restart();
-	}
-#endif
+	INIT_DRIVER(vspi)
+	INIT_DRIVER(i2c)
 }
 
 int getMagic()
