@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 cd esp-idf
+export HOST_PLATFORM=${machine}
 export IDF_PATH=$(pwd)
 export ESPIDF=$(pwd)
 source add_path.sh
