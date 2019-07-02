@@ -60,6 +60,12 @@ esp_err_t driver_vspi_freed(void)
 	return ESP_OK;
 }
 
+esp_err_t driver_vspi_test(void) {
+	//The I2C driver itself has no selftest. Attached devices will do a self-check so this driver needs no check.
+	return ESP_OK;
+} 
+
 #else // CONFIG_DRIVER_VSPI_ENABLE
 esp_err_t driver_vspi_init(void) { return ESP_OK; } // Dummy function, leave empty!
+esp_err_t driver_vspi_test(void) { return ESP_OK; } // Dummy function, leave empty!
 #endif
