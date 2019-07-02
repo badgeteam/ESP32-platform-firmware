@@ -102,7 +102,7 @@ MP_EXTRA_INC += -I$(IDF_PATH)/components/freertos/include/freertos
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp_http_client/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp_http_client/lib/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver-bus-i2c/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver-leds-hub75/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver-display-hub75/include
 
 
 
@@ -158,7 +158,6 @@ SRC_C =  $(addprefix esp32/,\
 	modutime.c \
 	moduos.c \
 	machine_timer.c \
-	modi2c.c \
 	machine_i2c.c \
 	machine_pin.c \
 	machine_touchpad.c \
@@ -179,6 +178,10 @@ SRC_C =  $(addprefix esp32/,\
 	modesp.c \
 	esprtcmem.c \
 	)
+
+ifdef CONFIG_DRIVER_I2C_ENABLE
+SRC_C += esp32/modi2c.c
+endif
 
 ifdef CONFIG_DRIVER_HUB75_ENABLE
 SRC_C += esp32/modhub75.c

@@ -3,9 +3,12 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
-#include <driver_i2c.h>
-#include <displayDriver.h>
 #include "ota_update.h"
+
+#define INIT_DRIVER(x) {    extern esp_err_t driver_##x##_init(void); 						    \
+							if(driver_##x##_init() != ESP_OK) { 								\
+								printf("Could not start the " #x " driver!\r\n"); restart(); 	\
+							}}
 
 extern void micropython_entry(void);
 extern int esp_rtcmem_read(uint32_t location);
@@ -43,15 +46,15 @@ void logo()
 
 void platform_init()
 {
-#ifdef CONFIG_DRIVER_I2C_ENABLE
-	if (driver_i2c_init() != ESP_OK) {
-		printf("Could not start the I2C driver!\r\n");
-		restart();
-	}
-#endif
-#ifdef CONFIG_DRIVER_HUB75_ENABLE
-	displayDriver_init();
-#endif
+    /**
+     * This macro calls the function esp_err_t driver_<name>_init(), and checks its return value.
+     *
+     * In /firmware/components/driver-<category>-<name>/driver_<name>.c, you should implement this
+     * function, and wrap its body in an ifdef that checks whether the driver is enabled through
+     * menuconfig. See driver-bus-i2c as an example.
+     */
+    INIT_DRIVER(i2c)
+    INIT_DRIVER(hub75)
 }
 
 int getMagic()

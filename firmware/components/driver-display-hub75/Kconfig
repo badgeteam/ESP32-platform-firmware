@@ -1,4 +1,4 @@
-menu "HUB75 LED panel driver"
+menu "Driver: HUB75 LED panel display"
 	config DRIVER_HUB75_ENABLE
 		bool "Enable the HUB75 LED driver, used for driving LED panels"
 		default n
