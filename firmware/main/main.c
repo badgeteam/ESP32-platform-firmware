@@ -5,11 +5,6 @@
 #include "esp_spi_flash.h"
 #include "ota_update.h"
 
-#define INIT_DRIVER(x) {    extern esp_err_t driver_##x##_init(void); 						    \
-							if(driver_##x##_init() != ESP_OK) { 								\
-								printf("Could not start the " #x " driver!\r\n"); restart(); 	\
-							}}
-
 extern void micropython_entry(void);
 extern int esp_rtcmem_read(uint32_t location);
 
@@ -44,6 +39,8 @@ void logo()
 	fflush(stdout);
 }
 
+#define INIT_DRIVER(x) { extern esp_err_t driver_##x##_init(void); if (driver_##x##_init() != ESP_OK) restart(); }
+
 void platform_init()
 {
     /**
@@ -53,6 +50,7 @@ void platform_init()
      * function, and wrap its body in an ifdef that checks whether the driver is enabled through
      * menuconfig. See driver-bus-i2c as an example.
      */
+    INIT_DRIVER(vspi)
     INIT_DRIVER(i2c)
     INIT_DRIVER(hub75)
 }

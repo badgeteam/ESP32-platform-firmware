@@ -244,4 +244,6 @@ esp_err_t driver_i2c_read_event(uint8_t addr, uint8_t *buf)
 	return res;
 }
 
-#endif // DRIVER_I2C_ENABLE
+#else // DRIVER_I2C_ENABLE
+esp_err_t driver_i2c_init(void) { return ESP_OK; } // Dummy function, leave empty!
+#endif
