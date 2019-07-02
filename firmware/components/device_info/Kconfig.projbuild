@@ -7,15 +7,21 @@ menu "Build configuration"
 	config INFO_FIRMWARE_BUILD
 		int "Buildnumber of the firmware"
 		default 0
+		help
+                Build number of the firmware
 	endmenu
 	
 	menu "Hardware description"
 	config INFO_HARDWARE_NAME
 		string "Name of the device"
 		default "Generic device"
+		help
+                A semantic name for your badge
 
 	config INFO_HARDWARE_FOLDER
-		string "Name of the folder for the MicroPython modules"
+		string "MicroPython modules directory"
 		default "generic"
+		help
+                The name of the directory in /components/micropython/modules to load into firmware image.
 	endmenu
 endmenu

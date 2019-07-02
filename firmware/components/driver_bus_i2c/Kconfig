@@ -1,4 +1,4 @@
-menu "I2C bus"
+menu "Driver: I2C bus"
 	config DRIVER_I2C_ENABLE
 		bool "Enable the I2C bus driver"
 		default n

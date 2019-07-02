@@ -30,6 +30,7 @@ static xSemaphoreHandle driver_i2c_mux = NULL;
 
 esp_err_t driver_i2c_init(void)
 {
+#ifdef CONFIG_DRIVER_I2C_ENABLE
 	static bool driver_i2c_init_done = false;
 
 	if (driver_i2c_init_done)
@@ -70,6 +71,8 @@ esp_err_t driver_i2c_init(void)
 	driver_i2c_init_done = true;
 
 	ESP_LOGD(TAG, "init done");
+
+#endif
 
 	return ESP_OK;
 }
