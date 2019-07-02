@@ -1,6 +1,7 @@
-#ifdef CONFIG_DRIVER_HUB75_ENABLE
+#include <sdkconfig.h>
 
-#include "compositor.h"
+#ifdef CONFIG_DRIVER_HUB75_ENABLE
+#include "include/compositor.h"
 #include "stdlib.h"
 #include "string.h"
 
@@ -273,8 +274,8 @@ void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
                 yreal = y + py;
                 for(int px=0; px<sizeX; px++) {
                         xreal = x + px;
-                        if(yreal >= 0 && yreal < HEIGHT && xreal >= 0 && xreal < WIDTH) {
-                                addColor(&buffer[yreal*WIDTH+xreal], (Color *)&image[(py*sizeX+px)*4]);
+                        if(yreal >= 0 && yreal < CONFIG_HUB75_HEIGHT && xreal >= 0 && xreal < CONFIG_HUB75_WIDTH) {
+                                addColor(&buffer[yreal*CONFIG_HUB75_WIDTH+xreal], (Color *)&image[(py*sizeX+px)*4]);
                         }
                 }
         }
@@ -282,8 +283,8 @@ void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
 
 void renderCharCol(uint8_t ch, Color color, int x, int y) {
         for(int py = y; py<y+7; py++) {
-                if(py >= 0 && py < HEIGHT && x >= 0 && x < WIDTH) {
-                        if((ch & (1<<(py-y))) != 0) addColor(&buffer[py*WIDTH+x], &color);
+                if(py >= 0 && py < CONFIG_HUB75_HEIGHT && x >= 0 && x < CONFIG_HUB75_WIDTH) {
+                        if((ch & (1<<(py-y))) != 0) addColor(&buffer[py*CONFIG_HUB75_WIDTH+x], &color);
                 }
         }
 }
@@ -317,9 +318,9 @@ void display_crash() {
         blue.value = 0x00AA7010;
         Color white;
         white.value = 0xFFFFFFFF;
-        for(int x=0; x<WIDTH; x++) {
-                for(int y=0; y<HEIGHT; y++) {
-                        buffer[y*WIDTH+x] = blue;
+        for(int x=0; x<CONFIG_HUB75_WIDTH; x++) {
+                for(int y=0; y<CONFIG_HUB75_HEIGHT; y++) {
+                        buffer[y*CONFIG_HUB75_WIDTH+x] = blue;
                 }
         }
         renderImage((uint8_t *) smiley, 24, 0, 8, 8);   
@@ -328,9 +329,9 @@ void display_crash() {
 
 void composite() {
         //Setting the background color
-        for(int x=0; x<WIDTH; x++) {
-                for(int y=0; y<HEIGHT; y++) {
-                        buffer[y*WIDTH+x] = background;
+        for(int x=0; x<CONFIG_HUB75_WIDTH; x++) {
+                for(int y=0; y<CONFIG_HUB75_HEIGHT; y++) {
+                        buffer[y*CONFIG_HUB75_WIDTH+x] = background;
                 }
         }
         renderTask_t *node = head;

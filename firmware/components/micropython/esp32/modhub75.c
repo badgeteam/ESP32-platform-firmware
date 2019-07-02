@@ -1,3 +1,5 @@
+#include <sdkconfig.h>
+
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 
 #include <string.h>
@@ -13,8 +15,8 @@
 
 #include "extmod/vfs_native.h"
 
-#include "compositor.h"
-#include "displayDriver.h"
+#include <compositor.h>
+#include <displayDriver.h>
 
 #define TAG "esp32/hub75"
 

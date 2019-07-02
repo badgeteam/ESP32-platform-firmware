@@ -1,5 +1,6 @@
-#ifdef CONFIG_DRIVER_HUB75_ENABLE
+#include <sdkconfig.h>
 
+#ifdef CONFIG_DRIVER_HUB75_ENABLE
 
 // Copyright 2017 Espressif Systems (Shanghai) PTE LTD
 //
@@ -17,7 +18,7 @@
 
 
 #include <stdint.h>
-#include "val2pwm.h"
+#include "include/val2pwm.h"
 
 //C/p'ed from https://ledshield.wordpress.com/2012/11/13/led-brightness-to-your-eye-gamma-correction-no/
 const uint16_t lumConvTab[]={

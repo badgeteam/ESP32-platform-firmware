@@ -1,3 +1,5 @@
+#include <sdkconfig.h>
+
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 
 // Copyright 2017 Espressif Systems (Shanghai) PTE LTD
@@ -28,8 +30,8 @@
 #include "soc/io_mux_reg.h"
 #include "rom/lldesc.h"
 #include "esp_heap_caps.h"
-#include "val2pwm.h"
-#include "i2s_parallel.h"
+#include "include/val2pwm.h"
+#include "include/i2s_parallel.h"
 
 #define hw I2S1
 

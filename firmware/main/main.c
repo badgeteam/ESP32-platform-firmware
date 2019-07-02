@@ -4,6 +4,7 @@
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 #include <driver_i2c.h>
+#include <displayDriver.h>
 #include "ota_update.h"
 
 extern void micropython_entry(void);
@@ -47,6 +48,9 @@ void platform_init()
 		printf("Could not start the I2C driver!\r\n");
 		restart();
 	}
+#endif
+#ifdef CONFIG_DRIVER_HUB75_ENABLE
+	displayDriver_init();
 #endif
 }
 

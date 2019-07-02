@@ -283,9 +283,9 @@ extern const struct _mp_obj_module_t mp_module_network;
 extern const struct _mp_obj_module_t mp_module_ymodem;
 extern const struct _mp_obj_module_t esp_module;
 
-#ifdef CONFIG_DRIVER_HUB75_ENABLE
+//#ifdef CONFIG_DRIVER_HUB75_ENABLE
 extern const struct _mp_obj_module_t hub75_module;
-#endif
+//#endif
 
 #ifdef CONFIG_DRIVER_I2C_ENABLE
 extern const struct _mp_obj_module_t i2c_module;

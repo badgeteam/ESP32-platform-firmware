@@ -1,3 +1,5 @@
+#include <sdkconfig.h>
+
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 
 #include <stdio.h>
@@ -6,12 +8,12 @@
 #include <string.h>
 
 #include "esp_heap_caps.h"
-#include "val2pwm.h"
-#include "i2s_parallel.h"
+#include "include/val2pwm.h"
+#include "include/i2s_parallel.h"
 
 //#include "esp32-hal.h"
-#include "displayDriver.h"
-#include "compositor.h"
+#include "include/displayDriver.h"
+#include "include/compositor.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -213,7 +215,7 @@ void render16() {
                                 Color c1;
                                 int yreal = y;
                                 int xreal = 31-x;
-                                c1 = framebuffer[yreal*WIDTH+xreal];
+                                c1 = framebuffer[yreal*CONFIG_HUB75_WIDTH+xreal];
                                
                                 if (valToPwm(c1.RGB[0]) & mask) v|= BIT_R1;
                                 if (valToPwm(c1.RGB[1]) & mask) v|= BIT_G1;
