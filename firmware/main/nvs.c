@@ -38,15 +38,17 @@ esp_err_t nvs_check()
 	return ESP_OK;
 }
 
-void nvs_init()
+bool nvs_init()
 {
 	esp_err_t res = nvs_check();
 	if (res == ESP_ERR_NVS_NOT_INITIALIZED) {
 		//Failed because NVS partition has not been initialized.
 		printf("NVS partition seems to be empty!\n");
 		nvs_format(false);
+		return true;
 	} else if (res != ESP_OK) {
 		ESP_LOGE(TAG, "failed to read from NVS partition: %d", res);
 		restart();
 	}
+	return false;
 }

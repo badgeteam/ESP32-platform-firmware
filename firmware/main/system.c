@@ -13,6 +13,13 @@ void restart()
 	esp_restart();
 }
 
+void halt()
+{
+	printf("Halted.\n");
+	fflush(stdout);
+	while (1) { esp_deep_sleep_start(); }
+}
+
 void logo()
 {
 	printf("\r\n\r\n\r\n");

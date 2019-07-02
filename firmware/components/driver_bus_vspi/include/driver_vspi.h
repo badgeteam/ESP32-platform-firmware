@@ -22,6 +22,8 @@ extern esp_err_t driver_vspi_release_and_claim(esp_err_t (*release)(void));
 
 extern esp_err_t driver_vspi_freed(void);
 
+extern void driver_vspi_test(void);
+
 __END_DECLS
 
 #endif // CONFIG_DRIVER_SPI_ENABLE

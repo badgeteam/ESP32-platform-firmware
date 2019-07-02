@@ -13,4 +13,4 @@
 
 esp_err_t nvs_format(bool wipe);
 esp_err_t nvs_check();
-void nvs_init();
+bool nvs_init();
