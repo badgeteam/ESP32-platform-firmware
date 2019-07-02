@@ -38,9 +38,7 @@ MICROPY_FATFS = 0
 
 FROZEN_DIR = $(COMPONENT_PATH)/esp32/scripts
 
-# TODO: for some reason this FROZEN_MPY_DIR config substition doesn't work and gives a compile error
-#FROZEN_MPY_DIR =  $(COMPONENT_PATH)/modules/$(CONFIG_INFO_HARDWARE_FOLDER)
-FROZEN_MPY_DIR =  $(COMPONENT_PATH)/modules/generic
+FROZEN_MPY_DIR =  $(COMPONENT_PATH)/modules/$(patsubst "%",%,$(CONFIG_INFO_HARDWARE_FOLDER))
 
 # Includes for Qstr&Frozen modules
 #---------------------------------
