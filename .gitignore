@@ -4,3 +4,4 @@ firmware/sdkconfig.old
 .idea
 cmake-build-debug
 *.pyc
+*qstrdefs.generated.h
