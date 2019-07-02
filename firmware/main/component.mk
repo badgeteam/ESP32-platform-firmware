@@ -5,4 +5,6 @@
 
 COMPONENT_ADD_INCLUDEDIRS := .
 
-COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver-bus-i2c/include
+COMPONENT_EXTRA_INCLUDES := \
+	$(PROJECT_PATH)/components/driver_bus_i2c/include \
+	$(PROJECT_PATH)/components/driver_bus_vspi/include \

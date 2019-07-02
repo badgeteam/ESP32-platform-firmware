@@ -1,0 +1,5 @@
+menu "VSPI bus"
+	config DRIVER_VSPI_ENABLE
+		bool "Enable the VSPI bus driver"
+		default n
+endmenu
