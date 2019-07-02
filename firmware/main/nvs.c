@@ -2,53 +2,75 @@
 
 #define TAG "NVS"
 
-esp_err_t nvs_format(bool wipe)
+esp_err_t nvs_format()
 {
 	const esp_partition_t * nvs_partition = esp_partition_find_first(
 			ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_NVS, NULL);
 	if (nvs_partition == NULL) {
-		ESP_LOGE(TAG, "NVS partition not found!");
-		return ESP_FAIL;
+		printf("Could not find the NVS partition, check your partition table!\n");
+		restart();
 	}
-	if (wipe) {
-		esp_err_t res = esp_partition_erase_range(nvs_partition, 0, nvs_partition->size);
-		//res = spi_flash_erase_sector(nvs_partition->address / SPI_FLASH_SEC_SIZE);
-		if (res != ESP_OK) {
-			ESP_LOGE(TAG, "failed to erase NVS partition: %d", res);
-			return res;
-		}
-	}
-	printf("Initializing NVS partition...\n");
-	return nvs_flash_init();
+	esp_err_t res = esp_partition_erase_range(nvs_partition, 0, nvs_partition->size);
+	//res = spi_flash_erase_sector(nvs_partition->address / SPI_FLASH_SEC_SIZE);
+	return res;
 }
 
-esp_err_t nvs_check()
+bool nvs_check_empty()
 {
 	const esp_partition_t * nvs_partition = esp_partition_find_first(
 			ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_NVS, NULL);
 	if (nvs_partition == NULL) {
-		ESP_LOGE(TAG, "NVS partition not found!");
-		return ESP_FAIL;
+		printf("Could not find the NVS partition, check your partition table!\n");
+		restart();
 	}
 	uint8_t buf[64];
 	int res = spi_flash_read(nvs_partition->address, buf, sizeof(buf));
 	if (res != ESP_OK) return res;
 	static const uint8_t empty[16] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
-	if (memcmp(buf, empty, 16) == 0) return ESP_ERR_NVS_NOT_INITIALIZED;
+	if (memcmp(buf, empty, 16) == 0) return true;
+	return false;
+}
+
+esp_err_t config_set_u8(const char* handle, const char* field, uint8_t value)
+{
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open("system", NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) return res;
+	nvs_set_u8(my_handle, field, value);
+	if (res != ESP_OK) return res;
+	return ESP_OK;
+}
+
+esp_err_t config_get_u8(const char* handle, const char* field, uint8_t* value)
+{
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open("system", NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {printf("GET_U8 failed to open handle"); return res; }
+	nvs_get_u8(my_handle, field, value);
+	if (res != ESP_OK) {printf("GET_U8 failed to get value"); return res; }
 	return ESP_OK;
 }
 
 bool nvs_init()
 {
-	esp_err_t res = nvs_check();
-	if (res == ESP_ERR_NVS_NOT_INITIALIZED) {
-		//Failed because NVS partition has not been initialized.
-		printf("NVS partition seems to be empty!\n");
-		nvs_format(false);
-		return true;
-	} else if (res != ESP_OK) {
-		ESP_LOGE(TAG, "failed to read from NVS partition: %d", res);
-		restart();
+	bool was_empty = nvs_check_empty();
+	
+	esp_err_t res = nvs_flash_init();
+	if (res != ESP_OK)
+	{
+		printf("Formatting NVS partition...\n");
+		res = nvs_format();
+		if (res != ESP_OK) {
+			ESP_LOGE(TAG, "failed to erase NVS partition: %d", res);
+			restart();
+		}
+		res = nvs_flash_init();
+		if (res != ESP_OK)
+		{
+			ESP_LOGE(TAG, "failed to intialize NVS: %d", res);
+			restart();
+		}
 	}
-	return false;
+	
+	return was_empty;
 }
