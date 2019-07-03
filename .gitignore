@@ -5,3 +5,4 @@ firmware/sdkconfig.old
 cmake-build-debug
 *.pyc
 *qstrdefs.generated.h
+__pycache__

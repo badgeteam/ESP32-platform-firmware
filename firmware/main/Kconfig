@@ -22,7 +22,7 @@ menu "Build configuration"
 		string "MicroPython modules directory"
 		default "generic"
 		help
-                The name of the directory in /components/micropython/modules to load into firmware image.
+                The name of the directory in /python_modules to load into firmware image as static micropython modules.
 	endmenu
 endmenu
 
