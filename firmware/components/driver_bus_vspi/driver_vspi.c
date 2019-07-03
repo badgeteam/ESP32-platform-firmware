@@ -60,6 +60,11 @@ esp_err_t driver_vspi_freed(void)
 	return ESP_OK;
 }
 
+void driver_vspi_test(void) {
+	//Nothing to do.
+} 
+
 #else // CONFIG_DRIVER_VSPI_ENABLE
 esp_err_t driver_vspi_init(void) { return ESP_OK; } // Dummy function, leave empty!
+void driver_vspi_test(void) { return ESP_OK; } // Dummy function, leave empty!
 #endif
