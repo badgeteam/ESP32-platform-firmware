@@ -5,6 +5,7 @@ void platform_init()
 	INIT_DRIVER(vspi)
 	INIT_DRIVER(i2c)
 	INIT_DRIVER(hub75)
+	INIT_DRIVER(mpr121)
 }
 
 void platform_first_boot()
