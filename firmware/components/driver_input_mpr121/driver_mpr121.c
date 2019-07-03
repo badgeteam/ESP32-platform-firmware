@@ -7,24 +7,26 @@
 #include <freertos/semphr.h>
 #include <freertos/task.h>
 #include <esp_log.h>
+#include <nvs_flash.h>
+#include <nvs.h>
 #include <driver/gpio.h>
 #include <driver_i2c.h>
 #include "include/driver_mpr121.h"
 
-#ifdef DRIVER_MPR121_ENABLE
+#ifdef CONFIG_DRIVER_MPR121_ENABLE
 
 static const char *TAG = "mpr121";
 
 xSemaphoreHandle driver_mpr121_mux = NULL;          // mutex for accessing driver_mpr121_state, driver_mpr121_handlers, etc..
 xSemaphoreHandle driver_mpr121_intr_trigger = NULL; // semaphore to trigger MPR121 interrupt handling
 
-driver_mpr121_intr_t driver_mpr121_handlers[12] = { NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-void* driver_mpr121_arg[12] = { NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+driver_mpr121_intr_t driver_mpr121_handlers[12] = { NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL };
+void*                driver_mpr121_arg[12]      = { NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL };
 
 static inline int driver_mpr121_read_reg(uint8_t reg)
 {
 	uint8_t value;
-	esp_err_t res = driver_i2c_read_reg(I2C_ADDR_MPR121, reg, &value, 1);
+	esp_err_t res = driver_i2c_read_reg(CONFIG_I2C_ADDR_MPR121, reg, &value, 1);
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c read reg(0x%02x): error %d", reg, res);
 		return -1;
@@ -35,7 +37,7 @@ static inline int driver_mpr121_read_reg(uint8_t reg)
 
 static inline esp_err_t driver_mpr121_read_regs(uint8_t reg, uint8_t *data, size_t data_len)
 {
-	esp_err_t res = driver_i2c_read_reg(I2C_ADDR_MPR121, reg, data, data_len);
+	esp_err_t res = driver_i2c_read_reg(CONFIG_I2C_ADDR_MPR121, reg, data, data_len);
 
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c read regs(0x%02x, %d): error %d", reg, data_len, res);
@@ -46,7 +48,7 @@ static inline esp_err_t driver_mpr121_read_regs(uint8_t reg, uint8_t *data, size
 
 static inline esp_err_t driver_mpr121_write_reg(uint8_t reg, uint8_t value)
 {
-	esp_err_t res = driver_i2c_write_reg(I2C_ADDR_MPR121, reg, value);
+	esp_err_t res = driver_i2c_write_reg(CONFIG_I2C_ADDR_MPR121, reg, value);
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c write reg(0x%02x, 0x%02x): error %d", reg, value, res);
 		return res;
@@ -55,38 +57,58 @@ static inline esp_err_t driver_mpr121_write_reg(uint8_t reg, uint8_t value)
 	return res;
 }
 
+bool touch_values[12] = {false, false, false, false, false, false, false, false, false, false, false, false};
+
 void driver_mpr121_intr_task(void *arg)
 {
 	// we cannot use I2C in the interrupt handler, so we
 	// create an extra thread for this..
 
-	int old_state = 0;
+	int old_touch_state = 0;
+	int old_gpio_state = 0;
+	
 	while (1) {
 		if (xSemaphoreTake(driver_mpr121_intr_trigger, portMAX_DELAY)) {
-			int state;
+			int touch_state, gpio_state;
 			while (1) {
-				state = driver_mpr121_get_interrupt_status();
-				if (state != -1) break;
+				touch_state = driver_mpr121_get_interrupt_status_touch();
+				gpio_state = driver_mpr121_get_interrupt_status_gpio();
+				if ((touch_state != -1) && (gpio_state != -1)) break;
 				ESP_LOGE(TAG, "failed to read status registers.");
 				vTaskDelay(1000 / portTICK_PERIOD_MS);
 			}
 
-			for (int i=0; i<8; i++) {
-				if ((state & (1 << i)) != (old_state & (1 << i))) {
+			//Touch events
+			for (int i=0; i<12; i++) {
+				if ((touch_state & (1 << i)) != (old_touch_state & (1 << i))) {
+					touch_values[i] = (touch_state & (1 << i));
 					xSemaphoreTake(driver_mpr121_mux, portMAX_DELAY);
 					driver_mpr121_intr_t handler = driver_mpr121_handlers[i];
 					void *arg = driver_mpr121_arg[i];
 					xSemaphoreGive(driver_mpr121_mux);
-					if (handler != NULL) handler(arg, (state & (1 << i)) != 0);
+					if (handler != NULL) handler(arg, (touch_state & (1 << i)) != 0);
+				}
+			}
+			
+			if (old_gpio_state != gpio_state) printf("MPR121 GPIO STATE CHANGED %d => %d\n", old_gpio_state, gpio_state);
+			
+			for (int i=0; i<8; i++) { //Only ELE4-ELE11 have GPIO capabilities
+				if ((gpio_state & (1 << i)) != (old_gpio_state & (1 << i))) {
+					xSemaphoreTake(driver_mpr121_mux, portMAX_DELAY);
+					driver_mpr121_intr_t handler = driver_mpr121_handlers[i+4];
+					void *arg = driver_mpr121_arg[i+4];
+					xSemaphoreGive(driver_mpr121_mux);
+					if (handler != NULL) handler(arg, (gpio_state & (1 << i)) != 0);
 				}
 			}
 
-			if (state & 0x8000) {
+			//Over-current protection
+			if (touch_state & 0x8000) {
 				ESP_LOGE(TAG, "over-current detected!");
 				vTaskDelay(1000 / portTICK_PERIOD_MS);
 
 				// clear OVCF by writing a 1
-				esp_err_t res = driver_mpr121_write_reg(0x01, state >> 8);
+				esp_err_t res = driver_mpr121_write_reg(0x01, touch_state >> 8);
 				if (res != ESP_OK) {
 					ESP_LOGE(TAG, "failed to reset over-current.");
 				}
@@ -98,14 +120,15 @@ void driver_mpr121_intr_task(void *arg)
 				}
 			}
 
-			old_state = state;
+			old_touch_state = touch_state;
+			old_gpio_state  = gpio_state;
 		}
 	}
 }
 
 void driver_mpr121_intr_handler(void *arg)
 { /* in interrupt handler */
-	if (gpio_get_level(PIN_NUM_MPR121_INT) == 0) {
+	if (gpio_get_level(CONFIG_PIN_NUM_MPR121_INT) == 0) {
 		xSemaphoreGiveFromISR(driver_mpr121_intr_trigger, NULL);
 	}
 }
@@ -145,7 +168,7 @@ esp_err_t driver_mpr121_configure(const uint32_t *baseline, bool strict)
 	}
 
 	// set thresholds
-	for (i=0; i<8; i++) {
+	for (int i=0; i<8; i++) {
 		if (baseline != NULL) {
 			res = driver_mpr121_write_reg(MPR121_BASELINE_0 + i, baseline[i] >> 2); // baseline
 			if (res != ESP_OK)
@@ -178,26 +201,191 @@ esp_err_t driver_mpr121_configure(const uint32_t *baseline, bool strict)
 	return ESP_OK;
 }
 
+static esp_err_t nvs_baseline_helper(uint8_t idx, uint32_t *value)
+{
+	if (idx > 7) {
+		ESP_LOGE(TAG, "NVS baseline index out of range: %d", idx);
+		return -1;
+	}
+	char key[14];
+	sprintf(key, "mpr121.base.%d", idx);
+	uint16_t v;
+	nvs_handle my_handle;
+	esp_err_t err = nvs_open("system", NVS_READWRITE, &my_handle);
+	if (err != ESP_OK) return err;
+	err = nvs_get_u16(my_handle, key, &v);
+	if (err == ESP_OK)
+		*value = v;
+	return err;
+}
+
+static esp_err_t configure_gpios(void)
+{
+#ifdef CONFIG_MPR121_ELE4_INPUT
+	if (driver_mpr121_configure_gpio(4, MPR121_INPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE4_INPUT_PULL_DOWN
+	if (driver_mpr121_configure_gpio(4, MPR121_INPUT_PULL_UP) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE4_INPUT_PULL_UP
+	if (driver_mpr121_configure_gpio(4, MPR121_INPUT_PULL_DOWN) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE4_OUTPUT
+	if (driver_mpr121_configure_gpio(4, MPR121_OUTPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE4_OUTPUT_LOW_ONLY
+	if (driver_mpr121_configure_gpio(4, MPR121_OUTPUT_LOW_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE4_OUTPUT_HIGH_ONLY
+	if (driver_mpr121_configure_gpio(4, MPR121_OUTPUT_HIGH_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE5_INPUT
+	if (driver_mpr121_configure_gpio(5, MPR121_INPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE5_INPUT_PULL_DOWN
+	if (driver_mpr121_configure_gpio(5, MPR121_INPUT_PULL_UP) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE5_INPUT_PULL_UP
+	if (driver_mpr121_configure_gpio(5, MPR121_INPUT_PULL_DOWN) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE5_OUTPUT
+	if (driver_mpr121_configure_gpio(5, MPR121_OUTPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE5_OUTPUT_LOW_ONLY
+	if (driver_mpr121_configure_gpio(5, MPR121_OUTPUT_LOW_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE5_OUTPUT_HIGH_ONLY
+	if (driver_mpr121_configure_gpio(5, MPR121_OUTPUT_HIGH_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE6_INPUT
+	if (driver_mpr121_configure_gpio(6, MPR121_INPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE6_INPUT_PULL_DOWN
+	if (driver_mpr121_configure_gpio(6, MPR121_INPUT_PULL_UP) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE6_INPUT_PULL_UP
+	if (driver_mpr121_configure_gpio(6, MPR121_INPUT_PULL_DOWN) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE6_OUTPUT
+	if (driver_mpr121_configure_gpio(6, MPR121_OUTPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE6_OUTPUT_LOW_ONLY
+	if (driver_mpr121_configure_gpio(6, MPR121_OUTPUT_LOW_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE6_OUTPUT_HIGH_ONLY
+	if (driver_mpr121_configure_gpio(6, MPR121_OUTPUT_HIGH_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE7_INPUT
+	if (driver_mpr121_configure_gpio(7, MPR121_INPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE7_INPUT_PULL_DOWN
+	if (driver_mpr121_configure_gpio(7, MPR121_INPUT_PULL_UP) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE7_INPUT_PULL_UP
+	if (driver_mpr121_configure_gpio(7, MPR121_INPUT_PULL_DOWN) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE7_OUTPUT
+	if (driver_mpr121_configure_gpio(7, MPR121_OUTPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE7_OUTPUT_LOW_ONLY
+	if (driver_mpr121_configure_gpio(7, MPR121_OUTPUT_LOW_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE7_OUTPUT_HIGH_ONLY
+	if (driver_mpr121_configure_gpio(7, MPR121_OUTPUT_HIGH_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE8_INPUT
+	if (driver_mpr121_configure_gpio(8, MPR121_INPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE8_INPUT_PULL_DOWN
+	if (driver_mpr121_configure_gpio(8, MPR121_INPUT_PULL_UP) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE8_INPUT_PULL_UP
+	if (driver_mpr121_configure_gpio(8, MPR121_INPUT_PULL_DOWN) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE8_OUTPUT
+	if (driver_mpr121_configure_gpio(8, MPR121_OUTPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE8_OUTPUT_LOW_ONLY
+	if (driver_mpr121_configure_gpio(8, MPR121_OUTPUT_LOW_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE8_OUTPUT_HIGH_ONLY
+	if (driver_mpr121_configure_gpio(8, MPR121_OUTPUT_HIGH_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE9_INPUT
+	if (driver_mpr121_configure_gpio(9, MPR121_INPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE9_INPUT_PULL_DOWN
+	if (driver_mpr121_configure_gpio(9, MPR121_INPUT_PULL_UP) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE9_INPUT_PULL_UP
+	if (driver_mpr121_configure_gpio(9, MPR121_INPUT_PULL_DOWN) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE9_OUTPUT
+	if (driver_mpr121_configure_gpio(9, MPR121_OUTPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE9_OUTPUT_LOW_ONLY
+	if (driver_mpr121_configure_gpio(9, MPR121_OUTPUT_LOW_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE9_OUTPUT_HIGH_ONLY
+	if (driver_mpr121_configure_gpio(9, MPR121_OUTPUT_HIGH_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE10_INPUT
+	if (driver_mpr121_configure_gpio(10, MPR121_INPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE10_INPUT_PULL_DOWN
+	if (driver_mpr121_configure_gpio(10, MPR121_INPUT_PULL_UP) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE10_INPUT_PULL_UP
+	if (driver_mpr121_configure_gpio(10, MPR121_INPUT_PULL_DOWN) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE10_OUTPUT
+	if (driver_mpr121_configure_gpio(10, MPR121_OUTPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE10_OUTPUT_LOW_ONLY
+	if (driver_mpr121_configure_gpio(10, MPR121_OUTPUT_LOW_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE10_OUTPUT_HIGH_ONLY
+	if (driver_mpr121_configure_gpio(10, MPR121_OUTPUT_HIGH_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE11_INPUT
+	if (driver_mpr121_configure_gpio(11, MPR121_INPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE11_INPUT_PULL_DOWN
+	if (driver_mpr121_configure_gpio(11, MPR121_INPUT_PULL_UP) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE11_INPUT_PULL_UP
+	if (driver_mpr121_configure_gpio(11, MPR121_INPUT_PULL_DOWN) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE11_OUTPUT
+	if (driver_mpr121_configure_gpio(11, MPR121_OUTPUT) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE11_OUTPUT_LOW_ONLY
+	if (driver_mpr121_configure_gpio(11, MPR121_OUTPUT_LOW_ONLY) < 0) return ESP_FAIL;
+#endif
+#ifdef CONFIG_MPR121_ELE11_OUTPUT_HIGH_ONLY
+	if (driver_mpr121_configure_gpio(11, MPR121_OUTPUT_HIGH_ONLY) < 0) return ESP_FAIL;
+#endif
+	return ESP_OK;
+}
+
 esp_err_t driver_mpr121_init(void)
 {
 	static bool driver_mpr121_init_done = false;
 	if (driver_mpr121_init_done) return ESP_OK;
 	ESP_LOGD(TAG, "init called");
-	esp_err_t res = driver_base_init();
-	if (res != ESP_OK) return res;
-	res = driver_i2c_init();
+	esp_err_t res = driver_i2c_init();
 	if (res != ESP_OK) return res;
 	driver_mpr121_mux = xSemaphoreCreateMutex();
 	if (driver_mpr121_mux == NULL) return ESP_ERR_NO_MEM;
 	driver_mpr121_intr_trigger = xSemaphoreCreateBinary();
 	if (driver_mpr121_intr_trigger == NULL) return ESP_ERR_NO_MEM;
-	res = gpio_isr_handler_add(PIN_NUM_MPR121_INT, driver_mpr121_intr_handler, NULL);
+	res = gpio_isr_handler_add(CONFIG_PIN_NUM_MPR121_INT, driver_mpr121_intr_handler, NULL);
 	if (res != ESP_OK) return res;
 
 	gpio_config_t io_conf = {
 		.intr_type    = GPIO_INTR_ANYEDGE,
 		.mode         = GPIO_MODE_INPUT,
-		.pin_bit_mask = 1LL << PIN_NUM_MPR121_INT,
+		.pin_bit_mask = 1LL << CONFIG_PIN_NUM_MPR121_INT,
 		.pull_down_en = 0,
 		.pull_up_en   = 1,
 	};
@@ -206,6 +394,37 @@ esp_err_t driver_mpr121_init(void)
 	if (res != ESP_OK) return res;
 	xTaskCreate(&driver_mpr121_intr_task, "MPR121 interrupt task", 4096, NULL, 10, NULL);
 	xSemaphoreGive(driver_mpr121_intr_trigger);
+	
+	/* Hardcoded baseline values */
+	uint32_t mpr121_baseline[8] = {
+		0x0138,
+		0x0144,
+		0x0170,
+		0x0174,
+		0x00f0,
+		0x0103,
+		0x00ff,
+		0x00ed,
+	};
+	int i;
+	bool mpr121_strict = true;
+	for (i=0; i<8; i++) {
+		esp_err_t err = nvs_baseline_helper(i, &mpr121_baseline[i]);
+		if (err != ESP_OK)
+			mpr121_strict = false;
+	}
+	esp_err_t err = driver_mpr121_configure(mpr121_baseline, mpr121_strict);
+	if (err != ESP_OK) {
+		ESP_LOGE(TAG, "driver_mpr121_configure failed: %d", err);
+		return err;
+	}
+	
+	err = configure_gpios();
+	if (err != ESP_OK) {
+		ESP_LOGE(TAG, "GPIO configuration failed!");
+		return err;
+	}
+	
 	driver_mpr121_init_done = true;
 	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
@@ -224,10 +443,18 @@ void driver_mpr121_set_interrupt_handler(uint8_t pin, driver_mpr121_intr_t handl
 	}
 }
 
-int driver_mpr121_get_interrupt_status(void)
+int driver_mpr121_get_interrupt_status_touch(void)
 {
 	uint16_t value;
 	esp_err_t res = driver_mpr121_read_regs(0x00, (uint8_t *) &value, 2);
+	if (res != ESP_OK) return -1;
+	return value;
+}
+
+int driver_mpr121_get_interrupt_status_gpio(void)
+{
+	uint8_t value;
+	esp_err_t res = driver_mpr121_read_regs(0x75, (uint8_t *) &value, 1);
 	if (res != ESP_OK) return -1;
 	return value;
 }
@@ -362,6 +589,107 @@ int driver_mpr121_set_gpio_level(int pin, int value)
 		if (res == ESP_OK) mpr121_gpio_bit_out[pin] = 1;
 		return res;
 	}
+}
+
+bool driver_mpr121_is_digital_output(int ele) {
+	#if defined(CONFIG_MPR121_ELE4_OUTPUT) || defined(CONFIG_MPR121_ELE4_OUTPUT_LOW_ONLY) || defined(CONFIG_MPR121_ELE4_OUTPUT_HIGH_ONLY)
+	if (ele == 4) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE5_OUTPUT) || defined(CONFIG_MPR121_ELE5_OUTPUT_LOW_ONLY) || defined(CONFIG_MPR121_ELE5_OUTPUT_HIGH_ONLY)
+	if (ele == 5) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE6_OUTPUT) || defined(CONFIG_MPR121_ELE6_OUTPUT_LOW_ONLY) || defined(CONFIG_MPR121_ELE6_OUTPUT_HIGH_ONLY)
+	if (ele == 6) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE7_OUTPUT) || defined(CONFIG_MPR121_ELE7_OUTPUT_LOW_ONLY) || defined(CONFIG_MPR121_ELE7_OUTPUT_HIGH_ONLY)
+	if (ele == 7) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE8_OUTPUT) || defined(CONFIG_MPR121_ELE8_OUTPUT_LOW_ONLY) || defined(CONFIG_MPR121_ELE8_OUTPUT_HIGH_ONLY)
+	if (ele == 8) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE9_OUTPUT) || defined(CONFIG_MPR121_ELE9_OUTPUT_LOW_ONLY) || defined(CONFIG_MPR121_ELE9_OUTPUT_HIGH_ONLY)
+	if (ele == 9) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE10_OUTPUT) || defined(CONFIG_MPR121_ELE10_OUTPUT_LOW_ONLY) || defined(CONFIG_MPR121_ELE10_OUTPUT_HIGH_ONLY)
+	if (ele == 10) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE11_OUTPUT) || defined(CONFIG_MPR121_ELE11_OUTPUT_LOW_ONLY) || defined(CONFIG_MPR121_ELE11_OUTPUT_HIGH_ONLY)
+	if (ele == 11) return true;
+	#endif
+	return false;
+}
+
+bool driver_mpr121_is_digital_input(int ele) {
+	#if defined(CONFIG_MPR121_ELE4_INPUT) || defined(CONFIG_MPR121_ELE4_INPUT_PULL_DOWN) || defined(CONFIG_MPR121_ELE4_INPUT_PULL_UP)
+	if (ele == 4) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE5_INPUT) || defined(CONFIG_MPR121_ELE5_INPUT_PULL_DOWN) || defined(CONFIG_MPR121_ELE5_INPUT_PULL_UP)
+	if (ele == 5) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE6_INPUT) || defined(CONFIG_MPR121_ELE6_INPUT_PULL_DOWN) || defined(CONFIG_MPR121_ELE6_INPUT_PULL_UP)
+	if (ele == 6) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE7_INPUT) || defined(CONFIG_MPR121_ELE7_INPUT_PULL_DOWN) || defined(CONFIG_MPR121_ELE7_INPUT_PULL_UP)
+	if (ele == 7) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE8_INPUT) || defined(CONFIG_MPR121_ELE8_INPUT_PULL_DOWN) || defined(CONFIG_MPR121_ELE8_INPUT_PULL_UP)
+	if (ele == 8) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE9_INPUT) || defined(CONFIG_MPR121_ELE9_INPUT_PULL_DOWN) || defined(CONFIG_MPR121_ELE9_INPUT_PULL_UP)
+	if (ele == 9) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE10_INPUT) || defined(CONFIG_MPR121_ELE10_INPUT_PULL_DOWN) || defined(CONFIG_MPR121_ELE10_INPUT_PULL_UP)
+	if (ele == 10) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE11_INPUT) || defined(CONFIG_MPR121_ELE11_INPUT_PULL_DOWN) || defined(CONFIG_MPR121_ELE11_INPUT_PULL_UP)
+	if (ele == 11) return true;
+	#endif
+	return false;
+}
+
+bool driver_mpr121_is_touch_input(int ele) {
+	#if defined(CONFIG_MPR121_ELE0_BTN)
+	if (ele == 0) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE1_BTN)
+	if (ele == 1) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE2_BTN)
+	if (ele == 2) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE3_BTN)
+	if (ele == 3) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE4_BTN)
+	if (ele == 4) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE5_BTN)
+	if (ele == 5) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE6_BTN)
+	if (ele == 6) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE7_BTN)
+	if (ele == 7) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE8_BTN)
+	if (ele == 8) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE9_BTN)
+	if (ele == 9) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE10_BTN)
+	if (ele == 10) return true;
+	#endif
+	#if defined(CONFIG_MPR121_ELE11_BTN)
+	if (ele == 11) return true;
+	#endif
+	return false;
+}
+
+int driver_mpr121_get_touch_level(int pin) {
+	if ((pin < 0) || (pin > 11)) return -1;
+	return touch_values[pin];
 }
 
 #else

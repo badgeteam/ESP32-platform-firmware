@@ -62,7 +62,7 @@ def shell(status=False):
 # Over-the-air updating
 
 def ota(status=False):
-	import esp, deepsleep
+	import esp
 	if status:
 		import term
 		term.header(True, "Starting update...")

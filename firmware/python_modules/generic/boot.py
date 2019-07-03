@@ -16,12 +16,13 @@ if app:
 	esp.rtcmem_write_string("")
 else:
 	app = machine.nvs_getstr('sys_home')
-	if not app:
-		app = 'dashboard.home'
+	#if not app: #This generic set of modules has no default app
+		#app = 'dashboard.home'
 
 try:
 	system.__current_app__ = app
-	__import__(app)
+	if app:
+		__import__(app)
 except BaseException as e:
 	print("Fatal exception in the running app!")
 	sys.print_exception(e)

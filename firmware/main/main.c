@@ -2,6 +2,8 @@
 #include "include/platform.h"
 #include "include/ota_update.h"
 
+#include <driver_mpr121.h>
+
 extern void micropython_entry(void);
 
 void app_main()
@@ -9,6 +11,7 @@ void app_main()
 	logo();
 	bool is_first_boot = nvs_init();
 	platform_init();
+	
 	int magic = get_magic();
 	
 	uint8_t passed_selftest = 0;
