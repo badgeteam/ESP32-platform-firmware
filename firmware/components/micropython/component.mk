@@ -38,7 +38,7 @@ MICROPY_FATFS = 0
 
 FROZEN_DIR = $(COMPONENT_PATH)/esp32/scripts
 
-FROZEN_MPY_DIR =  $(PROJECT_PATH)/python/$(patsubst "%",%,$(CONFIG_INFO_HARDWARE_FOLDER))
+FROZEN_MPY_DIR =  $(PROJECT_PATH)/python_modules/$(patsubst "%",%,$(CONFIG_INFO_HARDWARE_FOLDER))
 
 # Includes for Qstr&Frozen modules
 #---------------------------------
