@@ -24,4 +24,5 @@ void platform_init()
 	INIT_DRIVER(mpr121)
 	INIT_DRIVER(neopixel)
 	INIT_DRIVER(erc12864)
+	INIT_DRIVER(ssd1306)
 }
