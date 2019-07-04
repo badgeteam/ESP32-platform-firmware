@@ -17,7 +17,7 @@ esp_err_t (*driver_vspi_release)(void) = NULL;
 /** initialize spi sharing
  * @return ESP_OK on success; any other value indicates an error
  */
-esp_err_t driver_vspi_init(void)
+extern esp_err_t driver_vspi_init(void)
 {
 	// TODO: create mutex
 
@@ -27,7 +27,7 @@ esp_err_t driver_vspi_init(void)
 /** force other device to release the vspi
  * @return ESP_OK on success; any other value indicates an error
  */
-esp_err_t driver_vspi_release_and_claim(esp_err_t (*release)(void))
+extern esp_err_t driver_vspi_release_and_claim(esp_err_t (*release)(void))
 {
 	// TODO: grab lock
 
@@ -51,7 +51,7 @@ esp_err_t driver_vspi_release_and_claim(esp_err_t (*release)(void))
 	return res;
 }
 
-esp_err_t driver_vspi_freed(void)
+extern esp_err_t driver_vspi_freed(void)
 {
 	// TODO: check if mutex is claimed
 
@@ -59,7 +59,6 @@ esp_err_t driver_vspi_freed(void)
 
 	return ESP_OK;
 }
-
 
 #else // CONFIG_DRIVER_VSPI_ENABLE
 esp_err_t driver_vspi_init(void) { return ESP_OK; } // Dummy function, leave empty!
