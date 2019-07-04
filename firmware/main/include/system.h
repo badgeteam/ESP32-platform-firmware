@@ -8,7 +8,6 @@
 #include "esp_system.h"
 
 #define MAGIC_OTA 1
-#define MAGIC_FIRST_BOOT 2
 
 void logo( void );
 void restart( void );

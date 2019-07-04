@@ -11,4 +11,220 @@ menu "Driver: MPR121 touch input"
 	config PIN_NUM_MPR121_INT
 		depends on DRIVER_MPR121_ENABLE
 		int "GPIO pin used for MPR121 interrupt"
+		
+	choice
+		prompt "Electrode 0"
+		default MPR121_ELE0_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE0_NC
+		bool "Not connected"
+	config MPR121_ELE0_BTN
+		bool "Touch input"
+	endchoice
+	
+	choice
+		prompt "Electrode 1"
+		default MPR121_ELE1_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE1_NC
+		bool "Not connected"
+	config MPR121_ELE1_BTN
+		bool "Touch input"
+	endchoice
+		
+	choice
+		prompt "Electrode 2"
+		default MPR121_ELE2_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE2_NC
+		bool "Not connected"
+	config MPR121_ELE2_BTN
+		bool "Touch input"
+	endchoice
+	
+	choice
+		prompt "Electrode 3"
+		default MPR121_ELE3_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE3_NC
+		bool "Not connected"
+	config MPR121_ELE3_BTN
+		bool "Touch input"
+	endchoice
+	
+	choice
+		prompt "Electrode 4"
+		default MPR121_ELE4_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE4_NC
+		bool "Not connected"
+	config MPR121_ELE4_BTN
+		bool "Touch input"
+	config MPR121_ELE4_INPUT
+		bool "Digital input"
+	config MPR121_ELE4_INPUT_PULL_DOWN
+		bool "Digital input with pull-down"
+	config MPR121_ELE4_INPUT_PULL_UP
+		bool "Digital input with pull-up"
+	config MPR121_ELE4_OUTPUT
+		bool "Digital output"
+	config MPR121_ELE4_OUTPUT_LOW_ONLY
+		bool "Digital output that only sinks"
+	config MPR121_ELE4_OUTPUT_HIGH_ONLY
+		bool "Digital output that only sources"
+	endchoice
+	
+	choice
+		prompt "Electrode 5"
+		default MPR121_ELE5_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE5_NC
+		bool "Not connected"
+	config MPR121_ELE5_BTN
+		bool "Touch input"
+	config MPR121_ELE5_INPUT
+		bool "Digital input"
+	config MPR121_ELE5_INPUT_PULL_DOWN
+		bool "Digital input with pull-down"
+	config MPR121_ELE5_INPUT_PULL_UP
+		bool "Digital input with pull-up"
+	config MPR121_ELE5_OUTPUT
+		bool "Digital output"
+	config MPR121_ELE5_OUTPUT_LOW_ONLY
+		bool "Digital output that only sinks"
+	config MPR121_ELE5_OUTPUT_HIGH_ONLY
+		bool "Digital output that only sources"
+	endchoice
+	
+	choice
+		prompt "Electrode 6"
+		default MPR121_ELE6_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE6_NC
+		bool "Not connected"
+	config MPR121_ELE6_BTN
+		bool "Touch input"
+	config MPR121_ELE6_INPUT
+		bool "Digital input"
+	config MPR121_ELE6_INPUT_PULL_DOWN
+		bool "Digital input with pull-down"
+	config MPR121_ELE6_INPUT_PULL_UP
+		bool "Digital input with pull-up"
+	config MPR121_ELE6_OUTPUT
+		bool "Digital output"
+	config MPR121_ELE6_OUTPUT_LOW_ONLY
+		bool "Digital output that only sinks"
+	config MPR121_ELE6_OUTPUT_HIGH_ONLY
+		bool "Digital output that only sources"
+	endchoice
+	
+	choice
+		prompt "Electrode 7"
+		default MPR121_ELE7_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE7_NC
+		bool "Not connected"
+	config MPR121_ELE7_BTN
+		bool "Touch input"
+	config MPR121_ELE7_INPUT
+		bool "Digital input"
+	config MPR121_ELE7_INPUT_PULL_DOWN
+		bool "Digital input with pull-down"
+	config MPR121_ELE7_INPUT_PULL_UP
+		bool "Digital input with pull-up"
+	config MPR121_ELE7_OUTPUT
+		bool "Digital output"
+	config MPR121_ELE7_OUTPUT_LOW_ONLY
+		bool "Digital output that only sinks"
+	config MPR121_ELE7_OUTPUT_HIGH_ONLY
+		bool "Digital output that only sources"
+	endchoice
+	
+	choice
+		prompt "Electrode 8"
+		default MPR121_ELE8_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE8_NC
+		bool "Not connected"
+	config MPR121_ELE8_BTN
+		bool "Touch input"
+	config MPR121_ELE8_INPUT
+		bool "Digital input"
+	config MPR121_ELE8_INPUT_PULL_DOWN
+		bool "Digital input with pull-down"
+	config MPR121_ELE8_INPUT_PULL_UP
+		bool "Digital input with pull-up"
+	config MPR121_ELE8_OUTPUT
+		bool "Digital output"
+	config MPR121_ELE8_OUTPUT_LOW_ONLY
+		bool "Digital output that only sinks"
+	config MPR121_ELE8_OUTPUT_HIGH_ONLY
+		bool "Digital output that only sources"
+	endchoice
+	
+	choice
+		prompt "Electrode 9"
+		default MPR121_ELE9_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE9_NC
+		bool "Not connected"
+	config MPR121_ELE9_BTN
+		bool "Touch input"
+	config MPR121_ELE9_INPUT
+		bool "Digital input"
+	config MPR121_ELE9_INPUT_PULL_DOWN
+		bool "Digital input with pull-down"
+	config MPR121_ELE9_INPUT_PULL_UP
+		bool "Digital input with pull-up"
+	config MPR121_ELE9_OUTPUT
+		bool "Digital output"
+	config MPR121_ELE9_OUTPUT_LOW_ONLY
+		bool "Digital output that only sinks"
+	config MPR121_ELE9_OUTPUT_HIGH_ONLY
+		bool "Digital output that only sources"
+	endchoice
+	
+	choice
+		prompt "Electrode 10"
+		default MPR121_ELE10_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE10_NC
+		bool "Not connected"
+	config MPR121_ELE10_BTN
+		bool "Touch input"
+	config MPR121_ELE10_INPUT
+		bool "Digital input"
+	config MPR121_ELE10_INPUT_PULL_DOWN
+		bool "Digital input with pull-down"
+	config MPR121_ELE10_INPUT_PULL_UP
+		bool "Digital input with pull-up"
+	config MPR121_ELE10_OUTPUT
+		bool "Digital output"
+	config MPR121_ELE10_OUTPUT_LOW_ONLY
+		bool "Digital output that only sinks"
+	config MPR121_ELE10_OUTPUT_HIGH_ONLY
+		bool "Digital output that only sources"
+	endchoice
+	
+	choice
+		prompt "Electrode 11"
+		default MPR121_ELE11_NC
+		depends on DRIVER_MPR121_ENABLE
+	config MPR121_ELE11_NC
+		bool "Not connected"
+	config MPR121_ELE11_BTN
+		bool "Touch input"
+	config MPR121_ELE11_INPUT
+		bool "Digital input"
+	config MPR121_ELE11_INPUT_PULL_DOWN
+		bool "Digital input with pull-down"
+	config MPR121_ELE11_INPUT_PULL_UP
+		bool "Digital input with pull-up"
+	config MPR121_ELE11_OUTPUT
+		bool "Digital output"
+	config MPR121_ELE11_OUTPUT_LOW_ONLY
+		bool "Digital output that only sinks"
+	config MPR121_ELE11_OUTPUT_HIGH_ONLY
+		bool "Digital output that only sources"
+	endchoice
 endmenu

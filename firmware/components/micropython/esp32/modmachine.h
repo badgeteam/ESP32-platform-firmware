@@ -126,7 +126,6 @@ extern const mp_obj_type_t machine_ds18x20_type;
 #ifdef CONFIG_MICROPY_USE_RFCOMM
 extern const mp_obj_type_t machine_rfcomm_type;
 #endif
-extern nvs_handle mpy_nvs_handle;
 extern int mpy_heap_size;
 
 void machine_pins_init(void);

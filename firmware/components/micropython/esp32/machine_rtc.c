@@ -272,36 +272,45 @@ void sntp_task (void *pvParameters)
 }
 
 //--------------------------------------------
-void tz_fromto_NVS(char *gettzs, char *settzs)
+bool tz_fromto_NVS(char *gettzs, char *settzs)
 {
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open("system", NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		return false;
+	}
+	
 	size_t len = 0;
     char value[64] = {'\0'};
     if (gettzs) {
     	gettzs[0] = '\0';
-        esp_err_t ret = nvs_get_str(mpy_nvs_handle, "MpyTimeZone", NULL, &len);
+    	    	
+        esp_err_t ret = nvs_get_str(my_handle, "MpyTimeZone", NULL, &len);
         if ((ret == ESP_OK ) && (len > 0) && (len < 64)) {
-    		esp_err_t ret = nvs_get_str(mpy_nvs_handle, "MpyTimeZone", value, &len);
+    		esp_err_t ret = nvs_get_str(my_handle, "MpyTimeZone", value, &len);
     		if ((ret == ESP_OK ) && (len > 0) && (len < 64)) {
     			if (gettzs) strcpy(gettzs, value);
     		}
         }
     }
 	if (settzs) {
-		esp_err_t esp_err = nvs_set_str(mpy_nvs_handle, "MpyTimeZone", settzs);
+		esp_err_t esp_err = nvs_set_str(my_handle, "MpyTimeZone", settzs);
 		if (ESP_OK == esp_err) {
-			nvs_commit(mpy_nvs_handle);
+			nvs_commit(my_handle);
 		}
 	}
+	nvs_close(my_handle);
+	return true;
 }
 
 STATIC mp_obj_t mach_rtc_timezone(mp_uint_t n_args, const mp_obj_t *args) {
 	if (strlen(mpy_time_zone) == 0) {
 		// Try to get tz from NVS
-		tz_fromto_NVS(mpy_time_zone, NULL);
+		if (!tz_fromto_NVS(mpy_time_zone, NULL)) mp_raise_ValueError("NVS error!");
 		if (strlen(mpy_time_zone) == 0) {
-			#ifdef MICROPY_TIMEZONE
+			#ifdef CONFIG_MICROPY_TIMEZONE
 			// ===== Set default time zone ======
-			snprintf(mpy_time_zone, sizeof(mpy_time_zone)-1, "%s", MICROPY_TIMEZONE);
+			snprintf(mpy_time_zone, sizeof(mpy_time_zone)-1, "%s", CONFIG_MICROPY_TIMEZONE);
 			#endif
 		}
 	}
@@ -309,7 +318,7 @@ STATIC mp_obj_t mach_rtc_timezone(mp_uint_t n_args, const mp_obj_t *args) {
 		const char *tzs = mp_obj_str_get_str(args[1]);
 		if ((strlen(tzs) > 2) && (strlen(tzs) < 64)) {
 			sprintf(mpy_time_zone, "%s", tzs);
-			tz_fromto_NVS(NULL, mpy_time_zone);
+			if (!tz_fromto_NVS(NULL, mpy_time_zone)) mp_raise_ValueError("NVS error!");
 		} else {
 			mp_raise_ValueError("tz string length must be 3 - 63");
 		}

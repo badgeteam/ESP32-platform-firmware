@@ -79,11 +79,11 @@ int machine_pin_get_gpio(mp_obj_t pin_in)
 
 //----------------------------
 void machine_pins_init(void) {
-    static bool did_install = false;
+    /*static bool did_install = false;
     if (!did_install) {
         gpio_install_isr_service(0);
         did_install = true;
-    }
+    }*/ //Handled by platform init
 
     machine_rtc_config.ext0_pin = -1;
     for (int i=0; i<EXT1_WAKEUP_MAX_PINS; i++) {
