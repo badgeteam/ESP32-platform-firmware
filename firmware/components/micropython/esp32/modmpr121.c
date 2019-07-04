@@ -84,7 +84,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(mpr121_input_detach_obj, mpr121_input_detach);
 static mp_obj_t mpr121_input_read(mp_obj_t _pin) {
   int pin = mp_obj_get_int(_pin);
   if ((pin < 0) || (pin > 11)) return mp_const_none;
-  if (driver_mpr121_is_digital_input(pin)) return mp_obj_new_bool(driver_mpr121_get_gpio_level(pin));
+  if (driver_mpr121_is_digital_input(pin) || driver_mpr121_is_digital_output(pin)) return mp_obj_new_bool(driver_mpr121_get_gpio_level(pin));
   if (driver_mpr121_is_touch_input(pin)) return mp_obj_new_bool(driver_mpr121_get_touch_level(pin));
   return mp_const_none;
 }

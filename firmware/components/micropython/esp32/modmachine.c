@@ -77,7 +77,6 @@ extern uint16_t rom_phy_get_vdd33();
 
 // === Global variables ===
 bool mpy_use_spiram = false;
-nvs_handle mpy_nvs_handle = 0;
 machine_rtc_config_t RTC_DATA_ATTR machine_rtc_config = {0};
 bool i2s_driver_installed = false;
 int mpy_heap_size = CONFIG_MICROPY_HEAP_SIZE * 1024;
@@ -667,23 +666,22 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(machine_random_obj, 1, 2, machine_random);
 
 // ==== NVS Support ===================================================================
 
-static void checkNVS()
-{
-    if (mpy_nvs_handle == 0) {
-        mp_raise_msg(&mp_type_OSError, "NVS not available!");
-    }
-}
-
 //------------------------------------------------------------------------
-STATIC mp_obj_t mod_machine_nvs_set_int (mp_obj_t _key, mp_obj_t _value) {
-    checkNVS();
-
+STATIC mp_obj_t mod_machine_nvs_set_int (mp_obj_t _handle, mp_obj_t _key, mp_obj_t _value) {
+	const char *handle = mp_obj_str_get_str(_handle);
     const char *key = mp_obj_str_get_str(_key);
     uint32_t value = mp_obj_get_int_truncated(_value);
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
 
-    esp_err_t esp_err = nvs_set_i32(mpy_nvs_handle, key, value);
+    esp_err_t esp_err = nvs_set_i32(my_handle, key, value);
     if (ESP_OK == esp_err) {
-        nvs_commit(mpy_nvs_handle);
+        nvs_commit(my_handle);
     }
     else if (ESP_ERR_NVS_NOT_ENOUGH_SPACE == esp_err || ESP_ERR_NVS_PAGE_FULL == esp_err || ESP_ERR_NVS_NO_FREE_PAGES == esp_err) {
         mp_raise_msg(&mp_type_OSError, "No space available.");
@@ -691,91 +689,127 @@ STATIC mp_obj_t mod_machine_nvs_set_int (mp_obj_t _key, mp_obj_t _value) {
     else if (ESP_ERR_NVS_INVALID_NAME == esp_err || ESP_ERR_NVS_KEY_TOO_LONG == esp_err) {
         mp_raise_msg(&mp_type_OSError, "Key invalid or too long");
     }
+    nvs_close(my_handle);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_machine_nvs_set_int_obj, mod_machine_nvs_set_int);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_machine_nvs_set_int_obj, mod_machine_nvs_set_int);
 
 //-------------------------------------------------------
-STATIC mp_obj_t mod_machine_nvs_get_int (mp_obj_t _key) {
-    checkNVS();
-
+STATIC mp_obj_t mod_machine_nvs_get_int (mp_obj_t _handle, mp_obj_t _key) {
+    const char *handle = mp_obj_str_get_str(_handle);
     const char *key = mp_obj_str_get_str(_key);
     int value = 0;
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
 
-    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_i32(mpy_nvs_handle, key, &value)) {
+    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_i32(my_handle, key, &value)) {
+		nvs_close(my_handle);
         return mp_const_none;
     }
+    nvs_close(my_handle);
     return mp_obj_new_int(value);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_machine_nvs_get_int_obj, mod_machine_nvs_get_int);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_machine_nvs_get_int_obj, mod_machine_nvs_get_int);
 
 //------------------------------------------------------------------------
-STATIC mp_obj_t mod_machine_nvs_set_str (mp_obj_t _key, mp_obj_t _value) {
-    checkNVS();
-
+STATIC mp_obj_t mod_machine_nvs_set_str (mp_obj_t _handle, mp_obj_t _key, mp_obj_t _value) {
+    const char *handle = mp_obj_str_get_str(_handle);
     const char *key = mp_obj_str_get_str(_key);
     const char *value = mp_obj_str_get_str(_value);
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
 
-    esp_err_t esp_err = nvs_set_str(mpy_nvs_handle, key, value);
+    esp_err_t esp_err = nvs_set_str(my_handle, key, value);
     if (ESP_OK == esp_err) {
-        nvs_commit(mpy_nvs_handle);
-    }
-    else if (ESP_ERR_NVS_NOT_ENOUGH_SPACE == esp_err || ESP_ERR_NVS_PAGE_FULL == esp_err || ESP_ERR_NVS_NO_FREE_PAGES == esp_err) {
+        nvs_commit(my_handle);
+	} else if (ESP_ERR_NVS_NOT_ENOUGH_SPACE == esp_err || ESP_ERR_NVS_PAGE_FULL == esp_err || ESP_ERR_NVS_NO_FREE_PAGES == esp_err) {
         mp_raise_msg(&mp_type_OSError, "No space available.");
-    }
-    else if (ESP_ERR_NVS_INVALID_NAME == esp_err || ESP_ERR_NVS_KEY_TOO_LONG == esp_err) {
+    } else if (ESP_ERR_NVS_INVALID_NAME == esp_err || ESP_ERR_NVS_KEY_TOO_LONG == esp_err) {
         mp_raise_msg(&mp_type_OSError, "Key invalid or too long");
     }
+    nvs_close(my_handle);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_machine_nvs_set_str_obj, mod_machine_nvs_set_str);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_machine_nvs_set_str_obj, mod_machine_nvs_set_str);
 
 //-------------------------------------------------------
-STATIC mp_obj_t mod_machine_nvs_get_str (mp_obj_t _key) {
-    checkNVS();
-
+STATIC mp_obj_t mod_machine_nvs_get_str (mp_obj_t _handle, mp_obj_t _key) {
+    const char *handle = mp_obj_str_get_str(_handle);
     const char *key = mp_obj_str_get_str(_key);
     size_t len = 0;
     mp_obj_t strval = mp_const_none;
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
 
-    esp_err_t ret = nvs_get_str(mpy_nvs_handle, key, NULL, &len);
+    esp_err_t ret = nvs_get_str(my_handle, key, NULL, &len);
     if ((ret == ESP_OK ) && (len > 0)) {
         char *value = malloc(len);
         if (value) {
-            esp_err_t ret = nvs_get_str(mpy_nvs_handle, key, value, &len);
+            esp_err_t ret = nvs_get_str(my_handle, key, value, &len);
             if ((ret == ESP_OK ) && (len > 0)) {
                 strval = mp_obj_new_str(value, strlen(value));
                 free(value);
             }
         }
     }
+    nvs_close(my_handle);
     return strval;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_machine_nvs_get_str_obj, mod_machine_nvs_get_str);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_machine_nvs_get_str_obj, mod_machine_nvs_get_str);
 
 //-----------------------------------------------------
-STATIC mp_obj_t mod_machine_nvs_erase (mp_obj_t _key) {
-    checkNVS();
-
+STATIC mp_obj_t mod_machine_nvs_erase (mp_obj_t _handle, mp_obj_t _key) {
+    const char *handle = mp_obj_str_get_str(_handle);
     const char *key = mp_obj_str_get_str(_key);
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
 
-    if (ESP_ERR_NVS_NOT_FOUND == nvs_erase_key(mpy_nvs_handle, key)) {
+    if (ESP_ERR_NVS_NOT_FOUND == nvs_erase_key(my_handle, key)) {
         mp_raise_ValueError("Key not found");
     }
+    nvs_close(my_handle);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_machine_nvs_erase_obj, mod_machine_nvs_erase);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_machine_nvs_erase_obj, mod_machine_nvs_erase);
 
 //------------------------------------------------
-STATIC mp_obj_t mod_machine_nvs_erase_all (void) {
-    checkNVS();
-
-    if (ESP_OK != nvs_erase_all(mpy_nvs_handle)) {
+STATIC mp_obj_t mod_machine_nvs_erase_all (mp_obj_t _handle) {
+    const char *handle = mp_obj_str_get_str(_handle);
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
+	
+    if (ESP_OK != nvs_erase_all(my_handle)) {
         mp_raise_msg(&mp_type_OSError, "Operation failed.");
     }
+    nvs_close(my_handle);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_machine_nvs_erase_all_obj, mod_machine_nvs_erase_all);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_machine_nvs_erase_all_obj, mod_machine_nvs_erase_all);
 
 
 // ==== ESP32 log level ===================================================================
@@ -922,15 +956,20 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_machine_wdt_obj, 0, 1, mod_machine_wdt);
 //-----------------------------------------------------------------------
 static void _set_stack_heap(char *key, int value, int valmin, int valmax)
 {
-    checkNVS();
+    nvs_handle my_handle;
+	esp_err_t res = nvs_open("system", NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return;
+	}
 
     if ((value != 0) && ((value < valmin) || (value > valmax))) {
         mp_raise_msg(&mp_type_OSError, "Invalid size");
     }
 
-    esp_err_t esp_err = nvs_set_i32(mpy_nvs_handle, key, value);
+    esp_err_t esp_err = nvs_set_i32(my_handle, key, value);
     if (ESP_OK == esp_err) {
-        nvs_commit(mpy_nvs_handle);
+        nvs_commit(my_handle);
     }
     else if (ESP_ERR_NVS_NOT_ENOUGH_SPACE == esp_err || ESP_ERR_NVS_PAGE_FULL == esp_err || ESP_ERR_NVS_NO_FREE_PAGES == esp_err) {
         mp_raise_msg(&mp_type_OSError, "No space available for NVS variable.");

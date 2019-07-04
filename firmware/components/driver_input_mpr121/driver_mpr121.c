@@ -90,7 +90,7 @@ void driver_mpr121_intr_task(void *arg)
 				}
 			}
 			
-			if (old_gpio_state != gpio_state) printf("MPR121 GPIO STATE CHANGED %d => %d\n", old_gpio_state, gpio_state);
+			//if (old_gpio_state != gpio_state) printf("MPR121 GPIO STATE CHANGED %d => %d\n", old_gpio_state, gpio_state);
 			
 			for (int i=0; i<8; i++) { //Only ELE4-ELE11 have GPIO capabilities
 				if ((gpio_state & (1 << i)) != (old_gpio_state & (1 << i))) {
@@ -216,6 +216,7 @@ static esp_err_t nvs_baseline_helper(uint8_t idx, uint32_t *value)
 	err = nvs_get_u16(my_handle, key, &v);
 	if (err == ESP_OK)
 		*value = v;
+	nvs_close(my_handle);
 	return err;
 }
 

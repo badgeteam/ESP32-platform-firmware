@@ -69,7 +69,7 @@
 // MicroPython runs as a STATIC task under FreeRTOS
 // ================================================
 
-#define NVS_NAMESPACE       "MPY_NVM"
+#define NVS_NAMESPACE       "system"
 #define MP_TASK_STACK_LEN	4096
 
 #if CONFIG_SPIRAM_IGNORE_NOTFOUND
@@ -131,6 +131,9 @@ void mp_task(void *pvParameter)
     mp_obj_list_init(mp_sys_path, 0);
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR_));
     mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_lib));
+	mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_apps));
+	mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_sd__slash_lib));
+	mp_obj_list_append(mp_sys_path, MP_OBJ_NEW_QSTR(MP_QSTR__slash_sd__slash_apps));
     mp_obj_list_init(mp_sys_argv, 0);
 
     readline_init0();
@@ -316,17 +319,21 @@ void micropython_entry(void)
 	*/
 
     nvs_flash_init();
-
+	
+	
+	
     // ================================
     // === Check and allocate stack ===
 	ESP_LOGD("MicroPython","Configure stack");
 	mp_task_stack_len = MPY_DEFAULT_STACK_SIZE;
 
 	// Open NVS name space
+	nvs_handle mpy_nvs_handle;
     if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &mpy_nvs_handle) != ESP_OK) {
     	mpy_nvs_handle = 0;
     	ESP_LOGE("MicroPython","Error while opening MicroPython NVS name space");
     }
+    
     if (mpy_nvs_handle != 0) {
     	// Get stack size from NVS
         if (ESP_ERR_NVS_NOT_FOUND != nvs_get_i32(mpy_nvs_handle, "MPY_StackSize", &mp_task_stack_len)) {
@@ -438,6 +445,8 @@ void micropython_entry(void)
 	#endif
 	esp_log_level_set("MicroPython", CONFIG_LOG_DEFAULT_LEVEL);
 	*/
+	
+	nvs_close(mpy_nvs_handle);
 
 	// ================================================
 	// ==== Create and start main MicroPython task ====

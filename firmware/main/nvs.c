@@ -31,26 +31,6 @@ bool nvs_check_empty()
 	return false;
 }
 
-esp_err_t config_set_u8(const char* handle, const char* field, uint8_t value)
-{
-	nvs_handle my_handle;
-	esp_err_t res = nvs_open("system", NVS_READWRITE, &my_handle);
-	if (res != ESP_OK) return res;
-	nvs_set_u8(my_handle, field, value);
-	if (res != ESP_OK) return res;
-	return ESP_OK;
-}
-
-esp_err_t config_get_u8(const char* handle, const char* field, uint8_t* value)
-{
-	nvs_handle my_handle;
-	esp_err_t res = nvs_open("system", NVS_READWRITE, &my_handle);
-	if (res != ESP_OK) {printf("GET_U8 failed to open handle"); return res; }
-	nvs_get_u8(my_handle, field, value);
-	if (res != ESP_OK) {printf("GET_U8 failed to get value"); return res; }
-	return ESP_OK;
-}
-
 bool nvs_init()
 {
 	bool was_empty = nvs_check_empty();

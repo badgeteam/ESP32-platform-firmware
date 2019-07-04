@@ -6,8 +6,6 @@ def reboot():
 
 def sleep(duration=0, status=False):
 	import machine, time
-	machine.RTC().wake_on_ext0(pin = machine.Pin(25), level = 0)
-	machine.RTC().wake_on_ext1([machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)], 0)
 	if (duration >= 86400000): #One day
 		duration = 0
 	if status:
