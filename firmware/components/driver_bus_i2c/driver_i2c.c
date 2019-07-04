@@ -244,11 +244,6 @@ esp_err_t driver_i2c_read_event(uint8_t addr, uint8_t *buf)
 	return res;
 }
 
-void driver_i2c_test(void) {
-	//Attached devices will do a self-check so this driver needs no check.
-} 
-
 #else // DRIVER_I2C_ENABLE
 esp_err_t driver_i2c_init(void) { return ESP_OK; } // Dummy function, leave empty!
-void driver_i2c_test(void) { return ESP_OK; } // Dummy function, leave empty!
 #endif

@@ -67,7 +67,8 @@ extern void driver_mpr121_set_interrupt_handler(uint8_t pin, driver_mpr121_intr_
  * Retrieve the mpr121 status.
  * @return the status registers; or -1 on error
  */
-extern int driver_mpr121_get_interrupt_status(void);
+extern int driver_mpr121_get_interrupt_status_touch(void);
+extern int driver_mpr121_get_interrupt_status_gpio(void);
 
 /**
  * Retrieve mpr121 touch info
@@ -110,6 +111,12 @@ extern int driver_mpr121_get_gpio_level(int pin);
  * @return 0 on succes; -1 on error
  */
 extern int driver_mpr121_set_gpio_level(int pin, int value);
+
+bool driver_mpr121_is_digital_output(int ele);
+bool driver_mpr121_is_digital_input(int ele);
+bool driver_mpr121_is_touch_input(int ele);
+
+extern int driver_mpr121_get_touch_level(int pin);
 
 __END_DECLS
 

@@ -49,6 +49,8 @@
 #include "libs/littleflash.h"
 #endif
 
+#include <driver_mpr121.h>
+
 //extern const mp_obj_type_t mp_fat_vfs_type;
 
 STATIC const qstr os_uname_info_fields[] = {
@@ -111,6 +113,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(os_dupterm_notify_obj, os_dupterm_notify);
 //------------------------------------------------------------------
 STATIC mp_obj_t os_mount_sdcard(size_t n_args, const mp_obj_t *args)
 {
+#ifdef CONFIG_SDMMC_MPR121_PIN
+	driver_mpr121_set_gpio_level(CONFIG_SDMMC_MPR121_PIN, true);
+#endif
 	if (n_args > 0) {
 		int chd = mp_obj_get_int(args[0]);
 		if (chd) {

@@ -113,6 +113,8 @@ static void badge_ota_initialise_wifi(void)
 	if (err != ESP_OK || len == 0) {
 		strncpy((char *) wifi_config.sta.password, CONFIG_WIFI_PASSWORD, sizeof(wifi_config.sta.password));
 	}
+	
+	nvs_close(my_handle);
 
 	ESP_LOGW(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));

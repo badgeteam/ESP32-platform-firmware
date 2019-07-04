@@ -23,7 +23,7 @@ void halt()
 void logo()
 {
 	printf("\r\n\r\n\r\n");
-	printf("\x1b[33;1mBADGE\x1b[34;1m.TEAM\x1b[0m FIRMWARE for ESP32\r\n");	
+	printf("\x1b[33;1mBADGE\x1b[34;1m.TEAM\x1b[0m\r\n");
 #ifdef CONFIG_SHOW_CHIP_INFO
 	esp_chip_info_t chip_info;
 	esp_chip_info(&chip_info);
