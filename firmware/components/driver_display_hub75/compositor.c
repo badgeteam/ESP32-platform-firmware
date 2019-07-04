@@ -207,7 +207,7 @@ void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX) 
         scrollText_t *scroll = (scrollText_t *) malloc(sizeof(scrollText_t));
         scroll->text = text;
         scroll->speed = 1;
-        scroll->skip = 0;
+        scroll->skip = -sizeX;
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
         node->payload = scroll;
         node->id = 2;
