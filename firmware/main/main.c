@@ -13,7 +13,7 @@ void app_main()
 	if (is_first_boot) { //Deze flag gebruiken we op het moment nergens meer voor.
 		printf("\r\n\r\nAll your base are belong to us.\r\n\r\n");
 	}
-	
+		
 	int magic = get_magic();
 		
 	switch(magic) {
