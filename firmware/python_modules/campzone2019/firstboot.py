@@ -7,8 +7,6 @@ import tasks.otacheck as otac
 import tasks.resourcescheck as resc
 import tasks.sponsorscheck as spoc
 
-import post_ota
-
 def start():
     if badge.safe_mode():
         splash = 'splash'

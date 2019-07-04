@@ -1,7 +1,6 @@
 import esp, machine, sys, system
 
-esp.rtcmem_write(0,0)
-esp.rtcmem_write(1,0)
+system.clear_boot_magic()
 
 rtc = machine.RTC()
 if (rtc.timezone()==""):
@@ -17,7 +16,7 @@ if app:
 else:
 	app = machine.nvs_getstr('sys_home')
 	if not app:
-		app = 'dashboard.home'
+		app = 'dashboard'
 
 try:
 	system.__current_app__ = app
