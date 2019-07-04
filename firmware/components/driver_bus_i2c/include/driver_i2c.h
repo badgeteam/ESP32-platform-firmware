@@ -28,8 +28,6 @@ extern esp_err_t driver_i2c_write_buffer(uint8_t addr, const uint8_t* buffer, ui
  */
 extern esp_err_t driver_i2c_read_event(uint8_t addr, uint8_t *buf);
 
-extern void driver_i2c_test(void);
-
 __END_DECLS
 
 #endif // DRIVER_I2C_H
