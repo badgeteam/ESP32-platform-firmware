@@ -1,14 +1,20 @@
 import sys, uos as os, time, ujson
-import appglue, virtualtimers, tasks.powermanagement as pm, dialogs, buttons, config
+import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines
 import rgb
 
 # Application list
 
 apps = []
+current_index = 0
 
 
 def show_text(text):
-    rgb.scrolltext(text, 0, 0, rgb.PANEL_WIDTH)
+    rgb.background((0, 50, 40))
+    rgb.scrolltext(text, (80, 80, 0))
+
+
+def clear():
+    rgb.clear()
 
 
 def add_app(app, information):
@@ -37,33 +43,13 @@ def populate_apps():
     add_app("installer", {"name": "Installer", "category": "system"})
     add_app("update", {"name": "Update apps", "category": "system"})
     add_app("checkforupdates", {"name": "Update firmware", "category": "system"})
-    add_app(badge.nvs_get_str('boot', 'splash', 'splash'), {"name": "Home", "category": "system"})
+    add_app(machine.nvs_getstr("system", 'default_app'), {"name": "Home", "category": "system"})
 
 
-# List as shown on screen
-currentListTitles = []
-currentListTargets = []
-
-
-def populate_category(category="", system=True):
-    global apps
-    global currentListTitles
-    global currentListTargets
-    currentListTitles = []
-    currentListTargets = []
-    for app in apps:
-        if (category == "" or category == app["category"] or (system and app["category"] == "system")) and (
-        not app["category"] == "hidden"):
-            currentListTitles.append(app["title"])
-            currentListTargets.append(app)
-
-
-def populate_options():
-    global options
-    options = ugfx.List(0, 0, int(ugfx.width()), ugfx.height())
-    global currentListTitles
-    for title in currentListTitles:
-        options.add_item(title)
+def render_current_app():
+    clear()
+    app = apps[current_index]
+    show_text(app["title"])
 
 
 # Read app metadata
@@ -112,17 +98,14 @@ def uninstall():
             show_text("Uninstall completed!")
         start()
 
-    dialogs.prompt_boolean('Remove %s?' % currentListTitles[selected], cb=perform_uninstall)
+    # TODO: add removal dialog again
+    # dialogs.prompt_boolean('Remove %s?' % currentListTitles[selected], cb=perform_uninstall)
 
 
 # Run app
 
 def run():
-    global options
-    selected = options.selected_index()
-    options.destroy()
-    global currentListTargets
-    appglue.start_app(currentListTargets[selected]["file"])
+    system.start(apps[current_index]["file"], status=True)
 
 
 # Path
@@ -150,11 +133,28 @@ def input_run(pressed):
         run()
 
 
-
 def input_uninstall(pressed):
     pm.feed()
     if pressed:
         uninstall()
+
+
+def input_up(pressed):
+    global current_index
+
+    pm.feed()
+    if pressed:
+        current_index = (current_index - 1) % len(apps)
+        render_current_app()
+
+
+def input_down(pressed):
+    global current_index
+
+    pm.feed()
+    if pressed:
+        current_index = (current_index + 1) % len(apps)
+        render_current_app()
 
 
 def input_other(pressed):
@@ -180,16 +180,17 @@ def start():
     options = None
     install_path = None
 
-    buttons.register(config.BTN_A, input_run)
-    buttons.register(config.BTN_UP, input_other)
-    buttons.register(config.BTN_DOWN, input_other)
-    buttons.register(config.BTN_LEFT, input_other)
-    buttons.register(config.BTN_RIGHT, input_other)
+    buttons.register(defines.BTN_A, input_run)
+    buttons.register(defines.BTN_UP, input_up)
+    buttons.register(defines.BTN_DOWN, input_down)
+    buttons.register(defines.BTN_LEFT, input_other)
+    buttons.register(defines.BTN_RIGHT, input_other)
 
     populate_apps()
-    populate_category()
-    populate_options()
+    render_current_app()
 
 
 start()
 init_power_management()
+menu = term_menu.UartMenu(None, pm)
+menu.main()

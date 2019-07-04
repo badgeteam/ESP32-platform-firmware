@@ -1,4 +1,4 @@
-import sys, version, badge
+import sys
 
 def goto(x,y):
 	sys.stdout.write(u"\u001b["+str(y)+";"+str(x)+"H")
@@ -21,7 +21,7 @@ def header(cls = False, text = ""):
 	if text:
 		text = "- "+text
 	color(37, 44, 1)
-	print(badge.deviceType.replace("_"," ")+" "+text+u"\r\n")
+	# print(badge.deviceType.replace("_"," ")+" "+text+u"\r\n")
 	color()
 	
 def draw_menu_item(text, selected, width=32):
@@ -77,9 +77,9 @@ def menu(title, items, selected = 0, text="", width=32):
 						selected += 1
 						needFullDraw = False
 		if (ord(key)==0x01):
-			import tasks.powermanagement as pm, badge
+			import tasks.powermanagement as pm#, badge
 			pm.disable()
-			badge.rawrepl()
+			# badge.rawrepl()
 			draw_menu(title, items, selected, text)
 			pm.resume()
 			

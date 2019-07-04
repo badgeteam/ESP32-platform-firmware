@@ -1,11 +1,10 @@
-import machine, badge, term, time
+import machine, term, time
 
 pin = machine.Pin(25)
 rtc = machine.RTC()
 rtc.wake_on_ext0(pin=pin, level=0)
 
 def start_sleeping(sleepTime=0):
-    badge.off()
     term.header(True, "Going to sleep...")
     if (sleepTime >= 86400000):  # One day
         sleepTime = 0

@@ -1,4 +1,4 @@
-import ugfx
+import defines
 
 build                  = 1
 name                   = "Harry Potter"
@@ -16,8 +16,8 @@ nick_width_small       = 8
 nick_height_large      = 36
 nick_height_small      = 22
 
-btn_ok = ugfx.BTN_START
-btn_cancel = ugfx.BTN_B
+btn_ok = defines.BTN_A
+btn_cancel = defines.BTN_B
 
 hatcheryurl             = "https://badgefw.rootfs.eu"
 otacheckurl             = "http://badgefw.rootfs.eu/firmware/version"
