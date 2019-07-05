@@ -7,10 +7,12 @@
 #include <esp_heap_caps.h>
 #include <esp_log.h>
 
-#include "driver_pins.h"
-#include "driver_eink_dev.h"
-#include "driver_eink_lut.h"
-#include "driver_eink.h"
+#include <nvs_flash.h>
+#include <nvs.h>
+
+#include "include/driver_eink_dev.h"
+#include "include/driver_eink_lut.h"
+#include "include/driver_eink.h"
 
 #ifdef CONFIG_DRIVER_EINK_ENABLE
 
@@ -45,26 +47,21 @@ static uint32_t *driver_eink_tmpbuf = NULL;
 static uint32_t *driver_eink_oldbuf = NULL;
 static bool driver_eink_have_oldbuf = false;
 
-static void
-memcpy_u32(uint32_t *dst, const uint32_t *src, size_t size)
+static void memcpy_u32(uint32_t *dst, const uint32_t *src, size_t size)
 {
-	while (size-- > 0)
-	{
+	while (size-- > 0) {
 		*dst++ = *src++;
 	}
 }
 
-static void
-memset_u32(uint32_t *dst, uint32_t value, size_t size)
+static void memset_u32(uint32_t *dst, uint32_t value, size_t size)
 {
-	while (size-- > 0)
-	{
+	while (size-- > 0) {
 		*dst++ = value;
 	}
 }
 
-static void
-driver_eink_create_bitplane(const uint8_t *img, uint32_t *buf, int bit, driver_eink_flags_t flags)
+static void driver_eink_create_bitplane(const uint8_t *img, uint32_t *buf, int bit, driver_eink_flags_t flags)
 {
 #ifdef EPD_ROTATED_180
 	flags ^= DISPLAY_FLAG_ROTATE_180;
@@ -113,9 +110,7 @@ driver_eink_create_bitplane(const uint8_t *img, uint32_t *buf, int bit, driver_e
 	}
 }
 
-static void
-driver_eink_set_ram_area(uint8_t x_start, uint8_t x_end,
-		uint16_t y_start, uint16_t y_end)
+static void driver_eink_set_ram_area(uint8_t x_start, uint8_t x_end, uint16_t y_start, uint16_t y_end)
 {
 	// set RAM X - address Start / End position
 	driver_eink_dev_write_command_p2(0x44, x_start, x_end);
@@ -123,8 +118,7 @@ driver_eink_set_ram_area(uint8_t x_start, uint8_t x_end,
 	driver_eink_dev_write_command_p4(0x45, y_start & 0xff, y_start >> 8, y_end & 0xff, y_end >> 8);
 }
 
-static void
-driver_eink_set_ram_pointer(uint8_t x_addr, uint16_t y_addr)
+static void driver_eink_set_ram_pointer(uint8_t x_addr, uint16_t y_addr)
 {
 	// set RAM X address counter
 	driver_eink_dev_write_command_p1(0x4e, x_addr);
@@ -132,16 +126,14 @@ driver_eink_set_ram_pointer(uint8_t x_addr, uint16_t y_addr)
 	driver_eink_dev_write_command_p2(0x4f, y_addr & 0xff, y_addr >> 8);
 }
 
-static void
-driver_eink_write_bitplane(const uint32_t *buf)
+static void driver_eink_write_bitplane(const uint32_t *buf)
 {
 	driver_eink_set_ram_area(0, DISP_SIZE_X_B - 1, 0, DISP_SIZE_Y - 1);
 	driver_eink_set_ram_pointer(0, 0);
 	driver_eink_dev_write_command_stream_u32(0x24, buf, DISP_SIZE_X_B * DISP_SIZE_Y/4);
 }
 
-void
-driver_eink_update(const uint32_t *buf, const struct driver_eink_update *upd_conf)
+void driver_eink_update(const uint32_t *buf, const struct driver_eink_update *upd_conf)
 {
 	// generate lut data
 	const struct driver_eink_lut_entry *lut_entries;
@@ -213,8 +205,7 @@ driver_eink_update(const uint32_t *buf, const struct driver_eink_update *upd_con
 	driver_eink_have_oldbuf = true;
 }
 
-void
-driver_eink_display(const uint8_t *img, driver_eink_flags_t flags)
+void driver_eink_display(const uint8_t *img, driver_eink_flags_t flags)
 {
 	int lut_mode = 
 		(flags >> DISPLAY_FLAG_LUT_BIT) & ((1 << DISPLAY_FLAG_LUT_SIZE)-1);
@@ -257,8 +248,7 @@ driver_eink_display(const uint8_t *img, driver_eink_flags_t flags)
 	driver_eink_update(buf, &eink_upd);
 }
 
-void
-driver_eink_display_greyscale(const uint8_t *img, driver_eink_flags_t flags, int layers)
+void driver_eink_display_greyscale(const uint8_t *img, driver_eink_flags_t flags, int layers)
 {
 	// start with black.
 	driver_eink_display(NULL, flags | DISPLAY_FLAG_FULL_UPDATE);
@@ -274,8 +264,7 @@ driver_eink_display_greyscale(const uint8_t *img, driver_eink_flags_t flags, int
 
 	driver_eink_have_oldbuf = false;
 
-	int layer;
-	for (layer = 0; layer < layers; layer++) {
+	for (int layer = 0; layer < layers; layer++) {
 		int bit = 128 >> layer;
 		int t = bit;
 		// gdeh: 128, 64, 32, 16, 8, 4, 2
@@ -294,8 +283,7 @@ driver_eink_display_greyscale(const uint8_t *img, driver_eink_flags_t flags, int
 			continue;
 		}
 
-		int j;
-		for (j = 0; j < p; j++) {
+		for (int j = 0; j < p; j++) {
 			int y_start = 0 + j * (DISP_SIZE_Y / p);
 			int y_end = y_start + (DISP_SIZE_Y / p) - 1;
 
@@ -348,109 +336,74 @@ driver_eink_display_greyscale(const uint8_t *img, driver_eink_flags_t flags, int
 	}
 }
 
-void
-driver_eink_deep_sleep(void)
+void driver_eink_deep_sleep(void)
 {
-	// enter deep sleep
-	driver_eink_dev_write_command_p1(0x10, 0x01);
+	driver_eink_dev_write_command_p1(0x10, 0x01); // enter deep sleep
 }
 
-void
-driver_eink_wakeup(void)
+void driver_eink_wakeup(void)
 {
-	// leave deep sleep
-	driver_eink_dev_write_command_p1(0x10, 0x00);
+	driver_eink_dev_write_command_p1(0x10, 0x00); // leave deep sleep
 }
 
-esp_err_t
-driver_eink_init(enum driver_eink_dev_t dev_type)
+esp_err_t driver_eink_init(void)
 {
 	static bool driver_eink_init_done = false;
-
-	if (driver_eink_init_done)
-		return ESP_OK;
+	
+	if (driver_eink_init_done) return ESP_OK;
 
 	ESP_LOGD(TAG, "init called");
+	
+	uint8_t eink_type;
+	nvs_handle my_handle;
+	esp_err_t err = nvs_open("system", NVS_READWRITE, &my_handle);
+	if (err != ESP_OK) { ESP_LOGE(TAG, "nvs handle failure"); return err; }
+	err = nvs_get_u8(my_handle, "eink.dev.type", &eink_type);
+	if (err != ESP_OK) {
+		//Failed to get e-ink type from NVS, write value from menuconfig
+		eink_type = DRIVER_EINK_DEFAULT;
+		nvs_set_u8(my_handle, "eink.dev.type", eink_type);
+	}
+		
+	enum driver_eink_dev_t dev_type = eink_type;
 
 	// initialize spi interface to display
 	esp_err_t res = driver_eink_dev_init(dev_type);
-	if (res != ESP_OK)
-		return res;
+	if (res != ESP_OK) { ESP_LOGE(TAG, "dev init failure");  return res; }
 
 	// allocate buffers
 	driver_eink_tmpbuf = heap_caps_malloc(DISP_SIZE_X_B * DISP_SIZE_Y, MALLOC_CAP_32BIT);
-	if (driver_eink_tmpbuf == NULL)
-		return ESP_ERR_NO_MEM;
+	if (driver_eink_tmpbuf == NULL) { ESP_LOGE(TAG, "tmpbuf alloc no mem"); return ESP_ERR_NO_MEM; }
 
-	if (driver_eink_dev_type == DRIVER_EINK_DEPG0290B1)
-	{
+	if (driver_eink_dev_type == DRIVER_EINK_DEPG0290B1) {
 		driver_eink_oldbuf = heap_caps_malloc(DISP_SIZE_X_B * DISP_SIZE_Y, MALLOC_CAP_32BIT);
-		if (driver_eink_oldbuf == NULL)
-			return ESP_ERR_NO_MEM;
+		if (driver_eink_oldbuf == NULL) { ESP_LOGE(TAG, "oldbuf alloc no mem");  return ESP_ERR_NO_MEM; }
 	}
 
-	if (driver_eink_dev_type == DRIVER_EINK_GDEH029A1)
-	{
+	if (driver_eink_dev_type == DRIVER_EINK_GDEH029A1) {
 		/* initialize GDEH029A1 */
-
-		// Hardware reset
-		driver_eink_dev_reset();
-
-		// Software reset
-		driver_eink_dev_write_command(0x12);
-
-		// 0C: booster soft start control
-		driver_eink_dev_write_command_p3(0x0c, 0xd7, 0xd6, 0x9d);
-
-		// 2C: write VCOM register
-		driver_eink_dev_write_command_p1(0x2c, 0xa8); // VCOM 7c
-
-		// 11: data entry mode setting
-		driver_eink_dev_write_command_p1(0x11, 0x03); // X inc, Y inc
+		driver_eink_dev_reset(); // Hardware reset
+		driver_eink_dev_write_command(0x12); // Software reset
+		driver_eink_dev_write_command_p3(0x0c, 0xd7, 0xd6, 0x9d); // 0C: booster soft start control
+		driver_eink_dev_write_command_p1(0x2c, 0xa8); // 2C: write VCOM register (VCOM 7c)
+		driver_eink_dev_write_command_p1(0x11, 0x03); // 11: data entry mode setting (X inc, Y inc)
 	}
 
 	if (driver_eink_dev_type == DRIVER_EINK_DEPG0290B1)
 	{
 		/* initialize DEPG0290B01 */
-
-		// Hardware reset
-		driver_eink_dev_reset();
-
-		// Software reset
-		driver_eink_dev_write_command(0x12);
-
-		// Set analog block control
-		driver_eink_dev_write_command_p1(0x74, 0x54);
-
-		// Set digital block control
-		driver_eink_dev_write_command_p1(0x7E, 0x3B);
-
-		// Set display size and driver output control
-		driver_eink_dev_write_command_p3(0x01, 0x27, 0x01, 0x00);
-
-		// Ram data entry mode
-		// Adress counter is updated in Y direction, Y increment, X increment
-		driver_eink_dev_write_command_p1(0x11, 0x03);
-
-		// Set RAM X address (00h to 0Fh)
-		driver_eink_dev_write_command_p2(0x44, 0x00, 0x0F);
-
-		// Set RAM Y address (0127h to 0000h)
-		driver_eink_dev_write_command_p4(0x45, 0x00, 0x00, 0x27, 0x01);
-
-		// Set border waveform for VBD (see datasheet)
-		driver_eink_dev_write_command_p1(0x3C, 0x01);
-
-		// SET VOLTAGE
-
-		// Set VCOM value
-		driver_eink_dev_write_command_p1(0x2C, 0x26);
-
-		// Gate voltage setting (17h = 20 Volt, ranges from 10v to 21v)
-		driver_eink_dev_write_command_p1(0x03, 0x17);
-
-		// Source voltage setting (15volt, 0 volt and -15 volt)
-		driver_eink_dev_write_command_p3(0x04, 0x41, 0x00, 0x32);
+		driver_eink_dev_reset(); // Hardware reset
+		driver_eink_dev_write_command(0x12); // Software reset
+		driver_eink_dev_write_command_p1(0x74, 0x54); // Set analog block control
+		driver_eink_dev_write_command_p1(0x7E, 0x3B); // Set digital block control
+		driver_eink_dev_write_command_p3(0x01, 0x27, 0x01, 0x00); // Set display size and driver output control
+		driver_eink_dev_write_command_p1(0x11, 0x03); // Ram data entry mode (Adress counter is updated in Y direction, Y increment, X increment)
+		driver_eink_dev_write_command_p2(0x44, 0x00, 0x0F); // Set RAM X address (00h to 0Fh)
+		driver_eink_dev_write_command_p4(0x45, 0x00, 0x00, 0x27, 0x01); // Set RAM Y address (0127h to 0000h)
+		driver_eink_dev_write_command_p1(0x3C, 0x01); // Set border waveform for VBD (see datasheet)
+		driver_eink_dev_write_command_p1(0x2C, 0x26); // Set VCOM value (SET VOLTAGE)
+		driver_eink_dev_write_command_p1(0x03, 0x17); // Gate voltage setting (17h = 20 Volt, ranges from 10v to 21v) (SET VOLTAGE)
+		driver_eink_dev_write_command_p3(0x04, 0x41, 0x00, 0x32); // Source voltage setting (15volt, 0 volt and -15 volt) (SET VOLTAGE)
 	}
 
 	driver_eink_init_done = true;

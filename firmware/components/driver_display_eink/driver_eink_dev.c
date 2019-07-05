@@ -17,10 +17,10 @@
 #include <driver/spi_master.h>
 #include <esp_heap_caps.h>
 
-#include "driver_pins.h"
-#include "driver_base.h"
-#include "driver_spi.h"
-#include "driver_eink_dev.h"
+#include <driver_vspi.h>
+#include "include/driver_eink_dev.h"
+
+#ifdef CONFIG_DRIVER_EINK_ENABLE
 
 #ifndef LOW
 #define LOW 0
@@ -42,8 +42,6 @@ static const char *TAG = "driver_eink_dev";
 
 enum driver_eink_dev_t driver_eink_dev_type = DRIVER_EINK_DEFAULT;
 
-#ifdef PIN_NUM_EPD_RESET
-
 static spi_device_handle_t spi_bus = NULL;
 
 // forward declarations
@@ -60,9 +58,9 @@ driver_eink_dev_claim_spi(void)
 	driver_vspi_release_and_claim(driver_eink_dev_release_spi);
 
 	static const spi_bus_config_t buscfg = {
-		.mosi_io_num     = PIN_NUM_EPD_MOSI,
+		.mosi_io_num     = CONFIG_PIN_NUM_EPD_MOSI,
 		.miso_io_num     = -1, // MISO is not used, we are transferring to the slave only
-		.sclk_io_num     = PIN_NUM_EPD_CLK,
+		.sclk_io_num     = CONFIG_PIN_NUM_EPD_CLK,
 		.quadwp_io_num   = -1,
 		.quadhd_io_num   = -1,
 		.max_transfer_sz = SPI_TRANSFER_SIZE,
@@ -74,7 +72,7 @@ driver_eink_dev_claim_spi(void)
 	static const spi_device_interface_config_t devcfg = {
 		.clock_speed_hz = 20 * 1000 * 1000,
 		.mode           = 0,  // SPI mode 0
-		.spics_io_num   = PIN_NUM_EPD_CS,
+		.spics_io_num   = CONFIG_PIN_NUM_EPD_CS,
 		.queue_size     = 1,
 		.flags          = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE), // We are sending only in one direction (to the ePaper slave)
 		.pre_cb         = driver_spi_pre_transfer_callback,            // Specify pre-transfer callback to handle D/C line
@@ -106,13 +104,13 @@ driver_eink_dev_release_spi(void)
 
 esp_err_t
 driver_eink_dev_reset(void) {
-	esp_err_t res = gpio_set_level(PIN_NUM_EPD_RESET, LOW);
+	esp_err_t res = gpio_set_level(CONFIG_PIN_NUM_EPD_RESET, LOW);
 	if (res != ESP_OK)
 		return res;
 
 	ets_delay_us(200000);
 
-	res = gpio_set_level(PIN_NUM_EPD_RESET, HIGH);
+	res = gpio_set_level(CONFIG_PIN_NUM_EPD_RESET, HIGH);
 	if (res != ESP_OK)
 		return res;
 
@@ -124,7 +122,7 @@ driver_eink_dev_reset(void) {
 bool
 driver_eink_dev_is_busy(void)
 {
-	return gpio_get_level(PIN_NUM_EPD_BUSY);
+	return gpio_get_level(CONFIG_PIN_NUM_EPD_BUSY);
 }
 
 // semaphore to trigger on gde-busy signal
@@ -165,7 +163,7 @@ static
 void driver_spi_pre_transfer_callback(spi_transaction_t *t)
 {
 	uint8_t dc_level = *((uint8_t *) t->user);
-	gpio_set_level(PIN_NUM_EPD_DATA, (int) dc_level);
+	gpio_set_level(CONFIG_PIN_NUM_EPD_DATA, (int) dc_level);
 }
 
 
@@ -260,8 +258,7 @@ driver_eink_dev_write_command_stream_u32(uint8_t command, const uint32_t *data,
 	ESP_LOGI(TAG, "Done");
 }
 
-esp_err_t
-driver_eink_dev_init(enum driver_eink_dev_t dev_type)
+esp_err_t driver_eink_dev_init(enum driver_eink_dev_t dev_type)
 {
 	static bool driver_eink_dev_init_done = false;
 
@@ -274,30 +271,19 @@ driver_eink_dev_init(enum driver_eink_dev_t dev_type)
 	driver_vspi_init();
 
 	driver_eink_dev_type = dev_type;
-
-	esp_err_t res = driver_base_init();
-	if (res != ESP_OK)
-		return res;
-
-#ifdef PIN_NUM_LED
-	gpio_pad_select_gpio(PIN_NUM_LED);
-	res = gpio_set_direction(PIN_NUM_LED, GPIO_MODE_OUTPUT);
-	if (res != ESP_OK)
-		return res;
-#endif // PIN_NUM_LED
-
+	
 	driver_eink_dev_intr_trigger = xSemaphoreCreateBinary();
 	if (driver_eink_dev_intr_trigger == NULL)
 		return ESP_ERR_NO_MEM;
 
-	res = gpio_isr_handler_add(PIN_NUM_EPD_BUSY, driver_eink_dev_intr_handler, NULL);
+	esp_err_t res = gpio_isr_handler_add(CONFIG_PIN_NUM_EPD_BUSY, driver_eink_dev_intr_handler, NULL);
 	if (res != ESP_OK)
 		return res;
 
 	gpio_config_t io_conf = {
 		.intr_type    = GPIO_INTR_ANYEDGE,
 		.mode         = GPIO_MODE_INPUT,
-		.pin_bit_mask = 1LL << PIN_NUM_EPD_BUSY,
+		.pin_bit_mask = 1LL << CONFIG_PIN_NUM_EPD_BUSY,
 		.pull_down_en = 0,
 		.pull_up_en   = 1,
 	};
@@ -305,19 +291,19 @@ driver_eink_dev_init(enum driver_eink_dev_t dev_type)
 	if (res != ESP_OK)
 		return res;
 
-	res = gpio_set_direction(PIN_NUM_EPD_CS, GPIO_MODE_OUTPUT);
+	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_CS, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK)
 		return res;
 
-	res = gpio_set_direction(PIN_NUM_EPD_DATA, GPIO_MODE_OUTPUT);
+	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_DATA, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK)
 		return res;
 
-	res = gpio_set_direction(PIN_NUM_EPD_RESET, GPIO_MODE_OUTPUT);
+	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_RESET, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK)
 		return res;
 
-	res = gpio_set_direction(PIN_NUM_EPD_BUSY, GPIO_MODE_INPUT);
+	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_BUSY, GPIO_MODE_INPUT);
 	if (res != ESP_OK)
 		return res;
 
@@ -377,4 +363,4 @@ driver_eink_dev_write_command_stream_u32(uint8_t command, const uint32_t *data,
 {
 }
 
-#endif // PIN_NUM_EPD_RESET
+#endif

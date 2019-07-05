@@ -16,9 +16,9 @@ enum driver_eink_dev_t {
 /**
  * DRIVER_EINK_DEFAULT specifies the compile-time default display type
  */
-#if defined(CONFIG_DRIVER_EINK_DEF_DEPG0290B1)
+#if defined(CONFIG_DRIVER_EINK_TYPE_NONE)
  #define DRIVER_EINK_DEFAULT DRIVER_EINK_DEPG0290B1
-#elif defined(CONFIG_DRIVER_EINK_DEF_GDEH029A1)
+#elif defined(CONFIG_DRIVER_EINK_TYPE_GDEH029A1)
  #define DRIVER_EINK_DEFAULT DRIVER_EINK_GDEH029A1
 #else
  #define DRIVER_EINK_DEFAULT DRIVER_EINK_NONE

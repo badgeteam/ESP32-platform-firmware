@@ -5,8 +5,10 @@
 
 #include <esp_log.h>
 
-#include "driver_eink_dev.h"
-#include "driver_eink_lut.h"
+#include "include/driver_eink_dev.h"
+#include "include/driver_eink_lut.h"
+
+#ifdef CONFIG_DRIVER_EINK_ENABLE
 
 static const char *TAG = "driver_eink_lut";
 
@@ -229,3 +231,5 @@ driver_eink_lut_generate(const struct driver_eink_lut_entry *list, enum driver_e
 
 	return 0;
 }
+
+#endif

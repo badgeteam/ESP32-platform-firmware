@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <esp_err.h>
 
-#include <driver_eink_types.h>
+#include "driver_eink_types.h"
 
 /** the width of the eink display */
 #define DRIVER_EINK_WIDTH  296
@@ -20,7 +20,7 @@ __BEGIN_DECLS
 /** Initialize the eink display
  * @return ESP_OK on success; any other value indicates an error
  */
-extern esp_err_t driver_eink_init(enum driver_eink_dev_t dev_type);
+extern esp_err_t driver_eink_init();
 
 /** driver_eink_update 'lut' settings */
 enum driver_eink_lut

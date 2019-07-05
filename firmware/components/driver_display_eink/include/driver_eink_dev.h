@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <esp_err.h>
 
-#include <driver_eink_types.h>
+#include "driver_eink_types.h"
 
 /** the number of horizontal pixels
  * @note the display is rotated 90 degrees
