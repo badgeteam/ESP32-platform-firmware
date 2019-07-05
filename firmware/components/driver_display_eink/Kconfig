@@ -1,0 +1,53 @@
+menu "Driver: E-ink display"
+	config DRIVER_EINK_ENABLE
+		depends on DRIVER_VSPI_ENABLE
+		bool "Enable the e-ink display driver"
+		default n
+	
+	choice
+		depends on DRIVER_VSPI_ENABLE
+		prompt "E-ink default type"
+		default DRIVER_EINK_TYPE_DEPG0290B1
+	config DRIVER_EINK_TYPE_NONE
+		bool "None"
+	config DRIVER_EINK_TYPE_GDEH029A1
+		bool "GDEH029A1"
+	config DRIVER_EINK_TYPE_DEPG0290B1
+		bool "DEPG0290B1"
+	endchoice
+	
+	config EPD_ROTATED_180
+		depends on DRIVER_EINK_ENABLE
+		bool "Rotate the e-ink display by 180 degrees"
+		default y
+	
+	config PIN_NUM_EPD_RESET
+		depends on DRIVER_EINK_ENABLE
+		int "GPIO pin used for e-ink reset"
+		default 23
+		
+	config PIN_NUM_EPD_BUSY
+		depends on DRIVER_EINK_ENABLE
+		int "GPIO pin used for e-ink busy"
+		default 22
+	
+	config PIN_NUM_EPD_MOSI
+		depends on DRIVER_EINK_ENABLE
+		int "GPIO pin used for e-ink MOSI"
+		default 5
+	
+	config PIN_NUM_EPD_CLK
+		depends on DRIVER_EINK_ENABLE
+		int "GPIO pin used for e-ink CLK"
+		default 18
+	
+	config PIN_NUM_EPD_CS
+		depends on DRIVER_EINK_ENABLE
+		int "GPIO pin used for e-ink CS"
+		default 19
+	
+	config PIN_NUM_EPD_DATA
+		depends on DRIVER_EINK_ENABLE
+		int "GPIO pin used for e-ink DATA"
+		default 21
+endmenu
