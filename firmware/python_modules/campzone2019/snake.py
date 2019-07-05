@@ -1,4 +1,4 @@
-import defines, rgb, buttons
+import defines, rgb, buttons, system
 from random import randint
 from time import sleep
 
@@ -20,25 +20,35 @@ def render():
 
 
 def input_up(pressed):
+    global direction
     direction = UP
 
 
 def input_down(pressed):
+    global direction
     direction = DOWN
 
 
 def input_left(pressed):
+    global direction
     direction = LEFT
 
 
 def input_right(pressed):
+    global direction
     direction = RIGHT
+
+
+def input_B(pressed):
+    global direction
+    direction = defines.BTN_B
 
 
 buttons.register(UP, input_up)
 buttons.register(DOWN, input_down)
 buttons.register(LEFT, input_left)
 buttons.register(RIGHT, input_right)
+buttons.register(defines.BTN_B, input_B)
 
 while direction != defines.BTN_B:
 
@@ -71,3 +81,5 @@ while direction != defines.BTN_B:
     sleep(0.5)
 
 rgb.scrolltext("Score - " + str(score))
+sleep(5)
+system.reboot()
