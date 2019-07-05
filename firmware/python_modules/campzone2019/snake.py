@@ -7,11 +7,12 @@ UP, DOWN, LEFT, RIGHT = defines.BTN_UP, defines.BTN_DOWN, defines.BTN_LEFT, defi
 direction = RIGHT
 score = 0
 
-snake = [(8, 4), (9, 4), (10, 4)]
-food = (randint(0, rgb.PANEL_WIDTH), randint(0, rgb.PANEL_HEIGHT))
+snake = [(10, 4), (8, 4), (9, 4)]
+food = (24, 6)
 
 def render():
     rgb.clear()
+    rgb.background((0,0,0))
 
     for x,y in snake:
         rgb.pixel((255, 255, 255), (x, y))
@@ -21,22 +22,26 @@ def render():
 
 def input_up(pressed):
     global direction
-    direction = UP
+    if direction != DOWN:
+        direction = UP
 
 
 def input_down(pressed):
     global direction
-    direction = DOWN
+    if direction != UP:
+        direction = DOWN
 
 
 def input_left(pressed):
     global direction
-    direction = LEFT
+    if direction != RIGHT:
+        direction = LEFT
 
 
 def input_right(pressed):
     global direction
-    direction = RIGHT
+    if direction != LEFT:
+        direction = RIGHT
 
 
 def input_B(pressed):
@@ -54,7 +59,7 @@ while direction != defines.BTN_B:
 
     cur_x, cur_y = snake[0]
     new_x, new_y = (cur_x + (1 if direction == RIGHT else (-1 if direction == LEFT else 0)),
-                     cur_y + (1 if direction == UP else (-1 if direction == DOWN else 0)))
+                     cur_y + (1 if direction == DOWN else (-1 if direction == UP else 0)))
 
     # Make snake loop from one border to the other
     new_x %= rgb.PANEL_WIDTH
@@ -62,7 +67,10 @@ while direction != defines.BTN_B:
     snake.insert(0, (new_x, new_y))
 
     # If snake bites itself, the game's over
-    # if snake[0] in snake[1:]: break
+    if snake[0] in snake[1:]:
+        print('dead')
+        pass
+        # break
 
     if snake[0] == food:
         # Snake eats the food
@@ -71,15 +79,16 @@ while direction != defines.BTN_B:
 
         # Spawn new food
         while food == []:
-            food = (randint(0, rgb.PANEL_WIDTH), randint(0, rgb.PANEL_HEIGHT))
+            food = (randint(0, rgb.PANEL_WIDTH-1), randint(0, rgb.PANEL_HEIGHT-1))
             if food in snake: food = []
     else:
         # Remove last entry from tail (snake didn't grow)
         last = snake.pop()
 
     render()
-    sleep(0.5)
+    sleep(0.2)
 
+rgb.clear()
 rgb.scrolltext("Score - " + str(score))
-sleep(5)
+sleep(4)
 system.reboot()
