@@ -295,6 +295,10 @@ extern const struct _mp_obj_module_t i2c_module;
 extern const struct _mp_obj_module_t mpr121_module;
 #endif
 
+#ifdef CONFIG_DRIVER_ERC12864_ENABLE
+extern const struct _mp_obj_module_t erc12864_module;
+#endif
+
 #ifdef CONFIG_DRIVER_NEOPIXEL_ENABLE
 extern const struct _mp_obj_module_t neopixel_module;
 #endif
@@ -353,6 +357,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_MPR121
 #endif
 
+#ifdef CONFIG_DRIVER_ERC12864_ENABLE
+#define BUILTIN_MODULE_ERC12864 { MP_OBJ_NEW_QSTR(MP_QSTR_erc12864), (mp_obj_t)&erc12864_module },
+#else
+#define BUILTIN_MODULE_ERC12864
+#endif
+
 #ifdef CONFIG_DRIVER_NEOPIXEL_ENABLE
 #define BUILTIN_MODULE_NEOPIXEL { MP_OBJ_NEW_QSTR(MP_QSTR_neopixel), (mp_obj_t)&neopixel_module },
 #else
@@ -379,6 +389,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
     { MP_OBJ_NEW_QSTR(MP_QSTR_esp), (mp_obj_t)&esp_module }, \
     BUILTIN_MODULE_I2C \
     BUILTIN_MODULE_MPR121 \
+    BUILTIN_MODULE_ERC12864 \
     BUILTIN_MODULE_NEOPIXEL \
     BUILTIN_MODULE_HUB75 \
 
