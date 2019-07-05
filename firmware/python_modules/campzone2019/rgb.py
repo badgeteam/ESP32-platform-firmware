@@ -24,3 +24,9 @@ def scrolltext(text, color=(255, 255, 255), pos=(0, 0), width=PANEL_WIDTH):
 def background(color=(0, 0, 0)):
     r, g, b = color
     hub75.background(r, g, b)
+
+
+def pixel(color=(255, 255, 255), pos=(0,0)):
+    r, g, b = color
+    x, y = pos
+    hub75.pixel(r, g, b, x, y)
