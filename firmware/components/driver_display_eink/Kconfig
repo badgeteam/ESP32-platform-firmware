@@ -16,6 +16,11 @@ menu "Driver: E-ink display"
 		bool "DEPG0290B1"
 	endchoice
 	
+	config EPD_ROTATED_180
+		depends on DRIVER_EINK_ENABLE
+		bool "Rotate the e-ink display by 180 degrees"
+		default y
+	
 	config PIN_NUM_EPD_RESET
 		depends on DRIVER_EINK_ENABLE
 		int "GPIO pin used for e-ink reset"

@@ -63,7 +63,7 @@ static void memset_u32(uint32_t *dst, uint32_t value, size_t size)
 
 static void driver_eink_create_bitplane(const uint8_t *img, uint32_t *buf, int bit, driver_eink_flags_t flags)
 {
-#ifdef EPD_ROTATED_180
+#ifdef CONFIG_EPD_ROTATED_180
 	flags ^= DISPLAY_FLAG_ROTATE_180;
 #endif
 	int x, y;
@@ -364,6 +364,8 @@ esp_err_t driver_eink_init(void)
 		eink_type = DRIVER_EINK_DEFAULT;
 		nvs_set_u8(my_handle, "eink.dev.type", eink_type);
 	}
+	
+	printf("E-ink type is %d\n", eink_type);
 		
 	enum driver_eink_dev_t dev_type = eink_type;
 
@@ -382,6 +384,7 @@ esp_err_t driver_eink_init(void)
 
 	if (driver_eink_dev_type == DRIVER_EINK_GDEH029A1) {
 		/* initialize GDEH029A1 */
+		printf("E-ink init GDEH029A1\n");
 		driver_eink_dev_reset(); // Hardware reset
 		driver_eink_dev_write_command(0x12); // Software reset
 		driver_eink_dev_write_command_p3(0x0c, 0xd7, 0xd6, 0x9d); // 0C: booster soft start control
@@ -392,6 +395,7 @@ esp_err_t driver_eink_init(void)
 	if (driver_eink_dev_type == DRIVER_EINK_DEPG0290B1)
 	{
 		/* initialize DEPG0290B01 */
+		printf("E-ink init DEPG0290B01\n");
 		driver_eink_dev_reset(); // Hardware reset
 		driver_eink_dev_write_command(0x12); // Software reset
 		driver_eink_dev_write_command_p1(0x74, 0x54); // Set analog block control

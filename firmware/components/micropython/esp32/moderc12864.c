@@ -45,4 +45,4 @@ const mp_obj_module_t erc12864_module = {
 	.globals = (mp_obj_dict_t *)&erc12864_module_globals,
 };
 
-#endif // CONFIG_DRIVER_I2C_ENABLE
+#endif // CONFIG_DRIVER_ERC12864_ENABLE
