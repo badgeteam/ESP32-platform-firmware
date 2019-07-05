@@ -9,7 +9,8 @@ menu "Driver: SSD1306 OLED display"
 		int "SSD1306 I2C address"
 		default 60
 	
-	config PIN_NUM_SSD1306_INT
+	config PIN_NUM_SSD1306_RESET
 		depends on DRIVER_SSD1306_ENABLE
 		int "GPIO pin used for SSD1306 reset"
+		default 16
 endmenu

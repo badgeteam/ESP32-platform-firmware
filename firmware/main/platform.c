@@ -25,4 +25,5 @@ void platform_init()
 	INIT_DRIVER(neopixel)
 	INIT_DRIVER(erc12864)
 	INIT_DRIVER(ssd1306)
+	//INIT_DRIVER(eink)
 }
