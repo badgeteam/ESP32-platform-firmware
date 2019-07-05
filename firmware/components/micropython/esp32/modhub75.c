@@ -138,6 +138,28 @@ STATIC mp_obj_t hub75_image(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_image_obj, 5, 5, hub75_image);
 
+STATIC mp_obj_t hub75_pixel(size_t n_args, const mp_obj_t *args) {
+     int r = mp_obj_get_int(args[0]);
+     int g = mp_obj_get_int(args[1]);
+     int b = mp_obj_get_int(args[2]);
+     int x = mp_obj_get_int(args[3]);
+     int y = mp_obj_get_int(args[4]);
+
+     uint32_t *image = malloc(4);
+
+     Color k;
+     k.RGB[0] = r;
+     k.RGB[1] = g;
+     k.RGB[2] = b;
+
+     image[0] = k.value;
+     compositor_addImage((uint8_t *) image, x, y, 1, 1);
+
+     return mp_const_none;
+ }
+ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_pixel_obj, 5, 5, hub75_pixel);
+
+
 STATIC mp_obj_t hub75_gif(size_t n_args, const mp_obj_t *args) {
     mp_obj_t *mp_arr;
     size_t len;
@@ -198,6 +220,7 @@ STATIC const mp_rom_map_elem_t hub75_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_frame), MP_ROM_PTR(&hub75_frame_obj)},
     {MP_ROM_QSTR(MP_QSTR_gif), MP_ROM_PTR(&hub75_gif_obj)},
     {MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&hub75_image_obj)},
+{MP_ROM_QSTR(MP_QSTR_pixel), MP_ROM_PTR(&hub75_pixel_obj)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(hub75_module_globals, hub75_module_globals_table);
