@@ -1,5 +1,9 @@
 # Power management
 
+def clear_boot_magic():
+	esp.rtcmem_write(0, 0)
+	esp.rtcmem_write(1, 0)
+
 def reboot():
 	import machine
 	machine.deepsleep(2)
