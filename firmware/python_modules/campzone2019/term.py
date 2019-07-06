@@ -22,6 +22,7 @@ def header(cls = False, text = ""):
 		text = "- "+text
 	color(37, 44, 1)
 	# print(badge.deviceType.replace("_"," ")+" "+text+u"\r\n")
+	print(" "+text+u"\r\n")
 	color()
 	
 def draw_menu_item(text, selected, width=32):

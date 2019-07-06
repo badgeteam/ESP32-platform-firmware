@@ -9,7 +9,7 @@ current_index = 0
 
 
 def show_text(text):
-    rgb.background((0, 50, 40))
+    # rgb.background((0, 50, 40))
     rgb.scrolltext(text, (80, 80, 0))
 
 
