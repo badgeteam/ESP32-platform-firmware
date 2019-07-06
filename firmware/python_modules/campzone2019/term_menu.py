@@ -54,22 +54,13 @@ class UartMenu():
 	
 	def opt_about(self):
 		system.start("about", True)
-	
-	def opt_configure_services(self):
-		system.start("dashboard.terminal.services", True)
-		
-	def opt_configure_led(self):
-		system.start("dashboard.terminal.ledservice", True)
-	
-	def opt_configure_picture(self):
-		system.start("dashboard.terminal.picture", True)
 		
 	def opt_downloader(self):
 		system.start("dashboard.terminal.downloader", True)
 		
 	def menu_settings(self):
-		items = ["Change nickname", "Configure WiFi", "Set default orientation", "Homescreen services (beta)", "Homescreen LED animation", "Homescreen logo", "Update firmware", "< Return to main menu"]
-		callbacks = [self.opt_change_nickname, self.opt_configure_wifi, self.opt_configure_orientation, self.opt_configure_services, self.opt_configure_led, self.opt_configure_picture, self.opt_ota, self.menu_main, self.menu_main]
+		items = ["Change nickname", "Configure WiFi", "Update firmware", "< Return to main menu"]
+		callbacks = [self.opt_change_nickname, self.opt_configure_wifi, self.opt_ota, self.menu_main, self.menu_main]
 		cb = term.menu("Settings", items)
 		self.menu = callbacks[cb]
 	

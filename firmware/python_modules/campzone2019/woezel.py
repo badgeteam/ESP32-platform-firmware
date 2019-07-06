@@ -154,14 +154,14 @@ def get_pkg_metadata(name):
         f.close()
 
 def get_pkg_list():
-    f = url_open("https://badge.team/basket/hackerhotel2019/list/json")
+    f = url_open("https://badge.team/basket/campzone2019/list/json")
     try:
         return json.load(f)
     finally:
         f.close()
 
 def search_pkg_list(query):
-    f = url_open("https://badge.team/basket/hackerhotel2019/search/%s/json" % query)
+    f = url_open("https://badge.team/basket/campzone2019/search/%s/json" % query)
     try:
         return json.load(f)
     finally:

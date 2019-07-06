@@ -37,7 +37,8 @@ def state():
     return userResponseTime
 
 def usb_attached():
-    return badge.usb_volt_sense() > 4500
+    pass
+    # return badge.usb_volt_sense() > 4500
 
 def pm_task():
     ''' The power management task [internal function] '''

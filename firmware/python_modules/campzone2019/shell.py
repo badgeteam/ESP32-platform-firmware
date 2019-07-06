@@ -1,2 +1,2 @@
-import system
-system.shell(True)
+# Causes shell to appear
+pass

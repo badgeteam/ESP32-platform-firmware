@@ -1,55 +1,49 @@
-import ugfx, appglue, term, sys, time, version, easydraw
+import system, term, sys, time, version, buttons
+import defines, rgb
 
 names = [
+    "Tom Clement", "Renze Nicolai", "Joris Witteman",
+    "Pim de Groot", "Khaled Nassar", "Evan Mandos",
     "Niek Blankers", "Sebastian Oort", "Bas van Sisseren",
     "Jeroen Domburg", "Christel Sanders", "Markus Bechtold",
-    "Thomas Roos", "Anne Jan Brouwer", "Renze Nicolai",
+    "Tom Clement", "Prof. Herr Lord I.B. Mobach",
+    "Thomas Roos", "Anne Jan Brouwer",
     "Aram Verstegen", "Arnout Engelen", "Alexandre Dulaunoy",
     "Eric Poulsen", "Damien P. George", "Heikki Juva",
     "Teemu Hakala", "Kliment", "Windytan",
     "Purkkaviritys", "Otto Raila", "Jaga",
-    "uGFX", "EMF Badge Team", "Tom Clement", "Khaled Nassar", "Evan Mandos", "",
-    "", "Press back or start", "to quit!"]
-
+    "uGFX", "EMF Badge Team", "MicroPython", "Loboris", " ",
+    " ", "BADGE.TEAM"]
 
 def action_exit(pushed):
     if (pushed):
-        appglue.home()
-
+        system.home()
 
 def show_names():
     global names
     c = False
     y = 10
-    nos = 0
-    ugfx.clear()
 
     term.header(True, "About")
     print("Developers:")
     for n in range(0, len(names)):
-        if (names[n] == ""):
+        if (names[n]==" "):
             break
-        print(" - " + names[n])
+        print(" - "+names[n])
 
-    nos = 9999
+    rgb.scrolltext("Your badge was made possible by:")
+    time.sleep(3)
 
     for n in range(0, len(names)):
-        if (nos > 3):
-            if (nos < 900):
-                time.sleep(2)
-            nos = 0
-            easydraw.msg("", "Thank you!", True)
-        easydraw.msg(names[n])
-        nos += 1
+        rgb.scrolltext(names[n])
+        time.sleep(0.5)
 
+    rgb.scrolltext("Press A or B to quit!")
 
 def main():
-    ugfx.input_init()
-    ugfx.input_attach(ugfx.BTN_B, action_exit)
-    ugfx.input_attach(ugfx.BTN_START, action_exit)
-    show_names()
-    sys.stdin.read(1)  # Wait for any key
-    action_exit(True)
+    buttons.register(defines.BTN_A, action_exit)
+    buttons.register(defines.BTN_B, action_exit)
 
+    show_names()
 
 main()
