@@ -6,7 +6,7 @@ menu "Driver: MPR121 touch input"
 	config I2C_ADDR_MPR121
 		depends on DRIVER_MPR121_ENABLE
 		int "MPR121 I2C address"
-		default 0
+		default 90
 		
 	config PIN_NUM_MPR121_INT
 		depends on DRIVER_MPR121_ENABLE

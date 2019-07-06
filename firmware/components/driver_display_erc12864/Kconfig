@@ -1,0 +1,16 @@
+menu "Driver: ERC12864 LCD display"
+	config DRIVER_ERC12864_ENABLE
+		depends on DRIVER_I2C_ENABLE
+		bool "Enable the ERC12864 display driver"
+		default n
+	
+	config I2C_ADDR_ERC12864
+		depends on DRIVER_ERC12864_ENABLE
+		int "ERC12864 I2C address"
+		default 56
+	
+	config ERC12864_FLIP
+		depends on DRIVER_ERC12864_ENABLE
+		bool "Flip display 180 degrees"
+		default y
+endmenu

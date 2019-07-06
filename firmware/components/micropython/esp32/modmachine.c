@@ -667,6 +667,106 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(machine_random_obj, 1, 2, machine_random);
 // ==== NVS Support ===================================================================
 
 //------------------------------------------------------------------------
+STATIC mp_obj_t mod_machine_nvs_set_u8 (mp_obj_t _handle, mp_obj_t _key, mp_obj_t _value) {
+	const char *handle = mp_obj_str_get_str(_handle);
+    const char *key = mp_obj_str_get_str(_key);
+    uint8_t value = mp_obj_get_int_truncated(_value);
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
+
+    esp_err_t esp_err = nvs_set_u8(my_handle, key, value);
+    if (ESP_OK == esp_err) {
+        nvs_commit(my_handle);
+    }
+    else if (ESP_ERR_NVS_NOT_ENOUGH_SPACE == esp_err || ESP_ERR_NVS_PAGE_FULL == esp_err || ESP_ERR_NVS_NO_FREE_PAGES == esp_err) {
+        mp_raise_msg(&mp_type_OSError, "No space available.");
+    }
+    else if (ESP_ERR_NVS_INVALID_NAME == esp_err || ESP_ERR_NVS_KEY_TOO_LONG == esp_err) {
+        mp_raise_msg(&mp_type_OSError, "Key invalid or too long");
+    }
+    nvs_close(my_handle);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_machine_nvs_set_u8_obj, mod_machine_nvs_set_u8);
+
+//-------------------------------------------------------
+STATIC mp_obj_t mod_machine_nvs_get_u8 (mp_obj_t _handle, mp_obj_t _key) {
+    const char *handle = mp_obj_str_get_str(_handle);
+    const char *key = mp_obj_str_get_str(_key);
+    uint8_t value = 0;
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
+
+    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u8(my_handle, key, &value)) {
+		nvs_close(my_handle);
+        return mp_const_none;
+    }
+    nvs_close(my_handle);
+    return mp_obj_new_int(value);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_machine_nvs_get_u8_obj, mod_machine_nvs_get_u8);
+
+//------------------------------------------------------------------------
+STATIC mp_obj_t mod_machine_nvs_set_u16 (mp_obj_t _handle, mp_obj_t _key, mp_obj_t _value) {
+	const char *handle = mp_obj_str_get_str(_handle);
+    const char *key = mp_obj_str_get_str(_key);
+    uint16_t value = mp_obj_get_int_truncated(_value);
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
+
+    esp_err_t esp_err = nvs_set_u16(my_handle, key, value);
+    if (ESP_OK == esp_err) {
+        nvs_commit(my_handle);
+    }
+    else if (ESP_ERR_NVS_NOT_ENOUGH_SPACE == esp_err || ESP_ERR_NVS_PAGE_FULL == esp_err || ESP_ERR_NVS_NO_FREE_PAGES == esp_err) {
+        mp_raise_msg(&mp_type_OSError, "No space available.");
+    }
+    else if (ESP_ERR_NVS_INVALID_NAME == esp_err || ESP_ERR_NVS_KEY_TOO_LONG == esp_err) {
+        mp_raise_msg(&mp_type_OSError, "Key invalid or too long");
+    }
+    nvs_close(my_handle);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_machine_nvs_set_u16_obj, mod_machine_nvs_set_u16);
+
+//-------------------------------------------------------
+STATIC mp_obj_t mod_machine_nvs_get_u16 (mp_obj_t _handle, mp_obj_t _key) {
+    const char *handle = mp_obj_str_get_str(_handle);
+    const char *key = mp_obj_str_get_str(_key);
+    uint16_t value = 0;
+	
+	nvs_handle my_handle;
+	esp_err_t res = nvs_open(handle, NVS_READWRITE, &my_handle);
+	if (res != ESP_OK) {
+		mp_raise_ValueError("NVS handle not found!");
+		return mp_const_none;
+	}
+
+    if (ESP_ERR_NVS_NOT_FOUND == nvs_get_u16(my_handle, key, &value)) {
+		nvs_close(my_handle);
+        return mp_const_none;
+    }
+    nvs_close(my_handle);
+    return mp_obj_new_int(value);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_machine_nvs_get_u16_obj, mod_machine_nvs_get_u16);
+
+//------------------------------------------------------------------------
 STATIC mp_obj_t mod_machine_nvs_set_int (mp_obj_t _handle, mp_obj_t _key, mp_obj_t _value) {
 	const char *handle = mp_obj_str_get_str(_handle);
     const char *key = mp_obj_str_get_str(_key);
@@ -1023,6 +1123,11 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
         { MP_ROM_QSTR(MP_QSTR_SetStackSize),			MP_ROM_PTR(&mod_machine_set_stack_size_obj) },
         { MP_ROM_QSTR(MP_QSTR_SetHeapSize),				MP_ROM_PTR(&mod_machine_set_heap_size_obj) },
 
+        { MP_OBJ_NEW_QSTR(MP_QSTR_nvs_set_u8),			MP_ROM_PTR(&mod_machine_nvs_set_u8_obj) },
+        { MP_OBJ_NEW_QSTR(MP_QSTR_nvs_get_u8),			MP_ROM_PTR(&mod_machine_nvs_get_u8_obj) },
+        { MP_OBJ_NEW_QSTR(MP_QSTR_nvs_set_u16),			MP_ROM_PTR(&mod_machine_nvs_set_u16_obj) },
+        { MP_OBJ_NEW_QSTR(MP_QSTR_nvs_get_u16),			MP_ROM_PTR(&mod_machine_nvs_get_u16_obj) },
+        
         { MP_OBJ_NEW_QSTR(MP_QSTR_nvs_setint),			MP_ROM_PTR(&mod_machine_nvs_set_int_obj) },
         { MP_OBJ_NEW_QSTR(MP_QSTR_nvs_getint),			MP_ROM_PTR(&mod_machine_nvs_get_int_obj) },
         { MP_OBJ_NEW_QSTR(MP_QSTR_nvs_setstr),			MP_ROM_PTR(&mod_machine_nvs_set_str_obj) },

@@ -22,4 +22,8 @@ void platform_init()
 	INIT_DRIVER(i2c)
 	INIT_DRIVER(hub75)
 	INIT_DRIVER(mpr121)
+	INIT_DRIVER(neopixel)
+	INIT_DRIVER(erc12864)
+	INIT_DRIVER(ssd1306)
+	INIT_DRIVER(eink)
 }

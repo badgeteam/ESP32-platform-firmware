@@ -102,6 +102,10 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp_http_client/lib/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_bus_i2c/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_hub75/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_input_mpr121/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_erc12864/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ssd1306/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include
 
 
 
@@ -177,6 +181,10 @@ SRC_C =  $(addprefix esp32/,\
 	modesp.c \
 	esprtcmem.c \
 	modmpr121.c \
+	moderc12864.c \
+	modneopixel.c \
+	modssd1306.c \
+	modeink.c \
 	)
 
 ifdef CONFIG_DRIVER_I2C_ENABLE

@@ -295,6 +295,22 @@ extern const struct _mp_obj_module_t i2c_module;
 extern const struct _mp_obj_module_t mpr121_module;
 #endif
 
+#ifdef CONFIG_DRIVER_ERC12864_ENABLE
+extern const struct _mp_obj_module_t erc12864_module;
+#endif
+
+#ifdef CONFIG_DRIVER_SSD1306_ENABLE
+extern const struct _mp_obj_module_t ssd1306_module;
+#endif
+
+#ifdef CONFIG_DRIVER_EINK_ENABLE
+extern const struct _mp_obj_module_t eink_module;
+#endif
+
+#ifdef CONFIG_DRIVER_NEOPIXEL_ENABLE
+extern const struct _mp_obj_module_t neopixel_module;
+#endif
+
 #ifdef CONFIG_MICROPY_USE_REQUESTS
 extern const struct _mp_obj_module_t mp_module_requests;
 #define BUILTIN_MODULE_REQUESTS { MP_OBJ_NEW_QSTR(MP_QSTR_requests), (mp_obj_t)&mp_module_requests },
@@ -349,6 +365,30 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_MPR121
 #endif
 
+#ifdef CONFIG_DRIVER_ERC12864_ENABLE
+#define BUILTIN_MODULE_ERC12864 { MP_OBJ_NEW_QSTR(MP_QSTR_erc12864), (mp_obj_t)&erc12864_module },
+#else
+#define BUILTIN_MODULE_ERC12864
+#endif
+
+#ifdef CONFIG_DRIVER_SSD1306_ENABLE
+#define BUILTIN_MODULE_SSD1306 { MP_OBJ_NEW_QSTR(MP_QSTR_ssd1306), (mp_obj_t)&ssd1306_module },
+#else
+#define BUILTIN_MODULE_SSD1306
+#endif
+
+#ifdef CONFIG_DRIVER_EINK_ENABLE
+#define BUILTIN_MODULE_EINK { MP_OBJ_NEW_QSTR(MP_QSTR_eink), (mp_obj_t)&eink_module },
+#else
+#define BUILTIN_MODULE_EINK
+#endif
+
+#ifdef CONFIG_DRIVER_NEOPIXEL_ENABLE
+#define BUILTIN_MODULE_NEOPIXEL { MP_OBJ_NEW_QSTR(MP_QSTR_neopixel), (mp_obj_t)&neopixel_module },
+#else
+#define BUILTIN_MODULE_NEOPIXEL
+#endif
+
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 #define BUILTIN_MODULE_HUB75 { MP_OBJ_NEW_QSTR(MP_QSTR_hub75), (mp_obj_t)&hub75_module },
 #else
@@ -369,7 +409,11 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
     { MP_OBJ_NEW_QSTR(MP_QSTR_esp), (mp_obj_t)&esp_module }, \
     BUILTIN_MODULE_I2C \
     BUILTIN_MODULE_MPR121 \
+    BUILTIN_MODULE_ERC12864 \
+    BUILTIN_MODULE_SSD1306 \
+    BUILTIN_MODULE_NEOPIXEL \
     BUILTIN_MODULE_HUB75 \
+    BUILTIN_MODULE_EINK \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_binascii), (mp_obj_t)&mp_module_ubinascii }, \
@@ -436,7 +480,7 @@ typedef long mp_off_t;
 
 // board specifics
 
-#define MICROPY_PY_SYS_PLATFORM "esp32_LoBo"
+#define MICROPY_PY_SYS_PLATFORM "BADGE.TEAM ESP32"
 #define MICROPY_HW_BOARD_NAME   CONFIG_MICROPY_HW_BOARD_NAME
 #define MICROPY_HW_MCU_NAME     CONFIG_MICROPY_HW_MCU_NAME
 #define MICROPY_TIMEZONE        CONFIG_MICROPY_TIMEZONE

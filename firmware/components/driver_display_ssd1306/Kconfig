@@ -1,0 +1,16 @@
+menu "Driver: SSD1306 OLED display"
+	config DRIVER_SSD1306_ENABLE
+		depends on DRIVER_I2C_ENABLE
+		bool "Enable the SSD1306 display driver"
+		default n
+	
+	config I2C_ADDR_SSD1306
+		depends on DRIVER_SSD1306_ENABLE
+		int "SSD1306 I2C address"
+		default 60
+	
+	config PIN_NUM_SSD1306_RESET
+		depends on DRIVER_SSD1306_ENABLE
+		int "GPIO pin used for SSD1306 reset"
+		default 16
+endmenu

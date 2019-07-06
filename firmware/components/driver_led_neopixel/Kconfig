@@ -1,0 +1,21 @@
+menu "Driver: Neopixel LED driver"
+	depends on DRIVER_VSPI_ENABLE
+	config DRIVER_NEOPIXEL_ENABLE
+		bool "Enable the neopixel LED driver"
+		default n
+	
+	config NEOPIXEL_PIN
+		depends on DRIVER_NEOPIXEL_ENABLE
+		int "GPIO pin used for data output"
+		default 32
+	
+	choice
+		prompt "Led type"
+		default NEOPIXEL_TYPE_RGBW
+		depends on DRIVER_NEOPIXEL_ENABLE
+	config NEOPIXEL_TYPE_RGBW
+		bool "RGBW (SK6812)"
+	config NEOPIXEL_TYPE_RGB
+		bool "RGB (WS2812)"
+	endchoice
+endmenu
