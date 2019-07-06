@@ -1,17 +1,17 @@
 import sys
 
 def goto(x,y):
-	sys.stdout.write(u"\u001b["+str(y)+";"+str(x)+"H")
+	sys.stdout.write("\033["+str(y)+";"+str(x)+"H")
 
 def home():
 	goto(1,1)
 
 def clear():
-	sys.stdout.write(u"\u001b[2J")
+	sys.stdout.write('\033[2J\033[3J\033[1;1H')
 	home()
 	
 def color(fg=37, bg=40, style=0):
-	sys.stdout.write(u"\u001b["+str(style)+";"+str(fg)+";"+str(bg)+"m")
+	sys.stdout.write("\033["+str(style)+";"+str(fg)+";"+str(bg)+"m")
 	
 def header(cls = False, text = ""):
 	if cls:
@@ -47,10 +47,11 @@ def draw_menu(title, items, selected=0, text="", width=32):
 	
 def draw_menu_partial(title, items, selected=0, text="", width=32,lastSelected=0):
 	if selected != lastSelected:
-		goto(1,3+lastSelected)
+		goto(1,7+lastSelected)
 		draw_menu_item(items[lastSelected], False, width)
-		goto(1,3+selected)
+		goto(1,7+selected)
 		draw_menu_item(items[selected], True, width)
+		goto(1,7+selected)
 		color()
 		
 def menu(title, items, selected = 0, text="", width=32):
@@ -80,7 +81,6 @@ def menu(title, items, selected = 0, text="", width=32):
 		if (ord(key)==0x01):
 			import tasks.powermanagement as pm#, badge
 			pm.disable()
-			# badge.rawrepl()
 			draw_menu(title, items, selected, text)
 			pm.resume()
 			
