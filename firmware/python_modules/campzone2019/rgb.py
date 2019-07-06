@@ -14,7 +14,7 @@ for name in dir(hub75):
 def text(text, color=(255, 255, 255), pos=(0, 0)) :
     r, g, b = color
     x, y = pos
-    hub75.scroll_text(text, r, g, b, x, y)
+    hub75.text(text, r, g, b, x, y)
 
 def scrolltext(text, color=(255, 255, 255), pos=(0, 0), width=PANEL_WIDTH):
     r, g, b = color
