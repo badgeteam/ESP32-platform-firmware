@@ -1,4 +1,4 @@
-import buttons
+import buttons, machine
 import defines, rgb
 
 RED     = (255, 0, 0)
@@ -11,23 +11,26 @@ CYAN   = (0, 255, 200)
 YELLOW   = (255, 255, 0)
 
 checklist = [
-    (RED,   WHITE, "UP",      defines.BTN_UP),
-    (GREEN, WHITE, "DOWN",    defines.BTN_DOWN),
-    (BLUE,  WHITE, "LEFT",    defines.BTN_LEFT),
-    (BLACK, WHITE, "RIGHT",   defines.BTN_RIGHT),
-    (BLACK, WHITE, "A",       defines.BTN_A),
-    (BLACK, WHITE, "B",       defines.BTN_B),
+    (RED,   WHITE, 10, "UP",      defines.BTN_UP),
+    (GREEN, WHITE, 4,  "DOWN",    defines.BTN_DOWN),
+    (BLUE,  WHITE, 4,  "LEFT",    defines.BTN_LEFT),
+    (BLACK, WHITE, 2,  "RIGHT",   defines.BTN_RIGHT),
+    (BLACK, WHITE, 12, "A",       defines.BTN_A),
+    (BLACK, WHITE, 12, "B",       defines.BTN_B),
 ]
 
 def next_check():
     if(len(checklist) == 0):
-        rgb.background(CYAN)
-        rgb.text("Done!", YELLOW, (12, 1))
+        rgb.clear()
+        rgb.background((0, 50, 0))
+        rgb.text("Done!", CYAN, (4, 1))
+        machine.nvs_setint('system', 'factory_checked', 1)
         return
 
-    background, textcolor, text, gpio = checklist.pop()
+    background, textcolor, x_pos, text, gpio = checklist.pop(0)
+    rgb.clear()
     rgb.background(background)
-    rgb.text(text, textcolor, (12, 1))
+    rgb.text(text, textcolor, (x_pos, 1))
 
     buttons.register(gpio, lambda pressed, gpio=gpio: (buttons.unassign(gpio), next_check()) if not pressed else None)
 
