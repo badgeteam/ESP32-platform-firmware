@@ -10,12 +10,6 @@ def start_app(app, display = True):
 def home():
 	start_app("")
 
-def start_ota():
-	term.header(True, "Starting OTA...")
-	esp.rtcmem_write(0,1)
-	esp.rtcmem_write(1,254)
-	deepsleep.reboot()
-
 #def start_bpp(duration):
 #	term.header(True, "Starting BPP...")
 #	print("[BPP] Duration = "+str(duration))
