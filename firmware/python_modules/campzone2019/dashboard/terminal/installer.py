@@ -1,10 +1,8 @@
-import orientation, dashboard.resources.woezel_repo as woezel_repo, term, system, time, wifi, uos, json, sys, gc, woezel
+import dashboard.resources.woezel_repo as woezel_repo, term, system, time, wifi, uos, json, sys, gc, woezel
 
 system.serialWarning()
 
 repo = woezel_repo.Repository()
-
-orientation.default()
 
 def showMessage(msg, error=False):
 	term.header(True, "Installer")
