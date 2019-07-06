@@ -6,14 +6,13 @@ names = [
     "Pim de Groot", "Khaled Nassar", "Evan Mandos",
     "Niek Blankers", "Sebastian Oort", "Bas van Sisseren",
     "Jeroen Domburg", "Christel Sanders", "Markus Bechtold",
-    "Tom Clement", "Prof. Herr Lord I.B. Mobach",
-    "Thomas Roos", "Anne Jan Brouwer",
+    "Prof. Herr Lord I.B. Mobach", "Thomas Roos", "Anne Jan Brouwer",
     "Aram Verstegen", "Arnout Engelen", "Alexandre Dulaunoy",
     "Eric Poulsen", "Damien P. George", "Heikki Juva",
     "Teemu Hakala", "Kliment", "Windytan",
     "Purkkaviritys", "Otto Raila", "Jaga",
-    "uGFX", "EMF Badge Team", "MicroPython", "Loboris", " ",
-    " ", "BADGE.TEAM"]
+    "uGFX", "EMF Badge Team", "MicroPython", "Loboris",
+    "BADGE.TEAM"]
 
 def action_exit(pushed):
     if (pushed):
@@ -31,13 +30,16 @@ def show_names():
             break
         print(" - "+names[n])
 
+    rgb.clear()
     rgb.scrolltext("Your badge was made possible by:")
-    time.sleep(3)
+    time.sleep(10)
 
     for n in range(0, len(names)):
+        rgb.clear()
         rgb.scrolltext(names[n])
-        time.sleep(0.5)
+        time.sleep(5)
 
+    rgb.clear()
     rgb.scrolltext("Press A or B to quit!")
 
 def main():
