@@ -46,12 +46,14 @@ def draw_menu(title, items, selected=0, text="", width=32):
 	color()
 	
 def draw_menu_partial(title, items, selected=0, text="", width=32,lastSelected=0):
+	print(text)
+	offset = 7 if len(text) else 3
 	if selected != lastSelected:
-		goto(1,7+lastSelected)
+		goto(1,offset+lastSelected)
 		draw_menu_item(items[lastSelected], False, width)
-		goto(1,7+selected)
+		goto(1,offset+selected)
 		draw_menu_item(items[selected], True, width)
-		goto(1,7+selected)
+		goto(1,offset+selected)
 		color()
 		
 def menu(title, items, selected = 0, text="", width=32):
