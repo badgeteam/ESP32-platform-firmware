@@ -163,7 +163,7 @@ void displayDriver_init() {
         xTaskCreatePinnedToCore(
                  &displayTask, /* Task function. */
                  "display", /* String with name of task. */
-                 512,    /* Stack size in words. */
+                 1024,    /* Stack size in words. */
                  NULL,     /* Parameter passed as input of the task */
                  10,       /* Priority of the task. */
                  NULL,     /* Task handle. */
