@@ -1,16 +1,16 @@
-menu "Build configuration"
+menu "Hardware & build configuration"
 	menu "Firmware description"
 	config INFO_FIRMWARE_NAME
 		string "Code-name of the firmware"
 		default "Bleeding edge"
-	
+
 	config INFO_FIRMWARE_BUILD
 		int "Buildnumber of the firmware"
 		default 0
 		help
                 Build number of the firmware
 	endmenu
-	
+
 	menu "Hardware description"
 	config INFO_HARDWARE_NAME
 		string "Name of the device"
@@ -26,7 +26,7 @@ menu "Build configuration"
 	endmenu
 endmenu
 
-menu "WiFi & OTA update"
+menu "OTA update & WiFi"
 	config OTA_WEB_SERVER
 		string "Hostname of server for OTA updates"
 		default "www.sensorcloud.nl"
@@ -46,4 +46,8 @@ menu "WiFi & OTA update"
 	config WIFI_PASSWORD
 		string "Default WiFi password, leave empty for unsecure network"
 		default ""
+endmenu
+
+menu "Drivers"
+    source "../components/driver_*/Kconfig"
 endmenu
