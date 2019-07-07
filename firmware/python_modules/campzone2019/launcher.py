@@ -193,5 +193,5 @@ def start():
 
 start()
 init_power_management()
-# menu = term_menu.UartMenu(None, pm)
-# menu.main()
+menu = term_menu.UartMenu(None, pm)
+menu.main()
