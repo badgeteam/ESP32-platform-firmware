@@ -121,10 +121,10 @@ bool active;
 void displayDriver_init() {
         //Change to set the global brightness of the display, range 1-63
         //Warning when set too high: Do not look into LEDs with remaining eye.
-        framebuffer = (Color *) malloc(CONFIG_HUB75_HEIGHT*CONFIG_HUB75_WIDTH*sizeof(Color));
+        framebuffer = (Color *) calloc(CONFIG_HUB75_HEIGHT*CONFIG_HUB75_WIDTH, sizeof(Color));
         for (int i=0; i<BITPLANE_CNT; i++) {
                 for (int j=0; j<2; j++) {
-                        bitplane[j][i] = (uint8_t *) heap_caps_malloc(BITPLANE_SZ*sizeof(uint8_t), MALLOC_CAP_DMA);
+                        bitplane[j][i] = (uint8_t *) heap_caps_calloc(BITPLANE_SZ, sizeof(uint8_t), MALLOC_CAP_DMA);
                         assert(bitplane[j][i] && "Can't allocate bitplane memory");
                 }
         }
