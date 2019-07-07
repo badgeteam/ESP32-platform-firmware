@@ -4,7 +4,7 @@
 # License: MIT
 # Authors: Renze Nicolai <renze@rnplus.nl>
 
-import time, network, badge, easydraw
+import time, network, machine
 
 state = False
 failed = False
@@ -31,34 +31,34 @@ def enable(showStatus=True):
 		nw = network.WLAN(network.STA_IF)
 		if not nw.isconnected():
 			nw.active(True)
-			ssid = badge.nvs_get_str('badge', 'wifi.ssid', '')
-			password = badge.nvs_get_str('badge', 'wifi.password', '')
+			ssid = machine.nvs_getstr('badge', 'wifi.ssid')
+			password = machine.nvs_getstr('badge', 'wifi.password')
 			if showStatus:
-				easydraw.msg("Connecting to '"+ssid+"'...")
+				print("Connecting to '"+ssid+"'...")
 			result = "?"
 			if password:
 				nw.connect(ssid, password)
 			else:
 				nw.connect(ssid)
-			timeout = badge.nvs_get_u8('badge', 'wifi.timeout', 30)
+			timeout = machine.nvs_getint('badge', 'wifi.timeout') or 30
 			show = round(timeout/5)
 			while not nw.isconnected():
 				newShow = round(timeout/5)
 				if show != newShow:
-					easydraw.msg("("+str(round(timeout/2))+" seconds)")
+					print("("+str(round(timeout/2))+" seconds)")
 					show = newShow
 				time.sleep(0.5)
 				timeout = timeout - 1
 				if (timeout<1):
 					if showStatus:
-						easydraw.msg("Error: could not connect!")
+						print("Error: could not connect!")
 					disable()
 					failed = True
 					return False
 			state = True
 			failed = False
 			if showStatus:
-				easydraw.msg("Connected!")
+				print("Connected!")
 	return True
 
 def disable():
