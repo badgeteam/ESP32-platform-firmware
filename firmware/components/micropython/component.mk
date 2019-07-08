@@ -180,6 +180,7 @@ SRC_C =  $(addprefix esp32/,\
 	machine_ow.c \
 	modesp.c \
 	esprtcmem.c \
+	modconsts.c \
 	modmpr121.c \
 	moderc12864.c \
 	modneopixel.c \
