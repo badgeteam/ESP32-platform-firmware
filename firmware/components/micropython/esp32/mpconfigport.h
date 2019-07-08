@@ -411,11 +411,10 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
     { MP_OBJ_NEW_QSTR(MP_QSTR_ymodem),   (mp_obj_t)&mp_module_ymodem }, \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_consts),   (mp_obj_t)&consts_module }, \
+    BUILTIN_MODULE_CONSTS \
 	BUILTIN_MODULE_CURL \
     BUILTIN_MODULE_REQUESTS \
 	BUILTIN_MODULE_BLUETOOTH \
-    BUILTIN_MODULE_CONSTS \
     BUILTIN_MODULE_I2C \
     BUILTIN_MODULE_MPR121 \
     BUILTIN_MODULE_ERC12864 \
