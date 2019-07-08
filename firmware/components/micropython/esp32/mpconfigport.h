@@ -283,6 +283,8 @@ extern const struct _mp_obj_module_t mp_module_network;
 extern const struct _mp_obj_module_t mp_module_ymodem;
 extern const struct _mp_obj_module_t esp_module;
 
+extern const struct _mp_obj_module_t espnow_module;
+
 //#ifdef CONFIG_DRIVER_HUB75_ENABLE
 extern const struct _mp_obj_module_t hub75_module;
 //#endif
@@ -414,6 +416,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
     BUILTIN_MODULE_NEOPIXEL \
     BUILTIN_MODULE_HUB75 \
     BUILTIN_MODULE_EINK \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_binascii), (mp_obj_t)&mp_module_ubinascii }, \
