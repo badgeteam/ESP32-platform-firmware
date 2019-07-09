@@ -282,12 +282,12 @@ extern const struct _mp_obj_module_t mp_module_machine;
 extern const struct _mp_obj_module_t mp_module_network;
 extern const struct _mp_obj_module_t mp_module_ymodem;
 extern const struct _mp_obj_module_t esp_module;
-
 extern const struct _mp_obj_module_t espnow_module;
+extern const struct _mp_obj_module_t consts_module;
 
-//#ifdef CONFIG_DRIVER_HUB75_ENABLE
+#ifdef CONFIG_DRIVER_HUB75_ENABLE
 extern const struct _mp_obj_module_t hub75_module;
-//#endif
+#endif
 
 #ifdef CONFIG_DRIVER_I2C_ENABLE
 extern const struct _mp_obj_module_t i2c_module;
@@ -397,6 +397,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_HUB75
 #endif
 
+
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_OBJ_NEW_QSTR(MP_QSTR_utime),    (mp_obj_t)&utime_module }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uos),      (mp_obj_t)&uos_module }, \
@@ -404,11 +405,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
     { MP_OBJ_NEW_QSTR(MP_QSTR_machine),  (mp_obj_t)&mp_module_machine }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),  (mp_obj_t)&mp_module_network }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_ymodem),   (mp_obj_t)&mp_module_ymodem }, \
-	{ MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_consts), (mp_obj_t)&consts_module }, \
 	BUILTIN_MODULE_CURL \
     BUILTIN_MODULE_REQUESTS \
 	BUILTIN_MODULE_BLUETOOTH \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_esp), (mp_obj_t)&esp_module }, \
     BUILTIN_MODULE_I2C \
     BUILTIN_MODULE_MPR121 \
     BUILTIN_MODULE_ERC12864 \
