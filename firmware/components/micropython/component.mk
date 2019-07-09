@@ -186,6 +186,7 @@ SRC_C =  $(addprefix esp32/,\
 	modneopixel.c \
 	modssd1306.c \
 	modeink.c \
+	modespnow.c \
 	)
 
 ifdef CONFIG_DRIVER_I2C_ENABLE
