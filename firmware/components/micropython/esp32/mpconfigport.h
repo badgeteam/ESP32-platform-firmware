@@ -282,8 +282,7 @@ extern const struct _mp_obj_module_t mp_module_machine;
 extern const struct _mp_obj_module_t mp_module_network;
 extern const struct _mp_obj_module_t mp_module_ymodem;
 extern const struct _mp_obj_module_t esp_module;
-
-// Consts module is always exposed
+extern const struct _mp_obj_module_t espnow_module;
 extern const struct _mp_obj_module_t consts_module;
 
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
@@ -313,9 +312,6 @@ extern const struct _mp_obj_module_t eink_module;
 #ifdef CONFIG_DRIVER_NEOPIXEL_ENABLE
 extern const struct _mp_obj_module_t neopixel_module;
 #endif
-
-// Consts module is always exposed
-#define BUILTIN_MODULE_CONSTS { MP_OBJ_NEW_QSTR(MP_QSTR_consts), (mp_obj_t)&consts_module },
 
 #ifdef CONFIG_MICROPY_USE_REQUESTS
 extern const struct _mp_obj_module_t mp_module_requests;
@@ -409,9 +405,9 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
     { MP_OBJ_NEW_QSTR(MP_QSTR_machine),  (mp_obj_t)&mp_module_machine }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_network),  (mp_obj_t)&mp_module_network }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_ymodem),   (mp_obj_t)&mp_module_ymodem }, \
-	{ MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
-    BUILTIN_MODULE_CONSTS \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_consts), (mp_obj_t)&consts_module }, \
 	BUILTIN_MODULE_CURL \
     BUILTIN_MODULE_REQUESTS \
 	BUILTIN_MODULE_BLUETOOTH \
@@ -422,6 +418,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
     BUILTIN_MODULE_NEOPIXEL \
     BUILTIN_MODULE_HUB75 \
     BUILTIN_MODULE_EINK \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_binascii), (mp_obj_t)&mp_module_ubinascii }, \
