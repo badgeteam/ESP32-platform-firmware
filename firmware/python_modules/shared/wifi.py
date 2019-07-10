@@ -1,9 +1,9 @@
-import network, time, machine
+import network, time, machine, consts
 
 sta_if = network.WLAN(network.STA_IF)
 
-defaultSsid = machine.nvs_getstr("system", "wifi.ssid")
-defaultPassword = machine.nvs_getstr("system", "wifi.password")
+defaultSsid = machine.nvs_getstr("system", "wifi.ssid") or consts.WIFI_SSID
+defaultPassword = machine.nvs_getstr("system", "wifi.password") or consts.WIFI_PASSWORD
 timeout = machine.nvs_get_u16("system", "wifi.timeout")
 
 if not defaultSsid:
@@ -30,6 +30,14 @@ def connect(ssid=defaultSsid, password=defaultPassword):
 		sta_if.connect(ssid, password)
 	else:
 		sta_if.connect(ssid)
+
+	if not status():
+		for i in range(0,3):
+			time.sleep(1)
+			if status():
+				break
+
+	return status()
 
 def disconnect():
 	global sta_if
