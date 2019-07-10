@@ -59,8 +59,8 @@ def password(ssidName, ssidType):
 
 def confirm(ssid, password):
 	term.header(True, "WiFi setup")
-	machine.nvs_setstr("badge", "wifi.ssid", ssid)
-	machine.nvs_setstr("badge", "wifi.password", password)
+	machine.nvs_setstr("system", "wifi.ssid", ssid)
+	machine.nvs_setstr("system", "wifi.password", password)
 	print("New configuration has been saved.")
 	print("")
 	print("SSID:\t\t"+ssid)

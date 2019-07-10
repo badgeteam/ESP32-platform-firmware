@@ -5,8 +5,8 @@ name                   = "Harry Potter"
 badge_name             = "CampZone"
 slug                   = "campzone2019"
 
-btn_ok = defines.BTN_A
-btn_cancel = defines.BTN_B
+btn_ok                 = defines.BTN_A
+btn_cancel             = defines.BTN_B
 
-hatcheryurl             = "https://badge.team"
-otacheckurl             = "http://badge.team/firmware/version"
+hatcheryurl            = "https://badge.team"
+otacheckurl            = "https://badge.team/firmware/version"

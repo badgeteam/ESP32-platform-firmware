@@ -12,7 +12,7 @@ else:
 		app = "factory_checks"
 	else:
 		app = machine.nvs_getstr("system", 'default_app')
-		if not app: #This generic set of modules has no default app
+		if not app:
 			app = 'launcher'
 
 try:

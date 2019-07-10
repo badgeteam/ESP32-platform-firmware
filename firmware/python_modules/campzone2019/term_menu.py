@@ -1,4 +1,4 @@
-import term, deepsleep as ds, system, version
+import term, deepsleep as ds, system, version, consts
 
 class UartMenu():
 	def __init__(self, gts, pm, safe = False, pol="Power off"):
@@ -23,7 +23,7 @@ class UartMenu():
 	def menu_main(self):
 		items = ["Python shell", "Apps", "Installer", "Settings", "Tools", "About", "Check for updates", self.power_off_label]
 		callbacks = [self.drop_to_shell, self.opt_launcher, self.opt_installer, self.menu_settings, self.menu_tools, self.opt_about, self.opt_ota_check, self.go_to_sleep]
-		message = "Welcome!\nYour badge is running firmware version "+str(version.build)+": "+version.name+"\n"
+		message = "Welcome!\nYour badge is running firmware version "+consts.INFO_FIRMWARE_BUILD+": "+consts.INFO_FIRMWARE_NAME+"\n"
 		cb = term.menu("Main menu", items, 0, message)
 		self.menu = callbacks[cb]
 		return

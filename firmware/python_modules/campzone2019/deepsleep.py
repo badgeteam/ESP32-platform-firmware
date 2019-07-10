@@ -7,6 +7,7 @@ rtc.wake_on_ext0(pin=pin, level=0)
 def start_sleeping(sleepTime=0):
     term.header(True, "Going to sleep...")
 
+    rgb.clear()
     rgb.scrolltext('ZzZz')
     time.sleep(3)
 

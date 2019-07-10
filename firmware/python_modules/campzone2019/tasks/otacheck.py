@@ -4,7 +4,7 @@
 # License: MIT
 # Authors: Renze Nicolai <renze@rnplus.nl>
 
-import easywifi, easydraw, badge, time, version
+import machine, time, version
 
 def checking_for_update_message():
     # Inform the user that we're checking for an update
@@ -15,7 +15,7 @@ def error_message():
     pass
 
 def download_info():
-    import urequests as requests
+    import requests
     checking_for_update_message()
     result = None
     try:
@@ -31,15 +31,15 @@ def download_info():
 
 def available(update=False):
     if update:
-        if not easywifi.status():
-            if not easywifi.enable():
-                return badge.nvs_get_u8('badge','OTA.ready',0)
+        if not wifi.status():
+            if not wifi.connect():
+                return machine.nvs_getint('badge','OTA.ready') or 0
 
         info = download_info()
         if info:
             if info["build"] > version.build:
-                badge.nvs_set_u8('badge','OTA.ready',1)
+                machine.nvs_setint('badge','OTA.ready', 1)
                 return True
 
-        badge.nvs_set_u8('badge','OTA.ready',0)
-    return badge.nvs_get_u8('badge','OTA.ready',0)
+        machine.nvs_setint('badge','OTA.ready', 0)
+    return machine.nvs_getint('badge','OTA.ready') or 0
