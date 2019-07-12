@@ -1,0 +1,15 @@
+menu "Driver: Disobey 2019 SAMD I/O"
+	config DRIVER_DISOBEY_SAMD_ENABLE
+		bool "Enable the Disobey 2019 SAMD I/O driver"
+		default n
+
+	config I2C_ADDR_DISOBEY_SAMD
+		depends on DRIVER_DISOBEY_SAMD_ENABLE
+		int "SAMD I2C address"
+		default 48
+
+	config PIN_NUM_DISOBEY_SAMD_INT
+		depends on DRIVER_DISOBEY_SAMD_ENABLE
+		int "GPIO pin used for SAMD interrupt"
+		default 25
+endmenu

@@ -48,6 +48,6 @@ menu "OTA update & WiFi"
 		default ""
 endmenu
 
-menu "Drivers"
-    source "../components/driver_*/Kconfig"
-endmenu
+#menu "Drivers"
+#    source "../components/driver_*/Kconfig"
+#endmenu

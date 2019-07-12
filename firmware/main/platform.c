@@ -18,12 +18,13 @@ esp_err_t isr_init()
 void platform_init()
 {
 	if (isr_init() != ESP_OK) restart();
-	INIT_DRIVER(vspi)
-	INIT_DRIVER(i2c)
-	INIT_DRIVER(hub75)
-	INIT_DRIVER(mpr121)
-	INIT_DRIVER(neopixel)
-	INIT_DRIVER(erc12864)
-	INIT_DRIVER(ssd1306)
-	INIT_DRIVER(eink)
+	INIT_DRIVER(vspi)         //Generic VSPI bus driver
+	INIT_DRIVER(i2c)          //Generic I2C bus driver
+	INIT_DRIVER(hub75)        //LED matrix as found on the CampZone 2019 badge
+	INIT_DRIVER(mpr121)       //I/O expander with touch inputs as found on the SHA2017 and HackerHotel 2019 badges
+	INIT_DRIVER(neopixel)     //Addressable LEDs as found on the SHA2017 and HackerHotel 2019 badges
+	INIT_DRIVER(erc12864)     //128x64 LCD screen as found on the Disobey 2019 badge
+	INIT_DRIVER(ssd1306)      //128x64 OLED screen as found on the Disobey 2020 badge
+	INIT_DRIVER(eink)         //296x128 e-ink display as found on the SHA2017 and HackerHotel 2019 badges
+	INIT_DRIVER(disobey_samd) //I/O via the SAMD co-processor on the Disobey 2019 badge
 }
