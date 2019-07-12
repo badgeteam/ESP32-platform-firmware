@@ -1,7 +1,16 @@
-import esp, machine, sys, system, os
+import esp, machine, sys, system, os, consts
+import rgb
 
+# Clear OTA boot magic
 esp.rtcmem_write(0,0)
 esp.rtcmem_write(1,0)
+
+# Set LED brightness
+brightness = machine.nvs_getint('system', 'brightness')
+if not brightness:
+    brightness = (rgb.MAX_BRIGHTNESS - 2)
+    machine.nvs_setint('system', 'brightness', brightness)
+rgb.set_brightness(brightness)
 
 #Application starting
 app = esp.rtcmem_read_string()

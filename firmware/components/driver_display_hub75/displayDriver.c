@@ -98,7 +98,7 @@
 #define BIT_LAT (1<<6) //connected to GPIO26 here
 #define BIT_OE (1<<7)  //connected to GPIO25 here
 
-int brightness=10;
+int brightness=CONFIG_HUB75_DEFAULT_BRIGHTNESS;
 int framerate=20;
 
 Color *framebuffer;

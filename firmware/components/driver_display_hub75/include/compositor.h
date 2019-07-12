@@ -3,12 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-//#include <esp32-hal.h>
-
-typedef union{
-		uint32_t value;
-		uint8_t RGB[4];
-} Color;
+#include "color.h"
 
 typedef struct renderTask{
 	struct renderTask *next;
@@ -41,6 +36,7 @@ typedef struct scrollText{
   void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX);
   void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length, int numFrames);
   void compositor_addImage(uint8_t *image, int x, int y, int width, int length);
+  void compositor_addColor(int x, int y, Color color);
 
   void composite();
 
