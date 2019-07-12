@@ -165,7 +165,7 @@ void displayDriver_init() {
                  "display", /* String with name of task. */
                  1024,    /* Stack size in words. */
                  NULL,     /* Parameter passed as input of the task */
-                 10,       /* Priority of the task. */
+                 1,       /* Priority of the task. (Lower = more important) */
                  NULL,     /* Task handle. */
                  1);       /* Core ID */
 

@@ -145,12 +145,15 @@ STATIC mp_obj_t hub75_pixel(size_t n_args, const mp_obj_t *args) {
      int x = mp_obj_get_int(args[3]);
      int y = mp_obj_get_int(args[4]);
 
+     uint32_t *image = malloc(4);
+
      Color k;
      k.RGB[0] = r;
      k.RGB[1] = g;
      k.RGB[2] = b;
 
-     compositor_addColor(x, y, k);
+     image[0] = k.value;
+     compositor_addImage((uint8_t *) image, x, y, 1, 1);
 
      return mp_const_none;
  }

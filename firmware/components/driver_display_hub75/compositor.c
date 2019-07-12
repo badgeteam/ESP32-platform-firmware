@@ -4,7 +4,9 @@
 #include "stdlib.h"
 #include "string.h"
 #include "include/font_7x5.h"
+#include "include/font_6x3.h"
 #include "include/compositor.h"
+#include "esp_log.h"
 
 
 #define C_SM 0xFFFFFFFF
@@ -164,12 +166,19 @@ void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length
         addTask(node);
 }
 
-void compositor_addColor(int x, int y, Color color) {
+void compositor_setPixel(int x, int y, Color color) {
         Color *target = &buffer[y*CONFIG_HUB75_WIDTH+x];
-        target->RGB[0] = (uint8_t)((color.RGB[0] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[0]));
-        target->RGB[1] = (uint8_t)((color.RGB[1] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[1]));
-        target->RGB[2] = (uint8_t)((color.RGB[2] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[2]));
+        target->RGB[0] = color.RGB[0] + (255-color.RGB[3])*target->RGB[0]/255;
+        target->RGB[1] = color.RGB[1] + (255-color.RGB[3])*target->RGB[1]/255;
+        target->RGB[2] = color.RGB[2] + (255-color.RGB[3])*target->RGB[2]/255;
 }
+
+//void compositor_setPixel(int x, int y, Color color) {
+//        Color *target = &buffer[y*CONFIG_HUB75_WIDTH+x];
+//        target->RGB[0] = (uint8_t)((color.RGB[0] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[0]));
+//        target->RGB[1] = (uint8_t)((color.RGB[1] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[1]));
+//        target->RGB[2] = (uint8_t)((color.RGB[2] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[2]));
+//}
 
 unsigned int compositor_getTextWidth(char *text) {
         int width = 0;
@@ -189,21 +198,23 @@ void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
                 for(int px=0; px<sizeX; px++) {
                         xreal = x + px;
                         if(yreal >= 0 && yreal < CONFIG_HUB75_HEIGHT && xreal >= 0 && xreal < CONFIG_HUB75_WIDTH) {
-                                compositor_addColor(xreal, yreal, *((Color *)&image[(py*sizeX+px)*4]));
+                                compositor_setPixel(xreal, yreal, *((Color *)&image[(py*sizeX+px)*4]));
                         }
                 }
         }
 }
-
+void renderChar_6x3(uint8_t charId, Color color, int *x, int y, int endX, int *skip);
 void renderText(char *text, Color color, int x, int y, int sizeX, int skip) {
-        int endX = sizeX > 0 ? x+sizeX : x - 1;
-        while(skip < 0) {
-                x++;
-                skip++;
+//        ESP_LOGW("hub75", "Rendering '%s', %d, %d, %d, %d", text, x, y, sizeX, skip);
+        int endX = sizeX > 0 ? x+sizeX : CONFIG_HUB75_WIDTH - 1;
+        if(skip < 0) {
+            x += -skip;
+            skip = 0;
         }
         for(int i = 0; i<strlen(text); i++) {
                 uint8_t charId = (uint8_t)text[i] - 32;
-                renderChar_7x5(charId, color, &x, y, endX, &skip);
+//                renderChar_7x5(charId, color, &x, y, endX, &skip);
+                renderChar_6x3(charId, color, &x, y, endX, &skip);
                 if(skip == 0) x++; //If started printing insert blank line
                 else skip--; //If not decrease the number to skip by one to make it fluid
         }

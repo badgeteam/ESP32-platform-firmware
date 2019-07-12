@@ -11,12 +11,12 @@ MAX_BRIGHTNESS = PANEL_WIDTH
 for name in dir(hub75):
     globals()[name] = getattr(hub75, name)
 
-def text(text, color=(255, 255, 255), pos=(0, 0)) :
+def text(text, color=(255, 255, 255), pos=(0, 1)) :
     r, g, b = color
     x, y = pos
     hub75.text(text, r, g, b, x, y)
 
-def scrolltext(text, color=(255, 255, 255), pos=(0, 0), width=PANEL_WIDTH):
+def scrolltext(text, color=(255, 255, 255), pos=(0, 1), width=PANEL_WIDTH):
     r, g, b = color
     x, y = pos
     hub75.scrolltext(text, r, g, b, x, y, width)

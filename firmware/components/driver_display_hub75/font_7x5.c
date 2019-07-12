@@ -8,7 +8,7 @@
 void renderCharCol(uint8_t ch, Color color, int x, int y) {
     for(int py = y; py<y+7; py++) {
         if(py >= 0 && py < CONFIG_HUB75_HEIGHT && x >= 0 && x < CONFIG_HUB75_WIDTH) {
-            if((ch & (1<<(py-y))) != 0) compositor_addColor(x, y + py, color);
+            if((ch & (1<<(py-y))) != 0) compositor_setPixel(x, y + py, color);
         }
     }
 }
@@ -19,7 +19,7 @@ void renderChar_7x5(uint8_t charId, Color color, int *x, int y, int endX, int *s
             uint8_t cs = font_7x5[charId*5+i];
             renderCharCol(cs, color, *x, y);
             (*x)++;
-            if(*x >= endX) return;
+            if(endX > 0 && *x >= endX) return;
         } else {
             (*skip)--;
         }
