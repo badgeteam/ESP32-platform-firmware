@@ -41,6 +41,7 @@ def populate_apps():
     for app in userApps:
         add_app(app, read_metadata(app))
     add_app("snake", {"name": "Snake", "category": "system"})
+    add_app("clock", {"name": "Clock", "category": "system"})
     add_app("installer", {"name": "Installer", "category": "system"})
     add_app("update", {"name": "Update apps", "category": "system"})
     add_app("checkforupdates", {"name": "Update firmware", "category": "system"})
