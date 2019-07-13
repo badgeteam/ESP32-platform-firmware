@@ -151,14 +151,17 @@ void compositor_clear() {
         renderTask_t *next;
         while(node != NULL) {
                 next = node->next;
-                if(node->id == 1) {
+                if(node->id == 0) {
                         free(node->payload);
-                }
-                if(node->id == 3) {
+                } else if(node->id == 1) {
+                        free(node->payload);
+                } else if(node->id == 2) {
+                        scrollText_t *t = (scrollText_t *) node->payload;
+                        free(t->text);
+                        free(node->payload);
+                } else if(node->id == 3) {
                         animation_t *gif = (animation_t *) node->payload;
                         free(gif->gif);
-                }
-                if(node->id == 2 || node->id == 3) {
                         free(node->payload);
                 }
                 free(node);
@@ -185,8 +188,10 @@ void addTask(renderTask_t *node) {
 }
 
 void compositor_addText(char *text, Color color, int x, int y) {
+        char *text_store = malloc(strlen(text)+1);
+        strcpy(text_store, text);
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
-        node->payload = text;
+        node->payload = text_store;
         node->color = color;
         node->x = x;
         node->y = y;
@@ -204,8 +209,10 @@ void compositor_addText(char *text, Color color, int x, int y) {
 * sizeX is the length over which text should be drawn
 */
 void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX) {
+        char *text_store = malloc(strlen(text)+1);
+        strcpy(text_store, text);
         scrollText_t *scroll = (scrollText_t *) malloc(sizeof(scrollText_t));
-        scroll->text = text;
+        scroll->text = text_store;
         scroll->speed = 1;
         scroll->skip = -sizeX;
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
@@ -228,7 +235,9 @@ void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX) 
 */
 void compositor_addImage(uint8_t *image, int x, int y, int width, int length) {
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
-        node->payload = image;
+        uint8_t *image_store = malloc(sizeof(uint8_t)*4*width*length);
+        memcpy(image_store, image, sizeof(uint8_t)*4*width*length);
+        node->payload = image_store;
         node->x = x;
         node->y = y;
         node->sizeX = width;
@@ -247,8 +256,10 @@ void compositor_addImage(uint8_t *image, int x, int y, int width, int length) {
 * numframes is the number of frames in the animation
 */
 void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length, int numFrames) {
+        uint8_t *gif_store = malloc(sizeof(uint8_t)*4*width*length*numFrames);
+        memcpy(gif_store, image, sizeof(uint8_t)*4*width*length*numFrames);
         animation_t *gif = (animation_t *) malloc(sizeof(animation_t));
-        gif->gif = image;
+        gif->gif = gif_store;
         gif->showFrame = 0;
         gif->numberFrames = numFrames;
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
