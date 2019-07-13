@@ -5,9 +5,13 @@ direction = 0
 if not easywifi.status():
     easywifi.enable()
 
+if not easywifi.status():
+    print("Error connecting to wifi")
+    system.reboot()
+
 if not ntp.set_NTP_time():
     print("Error setting time")
-    quit()
+    system.reboot()
 
 def input_B(pressed):
     global direction
