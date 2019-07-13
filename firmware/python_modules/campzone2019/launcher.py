@@ -41,6 +41,7 @@ def populate_apps():
     for app in userApps:
         add_app(app, read_metadata(app))
     add_app("snake", {"name": "Snake", "category": "system"})
+    add_app("clock", {"name": "Clock", "category": "system"})
     add_app("installer", {"name": "Installer", "category": "system"})
     add_app("update", {"name": "Update apps", "category": "system"})
     add_app("checkforupdates", {"name": "Update firmware", "category": "system"})
@@ -212,15 +213,15 @@ start()
 init_power_management()
 
 # Do shameless start-of-event update
-if not machine.nvs_getint("system", 'day0_updated'):
-    if wifi.status() or wifi.connect():
-        rgb.clear()
-        rgb.scrolltext("Updating, don't remove battery")
-        time.sleep(5)
-        machine.nvs_setint("system", 'day0_updated', 1)
-        system.ota()
-    else:
-        print('Need to perform day0 update, but no WiFi connection present')
+# if not machine.nvs_getint("system", 'day0_updated'):
+#     if wifi.status() or wifi.connect():
+#         rgb.clear()
+#         rgb.scrolltext("Updating, don't remove battery")
+#         time.sleep(5)
+#         machine.nvs_setint("system", 'day0_updated', 1)
+#         system.ota()
+#     else:
+#         print('Need to perform day0 update, but no WiFi connection present')
 
 menu = term_menu.UartMenu(None, pm)
 menu.main()
