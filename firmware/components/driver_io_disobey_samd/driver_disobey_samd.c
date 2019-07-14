@@ -230,4 +230,10 @@ esp_err_t driver_disobey_samd_get_touch_info(struct driver_disobey_samd_touch_in
 	return ESP_OK;
 }
 
+#else
+
+esp_err_t driver_disobey_samd_init(void) {
+    return ESP_OK;
+}
+
 #endif // CONFIG_DRIVER_DISOBEY_SAMD_ENABLE
