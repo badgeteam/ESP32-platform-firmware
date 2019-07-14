@@ -8,6 +8,10 @@ _progress_callback = None
 cleanup_files = []
 gzdict_sz = 16 + 15
 
+cache_path = '/cache/woezel/'
+woezel_domain = consts.WOEZEL_WEB_SERVER
+device_name = consts.INFO_HARDWARE_WOEZEL_NAME
+
 file_buf = bytearray(512)
 
 class NotFoundError(Exception):
@@ -175,7 +179,7 @@ def _set_last_updated():
 def update_cache():
     last_update = _get_last_updated()
     if time.time() < last_update + (600):
-        return
+        return True
 
     import wifi
     if not wifi.status():
@@ -186,9 +190,6 @@ def update_cache():
             return False
     _show_progress("Downloading categories...")
     try:
-        cache_path = '/cache/woezel/'
-        woezel_domain = consts.WOEZEL_WEB_SERVER
-        device_name = consts.INFO_HARDWARE_WOEZEL_NAME
         request = urequests.get("https://%s/eggs/categories/json" % woezel_domain, timeout=30)
         _show_progress("Saving categories...")
 
@@ -219,7 +220,18 @@ def update_cache():
     return False
 
 def get_categories():
-    update_cache()
+    if not update_cache():
+        return []
+
+    with open(cache_path + '/categories.json', 'r') as categories_file:
+        return json.load(categories_file)
+
+def get_category(category_name):
+    if not update_cache():
+        return []
+
+    with open(cache_path + '/%s.json' % category_name, 'r') as category_file:
+        return json.load(category_file)
 
 def get_pkg_metadata(name):
     f = _url_open("https://badge.team/eggs/get/%s/json" % name)

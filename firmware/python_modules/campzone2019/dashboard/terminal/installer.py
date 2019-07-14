@@ -2,22 +2,21 @@ import dashboard.resources.woezel_repo as woezel_repo, term, system, time, wifi,
 
 system.serialWarning()
 
-repo = woezel_repo.Repository()
-
 def showMessage(msg, error=False):
 	term.header(True, "Installer")
 	print(msg)
 
 # Categories list
+categories = woezel.get_categories()
 
 def show_categories():
 	system.serialWarning()
 	opt = []
-	for category in repo.categories:
+	for category in categories:
 		opt.append(category["name"])
 	opt.append("< Back to launcher")
 	sel = term.menu("Installer - Categories", opt)
-	if sel == len(repo.categories):
+	if sel == len(categories):
 		system.launcher(True)
 	show_category(sel)
 
@@ -26,12 +25,12 @@ def show_categories():
 def show_category(i):
 	system.serialWarning()
 	global category
-	slug = repo.categories[i]["slug"]
-	name = repo.categories[i]["name"]
+	slug = categories[i]["slug"]
+	name = categories[i]["name"]
 	showMessage("Loading "+slug+"...")
 	try:
 		try:
-			category = repo.getCategory(slug)
+			category = repo.get_category(slug)
 		except:
 			showMessage("Failed to open category "+slug+"!", True)
 			time.sleep(1)
@@ -84,8 +83,8 @@ def install_app(i):
 
 showMessage("Loading categories...")
 if not repo.load():
-	if not repo.update():
-		if repo.lastUpdate==0:
+	if not repo.update_cache():
+		if repo.last_updated==0:
 			showMessage("Failed to load repository. Returning to launcher...")
 			system.launcher()
 
