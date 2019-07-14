@@ -1,0 +1,6 @@
+menu "Driver: framebuffer support"
+	config DRIVER_FRAMEBUFFER_ENABLE
+		depends on DRIVER_I2C_ENABLE
+		bool "Enable the framebuffer driver"
+		default n
+endmenu
