@@ -22,6 +22,9 @@ STATIC const MP_DEFINE_STR_OBJ(info_firmware_build_obj, INT_TO_STR(CONFIG_INFO_F
 STATIC const MP_DEFINE_STR_OBJ(info_hardware_name_obj, CONFIG_INFO_HARDWARE_NAME);
 STATIC const MP_DEFINE_STR_OBJ(info_hardware_folder_obj, CONFIG_INFO_HARDWARE_FOLDER);
 
+STATIC const MP_DEFINE_STR_OBJ(info_woezel_web_server_obj, CONFIG_WOEZEL_WEB_SERVER);
+STATIC const MP_DEFINE_STR_OBJ(info_hardware_woezel_name_obj, CONFIG_INFO_HARDWARE_WOEZEL_NAME);
+
 STATIC const MP_DEFINE_STR_OBJ(wifi_ssid_obj, CONFIG_WIFI_SSID);
 STATIC const MP_DEFINE_STR_OBJ(wifi_pass_obj, CONFIG_WIFI_PASSWORD);
 
@@ -31,6 +34,9 @@ STATIC const mp_rom_map_elem_t consts_module_globals_table[] = {
 
     { MP_ROM_QSTR(MP_QSTR_INFO_HARDWARE_NAME),			MP_ROM_PTR(&info_hardware_name_obj) },
     { MP_ROM_QSTR(MP_QSTR_INFO_HARDWARE_FOLDER),		MP_ROM_PTR(&info_hardware_folder_obj) },
+
+    { MP_ROM_QSTR(MP_QSTR_WOEZEL_WEB_SERVER),			MP_ROM_PTR(&info_woezel_web_server_obj) },
+    { MP_ROM_QSTR(MP_QSTR_INFO_HARDWARE_WOEZEL_NAME),	MP_ROM_PTR(&info_hardware_woezel_name_obj) },
 
     { MP_ROM_QSTR(MP_QSTR_WIFI_SSID),			        MP_ROM_PTR(&wifi_ssid_obj) },
     { MP_ROM_QSTR(MP_QSTR_WIFI_PASSWORD),			    MP_ROM_PTR(&wifi_pass_obj) },

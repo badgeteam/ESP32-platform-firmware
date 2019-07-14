@@ -15,8 +15,8 @@ checklist = [
     (GREEN, WHITE, 4,  "DOWN",    defines.BTN_DOWN),
     (BLUE,  WHITE, 4,  "LEFT",    defines.BTN_LEFT),
     (BLACK, WHITE, 2,  "RIGHT",   defines.BTN_RIGHT),
-    (BLACK, WHITE, 12, "A",       defines.BTN_A),
-    (BLACK, WHITE, 12, "B",       defines.BTN_B),
+    (BLACK, WHITE, 13, "A",       defines.BTN_A),
+    (BLACK, WHITE, 13, "B",       defines.BTN_B),
 ]
 
 def next_check():

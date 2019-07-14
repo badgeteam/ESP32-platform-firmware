@@ -1,14 +1,10 @@
-import sys
-import gc
-import uos as os
-import uerrno as errno
-import ujson as json
-import uzlib
-import upip_utarfile as tarfile
+import sys, gc, uos as os, uerrno as errno, ujson as json, uzlib, urequests, upip_utarfile as tarfile, time
+import consts
 gc.collect()
 
 debug = False
 install_path = None
+_progress_callback = None
 cleanup_files = []
 gzdict_sz = 16 + 15
 
@@ -20,7 +16,7 @@ class NotFoundError(Exception):
 class LatestInstalledError(Exception):
     pass
 
-def op_split(path):
+def _op_split(path):
     if path == "":
         return ("", "")
     r = path.rsplit("/", 1)
@@ -32,7 +28,7 @@ def op_split(path):
     return (head, r[1])
 
 def op_basename(path):
-    return op_split(path)[1]
+    return _op_split(path)[1]
 
 # Expects *file* name
 def _makedirs(name, mode=0o777):
@@ -55,7 +51,7 @@ def _makedirs(name, mode=0o777):
     return ret
 
 
-def save_file(fname, subf):
+def _save_file(fname, subf):
     global file_buf
     with open(fname, "wb") as outf:
         while True:
@@ -64,7 +60,7 @@ def save_file(fname, subf):
                 break
             outf.write(file_buf, sz)
 
-def install_tar(f, prefix):
+def _install_tar(f, prefix):
     meta = {}
     for info in f:
         #print(info)
@@ -92,10 +88,10 @@ def install_tar(f, prefix):
                     print("Extracting " + outfname)
                 _makedirs(outfname)
                 subf = f.extractfile(info)
-                save_file(outfname, subf)
+                _save_file(outfname, subf)
     return meta
 
-def expandhome(s):
+def _expandhome(s):
     if "~/" in s:
         h = os.getenv("HOME")
         s = s.replace("~/", h + "/")
@@ -103,7 +99,7 @@ def expandhome(s):
 
 import ussl
 import usocket
-def url_open(url):
+def _url_open(url):
     if debug:
         print(url)
 
@@ -111,10 +107,10 @@ def url_open(url):
     try:
         ai = usocket.getaddrinfo(host, 443)
     except OSError as e:
-        fatal("Unable to resolve %s (no Internet?)" % host, e)
+        _fatal("Unable to resolve %s (no Internet?)" % host, e)
     #print("Address infos:", ai)
     if len(ai) == 0:
-        fatal("Unable to resolve %s (no Internet?)" % host, errno.EHOSTUNREACH)
+        _fatal("Unable to resolve %s (no Internet?)" % host, errno.EHOSTUNREACH)
     addr = ai[0][4]
 
     s = usocket.socket(ai[0][0])
@@ -146,32 +142,105 @@ def url_open(url):
     return s
 
 
+def _fatal(msg, exc=None):
+    print("Error:", msg)
+    if exc and debug:
+        raise exc
+    sys.exit(1)
+
+def set_progress_callback(callback):
+    global _progress_callback
+    _progress_callback = callback
+
+def _show_progress(text, error=False):
+    if callable(_progress_callback):
+        _progress_callback(text, error)
+
+def _get_last_updated():
+    last_updated = -1
+    try:
+        with open(cache_path + "/lastUpdate", 'r') as f:
+            last_updated = int(f.readline())
+    except:
+        pass
+    return last_updated
+
+def _set_last_updated():
+    try:
+        with open(cache_path + "/lastUpdate", 'w') as f:
+            f.write(str(time.time()))
+    except:
+        pass
+
+def update_cache():
+    last_update = _get_last_updated()
+    if time.time() < last_update + (600):
+        return
+
+    import wifi
+    if not wifi.status():
+        _show_progress("Connecting to WiFi...", False)
+        wifi.connect()
+        if not wifi.wait():
+            _show_progress("Failed to connect to WiFi.", True)
+            return False
+    _show_progress("Downloading categories...")
+    try:
+        cache_path = '/cache/woezel/'
+        woezel_domain = consts.WOEZEL_WEB_SERVER
+        device_name = consts.INFO_HARDWARE_WOEZEL_NAME
+        request = urequests.get("https://%s/eggs/categories/json" % woezel_domain, timeout=30)
+        _show_progress("Saving categories...")
+
+        with open(cache_path + '/categories.json', 'w') as categories_file:
+            categories_file.write(request.text)
+
+        _show_progress("Parsing categories...")
+        categories = request.json()
+
+        for category in categories:
+            gc.collect()
+            cat_slug = category["slug"]
+            _show_progress("Downloading '" + category["name"] + "'...")
+            f = urequests.get("https://%s/basket/%s/category/%s/json" % (woezel_domain, device_name, cat_slug), timeout=30)
+
+            with open(cache_path + '/' + cat_slug + '.json', 'w') as f_file:
+                f_file.write(f.text)
+
+        _set_last_updated()
+
+        _show_progress("Done!")
+        gc.collect()
+        return True
+    except BaseException as e:
+        sys.print_exception(e)
+        _show_progress("Failed!", True)
+        gc.collect()
+    return False
+
+def get_categories():
+    update_cache()
+
 def get_pkg_metadata(name):
-    f = url_open("https://badge.team/eggs/get/%s/json" % name)
+    f = _url_open("https://badge.team/eggs/get/%s/json" % name)
     try:
         return json.load(f)
     finally:
         f.close()
 
 def get_pkg_list():
-    f = url_open("https://badge.team/basket/campzone2019/list/json")
+    f = _url_open("https://badge.team/basket/campzone2019/list/json")
     try:
         return json.load(f)
     finally:
         f.close()
 
 def search_pkg_list(query):
-    f = url_open("https://badge.team/basket/campzone2019/search/%s/json" % query)
+    f = _url_open("https://badge.team/basket/campzone2019/search/%s/json" % query)
     try:
         return json.load(f)
     finally:
         f.close()
-
-def fatal(msg, exc=None):
-    print("Error:", msg)
-    if exc and debug:
-        raise exc
-    sys.exit(1)
 
 def install_pkg(pkg_spec, install_path, force_reinstall):
     data = get_pkg_metadata(pkg_spec)
@@ -211,11 +280,11 @@ def install_pkg(pkg_spec, install_path, force_reinstall):
     package_url = packages[0]["url"]
     print("Installing %s rev. %s from %s" % (pkg_spec, latest_ver, package_url))
     package_fname = op_basename(package_url)
-    f1 = url_open(package_url)
+    f1 = _url_open(package_url)
     try:
         f2 = uzlib.DecompIO(f1, gzdict_sz)
         f3 = tarfile.TarFile(fileobj=f2)
-        meta = install_tar(f3, "%s%s/" % (install_path, pkg_spec))
+        meta = _install_tar(f3, "%s%s/" % (install_path, pkg_spec))
     finally:
         f1.close()
     del f3
@@ -283,9 +352,8 @@ def search(query="*"):
 def get_install_path():
     global install_path
     if install_path is None:
-        # sys.path[0] is current module's path
-        install_path = sys.path[1]
-    install_path = expandhome(install_path)
+        install_path = 'apps'
+    install_path = _expandhome(install_path)
     return install_path
 
 def cleanup():
@@ -324,7 +392,7 @@ def main():
         return
 
     if sys.argv[1] != "install":
-        fatal("Only 'install' command supported")
+        _fatal("Only 'install' command supported")
 
     to_install = []
 
@@ -352,7 +420,7 @@ def main():
         elif opt == "--debug":
             debug = True
         else:
-            fatal("Unknown/unsupported option: " + opt)
+            _fatal("Unknown/unsupported option: " + opt)
 
     to_install.extend(sys.argv[i:])
     if not to_install:

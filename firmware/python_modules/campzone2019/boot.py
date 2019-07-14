@@ -1,4 +1,4 @@
-import esp, machine, sys, system, os
+import esp, machine, sys, system, os, rgb
 
 esp.rtcmem_write(0,0)
 esp.rtcmem_write(1,0)
