@@ -58,6 +58,6 @@ menu "Firmware & device configuration"
 	endmenu
 endmenu
 
-menu "Drivers"
-    source "../components/driver_*/Kconfig"
-endmenu
+#menu "Drivers"
+#    source "../components/driver_*/Kconfig"
+#endmenu
