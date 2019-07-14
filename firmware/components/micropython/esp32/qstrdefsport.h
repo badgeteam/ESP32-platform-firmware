@@ -28,3 +28,6 @@
 
 // Entries for sys.path
 Q(/lib)
+Q(/apps)
+Q(/sd/lib)
+Q(/sd/apps)
