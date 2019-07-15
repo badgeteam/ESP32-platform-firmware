@@ -235,9 +235,7 @@ void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX) 
 */
 void compositor_addImage(uint8_t *image, int x, int y, int width, int length) {
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
-        uint8_t *image_store = malloc(sizeof(uint8_t)*4*width*length);
-        memcpy(image_store, image, sizeof(uint8_t)*4*width*length);
-        node->payload = image_store;
+        node->payload = image;
         node->x = x;
         node->y = y;
         node->sizeX = width;
@@ -256,10 +254,8 @@ void compositor_addImage(uint8_t *image, int x, int y, int width, int length) {
 * numframes is the number of frames in the animation
 */
 void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length, int numFrames) {
-        uint8_t *gif_store = malloc(sizeof(uint8_t)*4*width*length*numFrames);
-        memcpy(gif_store, image, sizeof(uint8_t)*4*width*length*numFrames);
         animation_t *gif = (animation_t *) malloc(sizeof(animation_t));
-        gif->gif = gif_store;
+        gif->gif = image;
         gif->showFrame = 0;
         gif->numberFrames = numFrames;
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
