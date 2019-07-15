@@ -25,9 +25,9 @@ STATIC mp_obj_t hub75_background(mp_obj_t r_obj, mp_obj_t g_obj, mp_obj_t b_obj)
     uint8_t g = mp_obj_get_int(g_obj);
     uint8_t b = mp_obj_get_int(b_obj);
     Color k;
-    k.RGB[0] = r;
-    k.RGB[1] = g;
-    k.RGB[2] = b;
+    k.RGB[3] = r;
+    k.RGB[2] = g;
+    k.RGB[1] = b;
     compositor_setBackground(k);
     return mp_const_none;
 }
@@ -77,9 +77,9 @@ STATIC mp_obj_t hub75_text(size_t n_args, const mp_obj_t *args) {
     uint8_t g = mp_obj_get_int(args[2]);
     uint8_t b = mp_obj_get_int(args[3]);
     Color k;
-    k.RGB[0] = r;
-    k.RGB[1] = g;
-    k.RGB[2] = b;
+    k.RGB[3] = r;
+    k.RGB[2] = g;
+    k.RGB[1] = b;
 
     int x = mp_obj_get_int(args[4]);
     int y = mp_obj_get_int(args[5]);
@@ -97,9 +97,9 @@ STATIC mp_obj_t hub75_scrolltext(size_t n_args, const mp_obj_t *args) {
     uint8_t g = mp_obj_get_int(args[2]);
     uint8_t b = mp_obj_get_int(args[3]);
     Color k;
-    k.RGB[0] = r;
-    k.RGB[1] = g;
-    k.RGB[2] = b;
+    k.RGB[3] = r;
+    k.RGB[2] = g;
+    k.RGB[1] = b;
 
     int x = mp_obj_get_int(args[4]);
     int y = mp_obj_get_int(args[5]);
@@ -148,9 +148,9 @@ STATIC mp_obj_t hub75_pixel(size_t n_args, const mp_obj_t *args) {
      uint32_t *image = malloc(4);
 
      Color k;
-     k.RGB[0] = r;
-     k.RGB[1] = g;
-     k.RGB[2] = b;
+     k.RGB[3] = r;
+     k.RGB[2] = g;
+     k.RGB[1] = b;
 
      image[0] = k.value;
      compositor_addImage((uint8_t *) image, x, y, 1, 1);

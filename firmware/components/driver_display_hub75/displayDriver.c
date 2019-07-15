@@ -217,9 +217,9 @@ void render16() {
                                 int xreal = 31-x;
                                 c1 = framebuffer[yreal*CONFIG_HUB75_WIDTH+xreal];
                                
-                                if (valToPwm(c1.RGB[0]) & mask) v|= BIT_R1;
-                                if (valToPwm(c1.RGB[1]) & mask) v|= BIT_G1;
-                                if (valToPwm(c1.RGB[2]) & mask) v|= BIT_B1;                               
+                                if (valToPwm(c1.RGB[3]) & mask) v|= BIT_R1;
+                                if (valToPwm(c1.RGB[2]) & mask) v|= BIT_G1;
+                                if (valToPwm(c1.RGB[1]) & mask) v|= BIT_B1;                               
                                 
                                 //Save the calculated value to the bitplane memory
                                 *p++=v;

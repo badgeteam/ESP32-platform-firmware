@@ -132,10 +132,10 @@ void renderText(char *text, Color color, int x, int y, int sizeX, int skip);
 
 Color genColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
         Color color;
-        color.RGB[0] = r;
-        color.RGB[1] = g;
-        color.RGB[2] = b;
-        color.RGB[3] = a;
+        color.RGB[0] = a;
+        color.RGB[1] = b;
+        color.RGB[2] = g;
+        color.RGB[3] = r;
         return color;
 }
 
@@ -270,9 +270,9 @@ void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length
 }
 
 void addColor(Color *target, Color *color) {
-        target->RGB[0] = color->RGB[0] + (255-color->RGB[3])*target->RGB[0]/255;
-        target->RGB[1] = color->RGB[1] + (255-color->RGB[3])*target->RGB[1]/255;
-        target->RGB[2] = color->RGB[2] + (255-color->RGB[3])*target->RGB[2]/255;
+        target->RGB[3] = color->RGB[3] + (255-color->RGB[0])*target->RGB[3]/255;
+        target->RGB[1] = color->RGB[1] + (255-color->RGB[0])*target->RGB[1]/255;
+        target->RGB[2] = color->RGB[2] + (255-color->RGB[0])*target->RGB[2]/255;
 }
 
 void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
@@ -322,7 +322,7 @@ void renderText(char *text, Color color, int x, int y, int sizeX, int skip) {
 void display_crash() {
         enabled = false;
         Color blue;
-        blue.value = 0x00AA7010;
+        blue.value = 0x1070AA00;
         Color white;
         white.value = 0xFFFFFFFF;
         for(int x=0; x<CONFIG_HUB75_WIDTH; x++) {
