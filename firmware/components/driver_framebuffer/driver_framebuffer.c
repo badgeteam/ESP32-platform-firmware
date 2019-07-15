@@ -37,9 +37,6 @@ POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "include/driver_framebuffer.h"
-#include "include/fonts/FreeSans9pt7b.h"
-#include "include/fonts/Picopixel.h"
-#include "include/fonts/OCR_A10pt7b.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -80,10 +77,17 @@ void driver_framebuffer_setFont(const GFXfont *font)
 
 esp_err_t driver_framebuffer_init()
 {
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+	framebuffer1 = malloc(FB_SIZE);
+	if (!framebuffer1) return ESP_FAIL;
+	framebuffer2 = malloc(FB_SIZE);
+	if (!framebuffer2) return ESP_FAIL;
+	currentFb = false;
+	#else
 	framebuffer = malloc(FB_SIZE);
 	if (!framebuffer) return ESP_FAIL;
-	//driver_framebuffer_setFont(&FreeSans9pt7b);
-	driver_framebuffer_setFont(&OCR_A10pt7b);
+	#endif
+	driver_framebuffer_setFont(&FreeSans9pt7b);
 	return ESP_OK;
 }
 
@@ -104,6 +108,9 @@ void driver_framebuffer_pixel(uint16_t x, uint16_t y, bool value)
 	uint32_t position = ( (y / 8) * FB_WIDTH) + x;
 	uint8_t  bit      = y % 8;
 	#endif
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
 	framebuffer[position] ^= (-value ^ framebuffer[position]) & (1UL << bit);
 }
 #endif
@@ -118,12 +125,18 @@ void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint8_t value)
 	if (x >= FB_WIDTH) return;
 	if (y >= FB_HEIGHT) return;
 	uint32_t position = (y * FB_WIDTH) + x;
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
 	framebuffer[position] = value;
 }
 #endif
 #ifdef FB_TYPE_24BPP
 void driver_framebuffer_fill(uint8_t r, uint8_t g, uint8_t b)
 {
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
 	for (uint32_t i = 0; i < FB_SIZE; i+=3) {
 		framebuffer[i + 0] = r;
 		framebuffer[i + 1] = g;
@@ -135,6 +148,9 @@ void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint
 {
 	if (x >= FB_WIDTH) return;
 	if (y >= FB_HEIGHT) return;
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
 	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
 	framebuffer[position + 0] = r;
 	framebuffer[position + 1] = g;
@@ -451,10 +467,23 @@ void driver_framebuffer_write(uint8_t c)
 	}
 }
 
+void driver_framebuffer_print(const char* str)
+{
+	for (uint32_t i = 0; i < strlen(str); i++) driver_framebuffer_write(str[i]);
+}
+
 void driver_framebuffer_flush()
 {
 	uint8_t flags = 1; //Fox E-INK driver, needs to be replaced some day.
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	uint8_t* nextFb = currentFb ? framebuffer1 : framebuffer2;
+	currentFb = !currentFb; //Switch to the other framebuffer
+	#endif
 	FB_FLUSH(framebuffer,flags);
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+	memcpy(nextFb, framebuffer, FB_SIZE); //Copy the framebuffer we just flushed into the working buffer
+	#endif
 }
 
 #else

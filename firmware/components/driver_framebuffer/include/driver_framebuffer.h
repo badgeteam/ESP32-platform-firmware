@@ -11,6 +11,8 @@
 	#define FB_TYPE_1BPP
 	#define FB_1BPP_VERT
 	#define FB_FLUSH(buffer,flags) driver_ssd1306_write(buffer);
+	#define COLOR_BLACK 0
+	#define COLOR_WHITE 1
 #endif
 
 #ifdef CONFIG_DRIVER_ERC12864_ENABLE
@@ -20,6 +22,8 @@
 	#define FB_TYPE_1BPP
 	#define FB_1BPP_VERT
 	#define FB_FLUSH(buffer,flags) driver_erc12864_write(buffer);
+	#define COLOR_BLACK 0
+	#define COLOR_WHITE 1
 #endif
 
 #ifdef CONFIG_DRIVER_EINK_ENABLE
@@ -28,37 +32,35 @@
 	#define FB_HEIGHT DRIVER_EINK_HEIGHT
 	#define FB_TYPE_8BPP
 	#define FB_FLUSH(buffer,flags) driver_eink_display(buffer,flags);
+	#define COLOR_BLACK 0
+	#define COLOR_WHITE 255
 #endif
+
+#include "gfxfont.h"
 
 #ifndef PROGMEM //We don't use PROGMEM.
 	#define PROGMEM
 #endif
 
-/// Font data stored PER GLYPH
-typedef struct {
-	uint16_t bitmapOffset;     ///< Pointer into GFXfont->bitmap
-	uint8_t  width;            ///< Bitmap dimensions in pixels
-	uint8_t  height;           ///< Bitmap dimensions in pixels
-	uint8_t  xAdvance;         ///< Distance to advance cursor (x axis)
-	int8_t   xOffset;          ///< X dist from cursor pos to UL corner
-	int8_t   yOffset;          ///< Y dist from cursor pos to UL corner
-} GFXglyph;
+/* Fonts */
+#include "include/fonts/freesans9pt7b.h"
+#include "include/fonts/freesansbold12pt7b.h"
+#include "include/fonts/freesansbold9pt7b.h"
+#include "include/fonts/fairlight8pt7b.h"
+#include "include/fonts/org_018pt7b.h"
 
-/// Data stored for FONT AS A WHOLE
-typedef struct { 
-	uint8_t  *bitmap;      ///< Glyph bitmaps, concatenated
-	GFXglyph *glyph;       ///< Glyph array
-	uint8_t   first;       ///< ASCII extents (first char)
-	uint8_t   last;        ///< ASCII extents (last char)
-	uint8_t   yAdvance;    ///< Newline distance (y axis)
-} GFXfont;
-
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+bool currentFb;
+uint8_t* framebuffer1, framebuffer2;
+#else
 uint8_t* framebuffer;
+#endif
 
 esp_err_t driver_framebuffer_init();
 void driver_framebuffer_setCursor(int16_t x, int16_t y);
 void driver_framebuffer_getCursor(int16_t* x, int16_t* y);
 void driver_framebuffer_write(uint8_t c);
+void driver_framebuffer_print(const char* str);
 void driver_framebuffer_setScale(int16_t x, int16_t y);
 void driver_framebuffer_setFont(const GFXfont *font);
 void driver_framebuffer_flush();
