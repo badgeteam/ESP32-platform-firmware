@@ -1,8 +1,8 @@
 #ifndef _DRIVER_FRAMEBUFFER_H_
 #define _DRIVER_FRAMEBUFFER_H_
-#include "include/driver_ssd1306.h"
-#include "include/driver_erc12864.h"
-#include "include/driver_eink.h"
+#include "driver_ssd1306.h"
+#include "driver_erc12864.h"
+#include "driver_eink.h"
 
 #ifdef CONFIG_DRIVER_SSD1306_ENABLE
 	#define FB_SIZE SSD1306_BUFFER_SIZE
@@ -43,11 +43,21 @@
 #endif
 
 /* Fonts */
-#include "include/fonts/freesans9pt7b.h"
-#include "include/fonts/freesansbold12pt7b.h"
-#include "include/fonts/freesansbold9pt7b.h"
-#include "include/fonts/fairlight8pt7b.h"
-#include "include/fonts/org_018pt7b.h"
+extern const GFXfont fairlight8pt7b;
+extern const GFXfont fairlight9pt7b;
+extern const GFXfont fairlight12pt7b;
+extern const GFXfont freesans8pt7b;
+extern const GFXfont freesans9pt7b;
+extern const GFXfont freesans12pt7b;
+extern const GFXfont freesansbold8pt7b;
+extern const GFXfont freesansbold9pt7b;
+extern const GFXfont freesansbold12pt7b;
+extern const GFXfont freesansmono8pt7b;
+extern const GFXfont freesansmono9pt7b;
+extern const GFXfont freesansmono12pt7b;
+extern const GFXfont org_018pt7b;
+extern const GFXfont org_019pt7b;
+extern const GFXfont org_0112pt7b;
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 bool currentFb;
@@ -61,8 +71,10 @@ void driver_framebuffer_setCursor(int16_t x, int16_t y);
 void driver_framebuffer_getCursor(int16_t* x, int16_t* y);
 void driver_framebuffer_write(uint8_t c);
 void driver_framebuffer_print(const char* str);
+void driver_framebuffer_print_len(const char* str, int16_t len);
 void driver_framebuffer_setScale(int16_t x, int16_t y);
 void driver_framebuffer_setFont(const GFXfont *font);
+void driver_framebuffer_setFlags(uint8_t newFlags);
 void driver_framebuffer_flush();
 
 #ifdef FB_TYPE_1BPP

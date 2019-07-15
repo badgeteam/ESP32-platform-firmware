@@ -143,6 +143,7 @@ int main(int argc, char *argv[]) {
 	// the right symbols, and that's not done yet.
 	// fprintf(stderr, "%ld glyphs\n", face->num_glyphs);
 
+	printf("#include \"include/driver_framebuffer.h\"\n");
 	printf("const uint8_t %sBitmaps[] = {\n  ", fontName);
 
 	// Process glyphs and output huge bitmap data array

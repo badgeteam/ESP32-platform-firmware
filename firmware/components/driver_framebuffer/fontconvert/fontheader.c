@@ -215,11 +215,11 @@ int main(int argc, char *argv[]) {
 
 	printf("#ifndef _FONT_%s_H_\n", fontName);
 	printf("#define _FONT_%s_H_\n", fontName);
-	printf("const uint8_t %sBitmaps[%u];\n", fontName, bitmapLength);
+	//printf("const uint8_t %sBitmaps[%u];\n", fontName, bitmapLength);
 
 	// Output glyph attributes table (one per character)
 	uint32_t glyphLength = (last-first)*6;
-	printf("const GFXglyph %sGlyphs[%u];\n", fontName, glyphLength);
+	//printf("const GFXglyph %sGlyphs[%u];\n", fontName, glyphLength);
 
 	// Output font structure
 	printf("const GFXfont %s;\n", fontName);

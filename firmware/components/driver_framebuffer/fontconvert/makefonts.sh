@@ -17,7 +17,7 @@ cd input
 convert=../fontconvert
 header=../fontheader
 inpath=
-outpath=../../fonts/
+outpath=../../
 outheaderpath=../../include/fonts/
 fonts=(freesans org_01 fairlight)
 styles=("" mono bold italic)
@@ -38,7 +38,7 @@ do
 				outheaderfile=$outheaderpath$f$st$si"pt7b.h"
 				printf "%s %s %s > %s\n" $convert $infile $si $outfile
 				$convert $infile $si > $outfile
-				$header $infile $si > $outheaderfile
+				#$header $infile $si > $outheaderfile
 			fi
 		done
 	done

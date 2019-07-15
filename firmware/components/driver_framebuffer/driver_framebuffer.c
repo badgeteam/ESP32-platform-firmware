@@ -51,14 +51,16 @@ int16_t cursor_x = 0;
 int16_t cursor_y = 0;
 bool textWrap = true;
 #ifdef FB_TYPE_1BPP
-bool textColor = false;
+	bool textColor = false;
 #endif
 #ifdef FB_TYPE_8BPP
-uint8_t textColor = 0;
+	uint8_t textColor = 0;
 #endif
 #ifdef FB_TYPE_24BPP
-uint8_t textColorR = 0, textColorG = 0, textColorB = 0;
+	uint8_t textColorR = 0, textColorG = 0, textColorB = 0;
 #endif
+	
+uint8_t flags = 0;
 
 void update_font_height()
 {
@@ -87,7 +89,10 @@ esp_err_t driver_framebuffer_init()
 	framebuffer = malloc(FB_SIZE);
 	if (!framebuffer) return ESP_FAIL;
 	#endif
-	driver_framebuffer_setFont(&FreeSans9pt7b);
+	driver_framebuffer_setFont(&freesans9pt7b);
+	#if defined(FB_TYPE8BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
+		flags = DISPLAY_FLAG_8BITPIXEL;	
+	#endif
 	return ESP_OK;
 }
 
@@ -364,6 +369,15 @@ void driver_framebuffer_char(uint16_t x0, uint16_t y0, unsigned char c, uint8_t 
 void driver_framebuffer_char(uint16_t x0, uint16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint8_t r, uint8_t g, uint8_t b)
 #endif
 {
+	if (gfxFont == NULL) {
+		printf("ATTEMPT TO CHAR WITH NULL FONT\n");
+		return;
+	}
+	if ((c < gfxFont->first) || (c > gfxFont->last)) {
+		printf("ATTEMPT TO CHAR WITH UNPRINTABLE CHARACTER\n");
+		return;
+	}
+	
 	c -= (uint8_t) gfxFont->first;
 	const GFXglyph *glyph   = gfxFont->glyph + c;
 	const uint8_t  *bitmap  = gfxFont->bitmap;
@@ -446,6 +460,10 @@ void driver_framebuffer_setTextColor(uint8_t r, uint8_t g, uint8_t b)
 
 void driver_framebuffer_write(uint8_t c)
 {
+	if (gfxFont == NULL) {
+		printf("ATTEMPT TO WRITE WITH NULL FONT\n");
+		return;
+	}
 	const GFXglyph *glyph = gfxFont->glyph + c - (uint8_t) gfxFont->first;
 	/*uint8_t  width        = glyph->width;
 	uint8_t  height       = glyph->height;
@@ -469,7 +487,17 @@ void driver_framebuffer_write(uint8_t c)
 
 void driver_framebuffer_print(const char* str)
 {
-	for (uint32_t i = 0; i < strlen(str); i++) driver_framebuffer_write(str[i]);
+	for (uint16_t i = 0; i < strlen(str); i++) driver_framebuffer_write(str[i]);
+}
+
+void driver_framebuffer_print_len(const char* str, int16_t len)
+{
+	for (uint16_t i = 0; i < len; i++) driver_framebuffer_write(str[i]);
+}
+
+void driver_framebuffer_setFlags(uint8_t newFlags)
+{
+	flags = newFlags;
 }
 
 void driver_framebuffer_flush()

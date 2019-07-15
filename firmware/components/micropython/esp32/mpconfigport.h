@@ -305,6 +305,10 @@ extern const struct _mp_obj_module_t erc12864_module;
 extern const struct _mp_obj_module_t ssd1306_module;
 #endif
 
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+extern const struct _mp_obj_module_t framebuffer_module;
+#endif
+
 #ifdef CONFIG_DRIVER_DISOBEY_SAMD_ENABLE
 extern const struct _mp_obj_module_t samd_module;
 #endif
@@ -383,6 +387,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_SSD1306
 #endif
 
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+#define BUILTIN_MODULE_FRAMEBUFFER { MP_OBJ_NEW_QSTR(MP_QSTR_display), (mp_obj_t)&framebuffer_module },
+#else
+#define BUILTIN_MODULE_FRAMEBUFFER
+#endif
+
 #ifdef CONFIG_DRIVER_DISOBEY_SAMD_ENABLE
 #define BUILTIN_MODULE_DISOBEY_SAMD { MP_OBJ_NEW_QSTR(MP_QSTR_samd), (mp_obj_t)&samd_module },
 #else
@@ -425,6 +435,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
     BUILTIN_MODULE_MPR121 \
     BUILTIN_MODULE_ERC12864 \
     BUILTIN_MODULE_SSD1306 \
+    BUILTIN_MODULE_FRAMEBUFFER \
     BUILTIN_MODULE_NEOPIXEL \
     BUILTIN_MODULE_HUB75 \
     BUILTIN_MODULE_EINK \

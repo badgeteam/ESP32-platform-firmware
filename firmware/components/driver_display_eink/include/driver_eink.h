@@ -15,6 +15,8 @@
 /** the max number of layers used for greyscale */
 #define DRIVER_EINK_MAX_LAYERS 16
 
+#define EINK_BUFFER_SIZE DRIVER_EINK_WIDTH*DRIVER_EINK_HEIGHT
+
 __BEGIN_DECLS
 
 /** Initialize the eink display
