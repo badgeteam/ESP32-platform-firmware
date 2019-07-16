@@ -137,6 +137,9 @@ esp_err_t driver_framebuffer_init()
 	#if defined(FB_TYPE8BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
 		flags = DISPLAY_FLAG_8BITPIXEL;	
 	#endif
+	
+	driver_framebuffer_fill(COLOR_WHITE);
+	
 	return ESP_OK;
 }
 
@@ -153,8 +156,8 @@ void driver_framebuffer_fill(bool value)
 
 void driver_framebuffer_pixel(int16_t x, int16_t y, bool value)
 {
-	if (orientation) { int16_t t = x; x = y; y = t; }
-	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return;
 	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
@@ -181,8 +184,8 @@ void driver_framebuffer_pixel(int16_t x, int16_t y, bool value)
 
 bool driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
-	if (orientation) { int16_t t = x; x = y; y = t; }
-	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return 0;
 	if (x < 0) return 0;
 	if (y >= FB_HEIGHT) return 0;
@@ -214,8 +217,8 @@ void driver_framebuffer_fill(uint8_t value)
 
 void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value)
 {
-	if (orientation) { int16_t t = x; x = y; y = t; }
-	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return;
 	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
@@ -236,8 +239,8 @@ void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value)
 
 uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
-	if (orientation) { int16_t t = x; x = y; y = t; }
-	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return 0;
 	if (x < 0) return 0;
 	if (y >= FB_HEIGHT) return 0;
@@ -277,8 +280,8 @@ void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
         uint8_t g = (color>>8)&0xFF;
         uint8_t b = color&0xFF;
 
-	if (orientation) { int16_t t = x; x = y; y = t; }
-	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return;
 	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
@@ -300,8 +303,8 @@ void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
 }
 uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
-	if (orientation) { int16_t t = x; x = y; y = t; }
-	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return 0;
 	if (x < 0) return 0;
 	if (y >= FB_HEIGHT) return 0;
@@ -551,31 +554,29 @@ void driver_framebuffer_get_dirty(int16_t* x0, int16_t* y0, int16_t* x1, int16_t
 	*x1 = dirty_x1;
 	*y1 = dirty_y1;
 
-/*        if (flip180) {
-                int16_t a = FB_WIDTH - *x0;
-                int16_t b = FB_HEIGHT - *y0;
-                int16_t c = FB_WIDTH - *x1;
-                int16_t d = FB_HEIGHT - *y1;
-		*x0 = c;
-		*y0 = d;
-		*x1 = a;
-		*y1 = b;
-        }
-*/
-        if (orientation) {
+	if (flip180) {
 		int16_t tx0 = *x0;
-		*x0 = *y0;
-		*y0 = FB_WIDTH-tx0;
+		int16_t ty0 = *y0;
+		*x0 = FB_WIDTH-*x1-1;
+		*y0 = FB_HEIGHT-*y1-1;
+		*x1 = FB_WIDTH-tx0-1;
+		*y1 = FB_HEIGHT-ty0-1;
+	}
 
+	if (orientation) {
+		int16_t tx0 = *x0;
 		int16_t tx1 = *x1;
-		*x1 = *y1;
-		*y1 = FB_WIDTH-tx1;
+		int16_t ty1 = *y1;
+		*x0 = *y0;
+		*y0 = FB_WIDTH-tx1-1;
+		*x1 = ty1;
+		*y1 = FB_WIDTH-tx0-1;
 	}
 }
 
 void driver_framebuffer_flush()
 {
-	if (!isDirty) return; //No need to update
+	//if (!isDirty) return; //No need to update
 
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
@@ -605,7 +606,7 @@ void driver_framebuffer_flush()
 	#else
 		FB_FLUSH(framebuffer,flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
 	#endif
-
+	
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 	memcpy(nextFb, framebuffer, FB_SIZE); //Copy the framebuffer we just flushed into the working buffer
 	#endif

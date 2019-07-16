@@ -31,8 +31,8 @@
 	#define FB_WIDTH DRIVER_EINK_WIDTH
 	#define FB_HEIGHT DRIVER_EINK_HEIGHT
 	#define FB_TYPE_8BPP
-	//#define FB_FLUSH(buffer,flags) driver_eink_display(buffer,flags);
-	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_eink_display_part(buffer,flags,y0,y1);
+	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_eink_display(buffer,flags);
+	//#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_eink_display_part(buffer,flags,y0,y1);
 	#define FB_FLUSH_GS(buffer,flags) driver_eink_display_greyscale(buffer,flags,16);
 	#define COLOR_BLACK 0
 	#define COLOR_WHITE 255
