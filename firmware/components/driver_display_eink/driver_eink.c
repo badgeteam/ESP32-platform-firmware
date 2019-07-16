@@ -205,34 +205,26 @@ void driver_eink_update(const uint32_t *buf, const struct driver_eink_update *up
 	driver_eink_have_oldbuf = true;
 }
 
-void driver_eink_display(const uint8_t *img, driver_eink_flags_t flags)
+void driver_eink_display_part(const uint8_t *img, driver_eink_flags_t flags, uint16_t y_start, uint16_t y_end)
 {
-	int lut_mode = 
-		(flags >> DISPLAY_FLAG_LUT_BIT) & ((1 << DISPLAY_FLAG_LUT_SIZE)-1);
+	int lut_mode = (flags >> DISPLAY_FLAG_LUT_BIT) & ((1 << DISPLAY_FLAG_LUT_SIZE)-1);
 
 	uint32_t *buf = driver_eink_tmpbuf;
-	if (img == NULL)
-	{
+	if (img == NULL) {
 		memset_u32(buf, 0, DISP_SIZE_X_B * DISP_SIZE_Y/4);
-	}
-	else
-	{
+	} else {
 		driver_eink_create_bitplane(img, buf, 0x80, flags);
 	}
 
-	if ((flags & DISPLAY_FLAG_NO_UPDATE) != 0)
-	{
+	if ((flags & DISPLAY_FLAG_NO_UPDATE) != 0) {
 		return;
 	}
 
 	int lut_flags = 0;
-	if (!driver_eink_have_oldbuf || (flags & DISPLAY_FLAG_FULL_UPDATE))
-	{
+	if (!driver_eink_have_oldbuf || (flags & DISPLAY_FLAG_FULL_UPDATE)) {
 		// old image not known (or full update requested); do full update
 		lut_flags |= LUT_FLAG_FIRST;
-	}
-	else if (lut_mode - 1 != DRIVER_EINK_LUT_FULL)
-	{
+	} else if (lut_mode - 1 != DRIVER_EINK_LUT_FULL) {
 		// old image is known; prefer to do a partial update
 		lut_flags |= LUT_FLAG_PARTIAL;
 	}
@@ -242,10 +234,15 @@ void driver_eink_display(const uint8_t *img, driver_eink_flags_t flags)
 		.lut_flags = lut_flags,
 		.reg_0x3a  = 26,   // 26 dummy lines per gate
 		.reg_0x3b  = 0x08, // 62us per line
-		.y_start   = 0,
-		.y_end     = 295,
+		.y_start   = y_start,
+		.y_end     = y_end,
 	};
 	driver_eink_update(buf, &eink_upd);
+}
+
+void driver_eink_display(const uint8_t *img, driver_eink_flags_t flags)
+{
+	driver_eink_display_part(img, flags, 0, 295);
 }
 
 void driver_eink_display_greyscale(const uint8_t *img, driver_eink_flags_t flags, int layers)
