@@ -51,11 +51,11 @@ int16_t cursor_y = 0;
 bool textWrap = true;
 uint32_t textColor = COLOR_BLACK;
 
-bool isDirty = false;
-uint16_t dirty_x0 = 0;
-uint16_t dirty_y0 = 0;
-uint16_t dirty_x1 = FB_WIDTH;
-uint16_t dirty_y1 = FB_HEIGHT;
+bool isDirty = true;
+int16_t dirty_x0 = 0;
+int16_t dirty_y0 = 0;
+int16_t dirty_x1 = FB_WIDTH;
+int16_t dirty_y1 = FB_HEIGHT;
 
 
 uint8_t flags = 0; //Used to pass extra information to the display driver (if supported)
@@ -151,18 +151,20 @@ void driver_framebuffer_fill(bool value)
 	memset(framebuffer, value ? 0xFF : 0x00, FB_SIZE);
 }
 
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, bool value)
+void driver_framebuffer_pixel(int16_t x, int16_t y, bool value)
 {
-	if (orientation) { uint16_t t = x; x = y; y = t; }
+	if (orientation) { int16_t t = x; x = y; y = t; }
 	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
 	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
 	
 	isDirty = true;
 	if (x < dirty_x0) dirty_x0 = x;
 	if (y < dirty_y0) dirty_y0 = y;
 	if (x > dirty_x1) dirty_x1 = x;
-	if (y > dirty_y1) dirty_y1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
 
 	#ifndef FB_1BPP_VERT
 		uint32_t position = (y * FB_WIDTH) + (x / 8);
@@ -177,12 +179,15 @@ void driver_framebuffer_pixel(uint16_t x, uint16_t y, bool value)
 	framebuffer[position] ^= (-value ^ framebuffer[position]) & (1UL << bit);
 }
 
-bool driver_framebuffer_getPixel(uint16_t x, uint16_t y)
+bool driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
-	if (orientation) { uint16_t t = x; x = y; y = t; }
+	if (orientation) { int16_t t = x; x = y; y = t; }
 	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
-	if (x >= FB_WIDTH) return false;
-	if (y >= FB_HEIGHT) return false;
+	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
+	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+
 	#ifndef FB_1BPP_VERT
 		uint32_t position = (y * FB_WIDTH) + (x / 8);
 		uint8_t  bit      = x % 8;
@@ -207,18 +212,20 @@ void driver_framebuffer_fill(uint8_t value)
 	memset(framebuffer, value, FB_SIZE);
 }
 
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint8_t value)
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value)
 {
-	if (orientation) { uint16_t t = x; x = y; y = t; }
+	if (orientation) { int16_t t = x; x = y; y = t; }
 	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
 	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
 
 	isDirty = true;
 	if (x < dirty_x0) dirty_x0 = x;
 	if (y < dirty_y0) dirty_y0 = y;
 	if (x > dirty_x1) dirty_x1 = x;
-	if (y > dirty_y1) dirty_y1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
 
 	uint32_t position = (y * FB_WIDTH) + x;
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
@@ -227,12 +234,14 @@ void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint8_t value)
 	framebuffer[position] = value;
 }
 
-uint8_t driver_framebuffer_getPixel(uint16_t x, uint16_t y)
+uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
-	if (orientation) { uint16_t t = x; x = y; y = t; }
+	if (orientation) { int16_t t = x; x = y; y = t; }
 	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
 	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
 	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
 
 	uint32_t position = (y * FB_WIDTH) + x;
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
@@ -262,21 +271,24 @@ void driver_framebuffer_fill(uint32_t color)
 	}
 }
 
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint32_t color)
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
 {
         uint8_t r = (color>>16)&0xFF;
         uint8_t g = (color>>8)&0xFF;
         uint8_t b = color&0xFF;
-	if (orientation) { uint16_t t = x; x = y; y = t; }
+
+	if (orientation) { int16_t t = x; x = y; y = t; }
 	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
 	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
 
 	isDirty = true;
 	if (x < dirty_x0) dirty_x0 = x;
 	if (y < dirty_y0) dirty_y0 = y;
 	if (x > dirty_x1) dirty_x1 = x;
-	if (y > dirty_y1) dirty_y1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
 
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
@@ -286,12 +298,15 @@ void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint32_t color)
 	framebuffer[position + 1] = g;
 	framebuffer[position + 2] = b;
 }
-uint32_t driver_framebuffer_getPixel(uint16_t x, uint16_t y)
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
-	if (orientation) { uint16_t t = x; x = y; y = t; }
+	if (orientation) { int16_t t = x; x = y; y = t; }
 	if (flip180)     { y = FB_HEIGHT - y; x = FB_WIDTH - x; }
 	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
 	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
@@ -302,7 +317,7 @@ uint32_t driver_framebuffer_getPixel(uint16_t x, uint16_t y)
 
 #define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
 
-void driver_framebuffer_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color)
+void driver_framebuffer_line(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint32_t color)
 {
 	int16_t steep = abs(y1 - y0) > abs(x1 - x0);
 	if (steep) {
@@ -342,7 +357,7 @@ void driver_framebuffer_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 	}
 }
 
-void driver_framebuffer_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color)
+void driver_framebuffer_rect(int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color)
 {
 	if (x > FB_WIDTH) return;
 	if (y > FB_HEIGHT) return;
@@ -361,7 +376,7 @@ void driver_framebuffer_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
 	}
 }
 
-void driver_framebuffer_circle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint32_t color)
+void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint32_t color)
 {
 	int16_t f     = 1 - r;
 	int16_t ddF_x = 1;
@@ -425,7 +440,7 @@ void driver_framebuffer_circle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t a0
 	}
 }
 
-void driver_framebuffer_char(uint16_t x0, uint16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color)
+void driver_framebuffer_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color)
 {
 	if (gfxFont == NULL) {
 		printf("ATTEMPT TO CHAR WITH NULL FONT\n");
@@ -529,6 +544,35 @@ void driver_framebuffer_setFlags(uint8_t newFlags)
 	flags = newFlags;
 }
 
+void driver_framebuffer_get_dirty(int16_t* x0, int16_t* y0, int16_t* x1, int16_t* y1)
+{
+	*x0 = dirty_x0;
+	*y0 = dirty_y0;
+	*x1 = dirty_x1;
+	*y1 = dirty_y1;
+
+/*        if (flip180) {
+                int16_t a = FB_WIDTH - *x0;
+                int16_t b = FB_HEIGHT - *y0;
+                int16_t c = FB_WIDTH - *x1;
+                int16_t d = FB_HEIGHT - *y1;
+		*x0 = c;
+		*y0 = d;
+		*x1 = a;
+		*y1 = b;
+        }
+*/
+        if (orientation) {
+		int16_t tx0 = *x0;
+		*x0 = *y0;
+		*y0 = FB_WIDTH-tx0;
+
+		int16_t tx1 = *x1;
+		*x1 = *y1;
+		*y1 = FB_WIDTH-tx1;
+	}
+}
+
 void driver_framebuffer_flush()
 {
 	if (!isDirty) return; //No need to update
@@ -542,6 +586,15 @@ void driver_framebuffer_flush()
 	#ifdef DISPLAY_FLAG_8BITPIXEL
 		flags |= DISPLAY_FLAG_8BITPIXEL;
 	#endif
+
+	if (dirty_x0 < 0) dirty_x0 = 0;
+	if (dirty_x0 > FB_WIDTH) dirty_x0 = FB_WIDTH;
+        if (dirty_x1 < 0) dirty_x1 = 0;
+        if (dirty_x1 > FB_WIDTH) dirty_x1 = FB_WIDTH;
+        if (dirty_y0 < 0) dirty_y0 = 0;
+        if (dirty_y0 > FB_WIDTH) dirty_y0 = FB_HEIGHT;
+        if (dirty_y1 < 0) dirty_y1 = 0;
+        if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT;
 
 	#ifdef FB_FLUSH_GS
 		if (useGreyscale) {

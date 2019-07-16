@@ -82,30 +82,31 @@ void driver_framebuffer_setFont(const GFXfont *font);
 void driver_framebuffer_setFlags(uint8_t newFlags);
 void driver_framebuffer_flush();
 
+void driver_framebuffer_get_dirty(int16_t* x0, int16_t* y0, int16_t* x1, int16_t* y1);
 bool driver_framebuffer_is_dirty();
 void driver_framebuffer_set_greyscale(bool use);
 
-void driver_framebuffer_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color);
-void driver_framebuffer_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color);
-void driver_framebuffer_circle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint32_t color);
-void driver_framebuffer_char(uint16_t x0, uint16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color);
+void driver_framebuffer_line(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint32_t color);
+void driver_framebuffer_rect(int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color);
+void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint32_t color);
+void driver_framebuffer_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color);
 void driver_framebuffer_setTextColor(uint32_t color);
 
 
 #ifdef FB_TYPE_1BPP
 void driver_framebuffer_fill(bool value);
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, bool value);
-bool driver_framebuffer_getPixel(uint16_t x, uint16_t y);
+void driver_framebuffer_pixel(int16_t x, int16_t y, bool value);
+bool driver_framebuffer_getPixel(int16_t x, int16_t y);
 #endif
 #ifdef FB_TYPE_8BPP
 void driver_framebuffer_fill(uint8_t value);
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint8_t value);
-uint8_t driver_framebuffer_getPixel(uint16_t x, uint16_t y);
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value);
+uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y);
 #endif
 #ifdef FB_TYPE_24BPP
 void driver_framebuffer_fill(uint8_t r, uint8_t g, uint8_t b);
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b);
-uint32_t driver_framebuffer_getPixel(uint16_t x, uint16_t y);
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b);
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y);
 #endif
 
 #endif //_DRIVER_FRAMEBUFFER_H_
