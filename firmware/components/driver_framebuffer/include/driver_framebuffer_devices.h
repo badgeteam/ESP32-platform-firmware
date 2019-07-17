@@ -1,5 +1,6 @@
 #ifndef _DRIVER_FRAMEBUFFER_DEVICES_H_
 #define _DRIVER_FRAMEBUFFER_DEVICES_H_
+
 #include "driver_ssd1306.h"
 #include "driver_erc12864.h"
 #include "driver_eink.h"
@@ -49,6 +50,10 @@
 	#define FB_HEIGHT ILI9341_HEIGHT
 	#define FB_TYPE_16BPP
 	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_ili9341_write_partial(buffer, x0, y0, x1, y1)
+	#define COLOR_BLACK 0
+	#define COLOR_WHITE 0xFFFF
+	#define COLOR_FILL_DEFAULT COLOR_BLACK
+	#define COLOR_TEXT_DEFAULT COLOR_WHITE
 
 #else
 #error "Framebuffer driver enabled without a target display available!"

@@ -5,6 +5,9 @@ backlight = machine.Pin(5, machine.Pin.OUT)
 esp.rtcmem_write(0,0)
 esp.rtcmem_write(1,0)
 
+import display
+display.flush()
+
 #SD card interface on SHA2017 badge
 try:
 	os.mountsd()

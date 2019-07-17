@@ -1,5 +1,6 @@
 #ifndef _DRIVER_FRAMEBUFFER_H_
 #define _DRIVER_FRAMEBUFFER_H_
+#include <stdint.h>
 #include "driver_framebuffer_devices.h"
 #include "driver_framebuffer_font.h"
 
@@ -62,9 +63,14 @@ void driver_framebuffer_fill(uint8_t value);
 void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value);
 uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y);
 #endif
+#ifdef FB_TYPE_16BPP
+void driver_framebuffer_fill(uint32_t value);
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t value);
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y);
+#endif
 #ifdef FB_TYPE_24BPP
-void driver_framebuffer_fill(uint8_t r, uint8_t g, uint8_t b);
-void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t r, uint8_t g, uint8_t b);
+void driver_framebuffer_fill(uint32_t value);
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t value);
 uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y);
 #endif
 

@@ -54,8 +54,8 @@ uint32_t textColor = COLOR_BLACK;
 bool isDirty = true;
 int16_t dirty_x0 = 0;
 int16_t dirty_y0 = 0;
-int16_t dirty_x1 = FB_WIDTH;
-int16_t dirty_y1 = FB_HEIGHT;
+int16_t dirty_x1 = 0;
+int16_t dirty_y1 = 0;
 
 
 uint8_t flags = 0; //Used to pass extra information to the display driver (if supported)
@@ -143,14 +143,14 @@ esp_err_t driver_framebuffer_init()
 	return ESP_OK;
 }
 
-#ifdef FB_TYPE_1BPP
+#if defined(FB_TYPE_1BPP)
 void driver_framebuffer_fill(bool value)
 {
 	isDirty = true;
-	dirty_x0 = FB_WIDTH;
-	dirty_y0 = FB_HEIGHT;
-	dirty_x1 = 0;
-	dirty_y1 = 0;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
 	memset(framebuffer, value ? 0xFF : 0x00, FB_SIZE);
 }
 
@@ -203,15 +203,14 @@ bool driver_framebuffer_getPixel(int16_t x, int16_t y)
 	#endif
 	return (framebuffer[position] >> bit) && 0x01;
 }
-#endif
-#ifdef FB_TYPE_8BPP
+#elif defined(FB_TYPE_8BPP)
 void driver_framebuffer_fill(uint8_t value)
 {
 	isDirty = true;
-	dirty_x0 = FB_WIDTH;
-	dirty_y0 = FB_HEIGHT;
-	dirty_x1 = 0;
-	dirty_y1 = 0;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
 	memset(framebuffer, value, FB_SIZE);
 }
 
@@ -252,15 +251,14 @@ uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	#endif
 	return framebuffer[position];
 }
-#endif
-#ifdef FB_TYPE_16BPP
+#elif defined(FB_TYPE_16BPP)
 void driver_framebuffer_fill(uint32_t color)
 {
 	isDirty = true;
-	dirty_x0 = FB_WIDTH;
-	dirty_y0 = FB_HEIGHT;
-	dirty_x1 = 0;
-	dirty_y1 = 0;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
 	uint8_t c0 = (color>>8)&0xFF;
 	uint8_t c1 = color&0xFF;
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
@@ -310,18 +308,16 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
 	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
-	return (framebuffer[position] << 8) + (framebuffer[position + 1])
+	return (framebuffer[position] << 8) + (framebuffer[position + 1]);
 }
-#endif
-
-#ifdef FB_TYPE_24BPP
+#elif defined(FB_TYPE_24BPP)
 void driver_framebuffer_fill(uint32_t color)
 {
 	isDirty = true;
-	dirty_x0 = FB_WIDTH;
-	dirty_y0 = FB_HEIGHT;
-	dirty_x1 = 0;
-	dirty_y1 = 0;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
 	uint8_t r = (color>>16)&0xFF;
 	uint8_t g = (color>>8)&0xFF;
 	uint8_t b = color&0xFF;
@@ -375,8 +371,10 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
 	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
-	return (framebuffer[position] << 16) + (framebuffer[position+1] << 8) + (framebuffer[position + 2])
+	return (framebuffer[position] << 16) + (framebuffer[position+1] << 8) + (framebuffer[position + 2]);
 }
+#else
+#error "Framebuffer can not be enabled without valid output configuration."
 #endif
 
 #define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
@@ -637,7 +635,7 @@ void driver_framebuffer_get_dirty(int16_t* x0, int16_t* y0, int16_t* x1, int16_t
 
 void driver_framebuffer_flush()
 {
-	//if (!isDirty) return; //No need to update
+	if (!isDirty) return; //No need to update
 
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
@@ -651,12 +649,14 @@ void driver_framebuffer_flush()
 
 	if (dirty_x0 < 0) dirty_x0 = 0;
 	if (dirty_x0 > FB_WIDTH) dirty_x0 = FB_WIDTH;
-        if (dirty_x1 < 0) dirty_x1 = 0;
-        if (dirty_x1 > FB_WIDTH) dirty_x1 = FB_WIDTH;
-        if (dirty_y0 < 0) dirty_y0 = 0;
-        if (dirty_y0 > FB_WIDTH) dirty_y0 = FB_HEIGHT;
-        if (dirty_y1 < 0) dirty_y1 = 0;
-        if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT;
+	if (dirty_x1 < 0) dirty_x1 = 0;
+	if (dirty_x1 > FB_WIDTH) dirty_x1 = FB_WIDTH;
+	if (dirty_y0 < 0) dirty_y0 = 0;
+	if (dirty_y0 > FB_WIDTH) dirty_y0 = FB_HEIGHT;
+	if (dirty_y1 < 0) dirty_y1 = 0;
+	if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT;
+	
+	dirty_y1 +=1; //Temp. fix
 
 	#ifdef FB_FLUSH_GS
 		if (useGreyscale) {

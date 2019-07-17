@@ -59,12 +59,12 @@ static esp_err_t driver_ili9341_claim_spi(void)
 		.sclk_io_num     = CONFIG_PIN_NUM_ILI9341_CLK,
 		.quadwp_io_num   = -1,
 		.quadhd_io_num   = -1,
-		.max_transfer_sz = 128,
+		.max_transfer_sz = 320*128*2+32,
 	};
 	esp_err_t res = spi_bus_initialize(VSPI_HOST, &buscfg, 2);
 	if (res != ESP_OK) return res;
 	static const spi_device_interface_config_t devcfg = {
-		.clock_speed_hz = 20 * 1000 * 1000,
+		.clock_speed_hz = 40 * 1000 * 1000,
 		.mode           = 0,  // SPI mode 0
 		.spics_io_num   = CONFIG_PIN_NUM_ILI9341_CS,
 		.queue_size     = 1,
@@ -260,13 +260,27 @@ esp_err_t driver_ili9341_write(const uint8_t *buffer)
 	return driver_ili9341_write_partial(buffer, 0, 0, ILI9341_WIDTH, ILI9341_HEIGHT);
 }
 
+esp_err_t driver_ili9341_write_real_partial(const uint8_t *buffer, uint16_t y, uint16_t h)
+{
+	esp_err_t res = driver_ili9341_set_addr_window(0, y, ILI9341_WIDTH, h);
+	if (res != ESP_OK) return res;
+	res = driver_ili9341_send(buffer+(y*ILI9341_WIDTH)*2, ILI9341_WIDTH*h*2, true);
+	return res;
+}
+
 esp_err_t driver_ili9341_write_partial(const uint8_t *buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-	uint16_t w = x1-x0;
+	esp_err_t res;
 	uint16_t h = y1-y0;
-	esp_err_t res = driver_ili9341_set_addr_window(x0,y0,w,h);
-	if (res != ESP_OK) return res;
-	res = driver_ili9341_send(buffer, w*h*2, true);
+	while (h > 0) {
+		uint16_t lines = h;
+		if (lines > 120) lines = 120;
+		//printf("Lines %u\n", lines);
+		res = driver_ili9341_write_real_partial(buffer, y0, lines);
+		if (res != ESP_OK) return res;
+		y0 += lines;
+		h -= lines;
+	}
 	return res;
 }
 

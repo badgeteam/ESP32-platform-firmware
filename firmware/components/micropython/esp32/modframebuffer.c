@@ -52,6 +52,13 @@ static mp_obj_t framebuffer_set_pixel(mp_obj_t x_in, mp_obj_t y_in, mp_obj_t col
 }
 static MP_DEFINE_CONST_FUN_OBJ_3(framebuffer_set_pixel_obj, framebuffer_set_pixel);
 
+static mp_obj_t framebuffer_set_text_color(mp_obj_t color_in) {
+	int color = mp_obj_get_int(color_in);
+	driver_framebuffer_setTextColor(color);
+	return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_set_text_color_obj, framebuffer_set_text_color);
+
 static mp_obj_t framebuffer_fill(mp_uint_t n_args, const mp_obj_t *args)
 {
 	int color = n_args == 0 ? COLOR_WHITE : mp_obj_get_int(args[0]);
@@ -159,6 +166,7 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_cursor), MP_ROM_PTR(&framebuffer_cursor_obj)},
 	{MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&framebuffer_get_pixel_obj)},
 	{MP_ROM_QSTR(MP_QSTR_set), MP_ROM_PTR(&framebuffer_set_pixel_obj)},
+	{MP_ROM_QSTR(MP_QSTR_textColor), MP_ROM_PTR(&framebuffer_set_text_color_obj)},
 	{MP_ROM_QSTR(MP_QSTR_fill), MP_ROM_PTR(&framebuffer_fill_obj)},
 	{MP_ROM_QSTR(MP_QSTR_flush), MP_ROM_PTR(&framebuffer_flush_obj)},
 	{MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&framebuffer_char_obj)},
