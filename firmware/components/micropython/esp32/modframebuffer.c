@@ -161,6 +161,55 @@ static mp_obj_t framebuffer_set_greyscale(mp_obj_t value_in)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_set_greyscale_obj, framebuffer_set_greyscale);
 
+uint16_t rgbTo565(uint32_t in)
+{
+	uint8_t r = (in>>16)&0xFF;
+	uint8_t g = (in>>8)&0xFF;
+	uint8_t b = in&0xFF;
+	uint16_t out = ((b & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (r >> 3);
+	return out;
+}
+
+static mp_obj_t framebuffer_rgbTo565(mp_obj_t value_in)
+{
+	int in = mp_obj_get_int(value_in);
+	int out = rgbTo565(in);
+	return mp_obj_new_int(out);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_rgbTo565_obj, framebuffer_rgbTo565);
+
+static mp_obj_t framebuffer_raw565(mp_uint_t n_args, const mp_obj_t *args)
+{
+	int16_t x = mp_obj_get_int(args[0]);
+	int16_t y = mp_obj_get_int(args[1]);
+	int16_t w = mp_obj_get_int(args[2]);
+	int16_t h = mp_obj_get_int(args[3]);
+	
+	mp_uint_t len;
+	if (!MP_OBJ_IS_TYPE(args[4], &mp_type_bytes)) {
+		mp_raise_ValueError("Expected a bytestring like object.");
+		return mp_const_none;
+	}
+	uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[4], &len);
+	
+	/*for (int16_t px = 0; px < w, px++) {
+		for (int16_t py = 0; py < w, py++) {
+			uint32_t pos = (x+px)*3 + (y+py)*3*w;
+			driver_framebuffer_pixel(x,y,framebuffer_rgbTo565(data_in[pos],data_in[pos+1],data_in[pos+2]));
+		}
+	}*/
+	
+	for (int16_t px = 0; px < w; px++) {
+		for (int16_t py = 0; py < h; py++) {
+			uint32_t pos = (x+px)*2 + (y+py)*2*w;
+			driver_framebuffer_pixel(x+px,y+py,(data[pos]<<8)+data[pos+1]);
+		}
+	}
+	return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_raw565_obj, 5, 5, framebuffer_raw565);
+
 static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&framebuffer_orientation_obj)},
 	{MP_ROM_QSTR(MP_QSTR_cursor), MP_ROM_PTR(&framebuffer_cursor_obj)},
@@ -176,6 +225,8 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_circle), MP_ROM_PTR(&framebuffer_circle_obj)},
 	{MP_ROM_QSTR(MP_QSTR_dirty), MP_ROM_PTR(&framebuffer_get_dirty_obj)},
 	{MP_ROM_QSTR(MP_QSTR_greyscale), MP_ROM_PTR(&framebuffer_set_greyscale_obj)},
+	{MP_ROM_QSTR(MP_QSTR_rgbTo565), MP_ROM_PTR(&framebuffer_rgbTo565_obj)},
+	{MP_ROM_QSTR(MP_QSTR_raw565), MP_ROM_PTR(&framebuffer_raw565_obj)},
 };
 
 static MP_DEFINE_CONST_DICT(framebuffer_module_globals, framebuffer_module_globals_table);
