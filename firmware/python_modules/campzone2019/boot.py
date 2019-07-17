@@ -1,4 +1,4 @@
-import esp, machine, sys, system, os
+import esp, machine, sys, system, os, rgb
 
 esp.rtcmem_write(0,0)
 esp.rtcmem_write(1,0)
@@ -12,7 +12,7 @@ else:
 		app = "factory_checks"
 	else:
 		app = machine.nvs_getstr("system", 'default_app')
-		if not app: #This generic set of modules has no default app
+		if not app:
 			app = 'launcher'
 
 try:

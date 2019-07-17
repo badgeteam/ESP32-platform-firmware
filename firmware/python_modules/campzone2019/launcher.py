@@ -1,5 +1,5 @@
 import sys, uos as os, time, ujson
-import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines
+import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, wifi
 import rgb
 
 # Application list
@@ -9,8 +9,8 @@ current_index = 0
 
 
 def show_text(text):
-    rgb.background((0, 50, 40))
-    rgb.scrolltext(text, (80, 80, 0))
+    # rgb.background((0, 50, 40))
+    rgb.scrolltext(text, (80, 80, 80))
 
 
 def clear():
@@ -40,6 +40,8 @@ def populate_apps():
         userApps = []
     for app in userApps:
         add_app(app, read_metadata(app))
+    add_app("snake", {"name": "Snake", "category": "system"})
+    add_app("clock", {"name": "Clock", "category": "system"})
     add_app("installer", {"name": "Installer", "category": "system"})
     add_app("update", {"name": "Update apps", "category": "system"})
     add_app("checkforupdates", {"name": "Update firmware", "category": "system"})
@@ -192,5 +194,17 @@ def start():
 
 start()
 init_power_management()
+
+# Do shameless start-of-event update
+# if not machine.nvs_getint("system", 'day0_updated'):
+#     if wifi.status() or wifi.connect():
+#         rgb.clear()
+#         rgb.scrolltext("Updating, don't remove battery")
+#         time.sleep(5)
+#         machine.nvs_setint("system", 'day0_updated', 1)
+#         system.ota()
+#     else:
+#         print('Need to perform day0 update, but no WiFi connection present')
+
 menu = term_menu.UartMenu(None, pm)
 menu.main()

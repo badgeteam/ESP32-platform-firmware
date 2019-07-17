@@ -121,10 +121,10 @@ bool active;
 void displayDriver_init() {
         //Change to set the global brightness of the display, range 1-63
         //Warning when set too high: Do not look into LEDs with remaining eye.
-        framebuffer = (Color *) malloc(CONFIG_HUB75_HEIGHT*CONFIG_HUB75_WIDTH*sizeof(Color));
+        framebuffer = (Color *) calloc(CONFIG_HUB75_HEIGHT*CONFIG_HUB75_WIDTH, sizeof(Color));
         for (int i=0; i<BITPLANE_CNT; i++) {
                 for (int j=0; j<2; j++) {
-                        bitplane[j][i] = (uint8_t *) heap_caps_malloc(BITPLANE_SZ*sizeof(uint8_t), MALLOC_CAP_DMA);
+                        bitplane[j][i] = (uint8_t *) heap_caps_calloc(BITPLANE_SZ, sizeof(uint8_t), MALLOC_CAP_DMA);
                         assert(bitplane[j][i] && "Can't allocate bitplane memory");
                 }
         }
@@ -163,7 +163,7 @@ void displayDriver_init() {
         xTaskCreatePinnedToCore(
                  &displayTask, /* Task function. */
                  "display", /* String with name of task. */
-                 512,    /* Stack size in words. */
+                 1024,    /* Stack size in words. */
                  NULL,     /* Parameter passed as input of the task */
                  10,       /* Priority of the task. */
                  NULL,     /* Task handle. */
@@ -217,9 +217,9 @@ void render16() {
                                 int xreal = 31-x;
                                 c1 = framebuffer[yreal*CONFIG_HUB75_WIDTH+xreal];
                                
-                                if (valToPwm(c1.RGB[0]) & mask) v|= BIT_R1;
-                                if (valToPwm(c1.RGB[1]) & mask) v|= BIT_G1;
-                                if (valToPwm(c1.RGB[2]) & mask) v|= BIT_B1;                               
+                                if (valToPwm(c1.RGB[3]) & mask) v|= BIT_R1;
+                                if (valToPwm(c1.RGB[2]) & mask) v|= BIT_G1;
+                                if (valToPwm(c1.RGB[1]) & mask) v|= BIT_B1;                               
                                 
                                 //Save the calculated value to the bitplane memory
                                 *p++=v;

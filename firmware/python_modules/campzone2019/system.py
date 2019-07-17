@@ -43,7 +43,7 @@ def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
 
 # Application launching
 
-def start(app, status=False):
+def start(app, status=True):
 	import esp
 	if status:
 		import term

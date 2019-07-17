@@ -1,11 +1,11 @@
-menu "Hardware & build configuration"
+menu "Firmware & device configuration"
 	menu "Firmware description"
 	config INFO_FIRMWARE_NAME
 		string "Code-name of the firmware"
 		default "Bleeding edge"
 
 	config INFO_FIRMWARE_BUILD
-		int "Buildnumber of the firmware"
+		int "Build number of the firmware"
 		default 0
 		help
                 Build number of the firmware
@@ -23,10 +23,13 @@ menu "Hardware & build configuration"
 		default "generic"
 		help
                 The name of the directory in /python_modules to load into firmware image as static micropython modules.
-	endmenu
-endmenu
 
-menu "OTA update & WiFi"
+	config INFO_HARDWARE_WOEZEL_NAME
+		string "Name of the badge on the app hatchery"
+		default "generic"
+	endmenu
+
+	menu "OTA and app hatchery servers"
 	config OTA_WEB_SERVER
 		string "Hostname of server for OTA updates"
 		default "www.sensorcloud.nl"
@@ -39,6 +42,12 @@ menu "OTA update & WiFi"
 		string "Path on the server for OTA updates"
 		default "/firmware.bin"
 
+	config WOEZEL_WEB_SERVER
+		string "Hostname of server for app hatchery that contains user apps"
+		default "www.sensorcloud.nl"
+	endmenu
+
+    menu "WiFi"
 	config WIFI_SSID
 		string "Default WiFi ssid"
 		default ""
@@ -46,6 +55,7 @@ menu "OTA update & WiFi"
 	config WIFI_PASSWORD
 		string "Default WiFi password, leave empty for unsecure network"
 		default ""
+	endmenu
 endmenu
 
 #menu "Drivers"

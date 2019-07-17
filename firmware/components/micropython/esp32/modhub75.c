@@ -25,9 +25,9 @@ STATIC mp_obj_t hub75_background(mp_obj_t r_obj, mp_obj_t g_obj, mp_obj_t b_obj)
     uint8_t g = mp_obj_get_int(g_obj);
     uint8_t b = mp_obj_get_int(b_obj);
     Color k;
-    k.RGB[0] = r;
-    k.RGB[1] = g;
-    k.RGB[2] = b;
+    k.RGB[3] = r;
+    k.RGB[2] = g;
+    k.RGB[1] = b;
     compositor_setBackground(k);
     return mp_const_none;
 }
@@ -71,15 +71,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(hub75_enablecomp_obj, hub75_enablecomp);
 
 
 STATIC mp_obj_t hub75_text(size_t n_args, const mp_obj_t *args) {
-    char *test = mp_obj_str_get_str(args[0]);
+    char *test = (char*)mp_obj_str_get_str(args[0]);
 
     uint8_t r = mp_obj_get_int(args[1]);
     uint8_t g = mp_obj_get_int(args[2]);
     uint8_t b = mp_obj_get_int(args[3]);
     Color k;
-    k.RGB[0] = r;
-    k.RGB[1] = g;
-    k.RGB[2] = b;
+    k.RGB[3] = r;
+    k.RGB[2] = g;
+    k.RGB[1] = b;
 
     int x = mp_obj_get_int(args[4]);
     int y = mp_obj_get_int(args[5]);
@@ -91,15 +91,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_text_obj, 6, 6, hub75_text);
 
 
 STATIC mp_obj_t hub75_scrolltext(size_t n_args, const mp_obj_t *args) {
-     char *test = mp_obj_str_get_str(args[0]);
+     char *test = (char*)mp_obj_str_get_str(args[0]);
 
     uint8_t r = mp_obj_get_int(args[1]);
     uint8_t g = mp_obj_get_int(args[2]);
     uint8_t b = mp_obj_get_int(args[3]);
     Color k;
-    k.RGB[0] = r;
-    k.RGB[1] = g;
-    k.RGB[2] = b;
+    k.RGB[3] = r;
+    k.RGB[2] = g;
+    k.RGB[1] = b;
 
     int x = mp_obj_get_int(args[4]);
     int y = mp_obj_get_int(args[5]);
@@ -148,9 +148,9 @@ STATIC mp_obj_t hub75_pixel(size_t n_args, const mp_obj_t *args) {
      uint32_t *image = malloc(4);
 
      Color k;
-     k.RGB[0] = r;
-     k.RGB[1] = g;
-     k.RGB[2] = b;
+     k.RGB[3] = r;
+     k.RGB[2] = g;
+     k.RGB[1] = b;
 
      image[0] = k.value;
      compositor_addImage((uint8_t *) image, x, y, 1, 1);
@@ -209,6 +209,7 @@ STATIC mp_obj_t hub75_frame(mp_obj_t arr_obj) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_frame_obj, hub75_frame);
 
 STATIC const mp_rom_map_elem_t hub75_module_globals_table[] = {
+    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_hub75)},
     {MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&hub75_text_obj)},
     {MP_ROM_QSTR(MP_QSTR_scrolltext), MP_ROM_PTR(&hub75_scrolltext_obj)},
     {MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&hub75_clear_obj)},

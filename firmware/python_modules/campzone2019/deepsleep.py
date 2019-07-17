@@ -1,15 +1,20 @@
-import machine, term, time
+import machine, term, time, defines, rgb
 
-pin = machine.Pin(25)
+pin = machine.Pin(defines.BTN_A)
 rtc = machine.RTC()
 rtc.wake_on_ext0(pin=pin, level=0)
 
 def start_sleeping(sleepTime=0):
     term.header(True, "Going to sleep...")
+
+    rgb.clear()
+    rgb.scrolltext('ZzZz')
+    time.sleep(3)
+
     if (sleepTime >= 86400000):  # One day
         sleepTime = 0
     if (sleepTime < 1):
-        print("Sleeping until touchbutton is pressed...")
+        print("Sleeping until A-button is pressed...")
     else:
         print("Sleeping for " + str(sleepTime) + "ms...")
     time.sleep(0.1)

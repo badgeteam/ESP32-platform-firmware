@@ -132,10 +132,10 @@ void renderText(char *text, Color color, int x, int y, int sizeX, int skip);
 
 Color genColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
         Color color;
-        color.RGB[0] = r;
-        color.RGB[1] = g;
-        color.RGB[2] = b;
-        color.RGB[3] = a;
+        color.RGB[0] = a;
+        color.RGB[1] = b;
+        color.RGB[2] = g;
+        color.RGB[3] = r;
         return color;
 }
 
@@ -151,14 +151,17 @@ void compositor_clear() {
         renderTask_t *next;
         while(node != NULL) {
                 next = node->next;
-                if(node->id == 1) {
+                if(node->id == 0) {
                         free(node->payload);
-                }
-                if(node->id == 3) {
+                } else if(node->id == 1) {
+                        free(node->payload);
+                } else if(node->id == 2) {
+                        scrollText_t *t = (scrollText_t *) node->payload;
+                        free(t->text);
+                        free(node->payload);
+                } else if(node->id == 3) {
                         animation_t *gif = (animation_t *) node->payload;
                         free(gif->gif);
-                }
-                if(node->id == 2 || node->id == 3) {
                         free(node->payload);
                 }
                 free(node);
@@ -185,8 +188,10 @@ void addTask(renderTask_t *node) {
 }
 
 void compositor_addText(char *text, Color color, int x, int y) {
+        char *text_store = malloc(strlen(text)+1);
+        strcpy(text_store, text);
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
-        node->payload = text;
+        node->payload = text_store;
         node->color = color;
         node->x = x;
         node->y = y;
@@ -204,8 +209,10 @@ void compositor_addText(char *text, Color color, int x, int y) {
 * sizeX is the length over which text should be drawn
 */
 void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX) {
+        char *text_store = malloc(strlen(text)+1);
+        strcpy(text_store, text);
         scrollText_t *scroll = (scrollText_t *) malloc(sizeof(scrollText_t));
-        scroll->text = text;
+        scroll->text = text_store;
         scroll->speed = 1;
         scroll->skip = -sizeX;
         renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
@@ -263,9 +270,9 @@ void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length
 }
 
 void addColor(Color *target, Color *color) {
-        target->RGB[0] = color->RGB[0] + (255-color->RGB[3])*target->RGB[0]/255;
-        target->RGB[1] = color->RGB[1] + (255-color->RGB[3])*target->RGB[1]/255;
-        target->RGB[2] = color->RGB[2] + (255-color->RGB[3])*target->RGB[2]/255;
+        target->RGB[3] = color->RGB[3] + (255-color->RGB[0])*target->RGB[3]/255;
+        target->RGB[1] = color->RGB[1] + (255-color->RGB[0])*target->RGB[1]/255;
+        target->RGB[2] = color->RGB[2] + (255-color->RGB[0])*target->RGB[2]/255;
 }
 
 void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
@@ -315,7 +322,7 @@ void renderText(char *text, Color color, int x, int y, int sizeX, int skip) {
 void display_crash() {
         enabled = false;
         Color blue;
-        blue.value = 0x00AA7010;
+        blue.value = 0x1070AA00;
         Color white;
         white.value = 0xFFFFFFFF;
         for(int x=0; x<CONFIG_HUB75_WIDTH; x++) {
