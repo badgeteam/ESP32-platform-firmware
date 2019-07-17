@@ -6,6 +6,8 @@
 #include "driver_eink.h"
 #include "driver_ili9341.h"
 
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+
 /* This file specifies the framebuffer configuration for the displays that are supported. */
 /* The order in this file determines priority if multiple drivers are enabled */
 
@@ -57,6 +59,8 @@
 
 #else
 #error "Framebuffer driver enabled without a target display available!"
+#endif
+
 #endif
 
 #endif //_DRIVER_FRAMEBUFFER_DEVICES_H_
