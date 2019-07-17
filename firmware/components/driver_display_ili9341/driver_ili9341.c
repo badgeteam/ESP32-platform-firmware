@@ -250,28 +250,6 @@ esp_err_t driver_ili9341_init(void)
 	vTaskDelay(200 / portTICK_PERIOD_MS);
 	if (res != ESP_OK) return res;
 	
-	//TEST
-	
-	uint8_t buffer[128] = {0};
-	for (uint16_t i = 0; i < 16; i+=2) {
-		buffer[i*4] = 0xFF;
-		buffer[i*4+1] = 0xFF;
-		buffer[i*4+2] = 0;
-		buffer[i*4+3] = 0;
-		buffer[(i+1)*4] = 0;
-		buffer[(i+1)*4+1] = 0;
-		buffer[(i+1)*4+2] = 0xFF;
-		buffer[(i+1)*4+3] = 0xFF;
-	}
-	
-	for (uint16_t y = 0; y < 30; y++) {
-		for (uint16_t x = 0; x < 40; x++) {
-			driver_ili9341_set_addr_window(x*8,y*8,8,8);
-			driver_ili9341_send(buffer, 128, true);
-		}
-	}
-	//END TEST
-	
 	driver_ili9341_init_done = true;
 	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
@@ -279,8 +257,19 @@ esp_err_t driver_ili9341_init(void)
 
 esp_err_t driver_ili9341_write(const uint8_t *buffer)
 {
-	return ESP_OK;
+	return driver_ili9341_write_partial(buffer, 0, 0, ILI9341_WIDTH, ILI9341_HEIGHT);
 }
+
+esp_err_t driver_ili9341_write_partial(const uint8_t *buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+{
+	uint16_t w = x1-x0;
+	uint16_t h = y1-y0;
+	esp_err_t res = driver_ili9341_set_addr_window(x0,y0,w,h);
+	if (res != ESP_OK) return res;
+	res = driver_ili9341_send(buffer, w*h*2, true);
+	return res;
+}
+
 #else
 esp_err_t driver_ili9341_init(void) { return ESP_OK; } //Dummy function.
 #endif // CONFIG_DRIVER_ILI9341_ENABLE

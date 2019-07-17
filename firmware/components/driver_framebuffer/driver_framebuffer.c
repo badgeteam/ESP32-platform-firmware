@@ -253,6 +253,67 @@ uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	return framebuffer[position];
 }
 #endif
+#ifdef FB_TYPE_16BPP
+void driver_framebuffer_fill(uint32_t color)
+{
+	isDirty = true;
+	dirty_x0 = FB_WIDTH;
+	dirty_y0 = FB_HEIGHT;
+	dirty_x1 = 0;
+	dirty_y1 = 0;
+	uint8_t c0 = (color>>8)&0xFF;
+	uint8_t c1 = color&0xFF;
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	for (uint32_t i = 0; i < FB_SIZE; i+=2) {
+		framebuffer[i + 0] = c0;
+		framebuffer[i + 1] = c1;
+	}
+}
+
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
+{
+        uint8_t c0 = (color>>8)&0xFF;
+        uint8_t c1 = color&0xFF;
+
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
+	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
+
+	isDirty = true;
+	if (x < dirty_x0) dirty_x0 = x;
+	if (y < dirty_y0) dirty_y0 = y;
+	if (x > dirty_x1) dirty_x1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
+
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
+	framebuffer[position + 0] = c0;
+	framebuffer[position + 1] = c1;
+}
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
+{
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
+	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
+	return (framebuffer[position] << 8) + (framebuffer[position + 1])
+}
+#endif
+
 #ifdef FB_TYPE_24BPP
 void driver_framebuffer_fill(uint32_t color)
 {

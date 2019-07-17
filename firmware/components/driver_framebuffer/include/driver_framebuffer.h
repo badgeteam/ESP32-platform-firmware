@@ -1,48 +1,7 @@
 #ifndef _DRIVER_FRAMEBUFFER_H_
 #define _DRIVER_FRAMEBUFFER_H_
-#include "driver_ssd1306.h"
-#include "driver_erc12864.h"
-#include "driver_eink.h"
-
-#ifdef CONFIG_DRIVER_SSD1306_ENABLE
-	#define FB_SIZE SSD1306_BUFFER_SIZE
-	#define FB_WIDTH SSD1306_WIDTH
-	#define FB_HEIGHT SSD1306_HEIGHT
-	#define FB_TYPE_1BPP
-	#define FB_1BPP_VERT
-	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_ssd1306_write(buffer);
-	#define COLOR_BLACK 0
-	#define COLOR_WHITE 1
-#endif
-
-#ifdef CONFIG_DRIVER_ERC12864_ENABLE
-	#define FB_SIZE ERC12864_BUFFER_SIZE
-	#define FB_WIDTH ERC12864_WIDTH
-	#define FB_HEIGHT ERC12864_HEIGHT
-	#define FB_TYPE_1BPP
-	#define FB_1BPP_VERT
-	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_erc12864_write(buffer);
-	#define COLOR_BLACK 0
-	#define COLOR_WHITE 1
-#endif
-
-#ifdef CONFIG_DRIVER_EINK_ENABLE
-	#define FB_SIZE EINK_BUFFER_SIZE
-	#define FB_WIDTH DRIVER_EINK_WIDTH
-	#define FB_HEIGHT DRIVER_EINK_HEIGHT
-	#define FB_TYPE_8BPP
-	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_eink_display(buffer,flags);
-	//#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_eink_display_part(buffer,flags,y0,y1);
-	#define FB_FLUSH_GS(buffer,flags) driver_eink_display_greyscale(buffer,flags,16);
-	#define COLOR_BLACK 0
-	#define COLOR_WHITE 255
-#endif
-
-#include "gfxfont.h"
-
-#ifndef PROGMEM //We don't use PROGMEM.
-	#define PROGMEM
-#endif
+#include "driver_framebuffer_devices.h"
+#include "driver_framebuffer_font.h"
 
 /* Fonts */
 extern const GFXfont fairlight8pt7b;
