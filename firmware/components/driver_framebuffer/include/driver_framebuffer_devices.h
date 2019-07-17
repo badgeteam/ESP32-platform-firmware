@@ -3,6 +3,7 @@
 #include "driver_ssd1306.h"
 #include "driver_erc12864.h"
 #include "driver_eink.h"
+#include "driver_ili9341.h"
 
 /* This file specifies the framebuffer configuration for the displays that are supported. */
 /* The order in this file determines priority if multiple drivers are enabled */
@@ -47,7 +48,7 @@
 	#define FB_WIDTH ILI9341_WIDTH
 	#define FB_HEIGHT ILI9341_HEIGHT
 	#define FB_TYPE_16BPP
-	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_ili9341_write(buffer, x0, y0, x1, y1)
+	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_ili9341_write_partial(buffer, x0, y0, x1, y1)
 
 #else
 #error "Framebuffer driver enabled without a target display available!"
