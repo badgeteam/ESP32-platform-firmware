@@ -46,21 +46,65 @@ const GFXfont *gfxFont;
 uint8_t fontHeight;
 uint16_t textScaleX = 1;
 uint16_t textScaleY = 1;
-
 int16_t cursor_x = 0;
 int16_t cursor_y = 0;
 bool textWrap = true;
-#ifdef FB_TYPE_1BPP
-	bool textColor = false;
-#endif
-#ifdef FB_TYPE_8BPP
-	uint8_t textColor = 0;
-#endif
-#ifdef FB_TYPE_24BPP
-	uint8_t textColorR = 0, textColorG = 0, textColorB = 0;
-#endif
-	
-uint8_t flags = 0;
+uint32_t textColor = COLOR_BLACK;
+
+bool isDirty = true;
+int16_t dirty_x0 = 0;
+int16_t dirty_y0 = 0;
+int16_t dirty_x1 = 0;
+int16_t dirty_y1 = 0;
+
+
+uint8_t flags = 0; //Used to pass extra information to the display driver (if supported)
+
+#define ORIENTATION_LANDSCAPE 0
+#define ORIENTATION_PORTRAIT 1
+
+bool orientation = ORIENTATION_LANDSCAPE;
+bool flip180     = false;
+
+bool useGreyscale = false;
+
+bool driver_framebuffer_is_dirty()
+{
+	return isDirty;
+}
+
+void driver_framebuffer_set_greyscale(bool use)
+{
+	useGreyscale = use;
+}
+
+
+uint16_t driver_framebuffer_get_orientation()
+{
+	return orientation*90 + flip180*180;
+}
+
+void driver_framebuffer_set_orientation(uint16_t angle)
+{
+	switch(angle) {
+		case 90:
+			orientation = ORIENTATION_PORTRAIT;
+			flip180     = false;
+			break;
+		case 180:
+			orientation = ORIENTATION_LANDSCAPE;
+			flip180     = true;
+			break;
+		case 270:
+			orientation = ORIENTATION_PORTRAIT;
+			flip180     = true;
+			break;
+		default:
+			orientation = ORIENTATION_LANDSCAPE;
+			flip180     = false;
+			break;
+	}
+}
 
 void update_font_height()
 {
@@ -80,67 +124,205 @@ void driver_framebuffer_setFont(const GFXfont *font)
 esp_err_t driver_framebuffer_init()
 {
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	framebuffer1 = malloc(FB_SIZE);
-	if (!framebuffer1) return ESP_FAIL;
-	framebuffer2 = malloc(FB_SIZE);
-	if (!framebuffer2) return ESP_FAIL;
-	currentFb = false;
+		framebuffer1 = malloc(FB_SIZE);
+		if (!framebuffer1) return ESP_FAIL;
+		framebuffer2 = malloc(FB_SIZE);
+		if (!framebuffer2) return ESP_FAIL;
+		currentFb = false;
 	#else
-	framebuffer = malloc(FB_SIZE);
-	if (!framebuffer) return ESP_FAIL;
+		framebuffer = malloc(FB_SIZE);
+		if (!framebuffer) return ESP_FAIL;
 	#endif
 	driver_framebuffer_setFont(&freesans9pt7b);
 	#if defined(FB_TYPE8BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
 		flags = DISPLAY_FLAG_8BITPIXEL;	
 	#endif
+	
+	driver_framebuffer_fill(COLOR_WHITE);
+	
 	return ESP_OK;
 }
 
-#ifdef FB_TYPE_1BPP
+#if defined(FB_TYPE_1BPP)
 void driver_framebuffer_fill(bool value)
 {
+	isDirty = true;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
 	memset(framebuffer, value ? 0xFF : 0x00, FB_SIZE);
 }
 
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, bool value)
+void driver_framebuffer_pixel(int16_t x, int16_t y, bool value)
 {
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
+	
+	isDirty = true;
+	if (x < dirty_x0) dirty_x0 = x;
+	if (y < dirty_y0) dirty_y0 = y;
+	if (x > dirty_x1) dirty_x1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
+
 	#ifndef FB_1BPP_VERT
-	uint32_t position = (y * FB_WIDTH) + (x / 8);
-	uint8_t  bit      = x % 8;
+		uint32_t position = (y * FB_WIDTH) + (x / 8);
+		uint8_t  bit      = x % 8;
 	#else
-	uint32_t position = ( (y / 8) * FB_WIDTH) + x;
-	uint8_t  bit      = y % 8;
+		uint32_t position = ( (y / 8) * FB_WIDTH) + x;
+		uint8_t  bit      = y % 8;
 	#endif
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
 	framebuffer[position] ^= (-value ^ framebuffer[position]) & (1UL << bit);
 }
-#endif
-#ifdef FB_TYPE_8BPP
+
+bool driver_framebuffer_getPixel(int16_t x, int16_t y)
+{
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
+	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+
+	#ifndef FB_1BPP_VERT
+		uint32_t position = (y * FB_WIDTH) + (x / 8);
+		uint8_t  bit      = x % 8;
+	#else
+		uint32_t position = ( (y / 8) * FB_WIDTH) + x;
+		uint8_t  bit      = y % 8;
+	#endif
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	return (framebuffer[position] >> bit) && 0x01;
+}
+#elif defined(FB_TYPE_8BPP)
 void driver_framebuffer_fill(uint8_t value)
 {
+	isDirty = true;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
 	memset(framebuffer, value, FB_SIZE);
 }
 
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint8_t value)
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value)
 {
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
+
+	isDirty = true;
+	if (x < dirty_x0) dirty_x0 = x;
+	if (y < dirty_y0) dirty_y0 = y;
+	if (x > dirty_x1) dirty_x1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
+
 	uint32_t position = (y * FB_WIDTH) + x;
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
 	framebuffer[position] = value;
 }
-#endif
-#ifdef FB_TYPE_24BPP
-void driver_framebuffer_fill(uint8_t r, uint8_t g, uint8_t b)
+
+uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
+	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+
+	uint32_t position = (y * FB_WIDTH) + x;
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	return framebuffer[position];
+}
+#elif defined(FB_TYPE_16BPP)
+void driver_framebuffer_fill(uint32_t color)
+{
+	isDirty = true;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
+	uint8_t c0 = (color>>8)&0xFF;
+	uint8_t c1 = color&0xFF;
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	for (uint32_t i = 0; i < FB_SIZE; i+=2) {
+		framebuffer[i + 0] = c0;
+		framebuffer[i + 1] = c1;
+	}
+}
+
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
+{
+        uint8_t c0 = (color>>8)&0xFF;
+        uint8_t c1 = color&0xFF;
+
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
+	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
+
+	isDirty = true;
+	if (x < dirty_x0) dirty_x0 = x;
+	if (y < dirty_y0) dirty_y0 = y;
+	if (x > dirty_x1) dirty_x1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
+
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
+	framebuffer[position + 0] = c0;
+	framebuffer[position + 1] = c1;
+}
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
+{
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
+	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
+	return (framebuffer[position] << 8) + (framebuffer[position + 1]);
+}
+#elif defined(FB_TYPE_24BPP)
+void driver_framebuffer_fill(uint32_t color)
+{
+	isDirty = true;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
+	uint8_t r = (color>>16)&0xFF;
+	uint8_t g = (color>>8)&0xFF;
+	uint8_t b = color&0xFF;
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
 	for (uint32_t i = 0; i < FB_SIZE; i+=3) {
 		framebuffer[i + 0] = r;
@@ -149,31 +331,55 @@ void driver_framebuffer_fill(uint8_t r, uint8_t g, uint8_t b)
 	}
 }
 
-void driver_framebuffer_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b)
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
 {
+        uint8_t r = (color>>16)&0xFF;
+        uint8_t g = (color>>8)&0xFF;
+        uint8_t b = color&0xFF;
+
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
 	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
+
+	isDirty = true;
+	if (x < dirty_x0) dirty_x0 = x;
+	if (y < dirty_y0) dirty_y0 = y;
+	if (x > dirty_x1) dirty_x1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
+
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
 	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
 	framebuffer[position + 0] = r;
 	framebuffer[position + 1] = g;
 	framebuffer[position + 2] = b;
 }
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
+{
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
+	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
+	#endif
+	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
+	return (framebuffer[position] << 16) + (framebuffer[position+1] << 8) + (framebuffer[position + 2]);
+}
+#else
+#error "Framebuffer can not be enabled without valid output configuration."
 #endif
 
 #define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
 
-#ifdef FB_TYPE_1BPP
-void driver_framebuffer_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, bool value)
-#endif
-#ifdef FB_TYPE_8BPP
-void driver_framebuffer_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t value)
-#endif
-#ifdef FB_TYPE_24BPP
-void driver_framebuffer_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t r, uint8_t g, uint8_t b)
-#endif
+void driver_framebuffer_line(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint32_t color)
 {
 	int16_t steep = abs(y1 - y0) > abs(x1 - x0);
 	if (steep) {
@@ -200,12 +406,11 @@ void driver_framebuffer_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 	}
 
 	for (/*empty*/; x0<=x1; x0++) {
-		#if defined(FB_TYPE_1BPP) || defined(FB_TYPE_8BPP)
-		if (steep) { driver_framebuffer_pixel(y0, x0, value); } else { driver_framebuffer_pixel(x0, y0, value); }
-		#endif
-		#ifdef FB_TYPE_24BPP
-		if (steep) { driver_framebuffer_pixel(y0, x0, r, g, b); } else { driver_framebuffer_pixel(x0, y0, r, g, b); }
-		#endif
+		if (steep) {
+			driver_framebuffer_pixel(y0, x0, color);
+		} else {
+			driver_framebuffer_pixel(x0, y0, color);
+		}
 		err -= dy;
 		if (err < 0) {
 			y0 += ystep;
@@ -214,15 +419,7 @@ void driver_framebuffer_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 	}
 }
 
-#ifdef FB_TYPE_1BPP
-void driver_framebuffer_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool fill, bool value)
-#endif
-#ifdef FB_TYPE_8BPP
-void driver_framebuffer_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool fill, uint8_t value)
-#endif
-#ifdef FB_TYPE_24BPP
-void driver_framebuffer_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool fill, uint8_t r, uint8_t g, uint8_t b)
-#endif
+void driver_framebuffer_rect(int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color)
 {
 	if (x > FB_WIDTH) return;
 	if (y > FB_HEIGHT) return;
@@ -231,38 +428,17 @@ void driver_framebuffer_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, boo
 	
 	if (fill) {
 		for (int16_t i=x; i<x+w; i++) {
-			#if defined(FB_TYPE_1BPP) || defined(FB_TYPE_8BPP)
-			driver_framebuffer_line(i, y, i, y+h, value);
-			#endif
-			#ifdef FB_TYPE_24BPP
-			driver_framebuffer_line(i, y, i, y+h, r, g, b);
-			#endif
+			driver_framebuffer_line(i, y, i, y+h, color);
 		}
 	} else {
-		#if defined(FB_TYPE_1BPP) || defined(FB_TYPE_8BPP)
-		driver_framebuffer_line(x,    y,     x+w-1, y,     value);
-		driver_framebuffer_line(x,    y+h-1, x+w-1, y+h-1, value);
-		driver_framebuffer_line(x,    y,     x,     y+h-1, value);
-		driver_framebuffer_line(x+w-1,y,     x+w-1, y+h-1, value);
-		#endif
-		#ifdef FB_TYPE_24BPP
-		driver_framebuffer_line(x,    y,     x+w-1, y,     r, g, b);
-		driver_framebuffer_line(x,    y+h-1, x+w-1, y+h-1, r, g, b);
-		driver_framebuffer_line(x,    y,     x,     y+h-1, r, g, b);
-		driver_framebuffer_line(x+w-1,y,     x+w-1, y+h-1, r, g, b);
-		#endif
+		driver_framebuffer_line(x,    y,     x+w-1, y,     color);
+		driver_framebuffer_line(x,    y+h-1, x+w-1, y+h-1, color);
+		driver_framebuffer_line(x,    y,     x,     y+h-1, color);
+		driver_framebuffer_line(x+w-1,y,     x+w-1, y+h-1, color);
 	}
 }
 
-#ifdef FB_TYPE_1BPP
-void driver_framebuffer_circle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, bool value)
-#endif
-#ifdef FB_TYPE_8BPP
-void driver_framebuffer_circle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint8_t value)
-#endif
-#ifdef FB_TYPE_24BPP
-void driver_framebuffer_circle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint8_t r, uint8_t g, uint8_t b)
-#endif
+void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint32_t color)
 {
 	int16_t f     = 1 - r;
 	int16_t ddF_x = 1;
@@ -294,80 +470,39 @@ void driver_framebuffer_circle(uint16_t x0, uint16_t y0, uint16_t r, uint16_t a0
 		
 		printf("Circle x=%d, y=%d, f=%d, ddF_x=%d, ddF_y=%d\n", x, y, f, ddF_x, ddF_y);
 		
-		#if defined(FB_TYPE_1BPP) || defined(FB_TYPE_8BPP)
 		if (fill) {
 			//Please fix this part of the code, it doesn't work well.
-			if (parts & (1<<0))         driver_framebuffer_line(x0, y0, x0 + x, y0 - y, value);
-			if (parts & (1<<1))         driver_framebuffer_line(x0, y0, x0 + y, y0 - x, value);
-			if (parts & (1<<2))         driver_framebuffer_line(x0, y0, x0 + y, y0 + x, value);
-			if (parts & (1<<3))         driver_framebuffer_line(x0, y0, x0 + x, y0 + y, value);
-			if (parts & (1<<4))         driver_framebuffer_line(x0, y0, x0 - x, y0 + y, value);
-			if (parts & (1<<5))         driver_framebuffer_line(x0, y0, x0 - y, y0 + x, value);
-			if (parts & (1<<6))         driver_framebuffer_line(x0, y0, x0 - y, y0 - x, value);
-			if (parts & (1<<7))         driver_framebuffer_line(x0, y0, x0 - x, y0 - y, value);
-			if (a0 == 0   || a1 == 360) driver_framebuffer_line(x0, y0, x0,     y0 - r, value);
-			if (a0 <= 90  && a1 >=  90) driver_framebuffer_line(x0, y0, x0 + r, y0,     value);
-			if (a0 <= 180 && a1 >= 180) driver_framebuffer_line(x0, y0, x0,     y0 + r, value);
-			if (a0 <= 270 && a1 >= 270) driver_framebuffer_line(x0, y0, x0 - r, y0,     value);
+			if (parts & (1<<0))         driver_framebuffer_line(x0, y0, x0 + x, y0 - y, color);
+			if (parts & (1<<1))         driver_framebuffer_line(x0, y0, x0 + y, y0 - x, color);
+			if (parts & (1<<2))         driver_framebuffer_line(x0, y0, x0 + y, y0 + x, color);
+			if (parts & (1<<3))         driver_framebuffer_line(x0, y0, x0 + x, y0 + y, color);
+			if (parts & (1<<4))         driver_framebuffer_line(x0, y0, x0 - x, y0 + y, color);
+			if (parts & (1<<5))         driver_framebuffer_line(x0, y0, x0 - y, y0 + x, color);
+			if (parts & (1<<6))         driver_framebuffer_line(x0, y0, x0 - y, y0 - x, color);
+			if (parts & (1<<7))         driver_framebuffer_line(x0, y0, x0 - x, y0 - y, color);
+			if (a0 == 0   || a1 == 360) driver_framebuffer_line(x0, y0, x0,     y0 - r, color);
+			if (a0 <= 90  && a1 >=  90) driver_framebuffer_line(x0, y0, x0 + r, y0,     color);
+			if (a0 <= 180 && a1 >= 180) driver_framebuffer_line(x0, y0, x0,     y0 + r, color);
+			if (a0 <= 270 && a1 >= 270) driver_framebuffer_line(x0, y0, x0 - r, y0,     color);
 		} else {
 			//This only works up until 45 degree parts, for more control please rewrite this.
-			if (parts & (1<<0))         driver_framebuffer_pixel(x0 + x, y0 - y, value);
-			if (parts & (1<<1))         driver_framebuffer_pixel(x0 + y, y0 - x, value);
-			if (parts & (1<<2))         driver_framebuffer_pixel(x0 + y, y0 + x, value);
-			if (parts & (1<<3))         driver_framebuffer_pixel(x0 + x, y0 + y, value);
-			if (parts & (1<<4))         driver_framebuffer_pixel(x0 - x, y0 + y, value);
-			if (parts & (1<<5))         driver_framebuffer_pixel(x0 - y, y0 + x, value);
-			if (parts & (1<<6))         driver_framebuffer_pixel(x0 - y, y0 - x, value);
-			if (parts & (1<<7))         driver_framebuffer_pixel(x0 - x, y0 - y, value);
-			if (a0 == 0   || a1 == 360) driver_framebuffer_pixel(x0,     y0 - r, value);
-			if (a0 <= 90  && a1 >=  90) driver_framebuffer_pixel(x0 + r, y0,     value);
-			if (a0 <= 180 && a1 >= 180) driver_framebuffer_pixel(x0,     y0 + r, value);
-			if (a0 <= 270 && a1 >= 270) driver_framebuffer_pixel(x0 - r, y0,     value);
+			if (parts & (1<<0))         driver_framebuffer_pixel(x0 + x, y0 - y, color);
+			if (parts & (1<<1))         driver_framebuffer_pixel(x0 + y, y0 - x, color);
+			if (parts & (1<<2))         driver_framebuffer_pixel(x0 + y, y0 + x, color);
+			if (parts & (1<<3))         driver_framebuffer_pixel(x0 + x, y0 + y, color);
+			if (parts & (1<<4))         driver_framebuffer_pixel(x0 - x, y0 + y, color);
+			if (parts & (1<<5))         driver_framebuffer_pixel(x0 - y, y0 + x, color);
+			if (parts & (1<<6))         driver_framebuffer_pixel(x0 - y, y0 - x, color);
+			if (parts & (1<<7))         driver_framebuffer_pixel(x0 - x, y0 - y, color);
+			if (a0 == 0   || a1 == 360) driver_framebuffer_pixel(x0,     y0 - r, color);
+			if (a0 <= 90  && a1 >=  90) driver_framebuffer_pixel(x0 + r, y0,     color);
+			if (a0 <= 180 && a1 >= 180) driver_framebuffer_pixel(x0,     y0 + r, color);
+			if (a0 <= 270 && a1 >= 270) driver_framebuffer_pixel(x0 - r, y0,     color);
 		}
-		#endif
-		#if defined(FB_TYPE_24BPP)
-		if (fill) {
-			//Please fix this part of the code, it doesn't work well.
-			if (parts & (1<<0))         driver_framebuffer_line(x0, y0, x0 + x, y0 - y, r, g, b);
-			if (parts & (1<<1))         driver_framebuffer_line(x0, y0, x0 + y, y0 - x, r, g, b);
-			if (parts & (1<<2))         driver_framebuffer_line(x0, y0, x0 + y, y0 + x, r, g, b);
-			if (parts & (1<<3))         driver_framebuffer_line(x0, y0, x0 + x, y0 + y, r, g, b);
-			if (parts & (1<<4))         driver_framebuffer_line(x0, y0, x0 - x, y0 + y, r, g, b);
-			if (parts & (1<<5))         driver_framebuffer_line(x0, y0, x0 - y, y0 + x, r, g, b);
-			if (parts & (1<<6))         driver_framebuffer_line(x0, y0, x0 - y, y0 - x, r, g, b);
-			if (parts & (1<<7))         driver_framebuffer_line(x0, y0, x0 - x, y0 - y, r, g, b);
-			if (a0 == 0   || a1 == 360) driver_framebuffer_line(x0, y0, x0,     y0 - r, r, g, b);
-			if (a0 <= 90  && a1 >=  90) driver_framebuffer_line(x0, y0, x0 + r, y0,     r, g, b);
-			if (a0 <= 180 && a1 >= 180) driver_framebuffer_line(x0, y0, x0,     y0 + r, r, g, b);
-			if (a0 <= 270 && a1 >= 270) driver_framebuffer_line(x0, y0, x0 - r, y0,     r, g, b);
-		} else {
-			//This only works up until 45 degree parts, for more control please rewrite this.
-			if (parts & (1<<0))         driver_framebuffer_pixel(x0 + x, y0 - y, r, g, b);
-			if (parts & (1<<1))         driver_framebuffer_pixel(x0 + y, y0 - x, r, g, b);
-			if (parts & (1<<2))         driver_framebuffer_pixel(x0 + y, y0 + x, r, g, b);
-			if (parts & (1<<3))         driver_framebuffer_pixel(x0 + x, y0 + y, r, g, b);
-			if (parts & (1<<4))         driver_framebuffer_pixel(x0 - x, y0 + y, r, g, b);
-			if (parts & (1<<5))         driver_framebuffer_pixel(x0 - y, y0 + x, r, g, b);
-			if (parts & (1<<6))         driver_framebuffer_pixel(x0 - y, y0 - x, r, g, b);
-			if (parts & (1<<7))         driver_framebuffer_pixel(x0 - x, y0 - y, r, g, b);
-			if (a0 == 0   || a1 == 360) driver_framebuffer_pixel(x0,     y0 - r, r, g, b);
-			if (a0 <= 90  && a1 >=  90) driver_framebuffer_pixel(x0 + r, y0,     r, g, b);
-			if (a0 <= 180 && a1 >= 180) driver_framebuffer_pixel(x0,     y0 + r, r, g, b);
-			if (a0 <= 270 && a1 >= 270) driver_framebuffer_pixel(x0 - r, y0,     r, g, b);
-		}
-		#endif
 	}
 }
 
-#ifdef FB_TYPE_1BPP
-void driver_framebuffer_char(uint16_t x0, uint16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, bool value)
-#endif
-#ifdef FB_TYPE_8BPP
-void driver_framebuffer_char(uint16_t x0, uint16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint8_t value)
-#endif
-#ifdef FB_TYPE_24BPP
-void driver_framebuffer_char(uint16_t x0, uint16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint8_t r, uint8_t g, uint8_t b)
-#endif
+void driver_framebuffer_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color)
 {
 	if (gfxFont == NULL) {
 		printf("ATTEMPT TO CHAR WITH NULL FONT\n");
@@ -400,20 +535,11 @@ void driver_framebuffer_char(uint16_t x0, uint16_t y0, unsigned char c, uint8_t 
 			if(!(bit++ & 7)) bits = bitmap[bitmapOffset++];
 			//printf("char %u,%u = %02x\n", x, y, bits);
 			if(bits & 0x80) {
-				#if defined(FB_TYPE_1BPP) || defined(FB_TYPE_8BPP)
 				if (xScale == 1 && yScale == 1) {
-					driver_framebuffer_pixel(x0+xOffset+x, y0+yOffset+y+fontHeight, value);
+					driver_framebuffer_pixel(x0+xOffset+x, y0+yOffset+y+fontHeight, color);
 				} else {
-					driver_framebuffer_rect(x0+(xOffset+x)*xScale, y0+(yOffset+y+fontHeight)*yScale, xScale, yScale, true, value);
+					driver_framebuffer_rect(x0+(xOffset+x)*xScale, y0+(yOffset+y+fontHeight)*yScale, xScale, yScale, true, color);
 				}
-				#endif
-				#ifdef FB_TYPE_24BPP
-				if (xScale == 1 && yScale == 1) {
-					driver_framebuffer_pixel(x0+xOffset+x, y0+yOffset+y+fontHeight, r, g, b);
-				} else {
-					driver_framebuffer_rect(x0+(xOffset+x)*xScale, y0+(yOffset+y+fontHeight)*yScale, xScale, yScale, true, r, g, b);
-				}
-				#endif
 			}
 			bits <<= 1;
 		}
@@ -438,24 +564,9 @@ void driver_framebuffer_setScale(int16_t x, int16_t y)
 	textScaleY = y;
 }
 
-#ifdef FB_TYPE_1BPP
-void driver_framebuffer_setTextColor(bool value)
-#endif
-#ifdef FB_TYPE_8BPP
-void driver_framebuffer_setTextColor(uint8_t value)
-#endif
-#ifdef FB_TYPE_24BPP
-void driver_framebuffer_setTextColor(uint8_t r, uint8_t g, uint8_t b)
-#endif
+void driver_framebuffer_setTextColor(uint32_t value)
 {
-	#if defined(FB_TYPE_1BPP) || defined(FB_TYPE_8BPP)
 	textColor = value;
-	#endif
-	#ifdef FB_TYPE_24BPP
-	textColorR = r;
-	textColorG = g;
-	textColorB = b;
-	#endif
 }
 
 void driver_framebuffer_write(uint8_t c)
@@ -475,12 +586,7 @@ void driver_framebuffer_write(uint8_t c)
 		cursor_x = 0;
 		cursor_y += textScaleY * gfxFont->yAdvance;
 	} else if (c != '\r') {
-		#if defined(FB_TYPE_1BPP) || defined(FB_TYPE_8BPP)
 		driver_framebuffer_char(cursor_x, cursor_y, c, textScaleX, textScaleY, textColor);
-		#endif
-		#ifdef FB_TYPE_24BPP
-		driver_framebuffer_char(cursor_x, cursor_y, c, textScaleX, textScaleY, textColorR, textColorG, textColorB);
-		#endif
 		cursor_x += xAdvance * textScaleX;
 	}
 }
@@ -500,18 +606,77 @@ void driver_framebuffer_setFlags(uint8_t newFlags)
 	flags = newFlags;
 }
 
+void driver_framebuffer_get_dirty(int16_t* x0, int16_t* y0, int16_t* x1, int16_t* y1)
+{
+	*x0 = dirty_x0;
+	*y0 = dirty_y0;
+	*x1 = dirty_x1;
+	*y1 = dirty_y1;
+
+	if (flip180) {
+		int16_t tx0 = *x0;
+		int16_t ty0 = *y0;
+		*x0 = FB_WIDTH-*x1-1;
+		*y0 = FB_HEIGHT-*y1-1;
+		*x1 = FB_WIDTH-tx0-1;
+		*y1 = FB_HEIGHT-ty0-1;
+	}
+
+	if (orientation) {
+		int16_t tx0 = *x0;
+		int16_t tx1 = *x1;
+		int16_t ty1 = *y1;
+		*x0 = *y0;
+		*y0 = FB_WIDTH-tx1-1;
+		*x1 = ty1;
+		*y1 = FB_WIDTH-tx0-1;
+	}
+}
+
 void driver_framebuffer_flush()
 {
-	uint8_t flags = 1; //Fox E-INK driver, needs to be replaced some day.
+	if (!isDirty) return; //No need to update
+
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	uint8_t* nextFb = currentFb ? framebuffer1 : framebuffer2;
 	currentFb = !currentFb; //Switch to the other framebuffer
 	#endif
-	FB_FLUSH(framebuffer,flags);
+
+	#ifdef DISPLAY_FLAG_8BITPIXEL
+		flags |= DISPLAY_FLAG_8BITPIXEL;
+	#endif
+
+	if (dirty_x0 < 0) dirty_x0 = 0;
+	if (dirty_x0 > FB_WIDTH) dirty_x0 = FB_WIDTH;
+	if (dirty_x1 < 0) dirty_x1 = 0;
+	if (dirty_x1 > FB_WIDTH) dirty_x1 = FB_WIDTH;
+	if (dirty_y0 < 0) dirty_y0 = 0;
+	if (dirty_y0 > FB_WIDTH) dirty_y0 = FB_HEIGHT;
+	if (dirty_y1 < 0) dirty_y1 = 0;
+	if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT;
+	
+	dirty_y1 +=1; //Temp. fix
+
+	#ifdef FB_FLUSH_GS
+		if (useGreyscale) {
+			FB_FLUSH_GS(framebuffer, flags);
+		} else {
+			FB_FLUSH(framebuffer,flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
+		}
+	#else
+		FB_FLUSH(framebuffer,flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
+	#endif
+	
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 	memcpy(nextFb, framebuffer, FB_SIZE); //Copy the framebuffer we just flushed into the working buffer
 	#endif
+
+	dirty_x0 = FB_WIDTH;
+	dirty_y0 = FB_HEIGHT;
+	dirty_x1 = 0;
+	dirty_y1 = 0;
+	isDirty = false;
 }
 
 #else

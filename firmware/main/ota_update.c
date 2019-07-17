@@ -93,6 +93,36 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 					driver_framebuffer_flush();
 				}
 			#endif
+			#ifdef CONFIG_DRIVER_ILI9341_ENABLE
+				if (showPercentage) lastShownPercentage = percentage;
+				driver_framebuffer_fill(COLOR_WHITE);
+				driver_framebuffer_setTextColor(COLOR_BLACK);
+				driver_framebuffer_setFont(&freesansbold12pt7b);
+				driver_framebuffer_setCursor(0,0);
+				driver_framebuffer_setScale(1,1);
+				driver_framebuffer_print("Firmware update\n");
+				driver_framebuffer_setFont(&freesansmono9pt7b);
+				driver_framebuffer_print(text);
+				driver_framebuffer_write('\n');
+				if (showPercentage) {
+					driver_framebuffer_setCursor(FB_WIDTH-100,FB_HEIGHT-50);
+					driver_framebuffer_setFont(&freesansmono9pt7b);
+					driver_framebuffer_setScale(2,2);
+					char buffer[16];
+					snprintf(buffer, 16, "%*u%%", 3, percentage);
+					driver_framebuffer_print(buffer);
+				}
+				driver_framebuffer_setFont(&fairlight8pt7b);
+				driver_framebuffer_setCursor(0,FB_HEIGHT-15);
+				driver_framebuffer_setScale(1,1);
+				driver_framebuffer_print("BADGE.TEAM\n");
+				if (force) {
+					driver_framebuffer_setFlags(DISPLAY_FLAG_8BITPIXEL);
+				} else {
+					driver_framebuffer_setFlags(DISPLAY_FLAG_8BITPIXEL + DISPLAY_FLAG_LUT(DRIVER_EINK_LUT_FASTEST));
+				}
+				driver_framebuffer_flush();
+			#endif
 			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12864_ENABLE)
 				driver_framebuffer_fill(COLOR_BLACK);
 				driver_framebuffer_setTextColor(COLOR_WHITE);
