@@ -19,9 +19,9 @@ header=../fontheader
 inpath=
 outpath=../../
 outheaderpath=../../include/fonts/
-fonts=(freesans org_01 fairlight)
-styles=("" mono bold italic)
-sizes=(8 9 12)
+fonts=(freesans org_01 fairlight pixelade dejavusans permanentmarker roboto)
+styles=("" mono bold italic black italic blackitalic)
+sizes=(8 9 12 13 18 20 22 24 36 42)
 
 for f in ${fonts[*]}
 do
@@ -43,3 +43,5 @@ do
 		done
 	done
 done
+
+$convert weather.ttf 42 59905 59923 -59905 > ../../weather42pt.c
