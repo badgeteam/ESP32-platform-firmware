@@ -1,8 +1,11 @@
 #ifndef _DRIVER_FRAMEBUFFER_H_
 #define _DRIVER_FRAMEBUFFER_H_
+#include "sdkconfig.h"
+#include <stdio.h>
+#include <string.h>
 #include <stdint.h>
-#include "driver_framebuffer_devices.h"
 #include "driver_framebuffer_font.h"
+#include "esp_system.h"
 
 /* Fonts */
 extern const GFXfont fairlight8pt7b;
@@ -52,26 +55,19 @@ void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, 
 void driver_framebuffer_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color);
 void driver_framebuffer_setTextColor(uint32_t color);
 
+esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, size_t len);
 
-#ifdef FB_TYPE_1BPP
-void driver_framebuffer_fill(bool value);
-void driver_framebuffer_pixel(int16_t x, int16_t y, bool value);
-bool driver_framebuffer_getPixel(int16_t x, int16_t y);
-#endif
-#ifdef FB_TYPE_8BPP
-void driver_framebuffer_fill(uint8_t value);
-void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value);
-uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y);
-#endif
-#ifdef FB_TYPE_16BPP
 void driver_framebuffer_fill(uint32_t value);
 void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t value);
 uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y);
-#endif
-#ifdef FB_TYPE_24BPP
-void driver_framebuffer_fill(uint32_t value);
-void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t value);
-uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y);
-#endif
+
+int16_t driver_framebuffer_getWidth(void);
+int16_t driver_framebuffer_getHeight(void);
+
+#define COLOR_BLACK 0x000000
+#define COLOR_WHITE 0xFFFFFF
+#define COLOR_RED   0xFF0000
+#define COLOR_GREEN 0x00FF00
+#define COLOR_BLUE  0x0000FF
 
 #endif //_DRIVER_FRAMEBUFFER_H_

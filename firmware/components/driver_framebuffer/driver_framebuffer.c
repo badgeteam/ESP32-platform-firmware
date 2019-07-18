@@ -37,8 +37,18 @@ POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "include/driver_framebuffer.h"
-#include <stdio.h>
-#include <string.h>
+#include "include/driver_framebuffer_devices.h"
+
+//PNG library
+#include "mem_reader.h"
+#include "file_reader.h"
+#include "png_reader.h"
+
+//Displays
+#include "driver_ssd1306.h"
+#include "driver_erc12864.h"
+#include "driver_eink.h"
+#include "driver_ili9341.h"
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
@@ -57,16 +67,38 @@ int16_t dirty_y0 = 0;
 int16_t dirty_x1 = 0;
 int16_t dirty_y1 = 0;
 
-
 uint8_t flags = 0; //Used to pass extra information to the display driver (if supported)
 
 #define ORIENTATION_LANDSCAPE 0
-#define ORIENTATION_PORTRAIT 1
+#define ORIENTATION_PORTRAIT  1
 
 bool orientation = ORIENTATION_LANDSCAPE;
 bool flip180     = false;
-
 bool useGreyscale = false;
+
+/* Color space conversions */
+
+inline uint16_t rgbTo565(uint32_t in)
+{
+	uint8_t r = (in>>16)&0xFF;
+	uint8_t g = (in>>8)&0xFF;
+	uint8_t b = in&0xFF;
+	uint16_t out = ((b & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (r >> 3);
+	return out;
+}
+
+inline uint8_t rgbToGrey(uint32_t in)
+{
+	uint8_t r = (in>>16)&0xFF;
+	uint8_t g = (in>>8)&0xFF;
+	uint8_t b = in&0xFF;
+	return ( r + g + b + 1 ) / 3;
+}
+
+inline bool greyToBw(uint8_t in)
+{
+	return in >= 128;
+}
 
 bool driver_framebuffer_is_dirty()
 {
@@ -76,6 +108,11 @@ bool driver_framebuffer_is_dirty()
 void driver_framebuffer_set_greyscale(bool use)
 {
 	useGreyscale = use;
+	isDirty = true;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
 }
 
 
@@ -134,7 +171,7 @@ esp_err_t driver_framebuffer_init()
 		if (!framebuffer) return ESP_FAIL;
 	#endif
 	driver_framebuffer_setFont(&freesans9pt7b);
-	#if defined(FB_TYPE8BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
+	#if defined(FB_TYPE8_BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
 		flags = DISPLAY_FLAG_8BITPIXEL;	
 	#endif
 	
@@ -144,8 +181,9 @@ esp_err_t driver_framebuffer_init()
 }
 
 #if defined(FB_TYPE_1BPP)
-void driver_framebuffer_fill(bool value)
+void driver_framebuffer_fill(uint32_t value)
 {
+	value = greyToBw(rgbToGrey(value));
 	isDirty = true;
 	dirty_x0 = 0;
 	dirty_y0 = 0;
@@ -154,8 +192,9 @@ void driver_framebuffer_fill(bool value)
 	memset(framebuffer, value ? 0xFF : 0x00, FB_SIZE);
 }
 
-void driver_framebuffer_pixel(int16_t x, int16_t y, bool value)
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t value)
 {
+	value = greyToBw(rgbToGrey(value));
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return;
@@ -182,7 +221,7 @@ void driver_framebuffer_pixel(int16_t x, int16_t y, bool value)
 	framebuffer[position] ^= (-value ^ framebuffer[position]) & (1UL << bit);
 }
 
-bool driver_framebuffer_getPixel(int16_t x, int16_t y)
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
@@ -201,11 +240,16 @@ bool driver_framebuffer_getPixel(int16_t x, int16_t y)
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
-	return (framebuffer[position] >> bit) && 0x01;
+	if ((framebuffer[position] >> bit) && 0x01) {
+		return 0xFFFFFF;
+	} else {
+		return 0x000000;
+	}
 }
 #elif defined(FB_TYPE_8BPP)
-void driver_framebuffer_fill(uint8_t value)
+void driver_framebuffer_fill(uint32_t value)
 {
+	value = rgbToGrey(value);
 	isDirty = true;
 	dirty_x0 = 0;
 	dirty_y0 = 0;
@@ -214,8 +258,9 @@ void driver_framebuffer_fill(uint8_t value)
 	memset(framebuffer, value, FB_SIZE);
 }
 
-void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value)
+void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t value)
 {
+	value = rgbToGrey(value);
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return;
@@ -236,7 +281,7 @@ void driver_framebuffer_pixel(int16_t x, int16_t y, uint8_t value)
 	framebuffer[position] = value;
 }
 
-uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y)
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
@@ -249,11 +294,12 @@ uint8_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
-	return framebuffer[position];
+	return (framebuffer[position] << 16) + (framebuffer[position]<<8) + framebuffer[position];
 }
 #elif defined(FB_TYPE_16BPP)
 void driver_framebuffer_fill(uint32_t color)
 {
+	color = rgbTo565(color);
 	isDirty = true;
 	dirty_x0 = 0;
 	dirty_y0 = 0;
@@ -272,8 +318,9 @@ void driver_framebuffer_fill(uint32_t color)
 
 void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
 {
-        uint8_t c0 = (color>>8)&0xFF;
-        uint8_t c1 = color&0xFF;
+	color = rgbTo565(color);
+	uint8_t c0 = (color>>8)&0xFF;
+	uint8_t c1 = color&0xFF;
 
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
@@ -308,7 +355,13 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
 	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
-	return (framebuffer[position] << 8) + (framebuffer[position + 1]);
+	uint32_t color = (framebuffer[position] << 8) + (framebuffer[position + 1]);
+	uint8_t r = ((((color >> 11) & 0x1F) * 527) + 23) >> 6;
+
+	uint8_t g = ((((color >> 5) & 0x3F) * 259) + 33) >> 6;
+
+	uint8_t b = (((color & 0x1F) * 527) + 23) >> 6;
+	return r << 16 | g << 8 | b;;
 }
 #elif defined(FB_TYPE_24BPP)
 void driver_framebuffer_fill(uint32_t color)
@@ -677,6 +730,87 @@ void driver_framebuffer_flush()
 	dirty_x1 = 0;
 	dirty_y1 = 0;
 	isDirty = false;
+}
+
+
+esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, size_t len)
+{
+	if (x >= FB_WIDTH || y >= FB_HEIGHT)
+ {
+		printf("PNG too large!\n");
+		return ESP_FAIL;
+	}
+
+	lib_reader_read_t reader;
+	void * reader_p;
+
+	struct lib_mem_reader *mr = lib_mem_new(png_data, len);
+	if (mr == NULL) {
+		printf("Out of memory 1\n");
+		return ESP_FAIL;
+	}
+	
+	reader = (lib_reader_read_t) &lib_mem_read;
+	reader_p = mr;
+
+	struct lib_png_reader *pr = lib_png_new(reader, reader_p);
+	if (pr == NULL) {
+		lib_mem_destroy(reader_p);
+		printf("Out of memory 2\n");
+		return ESP_FAIL;
+	}
+	
+	int res = lib_png_read_header(pr);
+	if (res < 0) {
+		lib_png_destroy(pr);
+		lib_mem_destroy(reader_p);
+		printf("Can not read header.");
+		return ESP_FAIL;
+	}
+	
+	int width = pr->ihdr.width;
+	int height = pr->ihdr.height;
+	int bit_depth = pr->ihdr.bit_depth;
+	int color_type = pr->ihdr.color_type;
+	
+	isDirty = true;
+	if (x < dirty_x0) dirty_x0 = x;
+	if (y < dirty_y0) dirty_y0 = y;
+	if (x+width > dirty_x1) dirty_x1 = x+width;
+	if (y+height > dirty_y1) dirty_y1 = y+height;
+	
+	uint32_t dst_min_x = x < 0 ? -x : 0;
+	uint32_t dst_min_y = y < 0 ? -y : 0;
+	
+	uint8_t bitsPerPixel = 0;
+	#if defined(FB_TYPE_24BPP)
+	bitsPerPixel = 24;
+	#elif defined(FB_TYPE_8BPP)
+	bitsPerPixel = 8;
+	#elif defined(FB_TYPE_1BPP)
+	bitsPerPixel = 1;
+	#endif
+		
+	res = lib_png_load_image(pr, x, y, dst_min_x, dst_min_y, FB_WIDTH - x, FB_HEIGHT - y, FB_WIDTH, 8);
+
+	lib_png_destroy(pr);
+	lib_mem_destroy(reader_p);
+
+	if (res < 0) {
+		printf("Failed to load image.\n");
+		return ESP_FAIL;
+	}
+	
+	return ESP_OK;
+}
+
+int16_t driver_framebuffer_getWidth(void)
+{
+	return orientation ? FB_HEIGHT : FB_WIDTH;
+}
+int16_t driver_framebuffer_getHeight(void)
+{
+	return orientation ? FB_WIDTH : FB_HEIGHT;
 }
 
 #else

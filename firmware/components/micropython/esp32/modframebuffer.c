@@ -210,6 +210,26 @@ static mp_obj_t framebuffer_raw565(mp_uint_t n_args, const mp_obj_t *args)
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_raw565_obj, 5, 5, framebuffer_raw565);
 
+static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
+{
+	int16_t x = mp_obj_get_int(args[0]);
+	int16_t y = mp_obj_get_int(args[1]);
+	
+	if (!MP_OBJ_IS_TYPE(args[2], &mp_type_bytes)) {
+		mp_raise_ValueError("Expected a bytestring like object.");
+		return mp_const_none;
+	}
+	
+	mp_uint_t len;
+	uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[2], &len);
+	
+	driver_framebuffer_png(x, y, data, len);
+	
+	return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_obj, 3, 3, framebuffer_png);
+
 static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&framebuffer_orientation_obj)},
 	{MP_ROM_QSTR(MP_QSTR_cursor), MP_ROM_PTR(&framebuffer_cursor_obj)},
@@ -227,6 +247,7 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_greyscale), MP_ROM_PTR(&framebuffer_set_greyscale_obj)},
 	{MP_ROM_QSTR(MP_QSTR_rgbTo565), MP_ROM_PTR(&framebuffer_rgbTo565_obj)},
 	{MP_ROM_QSTR(MP_QSTR_raw565), MP_ROM_PTR(&framebuffer_raw565_obj)},
+	{MP_ROM_QSTR(MP_QSTR_png), MP_ROM_PTR(&framebuffer_png_obj)},
 };
 
 static MP_DEFINE_CONST_DICT(framebuffer_module_globals, framebuffer_module_globals_table);
