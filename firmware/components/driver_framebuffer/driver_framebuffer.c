@@ -50,12 +50,13 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "driver_eink.h"
 #include "driver_ili9341.h"
 
+#include "esp_heap_caps.h"
+
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
 const GFXfont *gfxFont;
-uint8_t fontHeight;
-uint16_t textScaleX = 1;
-uint16_t textScaleY = 1;
+uint8_t textScaleX = 1;
+uint8_t textScaleY = 1;
 int16_t cursor_x = 0;
 int16_t cursor_y = 0;
 bool textWrap = true;
@@ -116,21 +117,6 @@ const GFXfont* fontPointers[] = {
 	&pixelade13pt7b,
 	&weather42pt8b
 };
-
-bool driver_framebuffer_selectFont(const char* fontName)
-{
-	char buffer[32];
-	if (strlen(fontName) > 31) return false;
-	strcpy(buffer, fontName);
-	strlwr(buffer);
-	for (uint16_t i = 0; i < FONTS_AMOUNT; i++) {
-		if (strcmp(fontNames[i],buffer)==0) {
-			driver_framebuffer_setFont(fontPointers[i]);
-			return true;
-		}
-	}
-	return false;
-}
 
 /* Color space conversions */
 
@@ -199,19 +185,24 @@ void driver_framebuffer_set_orientation(uint16_t angle)
 	}
 }
 
-void update_font_height()
-{
-	fontHeight = 0;
-	for (uint8_t i = 0; i < gfxFont->last-gfxFont->first; i++) {
-		GFXglyph *glyph = gfxFont->glyph + i;
-		if (glyph->height > fontHeight) fontHeight = glyph->height;
-	}
-}
-
 void driver_framebuffer_setFont(const GFXfont *font)
 {
 	gfxFont = font;
-	update_font_height();
+}
+
+bool driver_framebuffer_selectFont(const char* fontName)
+{
+	char buffer[32];
+	if (strlen(fontName) > 31) return false;
+	strcpy(buffer, fontName);
+	strlwr(buffer);
+	for (uint16_t i = 0; i < FONTS_AMOUNT; i++) {
+		if (strcmp(fontNames[i],buffer)==0) {
+			driver_framebuffer_setFont(fontPointers[i]);
+			return true;
+		}
+	}
+	return false;
 }
 
 esp_err_t driver_framebuffer_init()
@@ -223,7 +214,7 @@ esp_err_t driver_framebuffer_init()
 		if (!framebuffer2) return ESP_FAIL;
 		currentFb = false;
 	#else
-		framebuffer = malloc(FB_SIZE);
+		framebuffer = heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM);//malloc(FB_SIZE);
 		if (!framebuffer) return ESP_FAIL;
 	#endif
 	driver_framebuffer_setFont(&freesans9pt7b);
@@ -248,7 +239,7 @@ void driver_framebuffer_fill(uint32_t value)
 	memset(framebuffer, value ? 0xFF : 0x00, FB_SIZE);
 }
 
-void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t value)
+void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t value)
 {
 	value = greyToBw(rgbToGrey(value));
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
@@ -314,7 +305,7 @@ void driver_framebuffer_fill(uint32_t value)
 	memset(framebuffer, value, FB_SIZE);
 }
 
-void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t value)
+void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t value)
 {
 	value = rgbToGrey(value);
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
@@ -372,7 +363,7 @@ void driver_framebuffer_fill(uint32_t color)
 	}
 }
 
-void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
+void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 {
 	color = rgbTo565(color);
 	uint8_t c0 = (color>>8)&0xFF;
@@ -440,7 +431,7 @@ void driver_framebuffer_fill(uint32_t color)
 	}
 }
 
-void driver_framebuffer_pixel(int16_t x, int16_t y, uint32_t color)
+void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 {
         uint8_t r = (color>>16)&0xFF;
         uint8_t g = (color>>8)&0xFF;
@@ -516,9 +507,9 @@ void driver_framebuffer_line(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uin
 
 	for (/*empty*/; x0<=x1; x0++) {
 		if (steep) {
-			driver_framebuffer_pixel(y0, x0, color);
+			driver_framebuffer_setPixel(y0, x0, color);
 		} else {
-			driver_framebuffer_pixel(x0, y0, color);
+			driver_framebuffer_setPixel(x0, y0, color);
 		}
 		err -= dy;
 		if (err < 0) {
@@ -536,9 +527,7 @@ void driver_framebuffer_rect(int16_t x, int16_t y, uint16_t w, uint16_t h, bool 
 	if (y+h > FB_WIDTH) h = FB_HEIGHT - y;
 	
 	if (fill) {
-		for (int16_t i=x; i<x+w; i++) {
-			driver_framebuffer_line(i, y, i, y+h, color);
-		}
+		for (int16_t i=x; i<x+w; i++) driver_framebuffer_line(i, y, i, y+h-1, color);
 	} else {
 		driver_framebuffer_line(x,    y,     x+w-1, y,     color);
 		driver_framebuffer_line(x,    y+h-1, x+w-1, y+h-1, color);
@@ -595,62 +584,18 @@ void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, 
 			if (a0 <= 270 && a1 >= 270) driver_framebuffer_line(x0, y0, x0 - r, y0,     color);
 		} else {
 			//This only works up until 45 degree parts, for more control please rewrite this.
-			if (parts & (1<<0))         driver_framebuffer_pixel(x0 + x, y0 - y, color);
-			if (parts & (1<<1))         driver_framebuffer_pixel(x0 + y, y0 - x, color);
-			if (parts & (1<<2))         driver_framebuffer_pixel(x0 + y, y0 + x, color);
-			if (parts & (1<<3))         driver_framebuffer_pixel(x0 + x, y0 + y, color);
-			if (parts & (1<<4))         driver_framebuffer_pixel(x0 - x, y0 + y, color);
-			if (parts & (1<<5))         driver_framebuffer_pixel(x0 - y, y0 + x, color);
-			if (parts & (1<<6))         driver_framebuffer_pixel(x0 - y, y0 - x, color);
-			if (parts & (1<<7))         driver_framebuffer_pixel(x0 - x, y0 - y, color);
-			if (a0 == 0   || a1 == 360) driver_framebuffer_pixel(x0,     y0 - r, color);
-			if (a0 <= 90  && a1 >=  90) driver_framebuffer_pixel(x0 + r, y0,     color);
-			if (a0 <= 180 && a1 >= 180) driver_framebuffer_pixel(x0,     y0 + r, color);
-			if (a0 <= 270 && a1 >= 270) driver_framebuffer_pixel(x0 - r, y0,     color);
-		}
-	}
-}
-
-void driver_framebuffer_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color)
-{
-	if (gfxFont == NULL) {
-		printf("ATTEMPT TO CHAR WITH NULL FONT\n");
-		return;
-	}
-	if ((c < gfxFont->first) || (c > gfxFont->last)) {
-		printf("ATTEMPT TO CHAR WITH UNPRINTABLE CHARACTER\n");
-		return;
-	}
-	
-	c -= (uint8_t) gfxFont->first;
-	const GFXglyph *glyph   = gfxFont->glyph + c;
-	const uint8_t  *bitmap  = gfxFont->bitmap;
-	
-	uint16_t bitmapOffset = glyph->bitmapOffset;
-	uint8_t  width        = glyph->width;
-	uint8_t  height       = glyph->height;
-	int8_t   xOffset      = glyph->xOffset;
-	int8_t   yOffset      = glyph->yOffset;
-	
-	/*printf("bitmapOffset = %u\n", bitmapOffset);
-	printf("width = %u\n", width);
-	printf("height = %u\n", height);
-	printf("xOffset = %d\n", xOffset);
-	printf("yOffset = %d\n", yOffset);*/
-	
-	uint8_t  bit = 0, bits = 0;	
-	for (uint8_t y = 0; y < height; y++) {
-		for (uint8_t x = 0; x < width; x++) {
-			if(!(bit++ & 7)) bits = bitmap[bitmapOffset++];
-			//printf("char %u,%u = %02x\n", x, y, bits);
-			if(bits & 0x80) {
-				if (xScale == 1 && yScale == 1) {
-					driver_framebuffer_pixel(x0+xOffset+x, y0+yOffset+y+fontHeight, color);
-				} else {
-					driver_framebuffer_rect(x0+(xOffset+x)*xScale, y0+(yOffset+y+fontHeight)*yScale, xScale, yScale, true, color);
-				}
-			}
-			bits <<= 1;
+			if (parts & (1<<0))         driver_framebuffer_setPixel(x0 + x, y0 - y, color);
+			if (parts & (1<<1))         driver_framebuffer_setPixel(x0 + y, y0 - x, color);
+			if (parts & (1<<2))         driver_framebuffer_setPixel(x0 + y, y0 + x, color);
+			if (parts & (1<<3))         driver_framebuffer_setPixel(x0 + x, y0 + y, color);
+			if (parts & (1<<4))         driver_framebuffer_setPixel(x0 - x, y0 + y, color);
+			if (parts & (1<<5))         driver_framebuffer_setPixel(x0 - y, y0 + x, color);
+			if (parts & (1<<6))         driver_framebuffer_setPixel(x0 - y, y0 - x, color);
+			if (parts & (1<<7))         driver_framebuffer_setPixel(x0 - x, y0 - y, color);
+			if (a0 == 0   || a1 == 360) driver_framebuffer_setPixel(x0,     y0 - r, color);
+			if (a0 <= 90  && a1 >=  90) driver_framebuffer_setPixel(x0 + r, y0,     color);
+			if (a0 <= 180 && a1 >= 180) driver_framebuffer_setPixel(x0,     y0 + r, color);
+			if (a0 <= 270 && a1 >= 270) driver_framebuffer_setPixel(x0 - r, y0,     color);
 		}
 	}
 }
@@ -667,10 +612,16 @@ void driver_framebuffer_getCursor(int16_t* x, int16_t* y)
 	*y = cursor_y;
 }
 
-void driver_framebuffer_setScale(int16_t x, int16_t y)
+void driver_framebuffer_setTextScale(uint8_t w, uint8_t h)
 {
-	textScaleX = x;
-	textScaleY = y;
+	textScaleX = w;
+	textScaleY = h;
+}
+
+void driver_framebuffer_getTextScale(uint8_t* w, uint8_t* h)
+{
+	*w = textScaleX;
+	*h = textScaleY;
 }
 
 void driver_framebuffer_setTextColor(uint32_t value)
@@ -678,31 +629,94 @@ void driver_framebuffer_setTextColor(uint32_t value)
 	textColor = value;
 }
 
-void driver_framebuffer_write(uint8_t c)
+uint32_t driver_framebuffer_getTextColor()
 {
-	if (gfxFont == NULL) {
-		printf("ATTEMPT TO WRITE WITH NULL FONT\n");
-		return;
-	}
-	const GFXglyph *glyph = gfxFont->glyph + c - (uint8_t) gfxFont->first;
-	/*uint8_t  width        = glyph->width;
+	return textColor;
+}
+
+void print_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color)
+{
+	if (gfxFont == NULL) return;
+	if ((c < gfxFont->first) || (c > gfxFont->last)) return;
+	
+	c -= (uint8_t) gfxFont->first;
+	const GFXglyph *glyph   = gfxFont->glyph + c;
+	const uint8_t  *bitmap  = gfxFont->bitmap;
+	
+	uint16_t bitmapOffset = glyph->bitmapOffset;
+	uint8_t  width        = glyph->width;
 	uint8_t  height       = glyph->height;
 	int8_t   xOffset      = glyph->xOffset;
-	int8_t   yOffset      = glyph->yOffset;*/
-	uint8_t  xAdvance     = glyph->xAdvance;
-	
+	int8_t   yOffset      = glyph->yOffset;
+		
+	uint8_t  bit = 0, bits = 0;	
+	for (uint8_t y = 0; y < height; y++) {
+		for (uint8_t x = 0; x < width; x++) {
+			if(!(bit++ & 7)) bits = bitmap[bitmapOffset++];
+			//printf("char %u,%u = %02x\n", x, y, bits);
+			if(bits & 0x80) {
+				if (xScale == 1 && yScale == 1) {
+					driver_framebuffer_setPixel(x0+xOffset+x, y0+yOffset+y+gfxFont->yAdvance, color);
+				} else {
+					driver_framebuffer_rect(x0+(xOffset+x)*xScale, y0+(yOffset+y+gfxFont->yAdvance)*yScale, xScale, yScale, true, color);
+				}
+			}
+			bits <<= 1;
+		}
+	}
+}
+
+void driver_framebuffer_write(uint8_t c)
+{
+	if (gfxFont == NULL) return;
+	const GFXglyph *glyph = gfxFont->glyph + c - (uint8_t) gfxFont->first;	
 	if (c == '\n') {
 		cursor_x = 0;
 		cursor_y += textScaleY * gfxFont->yAdvance;
 	} else if (c != '\r') {
-		driver_framebuffer_char(cursor_x, cursor_y, c, textScaleX, textScaleY, textColor);
-		cursor_x += xAdvance * textScaleX;
+		print_char(cursor_x, cursor_y, c, textScaleX, textScaleY, textColor);
+		cursor_x += glyph->xAdvance * textScaleX;
 	}
+}
+
+uint8_t driver_framebuffer_get_font_height()
+{
+	if (gfxFont == NULL) return 0;
+	return gfxFont->yAdvance;
+}
+
+uint16_t driver_framebuffer_get_char_width(uint8_t c)
+{
+	if (gfxFont == NULL) return 0;
+	if ((c < gfxFont->first) || (c > gfxFont->last)) return 0;
+	const GFXglyph *glyph = gfxFont->glyph + c - (uint8_t) gfxFont->first;
+	if ((c != '\r') && (c != '\n')) {
+		return glyph->xAdvance * textScaleX;
+	}
+	return 0;
 }
 
 void driver_framebuffer_print(const char* str)
 {
 	for (uint16_t i = 0; i < strlen(str); i++) driver_framebuffer_write(str[i]);
+}
+
+uint16_t driver_framebuffer_get_string_width(const char* str)
+{
+	uint16_t width = 0;
+	for (uint16_t i = 0; i < strlen(str); i++) width += driver_framebuffer_get_char_width(str[i]);
+	return width;
+}
+
+uint16_t driver_framebuffer_get_string_height(const char* str)
+{
+	uint8_t lineHeight = driver_framebuffer_get_font_height();
+	uint16_t height = lineHeight;
+	if (strlen(str) < 1) return 0;
+	for (uint16_t i = 0; i < strlen(str)-1; i++) {
+		if (str[i]=='\n') height += lineHeight;
+	}
+	return height;
 }
 
 void driver_framebuffer_print_len(const char* str, int16_t len)
@@ -757,16 +771,14 @@ void driver_framebuffer_flush()
 	#endif
 
 	if (dirty_x0 < 0) dirty_x0 = 0;
-	if (dirty_x0 > FB_WIDTH) dirty_x0 = FB_WIDTH;
+	if (dirty_x0 > FB_WIDTH) dirty_x0 = FB_WIDTH-1;
 	if (dirty_x1 < 0) dirty_x1 = 0;
-	if (dirty_x1 > FB_WIDTH) dirty_x1 = FB_WIDTH;
+	if (dirty_x1 > FB_WIDTH) dirty_x1 = FB_WIDTH-1;
 	if (dirty_y0 < 0) dirty_y0 = 0;
-	if (dirty_y0 > FB_WIDTH) dirty_y0 = FB_HEIGHT;
+	if (dirty_y0 > FB_WIDTH) dirty_y0 = FB_HEIGHT-1;
 	if (dirty_y1 < 0) dirty_y1 = 0;
-	if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT;
+	if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT-1;
 	
-	dirty_y1 +=1; //Temp. fix
-
 	#ifdef FB_FLUSH_GS
 		if (useGreyscale) {
 			FB_FLUSH_GS(framebuffer, flags);
@@ -781,8 +793,8 @@ void driver_framebuffer_flush()
 	memcpy(nextFb, framebuffer, FB_SIZE); //Copy the framebuffer we just flushed into the working buffer
 	#endif
 
-	dirty_x0 = FB_WIDTH;
-	dirty_y0 = FB_HEIGHT;
+	dirty_x0 = FB_WIDTH-1;
+	dirty_y0 = FB_HEIGHT-1;
 	dirty_x1 = 0;
 	dirty_y1 = 0;
 	isDirty = false;
@@ -837,16 +849,7 @@ esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, 
 	
 	uint32_t dst_min_x = x < 0 ? -x : 0;
 	uint32_t dst_min_y = y < 0 ? -y : 0;
-	
-	uint8_t bitsPerPixel = 0;
-	#if defined(FB_TYPE_24BPP)
-	bitsPerPixel = 24;
-	#elif defined(FB_TYPE_8BPP)
-	bitsPerPixel = 8;
-	#elif defined(FB_TYPE_1BPP)
-	bitsPerPixel = 1;
-	#endif
-		
+			
 	res = lib_png_load_image(pr, x, y, dst_min_x, dst_min_y, FB_WIDTH - x, FB_HEIGHT - y, FB_WIDTH, 8);
 
 	lib_png_destroy(pr);
@@ -860,11 +863,11 @@ esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, 
 	return ESP_OK;
 }
 
-int16_t driver_framebuffer_getWidth(void)
+uint16_t driver_framebuffer_getWidth(void)
 {
 	return orientation ? FB_HEIGHT : FB_WIDTH;
 }
-int16_t driver_framebuffer_getHeight(void)
+uint16_t driver_framebuffer_getHeight(void)
 {
 	return orientation ? FB_WIDTH : FB_HEIGHT;
 }

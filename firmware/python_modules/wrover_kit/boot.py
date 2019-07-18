@@ -1,19 +1,9 @@
-import esp, machine, sys, system, os
+import esp, machine, sys, system, os, badge
 
 backlight = machine.Pin(5, machine.Pin.OUT)
 
 esp.rtcmem_write(0,0)
 esp.rtcmem_write(1,0)
-
-import display
-display.flush()
-
-#SD card interface on SHA2017 badge
-try:
-	os.mountsd()
-except:
-	import badge
-	badge.setPower(False)
 
 #Application starting
 app = esp.rtcmem_read_string()
@@ -24,8 +14,8 @@ else:
 		app = "factory_checks"
 	else:
 		app = machine.nvs_getstr("system", 'default_app')
-		#if not app: #This generic set of modules has no default app
-			#app = 'dashboard.home'
+		if not app: #This generic set of modules has no default app
+			app = 'dashboard.home'
 
 try:
 	print("Starting app '%s'..." % app)

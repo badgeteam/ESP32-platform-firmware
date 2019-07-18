@@ -68,7 +68,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 					driver_framebuffer_setTextColor(COLOR_BLACK);
 					driver_framebuffer_setFont(&freesansbold12pt7b);
 					driver_framebuffer_setCursor(0,0);
-					driver_framebuffer_setScale(1,1);
+					driver_framebuffer_setTextScale(1,1);
 					driver_framebuffer_print("Firmware update\n");
 					driver_framebuffer_setFont(&freesansmono9pt7b);
 					driver_framebuffer_print(text);
@@ -76,14 +76,14 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 					if (showPercentage) {
 						driver_framebuffer_setCursor(driver_framebuffer_getWidth()-100,driver_framebuffer_getHeight()-50);
 						driver_framebuffer_setFont(&freesansmono9pt7b);
-						driver_framebuffer_setScale(2,2);
+						driver_framebuffer_setTextScale(2,2);
 						char buffer[16];
 						snprintf(buffer, 16, "%*u%%", 3, percentage);
 						driver_framebuffer_print(buffer);
 					}
 					driver_framebuffer_setFont(&fairlight8pt7b);
 					driver_framebuffer_setCursor(0,driver_framebuffer_getHeight()-15);
-					driver_framebuffer_setScale(1,1);
+					driver_framebuffer_setTextScale(1,1);
 					driver_framebuffer_print("BADGE.TEAM\n");
 					if (force) {
 						//driver_framebuffer_setFlags(DISPLAY_FLAG_8BITPIXEL);
@@ -99,7 +99,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				driver_framebuffer_setTextColor(COLOR_BLACK);
 				driver_framebuffer_setFont(&freesansbold12pt7b);
 				driver_framebuffer_setCursor(0,0);
-				driver_framebuffer_setScale(1,1);
+				driver_framebuffer_setTextScale(1,1);
 				driver_framebuffer_print("Firmware update\n");
 				driver_framebuffer_setFont(&freesansmono9pt7b);
 				driver_framebuffer_print(text);
@@ -107,14 +107,14 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				if (showPercentage) {
 					driver_framebuffer_setCursor(driver_framebuffer_getWidth()-100,driver_framebuffer_getHeight()-50);
 					driver_framebuffer_setFont(&freesansmono9pt7b);
-					driver_framebuffer_setScale(2,2);
+					driver_framebuffer_setTextScale(2,2);
 					char buffer[16];
 					snprintf(buffer, 16, "%*u%%", 3, percentage);
 					driver_framebuffer_print(buffer);
 				}
 				driver_framebuffer_setFont(&fairlight8pt7b);
 				driver_framebuffer_setCursor(0,driver_framebuffer_getHeight()-15);
-				driver_framebuffer_setScale(1,1);
+				driver_framebuffer_setTextScale(1,1);
 				driver_framebuffer_print("BADGE.TEAM\n");
 				driver_framebuffer_flush();
 			#endif
@@ -122,7 +122,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				driver_framebuffer_fill(COLOR_BLACK);
 				driver_framebuffer_setTextColor(COLOR_WHITE);
 				driver_framebuffer_setCursor(0,0);
-				driver_framebuffer_setScale(1,1);
+				driver_framebuffer_setTextScale(1,1);
 				driver_framebuffer_setFont(&freesansbold9pt7b);
 				driver_framebuffer_print("FW UPDATE\n");
 				driver_framebuffer_setFont(&org_018pt7b);

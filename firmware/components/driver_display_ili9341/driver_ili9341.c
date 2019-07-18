@@ -24,6 +24,8 @@
 
 #ifdef CONFIG_DRIVER_ILI9341_ENABLE
 
+#define ILI9341_MAX_TRANSFERSIZE 320*128*2+32
+
 static const char *TAG = "ili9341";
 
 static spi_device_handle_t spi_bus = NULL;
@@ -59,7 +61,7 @@ static esp_err_t driver_ili9341_claim_spi(void)
 		.sclk_io_num     = CONFIG_PIN_NUM_ILI9341_CLK,
 		.quadwp_io_num   = -1,
 		.quadhd_io_num   = -1,
-		.max_transfer_sz = 320*128*2+32,
+		.max_transfer_sz = ILI9341_MAX_TRANSFERSIZE,
 	};
 	esp_err_t res = spi_bus_initialize(VSPI_HOST, &buscfg, 2);
 	if (res != ESP_OK) return res;
@@ -157,9 +159,6 @@ esp_err_t driver_ili9341_write_initData(const uint8_t * data)
 		cmd = *data++;
 		if(!cmd) return ESP_OK; //END
 		len = *data++;
-		//printf("Writing command %02x with %u parameters...\n", cmd, len);
-		for (uint8_t i = 0; i < len; i++) printf("%02x, ", data[i]);
-		printf("\n");
 		driver_ili9341_send(&cmd, 1, false);
 		driver_ili9341_send(data, len, true);
 		data+=len;
@@ -238,10 +237,6 @@ esp_err_t driver_ili9341_init(void)
 	if (res != ESP_OK) return res;
 	res = driver_ili9341_reset();
 	if (res != ESP_OK) return res;
-	//uint32_t id = 0;
-	//res = driver_ili9341_read_id(&id);
-	//if (res != ESP_OK) return res;
-	//printf("ILI9341 ID  = %u\n", id);
 	res = driver_ili9341_write_initData(ili9341_init_data);
 	
 	driver_ili9341_send_command(ILI9341_SLPOUT);
@@ -260,27 +255,63 @@ esp_err_t driver_ili9341_write(const uint8_t *buffer)
 	return driver_ili9341_write_partial(buffer, 0, 0, ILI9341_WIDTH, ILI9341_HEIGHT);
 }
 
-esp_err_t driver_ili9341_write_real_partial(const uint8_t *buffer, uint16_t y, uint16_t h)
-{
-	esp_err_t res = driver_ili9341_set_addr_window(0, y, ILI9341_WIDTH, h);
+esp_err_t driver_ili9341_write_partial_direct(const uint8_t *buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+{ //Without conversion
+	if (x0 > x1) return ESP_FAIL;
+	if (y0 > y1) return ESP_FAIL;
+	uint16_t w = x1-x0;
+	uint16_t h = y1-y0;
+	esp_err_t res = driver_ili9341_set_addr_window(x0, y0, w, h);
 	if (res != ESP_OK) return res;
-	res = driver_ili9341_send(buffer+(y*ILI9341_WIDTH)*2, ILI9341_WIDTH*h*2, true);
+	res = driver_ili9341_send(buffer, w*h*2, true);
 	return res;
 }
 
 esp_err_t driver_ili9341_write_partial(const uint8_t *buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
-{
-	esp_err_t res;
-	uint16_t h = y1-y0;
-	while (h > 0) {
-		uint16_t lines = h;
-		if (lines > 120) lines = 120;
-		//printf("Lines %u\n", lines);
-		res = driver_ili9341_write_real_partial(buffer, y0, lines);
-		if (res != ESP_OK) return res;
-		y0 += lines;
-		h -= lines;
+{ //With conversion from framebuffer
+	esp_err_t res = ESP_OK;
+	if (x0 > x1) {
+		printf("X0 %u > X1 %u\n", x0, x1);
+		return ESP_FAIL;
 	}
+	if (y0 > y1) {
+		printf("Y0 %u > Y1 %u\n", y0, y1);
+		return ESP_FAIL;
+	}
+	if (x1 >= ILI9341_WIDTH)  x1 = ILI9341_WIDTH-1;
+	if (y1 >= ILI9341_HEIGHT) y1 = ILI9341_HEIGHT-1;
+	
+	uint16_t w = x1-x0+1;
+	uint16_t h = y1-y0+1;
+	
+	if ((w > 300) || (w*h*2 > ILI9341_MAX_TRANSFERSIZE)) { //Just copy whole lines if most of the line needs to be refreshed anyway
+		//printf("Refreshing %ux%u area at (%u,%u) (%u,%u) using method 1\n", w, h, x0, y0, x1, y1);
+		while (h > 0) {
+			uint16_t lines = h;
+			if (lines > 120) lines = 120;
+			esp_err_t res = driver_ili9341_set_addr_window(0, y0, ILI9341_WIDTH, lines);
+			if (res != ESP_OK) break;
+			res = driver_ili9341_send(buffer+(y0*ILI9341_WIDTH)*2, ILI9341_WIDTH*lines*2, true);
+			if (res != ESP_OK) break;
+			y0 += lines;
+			h -= lines;
+		}
+		return res;
+	}
+	
+	//printf("Refreshing %ux%u area at (%u,%u) (%u,%u) using method 2\n", w, h, x0, y0, x1, y1);
+	uint8_t *area = malloc(w*h*2);
+	if (!area) return ESP_FAIL;
+	for (uint16_t y = 0; y < h; y++) {
+		uint32_t areaOffset = (y*w)*2;
+		uint32_t fbOffset = (x0+(y0+y)*ILI9341_WIDTH)*2;
+		memcpy(area+areaOffset, buffer+fbOffset, w*2);
+	}
+	res = driver_ili9341_set_addr_window(x0, y0, w, h);
+	if (res == ESP_OK) {
+		res = driver_ili9341_send(area, w*h*2, true);
+	}
+	free(area);
 	return res;
 }
 

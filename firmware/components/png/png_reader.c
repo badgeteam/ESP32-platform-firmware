@@ -391,7 +391,7 @@ lib_png_decode(struct lib_png_reader *pr, uint32_t width, uint32_t height, uint3
 			if (a != 0 && x >= dst_min_x && x < dst_width && y >= dst_min_y && y < dst_height)
 			{
 				#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-				driver_framebuffer_pixel(offset_x + x, offset_y + y, ((r>>8)<<16)+((g>>8)<<8)+(b>>8));
+				driver_framebuffer_setPixel(offset_x + x, offset_y + y, ((r>>8)<<16)+((g>>8)<<8)+(b>>8));
 				#endif
 				/*if (bitsPerPixel == 8) {
 					uint32_t grey = ( r + g + b + 1 ) / 3;

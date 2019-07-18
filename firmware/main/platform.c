@@ -28,7 +28,7 @@ void fatal_error(const char* message)
 			driver_framebuffer_setTextColor(COLOR_BLACK);
 			driver_framebuffer_setFont(&freesansbold12pt7b);
 			driver_framebuffer_setCursor(0,0);
-			driver_framebuffer_setScale(1,1);
+			driver_framebuffer_setTextScale(1,1);
 			driver_framebuffer_print("Fatal error\n");
 			driver_framebuffer_setFont(&freesans8pt7b);
 			driver_framebuffer_print("Failure while starting driver.\n");
@@ -40,7 +40,7 @@ void fatal_error(const char* message)
 			driver_framebuffer_fill(COLOR_BLACK);
 			driver_framebuffer_setTextColor(COLOR_WHITE);
 			driver_framebuffer_setCursor(0,0);
-			driver_framebuffer_setScale(1,1);
+			driver_framebuffer_setTextScale(1,1);
 			driver_framebuffer_setFont(&freesan8pt7b);
 			driver_framebuffer_print("Fatal error\n");
 			driver_framebuffer_print("Driver failed:\n");
