@@ -94,6 +94,12 @@ STATIC mp_obj_t framebuffer_print(mp_obj_t text_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_print_obj, framebuffer_print);
 
+STATIC mp_obj_t framebuffer_font(mp_obj_t name_in) {
+	const char *name = mp_obj_str_get_str(name_in);
+	return mp_obj_new_bool(driver_framebuffer_selectFont(name));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_font_obj, framebuffer_font);
+
 static mp_obj_t framebuffer_line(mp_uint_t n_args, const mp_obj_t *args)
 {
 	int x0 =  mp_obj_get_int(args[0]);
@@ -240,6 +246,7 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_flush), MP_ROM_PTR(&framebuffer_flush_obj)},
 	{MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&framebuffer_char_obj)},
 	{MP_ROM_QSTR(MP_QSTR_print), MP_ROM_PTR(&framebuffer_print_obj)},
+	{MP_ROM_QSTR(MP_QSTR_font), MP_ROM_PTR(&framebuffer_font_obj)},
 	{MP_ROM_QSTR(MP_QSTR_line), MP_ROM_PTR(&framebuffer_line_obj)},
 	{MP_ROM_QSTR(MP_QSTR_rect), MP_ROM_PTR(&framebuffer_rect_obj)},
 	{MP_ROM_QSTR(MP_QSTR_circle), MP_ROM_PTR(&framebuffer_circle_obj)},

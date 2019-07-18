@@ -24,6 +24,19 @@ extern const GFXfont org_018pt7b;
 extern const GFXfont org_019pt7b;
 extern const GFXfont org_0112pt7b;
 
+//SHA2017
+extern const GFXfont dejavusans20pt7b;
+extern const GFXfont permanentmarker22pt7b;
+extern const GFXfont permanentmarker36pt7b;
+extern const GFXfont robotoblack22pt7b;
+extern const GFXfont robotoblackitalic24pt7b;
+extern const GFXfont roboto12pt7b;
+extern const GFXfont roboto18pt7b;
+extern const GFXfont roboto22pt7b;
+extern const GFXfont pixelade13pt7b;
+extern const GFXfont weather42pt8b;
+
+
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 bool currentFb;
 uint8_t* framebuffer1, framebuffer2;
@@ -54,6 +67,8 @@ void driver_framebuffer_rect(int16_t x, int16_t y, uint16_t w, uint16_t h, bool 
 void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint32_t color);
 void driver_framebuffer_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color);
 void driver_framebuffer_setTextColor(uint32_t color);
+
+bool driver_framebuffer_selectFont(const char* fontName);
 
 esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, size_t len);
 

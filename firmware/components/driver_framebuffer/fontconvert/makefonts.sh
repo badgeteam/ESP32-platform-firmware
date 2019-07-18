@@ -44,4 +44,4 @@ do
 	done
 done
 
-$convert weather.ttf 42 59905 59923 -59905 > ../../weather42pt.c
+$convert weather.ttf 42 59905 59923 -59905 > ../../weather42pt8b.c

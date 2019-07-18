@@ -76,6 +76,62 @@ bool orientation = ORIENTATION_LANDSCAPE;
 bool flip180     = false;
 bool useGreyscale = false;
 
+/* Fonts */
+
+#define FONTS_AMOUNT 15
+
+const char* fontNames[] = {
+	"freesans9",
+	"freesansmono9",
+	"freesansbold9p",
+	"freesansbold12",
+	"org18",
+	//Legacy fonts from SHA2017 (do NOT edit these names!)
+	"dejavusans20",
+	"permanentmarker22",
+	"permanentmarker36",
+	"roboto-black22",
+	"roboto-blackitalic24",
+	"roboto-regular12",
+	"roboto-regular18",
+	"roboto-regular22",
+	"pixelade13",
+	"weather42"
+};
+const GFXfont* fontPointers[] = {
+	&freesans9pt7b,
+	&freesansmono9pt7b,
+	&freesansbold9pt7b,
+	&freesansbold12pt7b,
+	&org_018pt7b,
+	//---
+	&dejavusans20pt7b,
+	&permanentmarker22pt7b,
+	&permanentmarker36pt7b,
+	&robotoblack22pt7b,
+	&robotoblackitalic24pt7b,
+	&roboto12pt7b,
+	&roboto18pt7b,
+	&roboto22pt7b,
+	&pixelade13pt7b,
+	&weather42pt8b
+};
+
+bool driver_framebuffer_selectFont(const char* fontName)
+{
+	char buffer[32];
+	if (strlen(fontName) > 31) return false;
+	strcpy(buffer, fontName);
+	strlwr(buffer);
+	for (uint16_t i = 0; i < FONTS_AMOUNT; i++) {
+		if (strcmp(fontNames[i],buffer)==0) {
+			driver_framebuffer_setFont(fontPointers[i]);
+			return true;
+		}
+	}
+	return false;
+}
+
 /* Color space conversions */
 
 inline uint16_t rgbTo565(uint32_t in)
