@@ -3,53 +3,48 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-//#include <esp32-hal.h>
+#include "color.h"
 
-typedef union{
-		uint32_t value;
-		uint8_t RGB[4];
-} Color;
-
-typedef struct renderTask{
-	struct renderTask *next;
-	void *payload;
-	int id;
-	int x;
-	int y;
-	int sizeX;
-	int sizeY;
-	Color color;
+typedef struct renderTask {
+    struct renderTask *next;
+    void *payload;
+    int id;
+    int x;
+    int y;
+    int sizeX;
+    int sizeY;
+    Color color;
 } renderTask_t;
 
-typedef struct animation{
-	uint8_t *gif;
-	int showFrame;
-	int numberFrames;
+typedef struct animation {
+    uint8_t *gif;
+    int showFrame;
+    int numberFrames;
 } animation_t;
 
-typedef struct scrollText{
-	char *text;
-	int skip;
-	int speed;
+typedef struct scrollText {
+    char *text;
+    int skip;
+    int speed;
 } scrollText_t;
 
-  void compositor_init();
-  void compositor_clear();
+void compositor_init();
 
-  void compositor_setBackground(Color color);
-  void compositor_addText(char *text, Color color, int x, int y);
-  void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX);
-  void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length, int numFrames);
-  void compositor_addImage(uint8_t *image, int x, int y, int width, int length);
+void compositor_clear();
 
-  void composite();
+void compositor_setBackground(Color color);
+void compositor_setPixel(int x, int y, Color color);
 
-  void compositor_setBuffer(Color* framebuffer);
+void compositor_addText(char *text, Color color, int x, int y);
+void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX);
+void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length, int numFrames);
+void compositor_addImage(uint8_t *image, int x, int y, int width, int length);
 
-  void compositor_enable();
-  void compositor_disable();
-  bool compositor_status();
-
-  void display_crash();
+void composite();
+void compositor_setBuffer(Color *framebuffer);
+void compositor_enable();
+void compositor_disable();
+bool compositor_status();
+void display_crash();
 
 #endif

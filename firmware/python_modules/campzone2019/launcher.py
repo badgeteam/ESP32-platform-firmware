@@ -175,6 +175,22 @@ def input_down(pressed):
         render_current_app()
 
 
+def input_left(pressed):
+    global current_index
+
+    pm.feed()
+    if pressed:
+        rgb.set_brightness(rgb.get_brightness() - 2)
+
+
+def input_right(pressed):
+    global current_index
+
+    pm.feed()
+    if pressed:
+        rgb.set_brightness(rgb.get_brightness() + 2)
+
+
 def input_other(pressed):
     pm.feed()
 
@@ -199,11 +215,11 @@ def start():
     install_path = None
 
     buttons.register(defines.BTN_A, input_A)
-    # buttons.register(defines.BTN_B, input_B)
+    buttons.register(defines.BTN_B, input_B)
     buttons.register(defines.BTN_UP, input_up)
     buttons.register(defines.BTN_DOWN, input_down)
-    buttons.register(defines.BTN_LEFT, input_other)
-    buttons.register(defines.BTN_RIGHT, input_other)
+    buttons.register(defines.BTN_LEFT, input_left)
+    buttons.register(defines.BTN_RIGHT, input_right)
 
     populate_apps()
     render_current_app()

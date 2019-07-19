@@ -49,6 +49,11 @@ menu "Driver: HUB75 LED panel display"
 		int "Number of columns of LED panel (unlimited)"
 		default 32
 
+	config HUB75_DEFAULT_BRIGHTNESS
+		depends on DRIVER_HUB75_ENABLE
+		int "Default brightness, being a value between 0 and "
+		default 30
+
 	config HUB75_CLOCK_SPEED
 		depends on DRIVER_HUB75_ENABLE
 		int "Clock speed to run the HUB75 I2S updates at"
