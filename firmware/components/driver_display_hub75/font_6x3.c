@@ -9,7 +9,6 @@
 
 void renderChar_6x3(uint8_t charId, Color color, int *x, int y, int endX, int *skip) {
     character toDraw = font_6x3[charId];
-//    ESP_LOGW("hub75", "Rendering '%c', %d", charId + 32, (int)toDraw.width);
 
     for (int col = 0; col < toDraw.width; col++) {
         if (*skip != 0) {

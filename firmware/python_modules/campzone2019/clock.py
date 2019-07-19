@@ -36,6 +36,7 @@ while direction != defines.BTN_B:
         hub75.text(th, 255, 255, 255, 3, 0)
         hub75.text(tm, 255, 255, 255, 18, 0)
         hub75.gif(gifd, 15, 0, 1, 7, 2)
+        hub75.gif(gifd, 16, 0, 1, 7, 2)
         tmold = tm
     time.sleep(0.2)
 system.reboot()

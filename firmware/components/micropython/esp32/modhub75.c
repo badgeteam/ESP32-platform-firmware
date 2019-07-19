@@ -129,7 +129,7 @@ STATIC mp_obj_t hub75_image(size_t n_args, const mp_obj_t *args) {
     uint32_t *image = malloc(width*height*4);
 
     for(int i = 0; i < width*height; i++) {
-        image[i] = mp_obj_get_int(mp_arr[i]);
+        image[i] = mp_obj_get_int64(mp_arr[i]);
     }
 
     compositor_addImage((uint8_t *) image, x, y, width, height);

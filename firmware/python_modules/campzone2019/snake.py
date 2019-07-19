@@ -69,8 +69,7 @@ while direction != defines.BTN_B:
     # If snake bites itself, the game's over
     if snake[0] in snake[1:]:
         print('dead')
-        pass
-        # break
+        break
 
     if snake[0] == food:
         # Snake eats the food

@@ -1,7 +1,8 @@
 import sys, uos as os, time, ujson
 import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, wifi
 import rgb
-from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, icon_activities, icon_nickname
+from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, icon_activities, icon_nickname, \
+                            icon_no_wifi, animation_connecting_wifi
 
 # Application list
 
@@ -12,6 +13,7 @@ b_down = False
 
 def show_text(text):
     rgb.scrolltext(text, (255,255,255))
+
 
 def show_app_name(name):
     rgb.scrolltext(name, (255,255,255), (8,0), rgb.PANEL_WIDTH-8)
@@ -65,7 +67,7 @@ def render_current_app():
     app = apps[current_index]
     data, num_frames = app["icon"]
 
-    rgb.gif(data, 0, 0, 8, 8, num_frames)
+    rgb.gif(data, (0, 0), (8, 8), num_frames)
     show_app_name(app["title"])
 
 
@@ -180,7 +182,7 @@ def input_left(pressed):
 
     pm.feed()
     if pressed:
-        rgb.set_brightness(rgb.get_brightness() - 2)
+        rgb.setbrightness(rgb.getbrightness() - 2)
 
 
 def input_right(pressed):
@@ -188,7 +190,7 @@ def input_right(pressed):
 
     pm.feed()
     if pressed:
-        rgb.set_brightness(rgb.get_brightness() + 2)
+        rgb.setbrightness(rgb.getbrightness() + 2)
 
 
 def input_other(pressed):
@@ -224,19 +226,41 @@ def start():
     populate_apps()
     render_current_app()
 
-start()
-init_power_management()
+# First time boot sequence
+if not machine.nvs_getint("system", 'intro_shown'):
+    import nyan
+    time.sleep(3)
+    rgb.clear()
+    time.sleep(1)
+    import sponsors
+    machine.nvs_setint("system", 'intro_shown', 1)
+    system.reboot()
 
 # Do shameless start-of-event update
 if not machine.nvs_getint("system", 'day0_updated'):
-    if wifi.status() or wifi.connect():
+    data, size, frames = animation_connecting_wifi
+    rgb.clear()
+    rgb.framerate(3)
+    rgb.gif(data, (12, 0), size, frames)
+    if wifi.connect():
         rgb.clear()
+        rgb.framerate(20)
+        rgb.setfont(1)
         rgb.scrolltext("Updating, don't remove battery")
         time.sleep(5)
         machine.nvs_setint("system", 'day0_updated', 1)
         system.ota()
     else:
         print('Need to perform day0 update, but no WiFi connection present')
+        rgb.clear()
+        rgb.framerate(20)
+        data, frames = icon_no_wifi
+        rgb.image(data, (12, 0), (8,8))
+        time.sleep(3)
+        rgb.clear()
+
+start()
+init_power_management()
 
 menu = term_menu.UartMenu(None, pm)
 menu.main()

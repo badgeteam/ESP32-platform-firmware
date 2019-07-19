@@ -6,6 +6,12 @@ MAX_BRIGHTNESS = PANEL_WIDTH
 
 MAX_BRIGHTNESS = PANEL_WIDTH
 
+FONT_7x5 = 0
+FONT_6x3 = 1
+
+current_font = FONT_7x5
+font_heights = [7, 6]
+
 # Copies all attributes from hub75,
 # so you can use e.g. rgb.scrolltext()
 # instead of hub75.scrolltext()
@@ -13,12 +19,18 @@ MAX_BRIGHTNESS = PANEL_WIDTH
 for name in dir(hub75):
     globals()[name] = getattr(hub75, name)
 
-def text(text, color=(255, 255, 255), pos=(0, 1)) :
+def text(text, color=(255, 255, 255), pos=None):
+    if pos is None:
+        pos = (0, int((8 - font_heights[current_font]) / 2))
+
     r, g, b = color
     x, y = pos
     hub75.text(text, r, g, b, x, y)
 
-def scrolltext(text, color=(255, 255, 255), pos=(0, 1), width=PANEL_WIDTH):
+def scrolltext(text, color=(255, 255, 255), pos=None, width=PANEL_WIDTH):
+    if pos is None:
+        pos = (0, int((8 - font_heights[current_font]) / 2))
+
     r, g, b = color
     x, y = pos
     hub75.scrolltext(text, r, g, b, x, y, width)
@@ -34,15 +46,35 @@ def pixel(color=(255, 255, 255), pos=(0,0)):
     hub75.pixel(r, g, b, x, y)
 
 
-def get_brightness():
+def gif(data, pos=(0,0), size=(8,8), frames=1):
+    x, y = pos
+    size_x, size_y = size
+    hub75.gif(data, x, y, size_x, size_y, frames)
+
+
+def image(data, pos=(0,0), size=(8,8)):
+    x, y = pos
+    size_x, size_y = size
+    hub75.image(data, x, y, size_x, size_y)
+
+
+def getbrightness():
     return machine.nvs_getint('system', 'brightness')
 
 
-def set_brightness(brightness=(MAX_BRIGHTNESS - 2)):
+def setbrightness(brightness=(MAX_BRIGHTNESS - 2)):
     brightness = 1 if brightness < 1 else (MAX_BRIGHTNESS if brightness > MAX_BRIGHTNESS else brightness)
     machine.nvs_setint('system', 'brightness', brightness)
     hub75.brightness(brightness)
 
+def setfont(font_index):
+    global current_font
+    if font_index < 0 or font_index >= 2:
+        return
+
+    current_font = font_index
+    hub75.setfont(font_index)
+
 
 # Restore previously set brightness
-set_brightness(get_brightness() or (MAX_BRIGHTNESS - 2))
+setbrightness(getbrightness() or (MAX_BRIGHTNESS - 2))
