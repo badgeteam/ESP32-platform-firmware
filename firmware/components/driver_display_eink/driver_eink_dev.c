@@ -131,9 +131,16 @@ xSemaphoreHandle driver_eink_dev_intr_trigger = NULL;
 void
 driver_eink_dev_busy_wait(void)
 {
-	while (driver_eink_dev_is_busy())
+	uint16_t timeout = 20;
+	while (driver_eink_dev_is_busy() && (timeout > 0))
 	{
 		xSemaphoreTake(driver_eink_dev_intr_trigger, 100 / portTICK_PERIOD_MS);
+		//printf("timeout %u\n", timeout);
+		timeout--;
+	}
+	
+	if (timeout < 1) {
+		printf("HARDWARE ERROR: EINK BUSY WAIT TIMEOUT!\n");
 	}
 }
 

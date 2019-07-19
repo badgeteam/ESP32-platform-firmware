@@ -15,6 +15,8 @@
 /** the max number of layers used for greyscale */
 #define DRIVER_EINK_MAX_LAYERS 16
 
+#define EINK_BUFFER_SIZE DRIVER_EINK_WIDTH*DRIVER_EINK_HEIGHT
+
 __BEGIN_DECLS
 
 /** Initialize the eink display
@@ -87,6 +89,7 @@ typedef int driver_eink_flags_t;
  * @param flags see `driver_eink_flags_t`
  */
 extern void driver_eink_display(const uint8_t *img, driver_eink_flags_t flags);
+extern void driver_eink_display_part(const uint8_t *img, driver_eink_flags_t flags, uint16_t y_start, uint16_t y_end);
 
 /**
  * display greyscale image (hack)

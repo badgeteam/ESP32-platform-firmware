@@ -36,6 +36,8 @@
 
 #include "include/ota_update.h"
 
+#include "driver_framebuffer.h"
+
 #define TAG "ota-update"
 
 static uint8_t buffer[1024];
@@ -54,11 +56,90 @@ static EventGroupHandle_t wifi_event_group = 0; //FreeRTOS event group to signal
 #define CONNECTED_BIT  BIT0
 
 uint8_t lastPercentage = 0;
+uint8_t lastShownPercentage = 0;
 
-void graphics_show(const char* text, uint8_t percentage, bool unused1, bool unused2)
+void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bool force)
 {
+		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+			#ifdef CONFIG_DRIVER_EINK_ENABLE
+				if (force || percentage == 0 || (percentage>=lastShownPercentage+10)) {
+					if (showPercentage) lastShownPercentage = percentage;
+					driver_framebuffer_fill(COLOR_WHITE);
+					driver_framebuffer_setTextColor(COLOR_BLACK);
+					driver_framebuffer_setFont(&freesansbold12pt7b);
+					driver_framebuffer_setCursor(0,0);
+					driver_framebuffer_setScale(1,1);
+					driver_framebuffer_print("Firmware update\n");
+					driver_framebuffer_setFont(&freesansmono9pt7b);
+					driver_framebuffer_print(text);
+					driver_framebuffer_write('\n');
+					if (showPercentage) {
+						driver_framebuffer_setCursor(driver_framebuffer_getWidth()-100,driver_framebuffer_getHeight()-50);
+						driver_framebuffer_setFont(&freesansmono9pt7b);
+						driver_framebuffer_setScale(2,2);
+						char buffer[16];
+						snprintf(buffer, 16, "%*u%%", 3, percentage);
+						driver_framebuffer_print(buffer);
+					}
+					driver_framebuffer_setFont(&fairlight8pt7b);
+					driver_framebuffer_setCursor(0,driver_framebuffer_getHeight()-15);
+					driver_framebuffer_setScale(1,1);
+					driver_framebuffer_print("BADGE.TEAM\n");
+					if (force) {
+						//driver_framebuffer_setFlags(DISPLAY_FLAG_8BITPIXEL);
+					} else {
+						//driver_framebuffer_setFlags(DISPLAY_FLAG_8BITPIXEL + DISPLAY_FLAG_LUT(DRIVER_EINK_LUT_FASTEST));
+					}
+					driver_framebuffer_flush();
+				}
+			#endif
+			#ifdef CONFIG_DRIVER_ILI9341_ENABLE
+				if (showPercentage) lastShownPercentage = percentage;
+				driver_framebuffer_fill(COLOR_WHITE);
+				driver_framebuffer_setTextColor(COLOR_BLACK);
+				driver_framebuffer_setFont(&freesansbold12pt7b);
+				driver_framebuffer_setCursor(0,0);
+				driver_framebuffer_setScale(1,1);
+				driver_framebuffer_print("Firmware update\n");
+				driver_framebuffer_setFont(&freesansmono9pt7b);
+				driver_framebuffer_print(text);
+				driver_framebuffer_write('\n');
+				if (showPercentage) {
+					driver_framebuffer_setCursor(driver_framebuffer_getWidth()-100,driver_framebuffer_getHeight()-50);
+					driver_framebuffer_setFont(&freesansmono9pt7b);
+					driver_framebuffer_setScale(2,2);
+					char buffer[16];
+					snprintf(buffer, 16, "%*u%%", 3, percentage);
+					driver_framebuffer_print(buffer);
+				}
+				driver_framebuffer_setFont(&fairlight8pt7b);
+				driver_framebuffer_setCursor(0,driver_framebuffer_getHeight()-15);
+				driver_framebuffer_setScale(1,1);
+				driver_framebuffer_print("BADGE.TEAM\n");
+				driver_framebuffer_flush();
+			#endif
+			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12864_ENABLE)
+				driver_framebuffer_fill(COLOR_BLACK);
+				driver_framebuffer_setTextColor(COLOR_WHITE);
+				driver_framebuffer_setCursor(0,0);
+				driver_framebuffer_setScale(1,1);
+				driver_framebuffer_setFont(&freesansbold9pt7b);
+				driver_framebuffer_print("FW UPDATE\n");
+				driver_framebuffer_setFont(&org_018pt7b);
+				driver_framebuffer_print(text);
+				driver_framebuffer_write('\n');
+				char buffer[16];
+				snprintf(buffer, 16, "%*u%%", 3, percentage);
+				if (showPercentage) driver_framebuffer_print(buffer);
+				driver_framebuffer_flush();
+			#endif
+		#endif
 	if (percentage>lastPercentage) lastPercentage = percentage;
-	printf("[%03u%%] %s\r\n", lastPercentage, text);
+	if (showPercentage) {
+		printf("[%*u%%] %s\r\n", 3, lastPercentage, text);
+	} else {
+		printf("%s\r\n", text);
+	}
 }
 
 /* the esp event-loop handler */
@@ -240,7 +321,7 @@ badge_ota_task(void *pvParameter)
 	ESP_LOGW(TAG, "Writing to partition type %d subtype %d (offset 0x%08x)",
 			part_update->type, part_update->subtype, part_update->address);
 
-	graphics_show("Connecting to WiFi", 0, false, true);
+	graphics_show("Connecting to WiFi...", 0, false, true);
 	/* Wait for the callback to set the CONNECTED_BIT in the
 	   event group.
 	 */
@@ -319,7 +400,7 @@ badge_ota_task(void *pvParameter)
 
 	mbedtls_net_init(&server_fd);
 
-	graphics_show("Handshaking server", 0, false, true);
+	graphics_show("Handshaking server...", 0, false, true);
 
 	ESP_LOGW(TAG, "Connecting to %s:%s...", CONFIG_OTA_WEB_SERVER,
 			CONFIG_OTA_WEB_PORT);
@@ -366,7 +447,7 @@ badge_ota_task(void *pvParameter)
 	}
 	ESP_LOGW(TAG, "%d bytes written", strlen(REQUEST));
 
-	graphics_show("Starting OTA update", 0, false, true);
+	graphics_show("Starting OTA update...", 0, false, true);
 
 	/* read until we have received the status line */
 	ESP_LOGW(TAG, "Reading HTTP response status line.");
@@ -510,7 +591,7 @@ badge_ota_task(void *pvParameter)
 		uint8_t newperc = (uint8_t) round(((float) content_pos * 100) / content_length);
 		if (newperc != percentage) {
 			percentage = newperc;
-			graphics_show("Updating", percentage, true, false);
+			graphics_show("Updating...", percentage, true, false);
 		}
 	}
 
@@ -528,7 +609,7 @@ badge_ota_task(void *pvParameter)
 	 * new OTA partition.
 	 */
 
-	graphics_show("Rebooting the badge", 0, false, true);
+	graphics_show("Starting firmware...", 0, false, true);
 
 	err = esp_ota_set_boot_partition(part_update);
 	if (err != ESP_OK) {
