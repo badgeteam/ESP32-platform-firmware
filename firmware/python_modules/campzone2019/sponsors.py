@@ -12,6 +12,16 @@ rgb.clear()
 time.sleep(1)
 
 rgb.scrolltext("AllNet")
-time.sleep(4)
+time.sleep(3)
+rgb.clear()
+time.sleep(1)
+
+rgb.scrolltext("And")
+time.sleep(2)
+rgb.clear()
+time.sleep(1)
+
+rgb.text("Deloitte")
+time.sleep(3)
 rgb.clear()
 time.sleep(1)

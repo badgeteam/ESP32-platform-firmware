@@ -28,6 +28,11 @@ Color background;
 Color *buffer;
 renderTask_t *head = NULL;
 
+#define N_FONTS 2
+int font_index = 0;
+void (*font_render_char[])(uint8_t charId, Color color, int *x, int y, int endX, int *skip) = {&renderChar_7x5, &renderChar_6x3};
+int (*font_char_width[])(uint8_t charId) = {&getCharWidth_7x5, &getCharWidth_6x3};
+
 void addTask(renderTask_t *node);
 void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY);
 void renderCharCol(uint8_t ch, Color color, int x, int y);
@@ -182,21 +187,10 @@ void compositor_setPixel(int x, int y, Color color) {
 
 //void compositor_setPixel(int x, int y, Color color) {
 //        Color *target = &buffer[y*CONFIG_HUB75_WIDTH+x];
-//        target->RGB[0] = (uint8_t)((color.RGB[0] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[0]));
-//        target->RGB[1] = (uint8_t)((color.RGB[1] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[1]));
-//        target->RGB[2] = (uint8_t)((color.RGB[2] * (color.RGB[3] / 255.0)) + ((255-color.RGB[3]) / 255.0 * target->RGB[2]));
+//        target->RGB[1] = (uint8_t)((color.RGB[1] * (color.RGB[0] / 255.0)) + ((255-color.RGB[0]) / 255.0 * target->RGB[0]));
+//        target->RGB[1] = (uint8_t)((color.RGB[1] * (color.RGB[0] / 255.0)) + ((255-color.RGB[0]) / 255.0 * target->RGB[1]));
+//        target->RGB[2] = (uint8_t)((color.RGB[2] * (color.RGB[0] / 255.0)) + ((255-color.RGB[0]) / 255.0 * target->RGB[2]));
 //}
-
-unsigned int compositor_getTextWidth(char *text) {
-        int width = 0;
-
-        for(int i = 0; i<strlen(text); i++) {
-                uint8_t charId = (uint8_t)text[i] - 32;
-                width += getCharWidth_7x5(charId);
-        }
-
-        return width;
-}
 
 void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
         int xreal, yreal;
@@ -210,9 +204,8 @@ void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
                 }
         }
 }
-void renderChar_6x3(uint8_t charId, Color color, int *x, int y, int endX, int *skip);
+
 void renderText(char *text, Color color, int x, int y, int sizeX, int skip) {
-//        ESP_LOGW("hub75", "Rendering '%s', %d, %d, %d, %d", text, x, y, sizeX, skip);
         int endX = sizeX > 0 ? x+sizeX : CONFIG_HUB75_WIDTH - 1;
         if(skip < 0) {
             x += -skip;
@@ -220,11 +213,27 @@ void renderText(char *text, Color color, int x, int y, int sizeX, int skip) {
         }
         for(int i = 0; i<strlen(text); i++) {
                 uint8_t charId = (uint8_t)text[i] - 32;
-//                renderChar_7x5(charId, color, &x, y, endX, &skip);
-                renderChar_6x3(charId, color, &x, y, endX, &skip);
+                (*font_render_char[font_index])(charId, color, &x, y, endX, &skip);
                 if(skip == 0) x++; //If started printing insert blank line
                 else skip--; //If not decrease the number to skip by one to make it fluid
         }
+}
+
+unsigned int compositor_getTextWidth(char *text) {
+        int width = 0;
+
+        for(int i = 0; i<strlen(text); i++) {
+                uint8_t charId = (uint8_t)text[i] - 32;
+                width += (*font_char_width[font_index])(charId);
+        }
+
+        return width;
+}
+
+void compositor_setFont(int index) {
+        if(index < 0 || index >= N_FONTS) return;
+
+        font_index = index;
 }
 
 

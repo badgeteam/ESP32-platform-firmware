@@ -40,6 +40,9 @@ void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX);
 void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length, int numFrames);
 void compositor_addImage(uint8_t *image, int x, int y, int width, int length);
 
+unsigned int compositor_getTextWidth(char *text);
+void compositor_setFont(int index);
+
 void composite();
 void compositor_setBuffer(Color *framebuffer);
 void compositor_enable();
