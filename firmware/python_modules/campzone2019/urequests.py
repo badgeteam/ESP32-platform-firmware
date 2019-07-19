@@ -30,7 +30,7 @@ class Response:
         return ujson.loads(self.content)
 
 
-def request(method, url, data=None, json=None, headers={}, stream=None, timeout=None, redirect=5):
+def request(method, url, data=None, json=None, headers={}, stream=None, timeout=10, redirect=5):
     try:
         proto, dummy, host, path = url.split("/", 3)
     except ValueError:

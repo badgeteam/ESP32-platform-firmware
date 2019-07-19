@@ -3,6 +3,13 @@ import esp, machine, sys, system, os, rgb
 esp.rtcmem_write(0,0)
 esp.rtcmem_write(1,0)
 
+# Config display
+brightness = machine.nvs_getint('display', 'brightness')
+if not brightness:
+	brightness = 10
+	machine.nvs_setint('display', 'brightness', brightness)
+rgb.brightness(brightness)
+
 #Application starting
 app = esp.rtcmem_read_string()
 if app:

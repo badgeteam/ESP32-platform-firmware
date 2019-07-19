@@ -1,11 +1,11 @@
-import time, ntp, hub75, easywifi, buttons, defines, system
+import time, ntp, hub75, wifi, buttons, defines, system
 
 direction = 0
 
-if not easywifi.status():
-    easywifi.enable()
+if not wifi.status():
+    wifi.connect()
 
-if not easywifi.status():
+if not wifi.status():
     print("Error connecting to wifi")
     system.reboot()
 

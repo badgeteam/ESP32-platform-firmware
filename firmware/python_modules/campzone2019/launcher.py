@@ -1,16 +1,20 @@
 import sys, uos as os, time, ujson
 import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, wifi
 import rgb
+from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, icon_activities, icon_nickname
 
 # Application list
 
 apps = []
 current_index = 0
+b_down = False
 
 
 def show_text(text):
-    # rgb.background((0, 50, 40))
-    rgb.scrolltext(text, (80, 80, 80))
+    rgb.scrolltext(text, (255,255,255))
+
+def show_app_name(name):
+    rgb.scrolltext(name, (255,255,255), (8,0), rgb.PANEL_WIDTH-8)
 
 
 def clear():
@@ -27,7 +31,16 @@ def add_app(app, information):
         category = information["category"]
     except:
         category = ""
-    info = {"file": app, "title": title, "category": category}
+    try:
+        icon = information["icon"]
+        data, num_frames = icon
+        if len(data) != 8 * 8 * num_frames:
+            print('not equal')
+            icon = icon_snake
+    except:
+        icon = icon_snake
+
+    info = {"file": app, "title": title, "category": category, "icon": icon}
     apps.append(info)
 
 
@@ -40,18 +53,20 @@ def populate_apps():
         userApps = []
     for app in userApps:
         add_app(app, read_metadata(app))
-    add_app("snake", {"name": "Snake", "category": "system"})
-    add_app("clock", {"name": "Clock", "category": "system"})
-    add_app("installer", {"name": "Installer", "category": "system"})
-    add_app("update", {"name": "Update apps", "category": "system"})
-    add_app("checkforupdates", {"name": "Update firmware", "category": "system"})
-    add_app(machine.nvs_getstr("system", 'default_app'), {"name": "Home", "category": "system"})
+    add_app("snake", {"name": "Snake", "category": "system", "icon": icon_snake})
+    add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
+    add_app("installer", {"name": "Installer", "category": "system", "icon": icon_appstore})
+    add_app("update", {"name": "Update apps", "category": "system", "icon": icon_settings})
+    add_app("checkforupdates", {"name": "Update firmware", "category": "system", "icon": icon_nickname})
 
 
 def render_current_app():
     clear()
     app = apps[current_index]
-    show_text(app["title"])
+    data, num_frames = app["icon"]
+
+    rgb.gif(data, 0, 0, 8, 8, num_frames)
+    show_app_name(app["title"])
 
 
 # Read app metadata
@@ -129,16 +144,17 @@ def get_install_path():
 
 
 # Actions        
-def input_run(pressed):
+def input_A(pressed):
     pm.feed()
     if pressed:
         run()
 
 
-def input_uninstall(pressed):
+def input_B(pressed):
+    global b_down
     pm.feed()
-    if pressed:
-        uninstall()
+    b_down = pressed
+
 
 
 def input_up(pressed):
@@ -182,7 +198,8 @@ def start():
     options = None
     install_path = None
 
-    buttons.register(defines.BTN_A, input_run)
+    buttons.register(defines.BTN_A, input_A)
+    # buttons.register(defines.BTN_B, input_B)
     buttons.register(defines.BTN_UP, input_up)
     buttons.register(defines.BTN_DOWN, input_down)
     buttons.register(defines.BTN_LEFT, input_other)
@@ -191,20 +208,19 @@ def start():
     populate_apps()
     render_current_app()
 
-
 start()
 init_power_management()
 
 # Do shameless start-of-event update
-# if not machine.nvs_getint("system", 'day0_updated'):
-#     if wifi.status() or wifi.connect():
-#         rgb.clear()
-#         rgb.scrolltext("Updating, don't remove battery")
-#         time.sleep(5)
-#         machine.nvs_setint("system", 'day0_updated', 1)
-#         system.ota()
-#     else:
-#         print('Need to perform day0 update, but no WiFi connection present')
+if not machine.nvs_getint("system", 'day0_updated'):
+    if wifi.status() or wifi.connect():
+        rgb.clear()
+        rgb.scrolltext("Updating, don't remove battery")
+        time.sleep(5)
+        machine.nvs_setint("system", 'day0_updated', 1)
+        system.ota()
+    else:
+        print('Need to perform day0 update, but no WiFi connection present')
 
 menu = term_menu.UartMenu(None, pm)
 menu.main()

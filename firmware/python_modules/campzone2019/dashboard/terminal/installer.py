@@ -82,10 +82,8 @@ def install_app(i):
 #Main application
 
 showMessage("Loading categories...")
-if not repo.load():
-	if not repo.update_cache():
-		if repo.last_updated==0:
-			showMessage("Failed to load repository. Returning to launcher...")
-			system.launcher()
+if not woezel.update_cache():
+	showMessage("Failed to load repository. Returning to launcher...")
+	system.launcher()
 
 show_categories()

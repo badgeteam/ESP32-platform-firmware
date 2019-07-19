@@ -3,6 +3,8 @@ import hub75
 PANEL_WIDTH = 32
 PANEL_HEIGHT = 8
 
+MAX_BRIGHTNESS = PANEL_WIDTH
+
 # Copies all attributes from hub75,
 # so you can use e.g. rgb.scrolltext()
 # instead of hub75.scrolltext()
