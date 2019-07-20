@@ -848,10 +848,10 @@ void driver_framebuffer_flush()
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 	if (framebuffer==framebuffer1) {
 		framebuffer = framebuffer2;
-		memcpy(framebuffer2, framebuffer1, FB_SIZE);
+		memcpy(framebuffer, framebuffer1, FB_SIZE);
 	} else {
 		framebuffer = framebuffer1;
-		memcpy(framebuffer1, framebuffer2, FB_SIZE);
+		memcpy(framebuffer, framebuffer2, FB_SIZE);
 	}
 	#endif
 
