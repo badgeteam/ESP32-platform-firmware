@@ -39,11 +39,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "include/driver_framebuffer.h"
 #include "include/driver_framebuffer_devices.h"
 
-//PNG library
-#include "mem_reader.h"
-#include "file_reader.h"
-#include "png_reader.h"
-
 //Displays
 #include "driver_ssd1306.h"
 #include "driver_erc12864.h"
@@ -59,8 +54,7 @@ POSSIBILITY OF SUCH DAMAGE.
 const GFXfont *gfxFont;
 uint8_t textScaleX = 1;
 uint8_t textScaleY = 1;
-int16_t cursor_x = 0;
-int16_t cursor_y = 0;
+int16_t cursor_x = 0, cursor_x0 = 0, cursor_y = 0;
 bool textWrap = true;
 uint32_t textColor = COLOR_BLACK;
 
@@ -83,16 +77,19 @@ bool useGreyscale = false;
 
 /* Fonts */
 
-#define FONTS_AMOUNT 16
+#define FONTS_AMOUNT 19
 
 const char* fontNames[] = {
 	//NEW:
+	"freesans6",
 	"freesans9",
 	"freesansmono9",
-	"freesansbold9p",
+	"freesansbold9",
 	"freesansbold12",
 	"org18",
+	"fairlight8",
 	"fairlight12",
+	"pixelade9",
 	//SHA2017:
 	"dejavusans20",
 	"permanentmarker22",
@@ -107,12 +104,15 @@ const char* fontNames[] = {
 };
 const GFXfont* fontPointers[] = {
 	//NEW:
+	&freesans6pt7b,
 	&freesans9pt7b,
 	&freesansmono9pt7b,
 	&freesansbold9pt7b,
 	&freesansbold12pt7b,
 	&org_018pt7b,
+	&fairlight8pt7b,
 	&fairlight12pt7b,
+	&pixelade9pt7b,
 	//SHA2017:
 	&dejavusans20pt7b,
 	&permanentmarker22pt7b,
@@ -619,6 +619,7 @@ void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, 
 void driver_framebuffer_setCursor(int16_t x, int16_t y)
 {
 	cursor_x = x;
+	cursor_x0 = x;
 	cursor_y = y;
 }
 
@@ -686,7 +687,7 @@ void driver_framebuffer_write(uint8_t c)
 	if (gfxFont == NULL) return;
 	const GFXglyph *glyph = gfxFont->glyph + c - (uint8_t) gfxFont->first;	
 	if (c == '\n') {
-		cursor_x = 0;
+		cursor_x = cursor_x0;
 		cursor_y += textScaleY * gfxFont->yAdvance;
 	} else if (c != '\r') {
 		print_char(cursor_x, cursor_y+(fontHeight/2), c, textScaleX, textScaleY, textColor);
@@ -816,39 +817,18 @@ void driver_framebuffer_flush()
 	isDirty = false;
 }
 
-
-esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, size_t len)
+esp_err_t driver_framebuffer_png(int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p)
 {
-	if (x >= FB_WIDTH || y >= FB_HEIGHT)
- {
-		printf("PNG too large!\n");
-		return ESP_FAIL;
-	}
-
-	lib_reader_read_t reader;
-	void * reader_p;
-
-	struct lib_mem_reader *mr = lib_mem_new(png_data, len);
-	if (mr == NULL) {
-		printf("Out of memory 1\n");
-		return ESP_FAIL;
-	}
-	
-	reader = (lib_reader_read_t) &lib_mem_read;
-	reader_p = mr;
-
 	struct lib_png_reader *pr = lib_png_new(reader, reader_p);
 	if (pr == NULL) {
-		lib_mem_destroy(reader_p);
-		printf("Out of memory 2\n");
+		printf("Out of memory.\n");
 		return ESP_FAIL;
 	}
 	
 	int res = lib_png_read_header(pr);
 	if (res < 0) {
 		lib_png_destroy(pr);
-		lib_mem_destroy(reader_p);
-		printf("Can not read header.");
+		printf("Can not read header.\n");
 		return ESP_FAIL;
 	}
 	
@@ -869,7 +849,6 @@ esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, 
 	res = lib_png_load_image(pr, x, y, dst_min_x, dst_min_y, FB_WIDTH - x, FB_HEIGHT - y, FB_WIDTH, 8);
 
 	lib_png_destroy(pr);
-	lib_mem_destroy(reader_p);
 
 	if (res < 0) {
 		printf("Failed to load image.\n");

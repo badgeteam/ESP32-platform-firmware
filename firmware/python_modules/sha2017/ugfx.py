@@ -49,8 +49,7 @@ def height():
 	return display.height()
 
 def display_image(x,y,data):
-	pass
-	#display.png(x,y,data)
+	display.png(x,y,data)
 
 def fill_circle(x, y, r, color):
 	display.circle(x, y, r, 0, 359, True, color)
@@ -90,13 +89,18 @@ def set_lut(arg):
 	pass
 
 justifyLeft = 0
-justifyRight = 1
+justifyCenter = 1
+justifyRight = 2
 
 def string_box(x,y,w,h,text,font,color,align):
 	if font:
 		display.font(font)
 	if align == justifyRight:
 		x = x + w - display.get_string_width(text)
+	elif align == justifyCenter:
+		x = x + int((w-display.get_string_width(text))/2)
+	if x < 0:
+		x = 0
 	string(x,y,text,font,color)
 
 class List():
@@ -202,3 +206,20 @@ class List():
 		
 def area(x,y,w,h,color):
 	display.rect(x,y,w,h,True,color)
+	
+def rounded_box(x,y,w,h,r,color):
+	display.rect(x,y,w,h,False,color)
+
+def fill_rounded_box(x,y,w,h,r,color):
+	display.rect(x,y,w,h,True,color)
+
+def string_box(x,y,w,h,text,font,color,justify):
+	display.textColor(color)
+	display.font(font)
+	if justify == justifyCenter:
+		display.cursor(x+int(display.get_string_width(text)/2),y+int(display.get_string_height(text)/2))
+	elif justify == justifyRight:
+		display.cursor(x+display.get_string_width(text),y+int(display.get_string_height(text)/2))
+	else:
+		display.cursor(x,y+int(display.get_string_height(text)/2))
+	display.print(text)

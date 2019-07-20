@@ -1,4 +1,4 @@
-import display, badge, version, time, orientation
+import display, badge, version, time, orientation, machine
 
 if orientation.isLandscape():
 	NUM_LINES = 9
@@ -13,7 +13,7 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 	title can be optionaly set when resetting or first call
 	"""
 	global messageHistory
-
+	
 	try:
 		messageHistory
 		if reset:
@@ -27,10 +27,12 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 		display.print(title)
 		messageHistory = []
 
+	display.font(version.font_default)
+	lineHeight = display.get_string_height(" ")
+
 	if len(messageHistory)<NUM_LINES:
 		display.textColor(0x000000)
-		display.font(version.font_default)
-		display.cursor(0,19 + (len(messageHistory) * 13))
+		display.cursor(0,19 + (len(messageHistory) * lineHeight))
 		display.print(message)
 		messageHistory.append(message)
 	else:
@@ -40,7 +42,7 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 		for i, message in enumerate(messageHistory):
 			display.textColor(0x000000)
 			display.font(version.font_default)
-			display.cursor(0, 19 + (i * 13))
+			display.cursor(0, 19 + (i * lineHeight))
 			display.print(message)
 
 	display.flush()
@@ -116,13 +118,16 @@ def messageCentered(message, firstLineTitle=True, png=None):
 	#except:
 	#	print("!!! Exception in easydraw.messageCentered !!!")
 
-def nickname(y = 0, font = version.font_nickname_large, color = 0x000000, lineHeight=15):
-	nick = badge.nvs_get_str("owner", "name", 'WELCOME TO HACKERHOTEL')
+def nickname(y = 5, font = "freesansbold12", color = 0x000000, unusedParameter=None):
+	nick = machine.nvs_getstr("owner", "name")
+	if not nick:
+		return y
 	lines = lineSplit(nick, display.width(), font)
 	for i in range(len(lines)):
 		line = lines[len(lines)-i-1]
 		display.font(font)
 		pos_x = int((display.width()-display.get_string_width(line)) / 2)
+		lineHeight = display.get_string_height(line)
 		display.cursor(pos_x, y+lineHeight*(len(lines)-i-1))
 		display.textColor(color)
 		display.print(line)
@@ -131,8 +136,8 @@ def nickname(y = 0, font = version.font_nickname_large, color = 0x000000, lineHe
 def battery(on_usb, vBatt, charging):
 	pass
 
-def disp_string_right_bottom(y, s):
-	display.font(version.font_default)
+def disp_string_right_bottom(y, s, font="freesans9"):
+	display.font(font)
 	l = display.get_string_width(s)
 	display.cursor(display.width()-l, display.height()-(y+1)*14)
 	display.textColor(0x000000)

@@ -6,6 +6,9 @@
 #include "py/mphal.h"
 #include "py/runtime.h"
 
+#include "extmod/vfs.h"
+#include "extmod/vfs_native.h"
+
 #include <driver_framebuffer.h>
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
@@ -211,29 +214,122 @@ static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 	int16_t x = mp_obj_get_int(args[0]);
 	int16_t y = mp_obj_get_int(args[1]);
 	
-	if (!MP_OBJ_IS_TYPE(args[2], &mp_type_bytes)) {
-		mp_raise_ValueError("Expected a bytestring like object.");
-		return mp_const_none;
+	lib_reader_read_t reader;
+	
+	bool is_bytes = MP_OBJ_IS_TYPE(args[2], &mp_type_bytes);
+	
+	esp_err_t renderRes = ESP_FAIL;
+	
+	if (is_bytes) {
+		mp_uint_t len;
+		uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[2], &len);
+		struct lib_mem_reader *mr = lib_mem_new(data, len);
+		if (mr == NULL) {
+			mp_raise_ValueError("Out of memory");
+			return mp_const_none;
+		}
+		reader = (lib_reader_read_t) &lib_mem_read;
+		renderRes = driver_framebuffer_png(x, y, reader, mr);
+		lib_mem_destroy(mr);
+	} else {
+		const char* filename = mp_obj_str_get_str(args[2]);
+		char fullname[128] = {'\0'};
+		int res = physicalPathN(filename, fullname, sizeof(fullname));
+		if ((res != 0) || (strlen(fullname) == 0)) {
+			mp_raise_ValueError("File not found");
+			return mp_const_none;
+		}
+		struct lib_file_reader *fr = lib_file_new(fullname, 1024);
+		if (fr == NULL) {
+			nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Could not open file '%s'!",filename));
+			return mp_const_none;
+		}
+		reader = (lib_reader_read_t) &lib_file_read;
+		renderRes = driver_framebuffer_png(x, y, reader, fr);
+		lib_file_destroy(fr);
 	}
 	
-	mp_uint_t len;
-	uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[2], &len);
-	
-	driver_framebuffer_png(x, y, data, len);
+	if (renderRes != ESP_OK) {
+		mp_raise_ValueError("Rendering error");
+	}
 	
 	return mp_const_none;
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_obj, 3, 3, framebuffer_png);
 
-STATIC mp_obj_t framebuffer_png_info(mp_obj_t obj_filename)
-{ //FIXME
-	mp_obj_t tuple[4];
-	tuple[0] = 0;
-	tuple[1] = 0;
-	tuple[2] = 0;
-	tuple[3] = 0;
-	return mp_obj_new_tuple(4, tuple);
+STATIC mp_obj_t framebuffer_png_info(mp_obj_t obj_filename)
+{
+	lib_reader_read_t reader;
+	void * reader_p;
+
+	bool is_bytes = MP_OBJ_IS_TYPE(obj_filename, &mp_type_bytes);
+
+	if (is_bytes) {
+		size_t len;
+		const uint8_t* png_data = (const uint8_t *) mp_obj_str_get_data(obj_filename, &len);
+		struct lib_mem_reader *mr = lib_mem_new(png_data, len);
+		if (mr == NULL)
+		{
+			nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "out of memory!"));
+			return mp_const_none;
+		}
+		reader = (lib_reader_read_t) &lib_mem_read;
+		reader_p = mr;
+
+	} else {
+		const char* filename = mp_obj_str_get_str(obj_filename);
+		char fullname[128] = {'\0'};
+		int res = physicalPathN(filename, fullname, sizeof(fullname));
+		if ((res != 0) || (strlen(fullname) == 0)) {
+			mp_raise_ValueError("Error resolving file name");
+			return mp_const_none;
+		}
+		struct lib_file_reader *fr = lib_file_new(fullname, 1024);
+		if (fr == NULL)
+		{
+			nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Could not open file '%s'!",filename));
+			return mp_const_none;
+		}
+		reader = (lib_reader_read_t) &lib_file_read;
+		reader_p = fr;
+	}
+
+	struct lib_png_reader *pr = lib_png_new(reader, reader_p);
+	if (pr == NULL)
+	{
+		if (is_bytes) {
+			lib_mem_destroy(reader_p);
+		} else {
+			lib_file_destroy(reader_p);
+		}
+		nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "out of memory."));
+		return mp_const_none;
+	}
+
+	int res = lib_png_read_header(pr);
+
+	mp_obj_t tuple[4];
+	if (res >= 0) {
+		tuple[0] = mp_obj_new_int(pr->ihdr.width);
+		tuple[1] = mp_obj_new_int(pr->ihdr.height);
+		tuple[2] = mp_obj_new_int(pr->ihdr.bit_depth);
+		tuple[3] = mp_obj_new_int(pr->ihdr.color_type);
+	}
+
+	lib_png_destroy(pr);
+	if (is_bytes) {
+		lib_mem_destroy(reader_p);
+	} else {
+		lib_file_destroy(reader_p);
+	}
+
+	if (res < 0)
+	{
+		nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "failed to load image: res = %d", res));
+	}
+
+	return mp_obj_new_tuple(4, tuple);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_png_info_obj, framebuffer_png_info);
 
