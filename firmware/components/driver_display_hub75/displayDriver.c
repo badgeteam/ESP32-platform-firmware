@@ -73,7 +73,6 @@
    Note: Because every subframe contains one bit of grayscale information, they are also referred to as 'bitplanes' by the code below.
  */
 
-
 //My display has each row swapped with its neighbour (so the rows are 2-1-4-3-6-5-8-7-...). If your display
 //is more sane, uncomment this to get a good image.
 #define DISPLAY_ROWS_SWAPPED 1

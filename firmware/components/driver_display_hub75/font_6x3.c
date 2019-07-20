@@ -7,6 +7,8 @@
 #include "include/compositor.h"
 #include "esp_log.h"
 
+#ifdef CONFIG_DRIVER_HUB75_ENABLE
+
 void renderChar_6x3(uint8_t charId, Color color, int *x, int y, int endX, int *skip) {
     character toDraw = font_6x3[charId];
 
@@ -42,3 +44,5 @@ int getCharWidth_6x3(uint8_t charId) {
     character c = font_6x3[charId];
     return (int) c.width;
 }
+
+#endif
