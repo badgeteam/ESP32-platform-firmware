@@ -18,4 +18,5 @@ typedef struct {
 	uint8_t   last;        ///< ASCII extents (last char)
 	uint8_t   yAdvance;    ///< Newline distance (y axis)
 } GFXfont;
+
 #endif

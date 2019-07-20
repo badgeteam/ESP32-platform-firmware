@@ -1,62 +1,72 @@
-import mpr121
+import machine, display, mpr121, eink
 
-def onBtnA(cb=None):
-	mpr121.attach(0, cb)
+def init():
+	pass
 
-def onBtnB(cb=None):
-	mpr121.attach(1, cb)
+def nvs_get_u8(space, item, default=None):
+	if space == "badge":
+		space = "system"
+	res = machine.nvs_get_u8(space, item)
+	if res == None:
+		res = default
+	return res
 
-def onBtnStart(cb=None):
-	mpr121.attach(2, cb)
+def nvs_set_u8(space, item, value):
+	if space == "badge":
+		space = "system"
+	return machine.nvs_set_u8(space, item, value)
 
-def onBtnSelect(cb=None):
-	mpr121.attach(3, cb)
+def nvs_get_u16(space, item, default=None):
+	if space == "badge":
+		space = "system"
+	res = machine.nvs_get_u16(space, item)
+	if res == None:
+		res = default
+	return res
 
-def onBtnDown(cb=None):
-	mpr121.attach(4, cb)
+def nvs_set_u16(space, item, value):
+	if space == "badge":
+		space = "system"
+	return machine.nvs_set_u16(space, item, value)
 
-def onBtnRight(cb=None):
-	mpr121.attach(5, cb)
+def nvs_get_str(space, item, default=None):
+	if space == "badge":
+		space = "system"
+	res = machine.nvs_getstr(space, item)
+	if res == None:
+		res = default
+	return res
 
-def onBtnUp(cb=None):
-	mpr121.attach(6, cb)
+def nvs_set_str(space, item, value):
+	if space == "badge":
+		space = "system"
+	return machine.nvs_setstr(space, item, value)
 
-def onBtnLeft(cb=None):
-	mpr121.attach(7, cb)
+def leds_init():
+	pass
 
-def onChrgStatusChange(cb=None):
-	mpr121.attach(9, cb)
+def leds_enable():
+	mpr121.set(10, true);
 
-def readBtnA():
-	return mpr121.get(0)
+def safe_mode():
+	return False
 
-def readBtnB():
-	return mpr121.get(1)
+def png_info(arg):
+	return display.png_info(arg)
 
-def readBtnStart():
-	return mpr121.get(2)
-
-def readBtnSelect():
-	return mpr121.get(3)
-
-def readBtnDown():
-	return mpr121.get(4)
-
-def readBtnRight():
-	return mpr121.get(5)
-
-def readBtnUp():
-	return mpr121.get(6)
-
-def readBtnLeft():
-	return mpr121.get(7)
-
-def readChrgStatus():
-	return mpr121.get(9)
-
-def setVibrator(state):
-	mpr121.set(8, state)
+def png(x,y,arg):
+	return display.png(x,y,arg)
 
 def setPower(state):
-	mpr121.set(10, state)
+	mpr121.set(10, state);
 
+deviceType = "FIXME"
+
+def usb_volt_sense():
+	return 0
+
+def battery_volt_sense():
+	return 0
+
+def eink_busy_wait():
+	eink.busy_wait()

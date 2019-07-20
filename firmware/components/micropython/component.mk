@@ -109,6 +109,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_disobey_samd/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 
 
 
@@ -202,10 +203,6 @@ ifdef CONFIG_DRIVER_HUB75_ENABLE
 SRC_C += esp32/modhub75.c
 endif
 
-ifdef CONFIG_MICROPY_USE_DISPLAY
-SRC_C += esp32/moddisplay.c
-endif
-
 ifdef CONFIG_MICROPY_USE_CURL
 SRC_C += esp32/modcurl.c
 endif
@@ -274,28 +271,6 @@ LIBS_SRC_C = $(addprefix esp32/libs/,\
 	ow/ds18b20.c \
 	littleflash.c \
 	)
-
-ifdef CONFIG_MICROPY_USE_TFT
-LIBS_SRC_C += \
-	esp32/moddisplay_tft.c \
-	esp32/libs/tft/tftspi.c \
-	esp32/libs/tft/tft.c \
-	esp32/libs/tft/comic24.c \
-	esp32/libs/tft/DefaultFont.c \
-	esp32/libs/tft/DejaVuSans18.c \
-	esp32/libs/tft/DejaVuSans24.c \
-	esp32/libs/tft/minya24.c \
-	esp32/libs/tft/SmallFont.c \
-	esp32/libs/tft/tooney32.c \
-	esp32/libs/tft/Ubuntu16.c \
-	esp32/libs/tft/def_small.c
-endif
-
-ifdef CONFIG_MICROPY_USE_EVE
-LIBS_SRC_C += \
-	esp32/libs/eve/FT8_commands.c \
-	esp32/moddisplay_eve.c
-endif
 
 ifeq ($(MICROPY_PY_BTREE),1)
 LIB_SRC_C += \

@@ -11,6 +11,7 @@
 
 void logo( void );
 void restart( void );
+void halt( void );
 int get_magic( void );
 
 #endif

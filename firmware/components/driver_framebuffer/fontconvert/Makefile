@@ -8,9 +8,5 @@ fontconvert: fontconvert.c
 	$(CC) $(CFLAGS) $< $(LIBS) -o $@
 	strip $@
 	
-fontheader: fontheader.c
-	$(CC) $(CFLAGS) $< $(LIBS) -o $@
-	strip $@
-
 clean:
 	rm -f fontconvert fontheader

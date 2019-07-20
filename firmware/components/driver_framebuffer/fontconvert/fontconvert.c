@@ -24,9 +24,9 @@ See notes at end for glyph nomenclature & other tidbits.
 #include <ft2build.h>
 #include FT_GLYPH_H
 #include FT_TRUETYPE_DRIVER_H
-#include "../include/gfxfont.h" // Adafruit_GFX font structures
+#include "../include/driver_framebuffer_font.h" // Adafruit_GFX font structures
 
-#define DPI 141 // Approximate res. of Adafruit 2.8" TFT
+#define DEFAULT_DPI 112
 
 // Accumulate bits for output, with periodic hexadecimal byte write
 void enbit(uint8_t value) {
@@ -49,7 +49,7 @@ void enbit(uint8_t value) {
 }
 
 int main(int argc, char *argv[]) {
-	int                i, j, err, size, first=' ', last='~',
+	int                i, j, err, size, dpi=112, first=' ', last='~', offset=0,
 	                   bitmapOffset = 0, x, y, byte;
 	char              *fontName, c, *ptr;
 	FT_Library         library;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 	// ' ' (space) and '~', respectively
 
 	if(argc < 3) {
-		fprintf(stderr, "Usage: %s fontfile size [first] [last]\n",
+		fprintf(stderr, "Usage: %s fontfile size [dpi] [first] [last] [offset]\n",
 		  argv[0]);
 		return 1;
 	}
@@ -76,11 +76,22 @@ int main(int argc, char *argv[]) {
 	size = atoi(argv[2]);
 
 	if(argc == 4) {
-		last  = atoi(argv[3]);
+		dpi = atoi(argv[3]);
 	} else if(argc == 5) {
-		first = atoi(argv[3]);
-		last  = atoi(argv[4]);
+		dpi = atoi(argv[3]);
+		first = atoi(argv[4]);
+	} else if(argc == 6) {
+		dpi = atoi(argv[3]);
+		first = atoi(argv[4]);
+		last  = atoi(argv[5]);
+	} else if(argc == 7) {
+		dpi = atoi(argv[3]);
+		first = atoi(argv[4]);
+		last  = atoi(argv[5]);
+		offset = atoi(argv[6]);
 	}
+	
+	fprintf(stderr, "%s) SIZE: %u, DPI: %d, FIRST: %d (%c), LAST: %d(%c), OFFSET: %d\n", argv[1], size, dpi, first, first, last, last, offset);
 
 	if(last < first) {
 		i     = first;
@@ -135,7 +146,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// << 6 because '26dot6' fixed-point format
-	FT_Set_Char_Size(face, size << 6, 0, DPI, 0);
+	FT_Set_Char_Size(face, size << 6, 0, dpi, 0);
 
 	// Currently all symbols from 'first' to 'last' are processed.
 	// Fonts may contain WAY more glyphs than that, but this code
@@ -241,7 +252,7 @@ int main(int argc, char *argv[]) {
 			first, last, table[0].height);
 	} else {
 		printf("  0x%02X, 0x%02X, %ld };\n\n",
-			first, last, face->size->metrics.height >> 6);
+			first+offset, last+offset, face->size->metrics.height >> 6);
 	}
 	printf("// Approx. %d bytes\n",
 	  bitmapOffset + (last - first + 1) * 7 + 7);
