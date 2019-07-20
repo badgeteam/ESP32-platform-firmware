@@ -34,7 +34,6 @@ First, make sure you pull the submodules in the project:
 git submodule update --init --recursive
 ```
 
-#Next, download the xtensa build toolchain [from here](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html#step-2-get-esp-idf), and save it as /xtensa-esp32-elf/ in the project root folder.
 Next, copy the xtensa build toolchain for your OS (currently supporting Linux and Mac OS) from /toolchains/, and unpack and save it as /xtensa-esp32-elf/ in the project root folder.
 # Build instructions
 To build and flash the basic generic firmware:
