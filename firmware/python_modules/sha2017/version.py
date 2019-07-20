@@ -4,7 +4,7 @@ build                  = 0
 name                   = "FIXME"
 badge_name             = "FIXME"
 dialog_title           = "Alert"
-default_orientation    = 90
+default_orientation    = 0
 
 font_header            = "Roboto_Regular18"
 font_default           = "Roboto_Regular12"

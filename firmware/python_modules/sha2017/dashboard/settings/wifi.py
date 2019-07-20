@@ -8,9 +8,6 @@ def clearGhosting():
 	ugfx.flush()
 	badge.eink_busy_wait()
 
-ugfx.init()
-ugfx.input_init()
-
 clearGhosting()
 ugfx.clear(ugfx.WHITE)
 ugfx.string(100,50,'Scanning...','Roboto_Regular18',ugfx.BLACK)
@@ -55,10 +52,10 @@ def connectClick(pushed):
             badge.eink_busy_wait()
             system.reboot()
 
-        badge.nvs_set_str("badge", "wifi.ssid", selected)
+        badge.nvs_set_str("system", "wifi.ssid", selected)
 
         if ssidType == 0:
-			badge.nvs_set_str("badge", "wifi.password", '')
+			badge.nvs_set_str("system", "wifi.password", '')
 			system.reboot()
         else:
         	clearGhosting()
@@ -66,7 +63,7 @@ def connectClick(pushed):
 
 
 def passInputDone(passIn):
-    badge.nvs_set_str("badge", "wifi.password", passIn)
+    badge.nvs_set_str("system", "wifi.password", passIn)
     ugfx.clear(ugfx.WHITE)
     ugfx.string(100,50,'Restarting!','Roboto_Regular18',ugfx.BLACK)
     ugfx.flush()

@@ -52,6 +52,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "esp_heap_caps.h"
 
+#define TAG "Framebuffer"
+
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
 const GFXfont *gfxFont;
@@ -61,6 +63,8 @@ int16_t cursor_x = 0;
 int16_t cursor_y = 0;
 bool textWrap = true;
 uint32_t textColor = COLOR_BLACK;
+
+int16_t fontHeight = 0;
 
 bool isDirty = true;
 int16_t dirty_x0 = 0;
@@ -79,33 +83,37 @@ bool useGreyscale = false;
 
 /* Fonts */
 
-#define FONTS_AMOUNT 15
+#define FONTS_AMOUNT 16
 
 const char* fontNames[] = {
+	//NEW:
 	"freesans9",
 	"freesansmono9",
 	"freesansbold9p",
 	"freesansbold12",
 	"org18",
-	//Legacy fonts from SHA2017 (do NOT edit these names!)
+	"fairlight12",
+	//SHA2017:
 	"dejavusans20",
 	"permanentmarker22",
 	"permanentmarker36",
-	"roboto-black22",
-	"roboto-blackitalic24",
-	"roboto-regular12",
-	"roboto-regular18",
-	"roboto-regular22",
+	"roboto_black22",
+	"roboto_blackitalic24",
+	"roboto_regular12",
+	"roboto_regular18",
+	"roboto_regular22",
 	"pixelade13",
 	"weather42"
 };
 const GFXfont* fontPointers[] = {
+	//NEW:
 	&freesans9pt7b,
 	&freesansmono9pt7b,
 	&freesansbold9pt7b,
 	&freesansbold12pt7b,
 	&org_018pt7b,
-	//---
+	&fairlight12pt7b,
+	//SHA2017:
 	&dejavusans20pt7b,
 	&permanentmarker22pt7b,
 	&permanentmarker36pt7b,
@@ -188,6 +196,18 @@ void driver_framebuffer_set_orientation(uint16_t angle)
 void driver_framebuffer_setFont(const GFXfont *font)
 {
 	gfxFont = font;
+	fontHeight = gfxFont->yAdvance;
+	//Hack for calculating font height (should be done at compile time)
+	/*fontHeight = 0;
+	uint16_t numberOfChars = gfxFont->last - gfxFont->first;
+	for (uint8_t i = 0; i < numberOfChars; i++) {
+		const GFXglyph *glyph = gfxFont->glyph + i;
+		int16_t charHeight = glyph->height + glyph->yOffset;
+		if (charHeight > fontHeight) {
+			fontHeight = charHeight;
+			printf("Height of character '%c' is %u, yOffset is %d, total is %d\n", (char) (i+gfxFont->first), glyph->height, glyph->yOffset, charHeight);
+		}
+	}*/
 }
 
 bool driver_framebuffer_selectFont(const char* fontName)
@@ -214,8 +234,11 @@ esp_err_t driver_framebuffer_init()
 		if (!framebuffer2) return ESP_FAIL;
 		currentFb = false;
 	#else
-		framebuffer = heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM);//malloc(FB_SIZE);
-		if (!framebuffer) return ESP_FAIL;
+		framebuffer = malloc(FB_SIZE); //heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM);
+		if (!framebuffer) {
+			printf("Unable to allocate memory for the framebuffer.\n");
+			return ESP_FAIL;
+		}
 	#endif
 	driver_framebuffer_setFont(&freesans9pt7b);
 	#if defined(FB_TYPE8_BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
@@ -551,11 +574,6 @@ void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, 
 		if (i>=a0 && i < a1) parts += 1<<bit;
 	}
 	
-	for (uint8_t i = 0; i<8; i++) {
-		printf("%s", (parts&(1<<i)) ? "1":"0");
-	}
-	printf("\n");
-
 	while (x<y) {
 		if (f >= 0) {
 			y--;
@@ -565,8 +583,6 @@ void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, 
 		x++;
 		ddF_x += 2;
 		f     += ddF_x;
-		
-		printf("Circle x=%d, y=%d, f=%d, ddF_x=%d, ddF_y=%d\n", x, y, f, ddF_x, ddF_y);
 		
 		if (fill) {
 			//Please fix this part of the code, it doesn't work well.
@@ -653,12 +669,11 @@ void print_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t
 	for (uint8_t y = 0; y < height; y++) {
 		for (uint8_t x = 0; x < width; x++) {
 			if(!(bit++ & 7)) bits = bitmap[bitmapOffset++];
-			//printf("char %u,%u = %02x\n", x, y, bits);
 			if(bits & 0x80) {
 				if (xScale == 1 && yScale == 1) {
-					driver_framebuffer_setPixel(x0+xOffset+x, y0+yOffset+y+gfxFont->yAdvance, color);
+					driver_framebuffer_setPixel(x0+xOffset+x, y0+yOffset+y, color);
 				} else {
-					driver_framebuffer_rect(x0+(xOffset+x)*xScale, y0+(yOffset+y+gfxFont->yAdvance)*yScale, xScale, yScale, true, color);
+					driver_framebuffer_rect(x0+(xOffset+x)*xScale, y0+(yOffset+y)*yScale, xScale, yScale, true, color);
 				}
 			}
 			bits <<= 1;
@@ -674,7 +689,7 @@ void driver_framebuffer_write(uint8_t c)
 		cursor_x = 0;
 		cursor_y += textScaleY * gfxFont->yAdvance;
 	} else if (c != '\r') {
-		print_char(cursor_x, cursor_y, c, textScaleX, textScaleY, textColor);
+		print_char(cursor_x, cursor_y+(fontHeight/2), c, textScaleX, textScaleY, textColor);
 		cursor_x += glyph->xAdvance * textScaleX;
 	}
 }
@@ -682,7 +697,7 @@ void driver_framebuffer_write(uint8_t c)
 uint8_t driver_framebuffer_get_font_height()
 {
 	if (gfxFont == NULL) return 0;
-	return gfxFont->yAdvance;
+	return fontHeight;
 }
 
 uint16_t driver_framebuffer_get_char_width(uint8_t c)
@@ -698,6 +713,7 @@ uint16_t driver_framebuffer_get_char_width(uint8_t c)
 
 void driver_framebuffer_print(const char* str)
 {
+	//printf("Print at (%u, %u) with height %u and advance %u\n", cursor_x, cursor_y, fontHeight, gfxFont->yAdvance);
 	for (uint16_t i = 0; i < strlen(str); i++) driver_framebuffer_write(str[i]);
 }
 
@@ -780,13 +796,13 @@ void driver_framebuffer_flush()
 	if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT-1;
 	
 	#ifdef FB_FLUSH_GS
-		if (useGreyscale) {
-			FB_FLUSH_GS(framebuffer, flags);
-		} else {
-			FB_FLUSH(framebuffer,flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
-		}
-	#else
+	if (useGreyscale) {
+		FB_FLUSH_GS(framebuffer, flags);
+	} else {
+	#endif
 		FB_FLUSH(framebuffer,flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
+	#ifdef FB_FLUSH_GS
+	}
 	#endif
 	
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
@@ -838,8 +854,8 @@ esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, 
 	
 	int width = pr->ihdr.width;
 	int height = pr->ihdr.height;
-	int bit_depth = pr->ihdr.bit_depth;
-	int color_type = pr->ihdr.color_type;
+	//int bit_depth = pr->ihdr.bit_depth;
+	//int color_type = pr->ihdr.color_type;
 	
 	isDirty = true;
 	if (x < dirty_x0) dirty_x0 = x;

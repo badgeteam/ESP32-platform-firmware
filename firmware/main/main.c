@@ -4,23 +4,33 @@
 
 extern void micropython_entry(void);
 
+extern esp_err_t unpack_first_boot_zip(void);
+
 void app_main()
 {
 	logo();
 	bool is_first_boot = nvs_init();
 	platform_init();
 	
-	if (is_first_boot) { //Deze flag gebruiken we op het moment nergens meer voor.
-		printf("\r\n\r\nAll your base are belong to us.\r\n\r\n");
-	}
-		
-	int magic = get_magic();
-		
-	switch(magic) {
-		case MAGIC_OTA:
-			badge_ota_update();
-			break;
-		default:
-			micropython_entry();
+	if (is_first_boot) {
+		printf("Executing first boot procedure...\b");
+		if (unpack_first_boot_zip() != ESP_OK) {
+			printf("First boot failed, HALT!\b");
+			halt();
+		} else {
+			printf("First boot completed succesfully, RESTART!\b");
+			fflush(stdout);
+			esp_restart();
+		}
+	} else {
+		int magic = get_magic();
+			
+		switch(magic) {
+			case MAGIC_OTA:
+				badge_ota_update();
+				break;
+			default:
+				micropython_entry();
+		}
 	}
 }

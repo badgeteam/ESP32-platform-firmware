@@ -23,8 +23,8 @@ def connectWiFi():
     nw = network.WLAN(network.STA_IF)
     if not nw.isconnected():
         nw.active(True)
-        ssid = badge.nvs_get_str('badge', 'wifi.ssid', 'SHA2017-insecure')
-        password = badge.nvs_get_str('badge', 'wifi.password')
+        ssid = badge.nvs_get_str('system', 'wifi.ssid', 'SHA2017-insecure')
+        password = badge.nvs_get_str('system', 'wifi.password')
         nw.connect(ssid, password) if password else nw.connect(ssid)
 
         draw_msg("Connecting to '"+ssid+"'...")

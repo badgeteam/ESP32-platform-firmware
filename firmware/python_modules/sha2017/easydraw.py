@@ -1,4 +1,4 @@
-import ugfx, badge, version, time, orientation
+import display, badge, version, time, orientation
 
 if orientation.isLandscape():
 	NUM_LINES = 9
@@ -19,21 +19,31 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 		if reset:
 			raise exception
 	except:
-		ugfx.clear(ugfx.WHITE)
-		ugfx.string(0, 0, title, version.font_header, ugfx.BLACK)
+		display.greyscale(False)
+		display.fill(0xFFFFFF)
+		display.textColor(0x000000)
+		display.font(version.font_header)
+		display.cursor(0,0)
+		display.print(title)
 		messageHistory = []
 
 	if len(messageHistory)<NUM_LINES:
-		ugfx.string(0, 19 + (len(messageHistory) * 13), message, version.font_default, ugfx.BLACK)
+		display.textColor(0x000000)
+		display.font(version.font_default)
+		display.cursor(0,19 + (len(messageHistory) * 13))
+		display.print(message)
 		messageHistory.append(message)
 	else:
 		messageHistory.pop(0)
 		messageHistory.append(message)
-		ugfx.area(0, 15, ugfx.width(), ugfx.height()-15, ugfx.WHITE)
+		display.rect(0, 15, display.width(), display.height()-15, True, 0xFFFFFF)
 		for i, message in enumerate(messageHistory):
-			ugfx.string(0, 19 + (i * 13), message, version.font_default, ugfx.BLACK)
+			display.textColor(0x000000)
+			display.font(version.font_default)
+			display.cursor(0, 19 + (i * 13))
+			display.print(message)
 
-	ugfx.flush(ugfx.LUT_FASTER)
+	display.flush()
 	
 def msg(message, title = "Loading...", reset = False, wait = 0):
 	global NUM_LINES
@@ -51,16 +61,19 @@ def msg(message, title = "Loading...", reset = False, wait = 0):
 		print(e)
 
 def lineCentered(pos_y, line, font, color):
-	pos_x = int((ugfx.width()-ugfx.get_string_width(line, font)) / 2)
-	ugfx.string(pos_x, pos_y, line, font, color)
+	display.font(font)
+	pos_x = int((display.width()-display.get_string_width(line)) / 2)
+	display.cursor(pos_x, pos_y)
+	display.textColor(color)
+	display.print(line)
 
 def messageCentered(message, firstLineTitle=True, png=None):
 	#try:
 	if 1:
 		font1 = "Roboto_Regular18"
 		font2 = "Roboto_Regular12"
-		color = ugfx.BLACK
-		ugfx.clear(ugfx.WHITE)
+		color = 0x000000
+		display.fill(0xFFFFFF)
 		parts = message.split("\n")
 		lines = []
 		font = font1
@@ -68,11 +81,11 @@ def messageCentered(message, firstLineTitle=True, png=None):
 			if len(part) < 1:
 				lines.append("")
 			else:
-				lines.extend(lineSplit(part, ugfx.width(), font))
+				lines.extend(lineSplit(part, display.width(), font))
 			if firstLineTitle:
 				font = font2
 		
-		offset_y = int(ugfx.height()/2) #Half of the screen height
+		offset_y = int(display.height()/2) #Half of the screen height
 		offset_y -= 9 #Height of the first line divided by 2
 		if firstLineTitle:
 			offset_y -= 6*len(lines)-1 #Height of font1 divided by 2
@@ -83,8 +96,8 @@ def messageCentered(message, firstLineTitle=True, png=None):
 			try:
 				img_info = badge.png_info(png)
 				offset_y -= int(img_info[1] / 2) + 4
-				img_x = int((ugfx.width() - img_info[0]) / 2)
-				ugfx.display_image(img_x, offset_y, png)
+				img_x = int((display.width() - img_info[0]) / 2)
+				display.png(img_x, offset_y, png)
 				offset_y += img_info[1] + 8 
 			except:
 				pass
@@ -99,25 +112,31 @@ def messageCentered(message, firstLineTitle=True, png=None):
 			else:
 				lineCentered(offset_y, lines[i+1], font2, color)
 				offset_y += 12
-		ugfx.flush()
+		display.flush()
 	#except:
 	#	print("!!! Exception in easydraw.messageCentered !!!")
 
-def nickname(y = 0, font = version.font_nickname_large, color = ugfx.BLACK, lineHeight=15):
+def nickname(y = 0, font = version.font_nickname_large, color = 0x000000, lineHeight=15):
 	nick = badge.nvs_get_str("owner", "name", 'WELCOME TO HACKERHOTEL')
-	lines = lineSplit(nick, ugfx.width(), font)
+	lines = lineSplit(nick, display.width(), font)
 	for i in range(len(lines)):
 		line = lines[len(lines)-i-1]
-		pos_x = int((ugfx.width()-ugfx.get_string_width(line, font)) / 2)
-		ugfx.string(pos_x, y+lineHeight*(len(lines)-i-1), line, font, color)
+		display.font(font)
+		pos_x = int((display.width()-display.get_string_width(line)) / 2)
+		display.cursor(pos_x, y+lineHeight*(len(lines)-i-1))
+		display.textColor(color)
+		display.print(line)
 	return len(lines) * lineHeight
 
 def battery(on_usb, vBatt, charging):
 	pass
 
 def disp_string_right_bottom(y, s):
-	l = ugfx.get_string_width(s,version.font_default)
-	ugfx.string(ugfx.width()-l, ugfx.height()-(y+1)*14, s, version.font_default,ugfx.BLACK)
+	display.font(version.font_default)
+	l = display.get_string_width(s)
+	display.cursor(display.width()-l, display.height()-(y+1)*14)
+	display.textColor(0x000000)
+	display.print(s)
 
 def lineSplit(message, width=None, font=version.font_default):
 	words = message.split(" ")
@@ -125,11 +144,12 @@ def lineSplit(message, width=None, font=version.font_default):
 	line = ""
     
 	if width==None:
-		width=ugfx.width()
+		width=display.width()
     
 	for word in words:
-		wordLength = ugfx.get_string_width(word, font)
-		lineLength = ugfx.get_string_width(line, font)
+		display.font(font)
+		wordLength = display.get_string_width(word)
+		lineLength = display.get_string_width(line)
 		if wordLength > width:
 			lines.append(line)
 			lines.append(word)

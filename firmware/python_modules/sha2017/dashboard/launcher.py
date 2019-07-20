@@ -1,4 +1,4 @@
-import ugfx, badge, sys, uos as os, system, version, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation
+import ugfx, badge, sys, uos as os, system, version, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display
 
 orientation.default()
 
@@ -172,8 +172,14 @@ def start():
 
 	# Instructions
 	if orientation.isLandscape():
-		ugfx.line(148, 78, 296, 78, ugfx.BLACK)
-		ugfx.string_box(148,78,148,18, " A: Run", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
+		display.font("fairlight12")
+		_ = display.cursor(display.width()-display.get_string_width("BADGE.TEAM")-5,15)
+		display.print("BADGE.TEAM\n")
+		_ = display.cursor(display.width()-display.get_string_width("BADGE.TEAM")-5,display.cursor()[1]-5)
+		display.font("pixelade13")
+		display.print("ESP32 platform")
+		ugfx.line(148, 62, 296, 62, ugfx.BLACK)
+		ugfx.string_box(148,64,148,18, " A: Run", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
 		ugfx.string_box(148,78,148,18, " B: Return to home", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyRight)
 		ugfx.string_box(148,92,148,18, " SELECT: Uninstall", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
 		ugfx.line(148, 110, 296, 110, ugfx.BLACK)

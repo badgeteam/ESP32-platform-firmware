@@ -4,7 +4,7 @@ sta_if = network.WLAN(network.STA_IF)
 
 defaultSsid = machine.nvs_getstr("system", "wifi.ssid") or consts.WIFI_SSID
 defaultPassword = machine.nvs_getstr("system", "wifi.password") or consts.WIFI_PASSWORD
-timeout = machine.nvs_get_u16("system", "wifi.timeout") or 30
+timeout = machine.nvs_get_u16("system", "wifi.timeout") or 10
 
 
 def status():
@@ -39,8 +39,8 @@ def ntp(onlyIfNeeded=True):
 def wait(duration=timeout, showStatus=False):
 	t = duration*10
 	while not status():
-		print("Waiting for WiFi ("+str(t)+")...")
 		if t <= 0:
 			break
 		t -= 1
 		time.sleep(0.1)
+	return status()

@@ -3,6 +3,8 @@ import time, network, badge, easydraw
 state = False
 failed = False
 
+nw = network.WLAN(network.STA_IF)
+
 def status():
     global state
     return state
@@ -19,18 +21,16 @@ def force_enable():
     enable()
 
 def enable(showStatus=True):
-    global failed
-    global state
+    global failed, state, nw
     if not state:
-        nw = network.WLAN(network.STA_IF)
         if not nw.isconnected():
             nw.active(True)
-            ssid = badge.nvs_get_str('badge', 'wifi.ssid', 'hackerhotel-insecure')
-            password = badge.nvs_get_str('badge', 'wifi.password')
+            ssid = badge.nvs_get_str('system', 'wifi.ssid', 'hackerhotel-insecure')
+            password = badge.nvs_get_str('system', 'wifi.password')
             if showStatus:
                 easydraw.msg("Connecting to '"+ssid+"'...")
             nw.connect(ssid, password) if password else nw.connect(ssid)
-            timeout = badge.nvs_get_u8('badge', 'wifi.timeout', 5)
+            timeout = badge.nvs_get_u8('system', 'wifi.timeout', 5)
             while not nw.isconnected():
                 time.sleep(1)
                 timeout = timeout - 1
@@ -47,9 +47,7 @@ def enable(showStatus=True):
     return True
 
 def disable():
-    global state
+    global state, failed, nw
     state = False
-    global failed
     failed = False
-    nw = network.WLAN(network.STA_IF)
     nw.active(False)
