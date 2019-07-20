@@ -4,7 +4,7 @@ sta_if = network.WLAN(network.STA_IF)
 
 defaultSsid = machine.nvs_getstr("system", "wifi.ssid") or consts.WIFI_SSID
 defaultPassword = machine.nvs_getstr("system", "wifi.password") or consts.WIFI_PASSWORD
-timeout = machine.nvs_get_u16("system", "wifi.timeout") or 10
+timeout = machine.nvs_getint("system", "wifi.timeout") or 10
 
 def status():
 	return sta_if.isconnected()

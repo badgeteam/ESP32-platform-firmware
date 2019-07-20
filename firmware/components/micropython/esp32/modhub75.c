@@ -129,7 +129,7 @@ STATIC mp_obj_t hub75_image(size_t n_args, const mp_obj_t *args) {
     uint32_t *image = malloc(width*height*4);
 
     for(int i = 0; i < width*height; i++) {
-        image[i] = mp_obj_get_int(mp_arr[i]);
+        image[i] = mp_obj_get_int64(mp_arr[i]);
     }
 
     compositor_addImage((uint8_t *) image, x, y, width, height);
@@ -208,6 +208,20 @@ STATIC mp_obj_t hub75_frame(mp_obj_t arr_obj) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_frame_obj, hub75_frame);
 
+STATIC mp_obj_t hub75_textwidth(mp_obj_t text_obj) {
+  char *text = (char*)mp_obj_str_get_str(text_obj);
+  unsigned int width = compositor_getTextWidth(text);
+  return mp_obj_new_int(width);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_textwidth_obj, hub75_textwidth);
+
+STATIC mp_obj_t hub75_setfont(mp_obj_t index_obj) {
+  int index = mp_obj_get_int(index_obj);
+  compositor_setFont(index);
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_setfont_obj, hub75_setfont);
+
 STATIC const mp_rom_map_elem_t hub75_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_hub75)},
     {MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&hub75_text_obj)},
@@ -221,7 +235,9 @@ STATIC const mp_rom_map_elem_t hub75_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_frame), MP_ROM_PTR(&hub75_frame_obj)},
     {MP_ROM_QSTR(MP_QSTR_gif), MP_ROM_PTR(&hub75_gif_obj)},
     {MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&hub75_image_obj)},
-{MP_ROM_QSTR(MP_QSTR_pixel), MP_ROM_PTR(&hub75_pixel_obj)},
+    {MP_ROM_QSTR(MP_QSTR_pixel), MP_ROM_PTR(&hub75_pixel_obj)},
+    {MP_ROM_QSTR(MP_QSTR_textwidth), MP_ROM_PTR(&hub75_textwidth_obj)},
+    {MP_ROM_QSTR(MP_QSTR_setfont), MP_ROM_PTR(&hub75_setfont_obj)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(hub75_module_globals, hub75_module_globals_table);

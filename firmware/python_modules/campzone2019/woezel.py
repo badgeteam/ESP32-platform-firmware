@@ -178,16 +178,16 @@ def _set_last_updated():
 
 def update_cache():
     last_update = _get_last_updated()
-    if time.time() < last_update + (600):
+    if last_update > 0 and time.time() < last_update + (600):
         return True
 
     import wifi
     if not wifi.status():
         _show_progress("Connecting to WiFi...", False)
-        wifi.connect()
-        if not wifi.wait():
+        if not wifi.connect():
             _show_progress("Failed to connect to WiFi.", True)
             return False
+        wifi.ntp()
     _show_progress("Downloading categories...")
     try:
         request = urequests.get("https://%s/eggs/categories/json" % woezel_domain, timeout=30)

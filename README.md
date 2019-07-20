@@ -34,7 +34,7 @@ First, make sure you pull the submodules in the project:
 git submodule update --init --recursive
 ```
 
-Next, download the xtensa build toolchain [from here](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html#step-2-get-esp-idf), and save it as /xtensa-esp32-elf/ in the project root folder.
+Next, copy the xtensa build toolchain for your OS (currently supporting Linux and Mac OS) from /toolchains/, and unpack and save it as /xtensa-esp32-elf/ in the project root folder.
 # Build instructions
 To build and flash the basic generic firmware:
 ```
@@ -59,9 +59,9 @@ Copy the relevant config file from `/firmware/configs/` to `/firmware/sdkconfig`
 # Creating new hardware
 You can use badge.team firmware for your own-designed badge or device. The workflow for this is described below.
 
- * Run `./config.sh`, configure the `Build Information` submenu (for the hardware folder option, think of any name. We will use it later.), and set up the drivers that your hardware will use in the `Components` submenu.
+ * Run `./config.sh`, configure the `Firmware & device configuration` submenu (for the folder option in the `Hardware description` section, think of any name. We will use it later.), and set up the drivers that your hardware will use in the `Components` submenu.
  * If you need to write drivers of your own, take a look at the [driver documentation](DRIVERS.md).
- * Create a directory of the name you configured in the first step in `/firmware/python_modules`, and copy `/firmware/python_modules/generic/*` into it.
+ * Create a directory with the folder name you configured in the first step in `/firmware/python_modules`, and copy `/firmware/python_modules/generic/*` into it.
  * In this directory, you can write Python code that will be built into the firmware image. The files `_boot.py` and `boot.py` are executed after each other on boot, and from there you can launch your own things.
  * Build and flash, and you're done!
  

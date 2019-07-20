@@ -34,4 +34,6 @@ def next_check():
 
     buttons.register(gpio, lambda pressed, gpio=gpio: (buttons.unassign(gpio), next_check()) if not pressed else None)
 
+# Dim the screen so the factory checks can be done from USB only
+rgb.brightness(5)
 next_check()
