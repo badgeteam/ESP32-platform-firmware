@@ -47,17 +47,19 @@ static mp_obj_t framebuffer_set_pixel(mp_obj_t x_in, mp_obj_t y_in, mp_obj_t col
 	int x = mp_obj_get_int(x_in);
 	int y = mp_obj_get_int(y_in);
 	int color = mp_obj_get_int(color_in);
-	driver_framebuffer_pixel(x,y,color);
+	driver_framebuffer_setPixel(x,y,color);
 	return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_3(framebuffer_set_pixel_obj, framebuffer_set_pixel);
 
-static mp_obj_t framebuffer_set_text_color(mp_obj_t color_in) {
-	int color = mp_obj_get_int(color_in);
-	driver_framebuffer_setTextColor(color);
-	return mp_const_none;
+static mp_obj_t framebuffer_set_text_color(mp_uint_t n_args, const mp_obj_t *args) {
+	if (n_args == 1) {
+		uint32_t color = mp_obj_get_int(args[0]);
+		driver_framebuffer_setTextColor(color);
+	}
+	return mp_obj_new_int(driver_framebuffer_getTextColor());
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_set_text_color_obj, framebuffer_set_text_color);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_set_text_color_obj, 0, 1, framebuffer_set_text_color);
 
 static mp_obj_t framebuffer_fill(mp_uint_t n_args, const mp_obj_t *args)
 {
@@ -74,18 +76,17 @@ static mp_obj_t framebuffer_flush()
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(framebuffer_flush_obj, framebuffer_flush);
 
-static mp_obj_t framebuffer_char(mp_uint_t n_args, const mp_obj_t *args)
+static mp_obj_t framebuffer_get_width()
 {
-	int x0 = mp_obj_get_int(args[0]);
-	int y0 = mp_obj_get_int(args[1]);
-	const uint16_t data = mp_obj_get_int(args[2]);
-	int scaleX = mp_obj_get_int(args[3]);
-	int scaleY = mp_obj_get_int(args[4]);
-	int color = mp_obj_get_int(args[5]);
-	driver_framebuffer_char(x0, y0, data, scaleX, scaleY, color);
-	return mp_const_none;
+	return mp_obj_new_int(driver_framebuffer_getWidth());
 }
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_char_obj, 6, 6, framebuffer_char);
+static MP_DEFINE_CONST_FUN_OBJ_0(framebuffer_get_width_obj, framebuffer_get_width);
+
+static mp_obj_t framebuffer_get_height()
+{
+	return mp_obj_new_int(driver_framebuffer_getHeight());
+}
+static MP_DEFINE_CONST_FUN_OBJ_0(framebuffer_get_height_obj, framebuffer_get_height);
 
 STATIC mp_obj_t framebuffer_print(mp_obj_t text_in) {
 	const char *text = mp_obj_str_get_str(text_in);
@@ -93,6 +94,20 @@ STATIC mp_obj_t framebuffer_print(mp_obj_t text_in) {
 	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_print_obj, framebuffer_print);
+
+STATIC mp_obj_t framebuffer_get_string_width(mp_obj_t text_in) {
+	const char *text = mp_obj_str_get_str(text_in);
+	int value = driver_framebuffer_get_string_width(text);
+	return mp_obj_new_int(value);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_get_string_width_obj, framebuffer_get_string_width);
+
+STATIC mp_obj_t framebuffer_get_string_height(mp_obj_t text_in) {
+	const char *text = mp_obj_str_get_str(text_in);
+	int value = driver_framebuffer_get_string_height(text);
+	return mp_obj_new_int(value);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_get_string_height_obj, framebuffer_get_string_height);
 
 STATIC mp_obj_t framebuffer_font(mp_obj_t name_in) {
 	const char *name = mp_obj_str_get_str(name_in);
@@ -167,24 +182,7 @@ static mp_obj_t framebuffer_set_greyscale(mp_obj_t value_in)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_set_greyscale_obj, framebuffer_set_greyscale);
 
-uint16_t rgbTo565(uint32_t in)
-{
-	uint8_t r = (in>>16)&0xFF;
-	uint8_t g = (in>>8)&0xFF;
-	uint8_t b = in&0xFF;
-	uint16_t out = ((b & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (r >> 3);
-	return out;
-}
-
-static mp_obj_t framebuffer_rgbTo565(mp_obj_t value_in)
-{
-	int in = mp_obj_get_int(value_in);
-	int out = rgbTo565(in);
-	return mp_obj_new_int(out);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_rgbTo565_obj, framebuffer_rgbTo565);
-
-static mp_obj_t framebuffer_raw565(mp_uint_t n_args, const mp_obj_t *args)
+static mp_obj_t framebuffer_raw(mp_uint_t n_args, const mp_obj_t *args)
 {
 	int16_t x = mp_obj_get_int(args[0]);
 	int16_t y = mp_obj_get_int(args[1]);
@@ -198,23 +196,15 @@ static mp_obj_t framebuffer_raw565(mp_uint_t n_args, const mp_obj_t *args)
 	}
 	uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[4], &len);
 	
-	/*for (int16_t px = 0; px < w, px++) {
-		for (int16_t py = 0; py < w, py++) {
-			uint32_t pos = (x+px)*3 + (y+py)*3*w;
-			driver_framebuffer_pixel(x,y,framebuffer_rgbTo565(data_in[pos],data_in[pos+1],data_in[pos+2]));
-		}
-	}*/
-	
 	for (int16_t px = 0; px < w; px++) {
 		for (int16_t py = 0; py < h; py++) {
-			uint32_t pos = (x+px)*2 + (y+py)*2*w;
-			driver_framebuffer_pixel(x+px,y+py,(data[pos]<<8)+data[pos+1]);
+			driver_framebuffer_setPixel(x+px,y+py,data[(x+px) + (y+py)*w]);
 		}
 	}
 	return mp_const_none;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_raw565_obj, 5, 5, framebuffer_raw565);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_raw_obj, 5, 5, framebuffer_raw);
 
 static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 {
@@ -236,6 +226,17 @@ static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_obj, 3, 3, framebuffer_png);
 
+STATIC mp_obj_t framebuffer_png_info(mp_obj_t obj_filename)
+{ //FIXME
+	mp_obj_t tuple[4];
+	tuple[0] = 0;
+	tuple[1] = 0;
+	tuple[2] = 0;
+	tuple[3] = 0;
+	return mp_obj_new_tuple(4, tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_png_info_obj, framebuffer_png_info);
+
 static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_orientation), MP_ROM_PTR(&framebuffer_orientation_obj)},
 	{MP_ROM_QSTR(MP_QSTR_cursor), MP_ROM_PTR(&framebuffer_cursor_obj)},
@@ -244,7 +245,6 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_textColor), MP_ROM_PTR(&framebuffer_set_text_color_obj)},
 	{MP_ROM_QSTR(MP_QSTR_fill), MP_ROM_PTR(&framebuffer_fill_obj)},
 	{MP_ROM_QSTR(MP_QSTR_flush), MP_ROM_PTR(&framebuffer_flush_obj)},
-	{MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&framebuffer_char_obj)},
 	{MP_ROM_QSTR(MP_QSTR_print), MP_ROM_PTR(&framebuffer_print_obj)},
 	{MP_ROM_QSTR(MP_QSTR_font), MP_ROM_PTR(&framebuffer_font_obj)},
 	{MP_ROM_QSTR(MP_QSTR_line), MP_ROM_PTR(&framebuffer_line_obj)},
@@ -252,9 +252,13 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_circle), MP_ROM_PTR(&framebuffer_circle_obj)},
 	{MP_ROM_QSTR(MP_QSTR_dirty), MP_ROM_PTR(&framebuffer_get_dirty_obj)},
 	{MP_ROM_QSTR(MP_QSTR_greyscale), MP_ROM_PTR(&framebuffer_set_greyscale_obj)},
-	{MP_ROM_QSTR(MP_QSTR_rgbTo565), MP_ROM_PTR(&framebuffer_rgbTo565_obj)},
-	{MP_ROM_QSTR(MP_QSTR_raw565), MP_ROM_PTR(&framebuffer_raw565_obj)},
+	{MP_ROM_QSTR(MP_QSTR_raw), MP_ROM_PTR(&framebuffer_raw_obj)},
 	{MP_ROM_QSTR(MP_QSTR_png), MP_ROM_PTR(&framebuffer_png_obj)},
+	{MP_ROM_QSTR(MP_QSTR_width), MP_ROM_PTR(&framebuffer_get_width_obj)},
+	{MP_ROM_QSTR(MP_QSTR_height), MP_ROM_PTR(&framebuffer_get_height_obj)},
+	{MP_ROM_QSTR(MP_QSTR_png_info), MP_ROM_PTR(&framebuffer_png_info_obj)},
+	{MP_ROM_QSTR(MP_QSTR_get_string_width), MP_ROM_PTR(&framebuffer_get_string_width_obj)},
+	{MP_ROM_QSTR(MP_QSTR_get_string_height), MP_ROM_PTR(&framebuffer_get_string_height_obj)},
 };
 
 static MP_DEFINE_CONST_DICT(framebuffer_module_globals, framebuffer_module_globals_table);

@@ -31,17 +31,13 @@ do
 		for si in ${sizes[*]}
 		do
 			infile=$inpath$f$st".ttf"
-			echo $infile
+			#echo $infile
 			if [ -f $infile ] # Does source combination exist?
 			  then
-				outfile=$outpath$f$st$si"pt7b.c"
-				outheaderfile=$outheaderpath$f$st$si"pt7b.h"
-				printf "%s %s %s > %s\n" $convert $infile $si $outfile
-				$convert $infile $si > $outfile
-				#$header $infile $si > $outheaderfile
+				$convert $infile $si 110 > $outpath$f$st$si"pt7b.c"
 			fi
 		done
 	done
 done
 
-$convert weather.ttf 42 59905 59923 -59905 > ../../weather42pt8b.c
+$convert weather.ttf 42 110 59905 59923 -59905 > ../../weather42pt8b.c
