@@ -5,6 +5,7 @@
 #include "driver_erc12864.h"
 #include "driver_eink.h"
 #include "driver_ili9341.h"
+#include "driver_hub75.h"
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
@@ -47,6 +48,13 @@
 	#define FB_TYPE_16BPP
 	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_ili9341_write_partial(buffer, x0, y0, x1, y1)
 
+/* HUB75 led matrix */
+#elif defined(CONFIG_DRIVER_HUB75_ENABLE)
+	#define FB_SIZE HUB75_BUFFER_SIZE
+	#define FB_WIDTH HUB75_WIDTH
+	#define FB_HEIGHT HUB75_HEIGHT
+	#define FB_TYPE_32BPP
+	#define FB_FLUSH(buffer,flags,x0,y0,x1,y1) driver_hub75_switch_buffer(buffer)
 #else
 #error "Framebuffer driver enabled without a target display available!"
 #endif

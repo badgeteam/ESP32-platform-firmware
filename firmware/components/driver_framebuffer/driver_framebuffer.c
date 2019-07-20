@@ -75,6 +75,13 @@ bool orientation = ORIENTATION_LANDSCAPE;
 bool flip180     = false;
 bool useGreyscale = false;
 
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+uint8_t* framebuffer1;
+uint8_t* framebuffer2;
+#endif
+
+uint8_t* framebuffer;
+
 /* Fonts */
 
 #define FONTS_AMOUNT 19
@@ -232,7 +239,7 @@ esp_err_t driver_framebuffer_init()
 		if (!framebuffer1) return ESP_FAIL;
 		framebuffer2 = malloc(FB_SIZE);
 		if (!framebuffer2) return ESP_FAIL;
-		currentFb = false;
+		framebuffer = framebuffer1;
 	#else
 		framebuffer = malloc(FB_SIZE); //heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM);
 		if (!framebuffer) {
@@ -244,8 +251,16 @@ esp_err_t driver_framebuffer_init()
 	#if defined(FB_TYPE8_BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
 		flags = DISPLAY_FLAG_8BITPIXEL;	
 	#endif
-	
+		
+	#ifdef CONFIG_DRIVER_HUB75_ENABLE
+	driver_framebuffer_fill(COLOR_BLACK); //1st framebuffer
+	driver_framebuffer_setTextColor(COLOR_WHITE);
+	driver_framebuffer_flush();
+	driver_framebuffer_fill(COLOR_BLACK); //2nd framebuffer
+	#else
 	driver_framebuffer_fill(COLOR_WHITE);
+	driver_framebuffer_setTextColor(COLOR_BLACK);
+	#endif
 	
 	return ESP_OK;
 }
@@ -285,9 +300,6 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t value)
 		uint32_t position = ( (y / 8) * FB_WIDTH) + x;
 		uint8_t  bit      = y % 8;
 	#endif
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	framebuffer[position] ^= (-value ^ framebuffer[position]) & (1UL << bit);
 }
 
@@ -306,9 +318,6 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	#else
 		uint32_t position = ( (y / 8) * FB_WIDTH) + x;
 		uint8_t  bit      = y % 8;
-	#endif
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
 	#endif
 	if ((framebuffer[position] >> bit) && 0x01) {
 		return 0xFFFFFF;
@@ -345,9 +354,6 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t value)
 	if (y > dirty_y1) dirty_y1 = y;
 
 	uint32_t position = (y * FB_WIDTH) + x;
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	framebuffer[position] = value;
 }
 
@@ -361,9 +367,6 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	if (y < 0) return 0;
 
 	uint32_t position = (y * FB_WIDTH) + x;
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	return (framebuffer[position] << 16) + (framebuffer[position]<<8) + framebuffer[position];
 }
 #elif defined(FB_TYPE_16BPP)
@@ -377,9 +380,6 @@ void driver_framebuffer_fill(uint32_t color)
 	dirty_y1 = FB_HEIGHT;
 	uint8_t c0 = (color>>8)&0xFF;
 	uint8_t c1 = color&0xFF;
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	for (uint32_t i = 0; i < FB_SIZE; i+=2) {
 		framebuffer[i + 0] = c0;
 		framebuffer[i + 1] = c1;
@@ -405,9 +405,6 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 	if (x > dirty_x1) dirty_x1 = x;
 	if (y > dirty_y1) dirty_y1 = y;
 
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
 	framebuffer[position + 0] = c0;
 	framebuffer[position + 1] = c1;
@@ -421,9 +418,6 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	if (y >= FB_HEIGHT) return 0;
 	if (y < 0) return 0;
 
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
 	uint32_t color = (framebuffer[position] << 8) + (framebuffer[position + 1]);
 	uint8_t r = ((((color >> 11) & 0x1F) * 527) + 23) >> 6;
@@ -444,9 +438,7 @@ void driver_framebuffer_fill(uint32_t color)
 	uint8_t r = (color>>16)&0xFF;
 	uint8_t g = (color>>8)&0xFF;
 	uint8_t b = color&0xFF;
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
+
 	for (uint32_t i = 0; i < FB_SIZE; i+=3) {
 		framebuffer[i + 0] = r;
 		framebuffer[i + 1] = g;
@@ -473,9 +465,6 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 	if (x > dirty_x1) dirty_x1 = x;
 	if (y > dirty_y1) dirty_y1 = y;
 
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
 	framebuffer[position + 0] = r;
 	framebuffer[position + 1] = g;
@@ -489,12 +478,68 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	if (x < 0) return 0;
 	if (y >= FB_HEIGHT) return 0;
 	if (y < 0) return 0;
-
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
+	
 	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
 	return (framebuffer[position] << 16) + (framebuffer[position+1] << 8) + (framebuffer[position + 2]);
+}
+#elif defined(FB_TYPE_32BPP)
+void driver_framebuffer_fill(uint32_t color)
+{
+	isDirty = true;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
+	uint8_t r = (color>>16)&0xFF;
+	uint8_t g = (color>>8)&0xFF;
+	uint8_t b = color&0xFF;
+	uint8_t a = 0xFF;
+
+	for (uint32_t i = 0; i < FB_SIZE; i+=4) {
+		framebuffer[i + 0] = a;
+		framebuffer[i + 1] = b;
+		framebuffer[i + 2] = g;
+		framebuffer[i + 3] = r;
+	}
+}
+
+void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
+{
+	uint8_t a = 0xFF;
+	uint8_t r = (color>>16)&0xFF;
+	uint8_t g = (color>>8)&0xFF;
+	uint8_t b = color&0xFF;
+
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
+	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
+
+	isDirty = true;
+	if (x < dirty_x0) dirty_x0 = x;
+	if (y < dirty_y0) dirty_y0 = y;
+	if (x > dirty_x1) dirty_x1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
+
+	uint32_t position = (y * FB_WIDTH * 4) + (x * 4);
+	framebuffer[position + 0] = a;
+	framebuffer[position + 1] = b;
+	framebuffer[position + 2] = g;
+	framebuffer[position + 3] = r;
+}
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
+{
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
+	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+
+	uint32_t position = (y * FB_WIDTH * 4) + (x * 4);
+	return (framebuffer[position+3] << 16) + (framebuffer[position+2] << 8) + (framebuffer[position + 1]);
 }
 #else
 #error "Framebuffer can not be enabled without valid output configuration."
@@ -777,12 +822,6 @@ void driver_framebuffer_flush()
 {
 	if (!isDirty) return; //No need to update
 
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	uint8_t* nextFb = currentFb ? framebuffer1 : framebuffer2;
-	currentFb = !currentFb; //Switch to the other framebuffer
-	#endif
-
 	#ifdef DISPLAY_FLAG_8BITPIXEL
 		flags |= DISPLAY_FLAG_8BITPIXEL;
 	#endif
@@ -795,7 +834,7 @@ void driver_framebuffer_flush()
 	if (dirty_y0 > FB_WIDTH) dirty_y0 = FB_HEIGHT-1;
 	if (dirty_y1 < 0) dirty_y1 = 0;
 	if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT-1;
-	
+		
 	#ifdef FB_FLUSH_GS
 	if (useGreyscale) {
 		FB_FLUSH_GS(framebuffer, flags);
@@ -807,7 +846,13 @@ void driver_framebuffer_flush()
 	#endif
 	
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	memcpy(nextFb, framebuffer, FB_SIZE); //Copy the framebuffer we just flushed into the working buffer
+	if (framebuffer==framebuffer1) {
+		framebuffer = framebuffer2;
+		memcpy(framebuffer2, framebuffer1, FB_SIZE);
+	} else {
+		framebuffer = framebuffer1;
+		memcpy(framebuffer1, framebuffer2, FB_SIZE);
+	}
 	#endif
 
 	dirty_x0 = FB_WIDTH-1;
