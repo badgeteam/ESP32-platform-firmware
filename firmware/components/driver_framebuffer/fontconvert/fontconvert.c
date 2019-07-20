@@ -24,7 +24,7 @@ See notes at end for glyph nomenclature & other tidbits.
 #include <ft2build.h>
 #include FT_GLYPH_H
 #include FT_TRUETYPE_DRIVER_H
-#include "../include/gfxfont.h" // Adafruit_GFX font structures
+#include "../include/driver_framebuffer_font.h" // Adafruit_GFX font structures
 
 #define DPI 141 // Approximate res. of Adafruit 2.8" TFT
 
@@ -49,7 +49,7 @@ void enbit(uint8_t value) {
 }
 
 int main(int argc, char *argv[]) {
-	int                i, j, err, size, first=' ', last='~',
+	int                i, j, err, size, first=' ', last='~', offset=0,
 	                   bitmapOffset = 0, x, y, byte;
 	char              *fontName, c, *ptr;
 	FT_Library         library;
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 	// ' ' (space) and '~', respectively
 
 	if(argc < 3) {
-		fprintf(stderr, "Usage: %s fontfile size [first] [last]\n",
+		fprintf(stderr, "Usage: %s fontfile size [first] [last] [offset]\n",
 		  argv[0]);
 		return 1;
 	}
@@ -80,6 +80,10 @@ int main(int argc, char *argv[]) {
 	} else if(argc == 5) {
 		first = atoi(argv[3]);
 		last  = atoi(argv[4]);
+	} else if(argc == 6) {
+		first = atoi(argv[3]);
+		last  = atoi(argv[4]);
+		offset = atoi(argv[5]);
 	}
 
 	if(last < first) {
@@ -241,7 +245,7 @@ int main(int argc, char *argv[]) {
 			first, last, table[0].height);
 	} else {
 		printf("  0x%02X, 0x%02X, %ld };\n\n",
-			first, last, face->size->metrics.height >> 6);
+			first+offset, last+offset, face->size->metrics.height >> 6);
 	}
 	printf("// Approx. %d bytes\n",
 	  bitmapOffset + (last - first + 1) * 7 + 7);
