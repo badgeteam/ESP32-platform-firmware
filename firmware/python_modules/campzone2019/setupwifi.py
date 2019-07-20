@@ -1,4 +1,4 @@
-import rgb, network, machine, time, buttons, defines, system
+import rgb, network, machine, time, buttons, defines, system, uinterface
 from default_icons import animation_connecting_wifi
 
 chosen_ssid = ''
@@ -18,23 +18,6 @@ sta_if.disconnect()
 ssid_result = sta_if.scan()
 ssid_list = [ssid[0].decode('utf-8', 'ignore') for ssid in ssid_result]
 
-
-def render_ssid():
-    rgb.clear()
-    rgb.scrolltext(ssid_list[cur_selected])
-
-def up_1(pressed):
-    global cur_selected
-    if pressed:
-        cur_selected = max(cur_selected - 1, 0)
-        render_ssid()
-
-def down_1(pressed):
-    global cur_selected
-    if pressed:
-        cur_selected = min(cur_selected + 1, len(ssid_list))
-        render_ssid()
-
 def ok(pressed):
     global accepted
     if pressed:
@@ -45,14 +28,14 @@ def render_pass():
     rgb.text(chosen_pass)
 
 
-def up_2(pressed):
+def up(pressed):
     global chosen_pass
     if pressed:
         new_char = chr(ord(chosen_pass[cur_selected]) + 1)
         chosen_pass = chosen_pass[0:cur_selected] + new_char + chosen_pass[cur_selected+1:]
         render_pass()
 
-def down_2(pressed):
+def down(pressed):
     global chosen_pass
     if pressed:
         new_char = chr(ord(chosen_pass[cur_selected]) - 1)
@@ -89,29 +72,24 @@ rgb.framerate(20)
 rgb.setfont(rgb.FONT_6x3)
 rgb.scrolltext('Select network')
 time.sleep(5)
-render_ssid()
 
-buttons.register(defines.BTN_UP, up_1)
-buttons.register(defines.BTN_DOWN, down_1)
-buttons.register(defines.BTN_A, ok)
-buttons.register(defines.BTN_B, back)
+choice = uinterface.menu(ssid_list)
+if choice is None:
+        system.reboot()
 
-while not accepted:
-    time.sleep(0.1)
+chosen_ssid = ssid_list[choice]
 
-chosen_ssid = ssid_list[cur_selected]
-
-buttons.unassign(defines.BTN_UP)
-buttons.unassign(defines.BTN_DOWN)
 accepted = False
 cur_selected = 0
 rgb.clear()
+rgb.framerate(20)
+rgb.setfont(rgb.FONT_6x3)
 rgb.scrolltext('Enter password:')
 time.sleep(5)
 render_pass()
 
-buttons.assign(defines.BTN_UP, up_2)
-buttons.assign(defines.BTN_DOWN, down_2)
+buttons.register(defines.BTN_UP, up)
+buttons.register(defines.BTN_DOWN, down)
 buttons.register(defines.BTN_LEFT, left)
 buttons.register(defines.BTN_RIGHT, right)
 
