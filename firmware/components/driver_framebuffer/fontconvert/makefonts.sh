@@ -17,11 +17,10 @@ cd input
 convert=../fontconvert
 header=../fontheader
 inpath=
-outpath=../../
-outheaderpath=../../include/fonts/
+outpath=../../font_
 fonts=(freesans org_01 fairlight pixelade dejavusans permanentmarker roboto)
 styles=("" mono bold italic black italic blackitalic)
-sizes=(8 9 12 13 18 20 22 24 36 42)
+sizes=(6 8 9 12 13 16 18 20 22 24 36 42)
 
 for f in ${fonts[*]}
 do
@@ -34,10 +33,10 @@ do
 			#echo $infile
 			if [ -f $infile ] # Does source combination exist?
 			  then
-				$convert $infile $si 110 > $outpath$f$st$si"pt7b.c"
+				$convert $infile $si 112 > $outpath$f$st$si"pt7b.c"
 			fi
 		done
 	done
 done
 
-$convert weather.ttf 42 110 59905 59923 -59905 > ../../weather42pt8b.c
+$convert weather.ttf 42 112 59905 59923 -59905 > ../../font_weather42pt8b.c

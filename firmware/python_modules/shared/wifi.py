@@ -6,20 +6,19 @@ defaultSsid = machine.nvs_getstr("system", "wifi.ssid") or consts.WIFI_SSID
 defaultPassword = machine.nvs_getstr("system", "wifi.password") or consts.WIFI_PASSWORD
 timeout = machine.nvs_get_u16("system", "wifi.timeout") or 10
 
-
 def status():
 	return sta_if.isconnected()
 
 def connect(ssid=defaultSsid, password=defaultPassword):
 	global sta_if
+	if not ssid:
+		return status()
 	sta_if.active(True)
 	print("WiFi connect to",ssid,password)
 	if password:
 		sta_if.connect(ssid, password)
 	else:
 		sta_if.connect(ssid)
-
-	wait()
 
 	return status()
 

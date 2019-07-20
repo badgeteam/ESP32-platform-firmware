@@ -1,4 +1,4 @@
-import sys
+import sys, consts
 
 def goto(x,y):
 	sys.stdout.write("\033["+str(y)+";"+str(x)+"H")
@@ -19,7 +19,7 @@ def header(cls = False, text = ""):
 	else:
 		home()
 	if text:
-		text = "- "+text
+		text = consts.INFO_HARDWARE_NAME+" - "+text
 	color(37, 44, 1)
 	# print(badge.deviceType.replace("_"," ")+" "+text+u"\r\n")
 	print(" "+text+u"\r\n")

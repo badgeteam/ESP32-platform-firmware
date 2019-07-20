@@ -7,24 +7,24 @@
 #include "driver_framebuffer_font.h"
 #include "esp_system.h"
 
+//PNG library
+#include "mem_reader.h"
+#include "file_reader.h"
+#include "png_reader.h"
+
 /* Fonts */
 extern const GFXfont fairlight8pt7b;
-extern const GFXfont fairlight9pt7b;
 extern const GFXfont fairlight12pt7b;
+extern const GFXfont freesans6pt7b;
 extern const GFXfont freesans8pt7b;
 extern const GFXfont freesans9pt7b;
 extern const GFXfont freesans12pt7b;
-extern const GFXfont freesansbold8pt7b;
 extern const GFXfont freesansbold9pt7b;
 extern const GFXfont freesansbold12pt7b;
 extern const GFXfont freesansmono8pt7b;
 extern const GFXfont freesansmono9pt7b;
 extern const GFXfont freesansmono12pt7b;
 extern const GFXfont org_018pt7b;
-extern const GFXfont org_019pt7b;
-extern const GFXfont org_0112pt7b;
-
-//SHA2017
 extern const GFXfont dejavusans20pt7b;
 extern const GFXfont permanentmarker22pt7b;
 extern const GFXfont permanentmarker36pt7b;
@@ -33,9 +33,9 @@ extern const GFXfont robotoblackitalic24pt7b;
 extern const GFXfont roboto12pt7b;
 extern const GFXfont roboto18pt7b;
 extern const GFXfont roboto22pt7b;
+extern const GFXfont pixelade9pt7b;
 extern const GFXfont pixelade13pt7b;
 extern const GFXfont weather42pt8b;
-
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 bool currentFb;
@@ -82,8 +82,8 @@ void driver_framebuffer_circle(int16_t x0, int16_t y0, uint16_t r, uint16_t a0, 
 void driver_framebuffer_setTextColor(uint32_t color);
 uint32_t driver_framebuffer_getTextColor();
 
-//Image format helpers
-esp_err_t driver_framebuffer_png(int16_t x, int16_t y, const uint8_t* png_data, size_t len);
+//Image decoders
+esp_err_t driver_framebuffer_png(int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p);
 
 //Colors
 #define COLOR_BLACK 0x000000
