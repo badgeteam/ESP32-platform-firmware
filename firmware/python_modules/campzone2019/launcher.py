@@ -57,9 +57,10 @@ def populate_apps():
         add_app(app, read_metadata(app))
     add_app("snake", {"name": "Snake", "category": "system", "icon": icon_snake})
     add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
-    add_app("installer", {"name": "Installer", "category": "system", "icon": icon_appstore})
-    add_app("update", {"name": "Update apps", "category": "system", "icon": icon_settings})
-    add_app("checkforupdates", {"name": "Update firmware", "category": "system", "icon": icon_nickname})
+    # add_app("installer", {"name": "App store", "category": "system", "icon": icon_appstore})
+    add_app("setupwifi", {"name": "Set up wifi", "category": "system", "icon": icon_settings})
+    # add_app("update", {"name": "Update apps", "category": "system", "icon": icon_settings})
+    # add_app("checkforupdates", {"name": "Update firmware", "category": "system", "icon": icon_nickname})
 
 
 def render_current_app():

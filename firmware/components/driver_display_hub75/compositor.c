@@ -187,9 +187,10 @@ void compositor_setPixel(int x, int y, Color color) {
 
 //void compositor_setPixel(int x, int y, Color color) {
 //        Color *target = &buffer[y*CONFIG_HUB75_WIDTH+x];
-//        target->RGB[1] = (uint8_t)((color.RGB[1] * (color.RGB[0] / 255.0)) + ((255-color.RGB[0]) / 255.0 * target->RGB[0]));
-//        target->RGB[1] = (uint8_t)((color.RGB[1] * (color.RGB[0] / 255.0)) + ((255-color.RGB[0]) / 255.0 * target->RGB[1]));
-//        target->RGB[2] = (uint8_t)((color.RGB[2] * (color.RGB[0] / 255.0)) + ((255-color.RGB[0]) / 255.0 * target->RGB[2]));
+//        float alpha = (color.RGB[0] / 255.0);
+//        target->RGB[1] = (uint8_t)((color.RGB[1] * alpha) + ((1 - alpha) * target->RGB[1]));
+//        target->RGB[2] = (uint8_t)((color.RGB[2] * alpha) + ((1 - alpha) * target->RGB[2]));
+//        target->RGB[3] = (uint8_t)((color.RGB[3] * alpha) + ((1 - alpha) * target->RGB[3]));
 //}
 
 void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
