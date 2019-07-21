@@ -8,7 +8,7 @@ _progress_callback = None
 cleanup_files = []
 gzdict_sz = 16 + 15
 
-cache_path = '/cache/woezel/'
+cache_path = '/cache/woezel'
 woezel_domain = consts.WOEZEL_WEB_SERVER
 device_name = consts.INFO_HARDWARE_WOEZEL_NAME
 
@@ -196,10 +196,10 @@ def update_cache():
         _show_progress("Parsing categories...")
         categories = request.json()
 
-        for category in categories:
+        for index, category in enumerate(categories):
             gc.collect()
             cat_slug = category["slug"]
-            _show_progress("Downloading '" + category["name"] + "'...")
+            _show_progress("Downloading '" + category["name"] + "' (%d/%d)..." % (index, len(categories)))
             f = urequests.get("https://%s/basket/%s/category/%s/json" % (woezel_domain, device_name, cat_slug), timeout=30)
 
             with open(cache_path + '/' + cat_slug + '.json', 'w') as f_file:
@@ -220,8 +220,20 @@ def get_categories():
     if not update_cache():
         return []
 
+    active_categories = []
+
     with open(cache_path + '/categories.json', 'r') as categories_file:
-        return json.load(categories_file)
+        categories = json.load(categories_file)
+
+    for category in categories:
+        slug = category['slug']
+        with open(cache_path + '/' + slug + '.json', 'r') as file:
+            contents = json.load(file)
+            if len(contents) > 0:
+                category['eggs'] = len(contents)
+                active_categories.append(category)
+
+    return active_categories
 
 def get_category(category_name):
     if not update_cache():
