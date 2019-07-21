@@ -5,6 +5,8 @@
 #include "include/font_7x5.h"
 #include "include/compositor.h"
 
+#ifdef CONFIG_DRIVER_HUB75_ENABLE
+
 void renderCharCol(uint8_t ch, Color color, int x, int y) {
     for(int py = y; py<y+7; py++) {
         if(py >= 0 && py < CONFIG_HUB75_HEIGHT && x >= 0 && x < CONFIG_HUB75_WIDTH) {
@@ -29,3 +31,5 @@ void renderChar_7x5(uint8_t charId, Color color, int *x, int y, int endX, int *s
 int getCharWidth_7x5(uint8_t charId) {
     return 5;
 }
+
+#endif

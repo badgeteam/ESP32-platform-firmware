@@ -37,6 +37,9 @@
 #include "include/ota_update.h"
 
 #include "driver_framebuffer.h"
+#include "driver_framebuffer_devices.h"
+
+#include "compositor.h"
 
 #define TAG "ota-update"
 
@@ -132,6 +135,33 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				snprintf(buffer, 16, "%*u%%", 3, percentage);
 				if (showPercentage) driver_framebuffer_print(buffer);
 				driver_framebuffer_flush();
+			#endif
+			#ifdef CONFIG_DRIVER_HUB75_ENABLE
+				compositor_disable(); //Don't use the compositor if we have the framebuffer driver
+				driver_framebuffer_fill(COLOR_BLACK);
+				driver_framebuffer_setCursor(0,0);
+				uint16_t progressPosition = (percentage*FB_WIDTH)/100;
+				for (uint8_t i = 0; i < FB_WIDTH; i++) {
+					if (i < progressPosition) {
+						driver_framebuffer_line(i,0,i,FB_HEIGHT-1,0x008800);
+					} else {
+						driver_framebuffer_line(i,0,i,FB_HEIGHT-1,0x880000);
+					}
+				}
+				driver_framebuffer_setFont(&freesans6pt7b);
+				char buff[4];
+				sprintf(buff, "%d%%", percentage);
+				driver_framebuffer_print(buff);
+				driver_framebuffer_flush();
+			#endif
+		#else
+			#ifdef CONFIG_DRIVER_HUB75_ENABLE
+				compositor_enable();
+				char buff[4];
+				sprintf(buff, "%d%%", percentage);
+				Color col = {.value=0xffffffff};
+				compositor_clear();
+				compositor_addText(buff, col, 6, 1);
 			#endif
 		#endif
 	if (percentage>lastPercentage) lastPercentage = percentage;

@@ -15,13 +15,13 @@ void app_main()
 	if (is_first_boot) {
 		printf("Attempting to unpack FAT initialization ZIP file...\b");
 		if (unpack_first_boot_zip() != ESP_OK) {
-			printf("An error occured while unpacking the ZIP file!\b");
+			printf("An error occured while unpackint the ZIP file!\b");
 			restart();
 		}
 	}
-
+	
 	int magic = get_magic();
-
+	
 	switch(magic) {
 		case MAGIC_OTA:
 			badge_ota_update();

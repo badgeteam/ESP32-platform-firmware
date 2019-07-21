@@ -16,7 +16,7 @@
 #include "extmod/vfs_native.h"
 
 #include <compositor.h>
-#include <displayDriver.h>
+#include <driver_hub75.h>
 
 #define TAG "esp32/hub75"
 
@@ -36,7 +36,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(hub75_background_obj, hub75_background);
 STATIC mp_obj_t hub75_brightness(mp_obj_t bright_obj) {
     int brightness = mp_obj_get_int(bright_obj);
 
-    setBrightness(brightness);
+    driver_hub75_set_brightness(brightness);
 
     return mp_const_none;
 }
@@ -45,7 +45,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_brightness_obj, hub75_brightness);
 STATIC mp_obj_t hub75_framerate(mp_obj_t bright_obj) {
     int framerate = mp_obj_get_int(bright_obj);
 
-    setFramerate(framerate);
+    driver_hub75_set_framerate(framerate);
 
     return mp_const_none;
 }

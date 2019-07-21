@@ -6,3 +6,4 @@ COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver_display_eink/inclu
                             $(PROJECT_PATH)/components/driver_display_ssd1306/include \
                             $(PROJECT_PATH)/components/driver_display_ili9341/include \
                             $(PROJECT_PATH)/components/driver_framebuffer/include \
+                            $(PROJECT_PATH)/components/driver_display_hub75/include \

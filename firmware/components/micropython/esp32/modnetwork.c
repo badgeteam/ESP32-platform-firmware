@@ -660,7 +660,7 @@ static bool _check_wifi_started(bool except)
 			nlr_raise(mp_obj_new_exception_msg(&mp_type_OSError, "WiFi not started"));
 		}
 		else {
-			ESP_LOGW(MODNETTWORK_TAG, "WiFi not started");
+			ESP_LOGD(MODNETTWORK_TAG, "WiFi not started");
 			return false;
 		}
 	}

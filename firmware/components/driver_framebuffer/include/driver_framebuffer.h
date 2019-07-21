@@ -37,13 +37,6 @@ extern const GFXfont pixelade9pt7b;
 extern const GFXfont pixelade13pt7b;
 extern const GFXfont weather42pt8b;
 
-#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-bool currentFb;
-uint8_t* framebuffer1, framebuffer2;
-#else
-uint8_t* framebuffer;
-#endif
-
 esp_err_t driver_framebuffer_init();
 void driver_framebuffer_flush();
 void driver_framebuffer_get_dirty(int16_t* x0, int16_t* y0, int16_t* x1, int16_t* y1);
