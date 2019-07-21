@@ -12,6 +12,8 @@
 
 #ifdef CONFIG_DRIVER_VSPI_ENABLE
 
+#define TAG "vspi"
+
 esp_err_t (*driver_vspi_release)(void) = NULL;
 
 /** initialize spi sharing
@@ -19,8 +21,12 @@ esp_err_t (*driver_vspi_release)(void) = NULL;
  */
 extern esp_err_t driver_vspi_init(void)
 {
+	static bool driver_vspi_init_done = false;
+	if (driver_vspi_init_done) return ESP_OK;
+	ESP_LOGD(TAG, "init called");
 	// TODO: create mutex
-
+	driver_vspi_init_done = true;
+	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
 }
 
@@ -29,6 +35,7 @@ extern esp_err_t driver_vspi_init(void)
  */
 extern esp_err_t driver_vspi_release_and_claim(esp_err_t (*release)(void))
 {
+	ESP_LOGD(TAG, "release and claim");
 	// TODO: grab lock
 
 	esp_err_t res;
@@ -53,6 +60,7 @@ extern esp_err_t driver_vspi_release_and_claim(esp_err_t (*release)(void))
 
 extern esp_err_t driver_vspi_freed(void)
 {
+	ESP_LOGD(TAG, "freed");
 	// TODO: check if mutex is claimed
 
 	driver_vspi_release = NULL;

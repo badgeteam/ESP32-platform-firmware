@@ -696,7 +696,7 @@ is_fat:
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(native_vfs_statvfs_obj, native_vfs_statvfs);
 
 //------------------------
-STATIC void checkBoot_py()
+/*STATIC void checkBoot_py()
 {
 	FILE *fd;
 	struct stat buf;
@@ -726,7 +726,7 @@ STATIC void checkBoot_py()
 		ESP_LOGV(TAG, "** 'boot.py' found **");
     	//fclose(fd);
     }
-}
+}*/
 
 //---------------------------------------------------------------
 STATIC void sdcard_print_info(const sdmmc_card_t* card, int mode)
