@@ -32,7 +32,8 @@ def download_info():
 def available(update=False):
     if update:
         if not wifi.status():
-            if not wifi.connect():
+            wifi.connect()
+            if not wifi.wait():
                 return machine.nvs_getint('badge','OTA.ready') or 0
 
         info = download_info()

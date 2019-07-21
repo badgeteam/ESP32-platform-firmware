@@ -11,7 +11,7 @@ void app_main()
 	logo();
 	bool is_first_boot = nvs_init();
 	platform_init();
-	
+
 	if (is_first_boot) {
 		printf("Attempting to unpack FAT initialization ZIP file...\b");
 		if (unpack_first_boot_zip() != ESP_OK) {
@@ -21,7 +21,7 @@ void app_main()
 	}
 	
 	int magic = get_magic();
-		
+	
 	switch(magic) {
 		case MAGIC_OTA:
 			badge_ota_update();

@@ -1,4 +1,4 @@
-import sys, gc, uos as os, uerrno as errno, ujson as json, uzlib, urequests, upip_utarfile as tarfile, time
+import sys, gc, uos as os, uerrno as errno, ujson as json, uzlib, urequests, upip_utarfile as tarfile, time, wifi, machine
 import consts
 gc.collect()
 
@@ -8,7 +8,7 @@ _progress_callback = None
 cleanup_files = []
 gzdict_sz = 16 + 15
 
-cache_path = '/cache/woezel/'
+cache_path = '/cache/woezel'
 woezel_domain = consts.WOEZEL_WEB_SERVER
 device_name = consts.INFO_HARDWARE_WOEZEL_NAME
 
@@ -162,32 +162,29 @@ def _show_progress(text, error=False):
 
 def _get_last_updated():
     last_updated = -1
-    try:
-        with open(cache_path + "/lastUpdate", 'r') as f:
-            last_updated = int(f.readline())
-    except:
-        pass
-    return last_updated
+    return machine.nvs_getint('system', 'lastUpdate') or last_updated
 
 def _set_last_updated():
     try:
-        with open(cache_path + "/lastUpdate", 'w') as f:
-            f.write(str(time.time()))
+        return machine.nvs_setint('system', 'lastUpdate', int(time.time()))
     except:
         pass
 
 def update_cache():
+    if not wifi.status():
+        _show_progress("Connecting to WiFi...", False)
+        wifi.connect()
+        if not wifi.wait():
+            _show_progress("Failed to connect to WiFi.", True)
+            return False
+
+    wifi.ntp()
     last_update = _get_last_updated()
     if last_update > 0 and time.time() < last_update + (600):
         return True
 
-    import wifi
-    if not wifi.status():
-        _show_progress("Connecting to WiFi...", False)
-        if not wifi.connect():
-            _show_progress("Failed to connect to WiFi.", True)
-            return False
-        wifi.ntp()
+    print('Updating woezel cache..')
+
     _show_progress("Downloading categories...")
     try:
         request = urequests.get("https://%s/eggs/categories/json" % woezel_domain, timeout=30)
@@ -199,10 +196,10 @@ def update_cache():
         _show_progress("Parsing categories...")
         categories = request.json()
 
-        for category in categories:
+        for index, category in enumerate(categories):
             gc.collect()
             cat_slug = category["slug"]
-            _show_progress("Downloading '" + category["name"] + "'...")
+            _show_progress("Downloading '" + category["name"] + "' (%d/%d)..." % (index, len(categories)))
             f = urequests.get("https://%s/basket/%s/category/%s/json" % (woezel_domain, device_name, cat_slug), timeout=30)
 
             with open(cache_path + '/' + cat_slug + '.json', 'w') as f_file:
@@ -223,8 +220,20 @@ def get_categories():
     if not update_cache():
         return []
 
+    active_categories = []
+
     with open(cache_path + '/categories.json', 'r') as categories_file:
-        return json.load(categories_file)
+        categories = json.load(categories_file)
+
+    for category in categories:
+        slug = category['slug']
+        with open(cache_path + '/' + slug + '.json', 'r') as file:
+            contents = json.load(file)
+            if len(contents) > 0:
+                category['eggs'] = len(contents)
+                active_categories.append(category)
+
+    return active_categories
 
 def get_category(category_name):
     if not update_cache():
@@ -323,6 +332,7 @@ def install(to_install, install_path=None, force_reinstall=False):
     if not isinstance(to_install, list):
         to_install = [to_install]
     print("Installing to: " + install_path)
+    _show_progress('Installing...', False)
     # sets would be perfect here, but don't depend on them
     installed = []
     try:
@@ -340,11 +350,12 @@ def install(to_install, install_path=None, force_reinstall=False):
             if deps:
                 deps = deps.decode("utf-8").split("\n")
                 to_install.extend(deps)
+        return True
     except Exception as e:
         print("Error installing '{}': {}, packages may be partially installed".format(
                 pkg_spec, e),
             file=sys.stderr)
-        raise e
+        return False
 
 def display_pkg(packages):
     for package in packages:

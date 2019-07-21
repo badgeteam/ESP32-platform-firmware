@@ -8,7 +8,8 @@ if not wifi.status():
     rgb.clear()
     rgb.framerate(3)
     rgb.gif(data, (12, 0), size, frames)
-    if wifi.connect():
+    wifi.connect()
+    if wifi.wait():
         rgb.clear()
         rgb.framerate(20)
     else:
