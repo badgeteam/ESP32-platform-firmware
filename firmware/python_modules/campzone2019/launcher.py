@@ -1,8 +1,8 @@
 import sys, uos as os, time, ujson
-import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, wifi
+import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, wifi, woezel
 import rgb
 from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, icon_activities, icon_nickname, \
-                            icon_no_wifi, animation_connecting_wifi
+                            icon_unknown, icon_no_wifi, animation_connecting_wifi
 
 # Application list
 
@@ -25,6 +25,7 @@ def clear():
 
 def add_app(app, information):
     global apps
+    install_path = woezel.get_install_path()
     try:
         title = information["name"]
     except:
@@ -34,13 +35,15 @@ def add_app(app, information):
     except:
         category = ""
     try:
-        icon = information["icon"]
+        icon = information["icon"] if category == "system" else __import__('%s/%s/icon' % (install_path, app)).icon
+
         data, num_frames = icon
         if len(data) != 8 * 8 * num_frames:
-            print('not equal')
-            icon = icon_snake
+            print('App icon for app "%s" is not 8*8 or has more/less frames than it says' % title)
+            icon = icon_unknown
+
     except:
-        icon = icon_snake
+        icon = icon_unknown
 
     info = {"file": app, "title": title, "category": category, "icon": icon}
     apps.append(info)
@@ -50,14 +53,14 @@ def populate_apps():
     global apps
     apps = []
     try:
-        userApps = os.listdir('lib')
+        userApps = os.listdir('apps')
     except OSError:
         userApps = []
     for app in userApps:
         add_app(app, read_metadata(app))
     add_app("snake", {"name": "Snake", "category": "system", "icon": icon_snake})
     add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
-    # add_app("installer", {"name": "App store", "category": "system", "icon": icon_appstore})
+    add_app("appstore", {"name": "App store", "category": "system", "icon": icon_appstore})
     add_app("setupwifi", {"name": "Set up wifi", "category": "system", "icon": icon_settings})
     add_app("forceupdate", {"name": "Force OTA update", "category": "system", "icon": icon_settings})
     # add_app("update", {"name": "Update apps", "category": "system", "icon": icon_settings})
@@ -76,7 +79,7 @@ def render_current_app():
 # Read app metadata
 def read_metadata(app):
     try:
-        install_path = get_install_path()
+        install_path = woezel.get_install_path()
         info_file = "%s/%s/metadata.json" % (install_path, app)
         print("Reading " + info_file + "...")
         with open(info_file) as f:
@@ -110,7 +113,7 @@ def uninstall():
         global install_path
         if ok:
             show_text("Removing " + currentListTitles[selected] + "...")
-            install_path = get_install_path()
+            install_path = woezel.get_install_path()
             for rm_file in os.listdir("%s/%s" % (install_path, currentListTargets[selected]["file"])):
                 show_text("Deleting '" + rm_file + "'...")
                 os.remove("%s/%s/%s" % (install_path, currentListTargets[selected]["file"], rm_file))
@@ -136,15 +139,6 @@ def expandhome(s):
         h = os.getenv("HOME")
         s = s.replace("~/", h + "/")
     return s
-
-
-def get_install_path():
-    global install_path
-    if install_path is None:
-        # sys.path[0] is current module's path
-        install_path = sys.path[1]
-    install_path = expandhome(install_path)
-    return install_path
 
 
 # Actions        
@@ -244,7 +238,8 @@ if not machine.nvs_getint("system", 'day0_updated'):
     rgb.clear()
     rgb.framerate(3)
     rgb.gif(data, (12, 0), size, frames)
-    if wifi.connect():
+    wifi.connect()
+    if wifi.wait():
         rgb.clear()
         rgb.framerate(20)
         rgb.setfont(1)

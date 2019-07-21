@@ -3,7 +3,12 @@ import network, time, machine, consts
 sta_if = network.WLAN(network.STA_IF)
 
 defaultSsid = machine.nvs_getstr("system", "wifi.ssid") or consts.WIFI_SSID
-defaultPassword = machine.nvs_getstr("system", "wifi.password") or consts.WIFI_PASSWORD
+defaultPassword = machine.nvs_getstr("system", "wifi.password")
+
+# Password is empty for unencrypted networks, so a simple or statement won't do
+if defaultPassword is None:
+	defaultPassword = consts.WIFI_PASSWORD
+
 timeout = machine.nvs_getint("system", "wifi.timeout") or 10
 
 def status():
@@ -20,8 +25,6 @@ def connect(ssid=defaultSsid, password=defaultPassword):
 	else:
 		sta_if.connect(ssid)
 
-	return status()
-
 def disconnect():
 	global sta_if
 	sta_if.disconnect()
@@ -32,7 +35,10 @@ def ntp(onlyIfNeeded=True):
 	from machine import RTC
 	rtc = RTC()
 	if not status():
-		return False
+		connect()
+		if not wait():
+			return False
+
 	return rtc.ntp_sync('pool.ntp.org')
 
 def wait(duration=timeout, showStatus=False):

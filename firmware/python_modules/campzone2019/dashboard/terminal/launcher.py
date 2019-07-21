@@ -21,7 +21,7 @@ def populate_apps():
     global apps
     apps = []
     try:
-        userApps = os.listdir('lib')
+        userApps = os.listdir('apps')
     except OSError:
         userApps = []
     for app in userApps:

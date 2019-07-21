@@ -1,4 +1,4 @@
-import sys, gc, uos as os, uerrno as errno, ujson as json, uzlib, urequests, upip_utarfile as tarfile, time
+import sys, gc, uos as os, uerrno as errno, ujson as json, uzlib, urequests, upip_utarfile as tarfile, time, wifi, machine
 import consts
 gc.collect()
 
@@ -162,32 +162,29 @@ def _show_progress(text, error=False):
 
 def _get_last_updated():
     last_updated = -1
-    try:
-        with open(cache_path + "/lastUpdate", 'r') as f:
-            last_updated = int(f.readline())
-    except:
-        pass
-    return last_updated
+    return machine.nvs_getint('system', 'lastUpdate') or last_updated
 
 def _set_last_updated():
     try:
-        with open(cache_path + "/lastUpdate", 'w') as f:
-            f.write(str(time.time()))
+        return machine.nvs_setint('system', 'lastUpdate', int(time.time()))
     except:
         pass
 
 def update_cache():
+    if not wifi.status():
+        _show_progress("Connecting to WiFi...", False)
+        wifi.connect()
+        if not wifi.wait():
+            _show_progress("Failed to connect to WiFi.", True)
+            return False
+
+    wifi.ntp()
     last_update = _get_last_updated()
     if last_update > 0 and time.time() < last_update + (600):
         return True
 
-    import wifi
-    if not wifi.status():
-        _show_progress("Connecting to WiFi...", False)
-        if not wifi.connect():
-            _show_progress("Failed to connect to WiFi.", True)
-            return False
-        wifi.ntp()
+    print('Updating woezel cache..')
+
     _show_progress("Downloading categories...")
     try:
         request = urequests.get("https://%s/eggs/categories/json" % woezel_domain, timeout=30)
@@ -323,6 +320,7 @@ def install(to_install, install_path=None, force_reinstall=False):
     if not isinstance(to_install, list):
         to_install = [to_install]
     print("Installing to: " + install_path)
+    _show_progress('Installing...', False)
     # sets would be perfect here, but don't depend on them
     installed = []
     try:
@@ -340,11 +338,12 @@ def install(to_install, install_path=None, force_reinstall=False):
             if deps:
                 deps = deps.decode("utf-8").split("\n")
                 to_install.extend(deps)
+        return True
     except Exception as e:
         print("Error installing '{}': {}, packages may be partially installed".format(
                 pkg_spec, e),
             file=sys.stderr)
-        raise e
+        return False
 
 def display_pkg(packages):
     for package in packages:

@@ -16,7 +16,8 @@ def start(pressed):
 		system.ota()
 
 if not wifi.status():
-	if not wifi.connect():
+	wifi.connect()
+	if not wifi.wait():
 		print("Error: could not connect to WiFi!")
 
 title = "Update check"
