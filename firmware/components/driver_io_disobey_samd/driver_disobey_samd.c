@@ -176,10 +176,7 @@ void driver_disobey_samd_intr_handler(void *arg)
 esp_err_t driver_disobey_samd_init(void)
 {
 	static bool driver_disobey_samd_init_done = false;
-
-	if (driver_disobey_samd_init_done)
-		return ESP_OK;
-
+	if (driver_disobey_samd_init_done)return ESP_OK;
 	ESP_LOGD(TAG, "init called");
 
 	esp_err_t res = driver_i2c_init();

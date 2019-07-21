@@ -33,4 +33,9 @@ menu "Driver: ILI9341 LCD display"
 		depends on DRIVER_ILI9341_ENABLE
 		int "GPIO pin used for MISO"
 		default 25
+	
+	config PIN_NUM_ILI9341_BACKLIGHT
+		depends on DRIVER_ILI9341_ENABLE
+		int "GPIO pin used for backlight"
+		default 5
 endmenu

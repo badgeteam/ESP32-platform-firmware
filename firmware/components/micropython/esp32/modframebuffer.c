@@ -10,6 +10,7 @@
 #include "extmod/vfs_native.h"
 
 #include <driver_framebuffer.h>
+#include <driver_framebuffer_devices.h>
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
@@ -66,7 +67,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_set_text_color_obj, 0, 1,
 
 static mp_obj_t framebuffer_fill(mp_uint_t n_args, const mp_obj_t *args)
 {
-	int color = n_args == 0 ? COLOR_WHITE : mp_obj_get_int(args[0]);
+	int color = n_args == 0 ? COLOR_FILL_DEFAULT : mp_obj_get_int(args[0]);
 	driver_framebuffer_fill(color);
 	return mp_const_none;
 }
@@ -258,78 +259,150 @@ static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_obj, 3, 3, framebuffer_png);
 
-STATIC mp_obj_t framebuffer_png_info(mp_obj_t obj_filename)
-{
-	lib_reader_read_t reader;
-	void * reader_p;
-
-	bool is_bytes = MP_OBJ_IS_TYPE(obj_filename, &mp_type_bytes);
-
-	if (is_bytes) {
-		size_t len;
-		const uint8_t* png_data = (const uint8_t *) mp_obj_str_get_data(obj_filename, &len);
-		struct lib_mem_reader *mr = lib_mem_new(png_data, len);
-		if (mr == NULL)
-		{
-			nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "out of memory!"));
-			return mp_const_none;
-		}
-		reader = (lib_reader_read_t) &lib_mem_read;
-		reader_p = mr;
-
-	} else {
-		const char* filename = mp_obj_str_get_str(obj_filename);
-		char fullname[128] = {'\0'};
-		int res = physicalPathN(filename, fullname, sizeof(fullname));
-		if ((res != 0) || (strlen(fullname) == 0)) {
-			mp_raise_ValueError("Error resolving file name");
-			return mp_const_none;
-		}
-		struct lib_file_reader *fr = lib_file_new(fullname, 1024);
-		if (fr == NULL)
-		{
-			nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Could not open file '%s'!",filename));
-			return mp_const_none;
-		}
-		reader = (lib_reader_read_t) &lib_file_read;
-		reader_p = fr;
-	}
-
-	struct lib_png_reader *pr = lib_png_new(reader, reader_p);
-	if (pr == NULL)
-	{
-		if (is_bytes) {
-			lib_mem_destroy(reader_p);
-		} else {
-			lib_file_destroy(reader_p);
-		}
-		nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "out of memory."));
-		return mp_const_none;
-	}
-
-	int res = lib_png_read_header(pr);
-
-	mp_obj_t tuple[4];
-	if (res >= 0) {
-		tuple[0] = mp_obj_new_int(pr->ihdr.width);
-		tuple[1] = mp_obj_new_int(pr->ihdr.height);
-		tuple[2] = mp_obj_new_int(pr->ihdr.bit_depth);
-		tuple[3] = mp_obj_new_int(pr->ihdr.color_type);
-	}
-
-	lib_png_destroy(pr);
-	if (is_bytes) {
-		lib_mem_destroy(reader_p);
-	} else {
-		lib_file_destroy(reader_p);
-	}
-
-	if (res < 0)
-	{
-		nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "failed to load image: res = %d", res));
-	}
-
-	return mp_obj_new_tuple(4, tuple);
+STATIC mp_obj_t framebuffer_png_info(mp_obj_t obj_filename)
+
+{
+
+	lib_reader_read_t reader;
+
+	void * reader_p;
+
+
+
+	bool is_bytes = MP_OBJ_IS_TYPE(obj_filename, &mp_type_bytes);
+
+
+
+	if (is_bytes) {
+
+		size_t len;
+
+		const uint8_t* png_data = (const uint8_t *) mp_obj_str_get_data(obj_filename, &len);
+
+		struct lib_mem_reader *mr = lib_mem_new(png_data, len);
+
+		if (mr == NULL)
+
+		{
+
+			nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "out of memory!"));
+
+			return mp_const_none;
+
+		}
+
+		reader = (lib_reader_read_t) &lib_mem_read;
+
+		reader_p = mr;
+
+
+
+	} else {
+
+		const char* filename = mp_obj_str_get_str(obj_filename);
+
+		char fullname[128] = {'\0'};
+
+		int res = physicalPathN(filename, fullname, sizeof(fullname));
+
+		if ((res != 0) || (strlen(fullname) == 0)) {
+
+			mp_raise_ValueError("Error resolving file name");
+
+			return mp_const_none;
+
+		}
+
+		struct lib_file_reader *fr = lib_file_new(fullname, 1024);
+
+		if (fr == NULL)
+
+		{
+
+			nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "Could not open file '%s'!",filename));
+
+			return mp_const_none;
+
+		}
+
+		reader = (lib_reader_read_t) &lib_file_read;
+
+		reader_p = fr;
+
+	}
+
+
+
+	struct lib_png_reader *pr = lib_png_new(reader, reader_p);
+
+	if (pr == NULL)
+
+	{
+
+		if (is_bytes) {
+
+			lib_mem_destroy(reader_p);
+
+		} else {
+
+			lib_file_destroy(reader_p);
+
+		}
+
+		nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "out of memory."));
+
+		return mp_const_none;
+
+	}
+
+
+
+	int res = lib_png_read_header(pr);
+
+
+
+	mp_obj_t tuple[4];
+
+	if (res >= 0) {
+
+		tuple[0] = mp_obj_new_int(pr->ihdr.width);
+
+		tuple[1] = mp_obj_new_int(pr->ihdr.height);
+
+		tuple[2] = mp_obj_new_int(pr->ihdr.bit_depth);
+
+		tuple[3] = mp_obj_new_int(pr->ihdr.color_type);
+
+	}
+
+
+
+	lib_png_destroy(pr);
+
+	if (is_bytes) {
+
+		lib_mem_destroy(reader_p);
+
+	} else {
+
+		lib_file_destroy(reader_p);
+
+	}
+
+
+
+	if (res < 0)
+
+	{
+
+		nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_ValueError, "failed to load image: res = %d", res));
+
+	}
+
+
+
+	return mp_obj_new_tuple(4, tuple);
+
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_png_info_obj, framebuffer_png_info);
 

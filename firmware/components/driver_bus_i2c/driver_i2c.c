@@ -30,18 +30,13 @@ static xSemaphoreHandle driver_i2c_mux = NULL;
 
 esp_err_t driver_i2c_init(void)
 {
-#ifdef CONFIG_DRIVER_I2C_ENABLE
 	static bool driver_i2c_init_done = false;
-
-	if (driver_i2c_init_done)
-		return ESP_OK;
-
+	if (driver_i2c_init_done) return ESP_OK;
 	ESP_LOGD(TAG, "init called");
 
 	// create mutex for I2C bus
 	driver_i2c_mux = xSemaphoreCreateMutex();
-	if (driver_i2c_mux == NULL)
-		return ESP_ERR_NO_MEM;
+	if (driver_i2c_mux == NULL) return ESP_ERR_NO_MEM;
 
 	// configure I2C
 	i2c_config_t conf = {
@@ -61,19 +56,13 @@ esp_err_t driver_i2c_init(void)
 		.master.clk_speed = CONFIG_I2C_MASTER_FREQ_HZ,
 	};
 	esp_err_t res = i2c_param_config(I2C_MASTER_NUM, &conf);
-	if (res != ESP_OK)
-		return res;
+	if (res != ESP_OK) return res;
 
 	res = i2c_driver_install(I2C_MASTER_NUM, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
-	if (res != ESP_OK)
-		return res;
+	if (res != ESP_OK) return res;
 
 	driver_i2c_init_done = true;
-
 	ESP_LOGD(TAG, "init done");
-
-#endif
-
 	return ESP_OK;
 }
 

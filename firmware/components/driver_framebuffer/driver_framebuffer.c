@@ -45,7 +45,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "driver_eink.h"
 #include "driver_ili9341.h"
 
+#include "compositor.h"
+
 #include "esp_heap_caps.h"
+#include "esp_log.h"
 
 #define TAG "Framebuffer"
 
@@ -56,9 +59,7 @@ uint8_t textScaleX = 1;
 uint8_t textScaleY = 1;
 int16_t cursor_x = 0, cursor_x0 = 0, cursor_y = 0;
 bool textWrap = true;
-uint32_t textColor = COLOR_BLACK;
-
-int16_t fontHeight = 0;
+uint32_t textColor = COLOR_TEXT_DEFAULT;
 
 bool isDirty = true;
 int16_t dirty_x0 = 0;
@@ -74,6 +75,13 @@ uint8_t flags = 0; //Used to pass extra information to the display driver (if su
 bool orientation = ORIENTATION_LANDSCAPE;
 bool flip180     = false;
 bool useGreyscale = false;
+
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
+uint8_t* framebuffer1;
+uint8_t* framebuffer2;
+#endif
+
+uint8_t* framebuffer;
 
 /* Fonts */
 
@@ -196,18 +204,6 @@ void driver_framebuffer_set_orientation(uint16_t angle)
 void driver_framebuffer_setFont(const GFXfont *font)
 {
 	gfxFont = font;
-	fontHeight = gfxFont->yAdvance;
-	//Hack for calculating font height (should be done at compile time)
-	/*fontHeight = 0;
-	uint16_t numberOfChars = gfxFont->last - gfxFont->first;
-	for (uint8_t i = 0; i < numberOfChars; i++) {
-		const GFXglyph *glyph = gfxFont->glyph + i;
-		int16_t charHeight = glyph->height + glyph->yOffset;
-		if (charHeight > fontHeight) {
-			fontHeight = charHeight;
-			printf("Height of character '%c' is %u, yOffset is %d, total is %d\n", (char) (i+gfxFont->first), glyph->height, glyph->yOffset, charHeight);
-		}
-	}*/
 }
 
 bool driver_framebuffer_selectFont(const char* fontName)
@@ -227,32 +223,69 @@ bool driver_framebuffer_selectFont(const char* fontName)
 
 esp_err_t driver_framebuffer_init()
 {
+	static bool driver_framebuffer_init_done = false;
+	if (driver_framebuffer_init_done) return ESP_OK;
+	ESP_LOGD(TAG, "init called");
+	
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		framebuffer1 = malloc(FB_SIZE);
+		ESP_LOGI(TAG, "Allocating %u bytes for framebuffer 1", FB_SIZE);
+		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
+			framebuffer1 = heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+		#else
+			//framebuffer1 = malloc(FB_SIZE);
+			framebuffer1 = heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
+		#endif
 		if (!framebuffer1) return ESP_FAIL;
-		framebuffer2 = malloc(FB_SIZE);
+		ESP_LOGI(TAG, "Allocating %u bytes for framebuffer 2", FB_SIZE);
+		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
+			framebuffer2 = heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+		#else
+			//framebuffer2 = malloc(FB_SIZE);
+			framebuffer2 = heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
+		#endif
 		if (!framebuffer2) return ESP_FAIL;
-		currentFb = false;
+		framebuffer = framebuffer1;
 	#else
-		framebuffer = malloc(FB_SIZE); //heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM);
+		ESP_LOGI(TAG, "Allocating %u bytes for the framebuffer", FB_SIZE);
+		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
+		framebuffer = heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+		#else
+		//framebuffer = malloc(FB_SIZE);
+		framebuffer = heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
+		#endif
+		
 		if (!framebuffer) {
-			printf("Unable to allocate memory for the framebuffer.\n");
+			ESP_LOGE(TAG, "Unable to allocate memory for the framebuffer.");
 			return ESP_FAIL;
 		}
 	#endif
+	
 	driver_framebuffer_setFont(&freesans9pt7b);
 	#if defined(FB_TYPE8_BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
 		flags = DISPLAY_FLAG_8BITPIXEL;	
 	#endif
+		
+	driver_framebuffer_fill(COLOR_FILL_DEFAULT); //1st framebuffer
+	driver_framebuffer_setTextColor(COLOR_TEXT_DEFAULT);
+	driver_framebuffer_flush();
+	driver_framebuffer_fill(COLOR_FILL_DEFAULT); //2nd framebuffer
 	
-	driver_framebuffer_fill(COLOR_WHITE);
+	#ifdef CONFIG_DRIVER_HUB75_ENABLE
+	compositor_enable();
+	#endif
 	
+	driver_framebuffer_init_done = true;
+	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
 }
 
 #if defined(FB_TYPE_1BPP)
 void driver_framebuffer_fill(uint32_t value)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "fill without alloc!");
+		return;
+	}
 	value = greyToBw(rgbToGrey(value));
 	isDirty = true;
 	dirty_x0 = 0;
@@ -264,6 +297,10 @@ void driver_framebuffer_fill(uint32_t value)
 
 void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t value)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "setPixel without alloc!");
+		return;
+	}
 	value = greyToBw(rgbToGrey(value));
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
@@ -285,14 +322,15 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t value)
 		uint32_t position = ( (y / 8) * FB_WIDTH) + x;
 		uint8_t  bit      = y % 8;
 	#endif
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	framebuffer[position] ^= (-value ^ framebuffer[position]) & (1UL << bit);
 }
 
 uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "getPixel without alloc!");
+		return 0;
+	}
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return 0;
@@ -307,9 +345,6 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 		uint32_t position = ( (y / 8) * FB_WIDTH) + x;
 		uint8_t  bit      = y % 8;
 	#endif
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	if ((framebuffer[position] >> bit) && 0x01) {
 		return 0xFFFFFF;
 	} else {
@@ -319,6 +354,10 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 #elif defined(FB_TYPE_8BPP)
 void driver_framebuffer_fill(uint32_t value)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "fill without alloc!");
+		return;
+	}
 	value = rgbToGrey(value);
 	isDirty = true;
 	dirty_x0 = 0;
@@ -330,6 +369,10 @@ void driver_framebuffer_fill(uint32_t value)
 
 void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t value)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "setPixel without alloc!");
+		return;
+	}
 	value = rgbToGrey(value);
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
@@ -345,14 +388,15 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t value)
 	if (y > dirty_y1) dirty_y1 = y;
 
 	uint32_t position = (y * FB_WIDTH) + x;
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	framebuffer[position] = value;
 }
 
 uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "getPixel without alloc!");
+		return 0;
+	}
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return 0;
@@ -361,14 +405,15 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	if (y < 0) return 0;
 
 	uint32_t position = (y * FB_WIDTH) + x;
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	return (framebuffer[position] << 16) + (framebuffer[position]<<8) + framebuffer[position];
 }
 #elif defined(FB_TYPE_16BPP)
 void driver_framebuffer_fill(uint32_t color)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "fill without alloc!");
+		return;
+	}
 	color = rgbTo565(color);
 	isDirty = true;
 	dirty_x0 = 0;
@@ -377,9 +422,7 @@ void driver_framebuffer_fill(uint32_t color)
 	dirty_y1 = FB_HEIGHT;
 	uint8_t c0 = (color>>8)&0xFF;
 	uint8_t c1 = color&0xFF;
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
+	
 	for (uint32_t i = 0; i < FB_SIZE; i+=2) {
 		framebuffer[i + 0] = c0;
 		framebuffer[i + 1] = c1;
@@ -388,6 +431,10 @@ void driver_framebuffer_fill(uint32_t color)
 
 void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "setPixel without alloc!");
+		return;
+	}
 	color = rgbTo565(color);
 	uint8_t c0 = (color>>8)&0xFF;
 	uint8_t c1 = color&0xFF;
@@ -405,15 +452,16 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 	if (x > dirty_x1) dirty_x1 = x;
 	if (y > dirty_y1) dirty_y1 = y;
 
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
 	framebuffer[position + 0] = c0;
 	framebuffer[position + 1] = c1;
 }
 uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "getPixel without alloc!");
+		return 0;
+	}
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return 0;
@@ -421,9 +469,6 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	if (y >= FB_HEIGHT) return 0;
 	if (y < 0) return 0;
 
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	uint32_t position = (y * FB_WIDTH * 2) + (x * 2);
 	uint32_t color = (framebuffer[position] << 8) + (framebuffer[position + 1]);
 	uint8_t r = ((((color >> 11) & 0x1F) * 527) + 23) >> 6;
@@ -436,6 +481,10 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 #elif defined(FB_TYPE_24BPP)
 void driver_framebuffer_fill(uint32_t color)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "fill without alloc!");
+		return;
+	}
 	isDirty = true;
 	dirty_x0 = 0;
 	dirty_y0 = 0;
@@ -444,9 +493,7 @@ void driver_framebuffer_fill(uint32_t color)
 	uint8_t r = (color>>16)&0xFF;
 	uint8_t g = (color>>8)&0xFF;
 	uint8_t b = color&0xFF;
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
+
 	for (uint32_t i = 0; i < FB_SIZE; i+=3) {
 		framebuffer[i + 0] = r;
 		framebuffer[i + 1] = g;
@@ -456,9 +503,13 @@ void driver_framebuffer_fill(uint32_t color)
 
 void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 {
-        uint8_t r = (color>>16)&0xFF;
-        uint8_t g = (color>>8)&0xFF;
-        uint8_t b = color&0xFF;
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "setPixel without alloc!");
+		return;
+	}
+	uint8_t r = (color>>16)&0xFF;
+	uint8_t g = (color>>8)&0xFF;
+	uint8_t b = color&0xFF;
 
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
@@ -473,9 +524,6 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 	if (x > dirty_x1) dirty_x1 = x;
 	if (y > dirty_y1) dirty_y1 = y;
 
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
 	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
 	framebuffer[position + 0] = r;
 	framebuffer[position + 1] = g;
@@ -483,6 +531,81 @@ void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
 }
 uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "getPixel without alloc!");
+		return 0;
+	}
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return 0;
+	if (x < 0) return 0;
+	if (y >= FB_HEIGHT) return 0;
+	if (y < 0) return 0;
+	
+	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
+	return (framebuffer[position] << 16) + (framebuffer[position+1] << 8) + (framebuffer[position + 2]);
+}
+#elif defined(FB_TYPE_32BPP)
+void driver_framebuffer_fill(uint32_t color)
+{
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "fill without alloc!");
+		return;
+	}
+	isDirty = true;
+	dirty_x0 = 0;
+	dirty_y0 = 0;
+	dirty_x1 = FB_WIDTH;
+	dirty_y1 = FB_HEIGHT;
+	uint8_t r = (color>>16)&0xFF;
+	uint8_t g = (color>>8)&0xFF;
+	uint8_t b = color&0xFF;
+	uint8_t a = 0xFF;
+
+	for (uint32_t i = 0; i < FB_SIZE; i+=4) {
+		framebuffer[i + 0] = a;
+		framebuffer[i + 1] = b;
+		framebuffer[i + 2] = g;
+		framebuffer[i + 3] = r;
+	}
+}
+
+void driver_framebuffer_setPixel(int16_t x, int16_t y, uint32_t color)
+{
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "setPixel without alloc!");
+		return;
+	}
+	uint8_t a = 0xFF;
+	uint8_t r = (color>>16)&0xFF;
+	uint8_t g = (color>>8)&0xFF;
+	uint8_t b = color&0xFF;
+
+	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
+	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
+	if (x >= FB_WIDTH) return;
+	if (x < 0) return;
+	if (y >= FB_HEIGHT) return;
+	if (y < 0) return;
+
+	isDirty = true;
+	if (x < dirty_x0) dirty_x0 = x;
+	if (y < dirty_y0) dirty_y0 = y;
+	if (x > dirty_x1) dirty_x1 = x;
+	if (y > dirty_y1) dirty_y1 = y;
+
+	uint32_t position = (y * FB_WIDTH * 4) + (x * 4);
+	framebuffer[position + 0] = a;
+	framebuffer[position + 1] = b;
+	framebuffer[position + 2] = g;
+	framebuffer[position + 3] = r;
+}
+uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
+{
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "getPixel without alloc!");
+		return 0;
+	}
 	if (orientation) { int16_t t = y; y = x; x = FB_WIDTH-t-1; }
 	if (flip180)     { y = FB_HEIGHT-y-1;    x = FB_WIDTH-x-1; }
 	if (x >= FB_WIDTH) return 0;
@@ -490,11 +613,8 @@ uint32_t driver_framebuffer_getPixel(int16_t x, int16_t y)
 	if (y >= FB_HEIGHT) return 0;
 	if (y < 0) return 0;
 
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	#endif
-	uint32_t position = (y * FB_WIDTH * 3) + (x * 3);
-	return (framebuffer[position] << 16) + (framebuffer[position+1] << 8) + (framebuffer[position + 2]);
+	uint32_t position = (y * FB_WIDTH * 4) + (x * 4);
+	return (framebuffer[position+3] << 16) + (framebuffer[position+2] << 8) + (framebuffer[position + 1]);
 }
 #else
 #error "Framebuffer can not be enabled without valid output configuration."
@@ -690,7 +810,7 @@ void driver_framebuffer_write(uint8_t c)
 		cursor_x = cursor_x0;
 		cursor_y += textScaleY * gfxFont->yAdvance;
 	} else if (c != '\r') {
-		print_char(cursor_x, cursor_y+(fontHeight/2), c, textScaleX, textScaleY, textColor);
+		print_char(cursor_x, cursor_y+(gfxFont->yAdvance/2), c, textScaleX, textScaleY, textColor);
 		cursor_x += glyph->xAdvance * textScaleX;
 	}
 }
@@ -698,7 +818,7 @@ void driver_framebuffer_write(uint8_t c)
 uint8_t driver_framebuffer_get_font_height()
 {
 	if (gfxFont == NULL) return 0;
-	return fontHeight;
+	return gfxFont->yAdvance;
 }
 
 uint16_t driver_framebuffer_get_char_width(uint8_t c)
@@ -714,7 +834,6 @@ uint16_t driver_framebuffer_get_char_width(uint8_t c)
 
 void driver_framebuffer_print(const char* str)
 {
-	//printf("Print at (%u, %u) with height %u and advance %u\n", cursor_x, cursor_y, fontHeight, gfxFont->yAdvance);
 	for (uint16_t i = 0; i < strlen(str); i++) driver_framebuffer_write(str[i]);
 }
 
@@ -775,12 +894,15 @@ void driver_framebuffer_get_dirty(int16_t* x0, int16_t* y0, int16_t* x1, int16_t
 
 void driver_framebuffer_flush()
 {
+	//ESP_LOGI(TAG, "Flush ignored."); return;
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "flush without alloc!");
+		return;
+	}
 	if (!isDirty) return; //No need to update
-
-	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	uint8_t* framebuffer = currentFb ? framebuffer2 : framebuffer1;
-	uint8_t* nextFb = currentFb ? framebuffer1 : framebuffer2;
-	currentFb = !currentFb; //Switch to the other framebuffer
+	
+	#ifdef CONFIG_DRIVER_HUB75_ENABLE
+	compositor_disable();
 	#endif
 
 	#ifdef DISPLAY_FLAG_8BITPIXEL
@@ -795,7 +917,7 @@ void driver_framebuffer_flush()
 	if (dirty_y0 > FB_WIDTH) dirty_y0 = FB_HEIGHT-1;
 	if (dirty_y1 < 0) dirty_y1 = 0;
 	if (dirty_y1 > FB_WIDTH) dirty_y1 = FB_HEIGHT-1;
-	
+		
 	#ifdef FB_FLUSH_GS
 	if (useGreyscale) {
 		FB_FLUSH_GS(framebuffer, flags);
@@ -807,7 +929,13 @@ void driver_framebuffer_flush()
 	#endif
 	
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-	memcpy(nextFb, framebuffer, FB_SIZE); //Copy the framebuffer we just flushed into the working buffer
+	if (framebuffer==framebuffer1) {
+		framebuffer = framebuffer2;
+		memcpy(framebuffer, framebuffer1, FB_SIZE);
+	} else {
+		framebuffer = framebuffer1;
+		memcpy(framebuffer, framebuffer2, FB_SIZE);
+	}
 	#endif
 
 	dirty_x0 = FB_WIDTH-1;
@@ -819,6 +947,10 @@ void driver_framebuffer_flush()
 
 esp_err_t driver_framebuffer_png(int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p)
 {
+	if (!framebuffer) {
+		ESP_LOGE(TAG, "png without alloc!");
+		return ESP_FAIL;
+	}
 	struct lib_png_reader *pr = lib_png_new(reader, reader_p);
 	if (pr == NULL) {
 		printf("Out of memory.\n");
@@ -862,6 +994,7 @@ uint16_t driver_framebuffer_getWidth(void)
 {
 	return orientation ? FB_HEIGHT : FB_WIDTH;
 }
+
 uint16_t driver_framebuffer_getHeight(void)
 {
 	return orientation ? FB_WIDTH : FB_HEIGHT;
