@@ -17,7 +17,11 @@
 #include "include/driver_hub75.h"
 #include "include/compositor.h"
 
+#include "esp_log.h"
+
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
+
+#define TAG "hub75"
 
 //My display has each row swapped with its neighbour (so the rows are 2-1-4-3-6-5-8-7-...). If your display
 //is more sane, uncomment this to get a good image.
@@ -121,6 +125,10 @@ Color* getFrameBuffer()
 
 esp_err_t driver_hub75_init(void)
 {
+	static bool driver_hub75_init_done = false;
+	if (driver_hub75_init_done) return ESP_OK;
+	ESP_LOGD(TAG, "init called");
+
 	//Change to set the global brightness of the display, range 1-63
 	//Warning when set too high: Do not look into LEDs with remaining eye.
 	#ifndef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
@@ -131,7 +139,10 @@ esp_err_t driver_hub75_init(void)
 	for (int i=0; i<BITPLANE_CNT; i++) {
 		for (int j=0; j<2; j++) {
 			bitplane[j][i] = (uint8_t *) heap_caps_calloc(BITPLANE_SZ, sizeof(uint8_t), MALLOC_CAP_DMA);
-			assert(bitplane[j][i] && "Can't allocate bitplane memory");
+			if (!bitplane[j][i]) {
+				ESP_LOGE(TAG, "Can't allocate bitplane memory");
+				return ESP_FAIL;
+			}
 		}
 	}
 
@@ -163,7 +174,7 @@ esp_err_t driver_hub75_init(void)
 
 	compositor_init();
 	#ifndef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-	//compositor_setBuffer(getFrameBuffer());
+	compositor_setBuffer(getFrameBuffer());
 	#endif
 
 	driver_hub75_active = true;
@@ -178,6 +189,8 @@ esp_err_t driver_hub75_init(void)
 		1             /* Core ID */
 	);
 
+	driver_hub75_init_done = true;
+	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
 }
 

@@ -1,2 +1,1 @@
-# Causes shell to appear
-pass
+../shared/shell.py
