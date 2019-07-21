@@ -13,24 +13,20 @@ void app_main()
 	platform_init();
 	
 	if (is_first_boot) {
-		printf("Executing first boot procedure...\b");
+		printf("Attempting to unpack FAT initialization ZIP file...\b");
 		if (unpack_first_boot_zip() != ESP_OK) {
-			printf("First boot failed, HALT!\b");
-			halt();
-		} else {
-			printf("First boot completed succesfully, RESTART!\b");
-			fflush(stdout);
-			esp_restart();
+			printf("An error occured while unpackint the ZIP file!\b");
+			restart();
 		}
-	} else {
-		int magic = get_magic();
-			
-		switch(magic) {
-			case MAGIC_OTA:
-				badge_ota_update();
-				break;
-			default:
-				micropython_entry();
-		}
+	}
+	
+	int magic = get_magic();
+		
+	switch(magic) {
+		case MAGIC_OTA:
+			badge_ota_update();
+			break;
+		default:
+			micropython_entry();
 	}
 }

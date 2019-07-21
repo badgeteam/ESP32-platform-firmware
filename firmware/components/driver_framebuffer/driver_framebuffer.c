@@ -45,6 +45,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "driver_eink.h"
 #include "driver_ili9341.h"
 
+#include "compositor.h"
+
 #include "esp_heap_caps.h"
 
 #define TAG "Framebuffer"
@@ -56,7 +58,7 @@ uint8_t textScaleX = 1;
 uint8_t textScaleY = 1;
 int16_t cursor_x = 0, cursor_x0 = 0, cursor_y = 0;
 bool textWrap = true;
-uint32_t textColor = COLOR_BLACK;
+uint32_t textColor = COLOR_TEXT_DEFAULT;
 
 int16_t fontHeight = 0;
 
@@ -252,14 +254,13 @@ esp_err_t driver_framebuffer_init()
 		flags = DISPLAY_FLAG_8BITPIXEL;	
 	#endif
 		
-	#ifdef CONFIG_DRIVER_HUB75_ENABLE
-	driver_framebuffer_fill(COLOR_BLACK); //1st framebuffer
-	driver_framebuffer_setTextColor(COLOR_WHITE);
+	driver_framebuffer_fill(COLOR_FILL_DEFAULT); //1st framebuffer
+	driver_framebuffer_setTextColor(COLOR_TEXT_DEFAULT);
 	driver_framebuffer_flush();
-	driver_framebuffer_fill(COLOR_BLACK); //2nd framebuffer
-	#else
-	driver_framebuffer_fill(COLOR_WHITE);
-	driver_framebuffer_setTextColor(COLOR_BLACK);
+	driver_framebuffer_fill(COLOR_FILL_DEFAULT); //2nd framebuffer
+	
+	#ifdef CONFIG_DRIVER_HUB75_ENABLE
+	compositor_enable();
 	#endif
 	
 	return ESP_OK;
@@ -821,6 +822,10 @@ void driver_framebuffer_get_dirty(int16_t* x0, int16_t* y0, int16_t* x1, int16_t
 void driver_framebuffer_flush()
 {
 	if (!isDirty) return; //No need to update
+	
+	#ifdef CONFIG_DRIVER_HUB75_ENABLE
+	compositor_disable();
+	#endif
 
 	#ifdef DISPLAY_FLAG_8BITPIXEL
 		flags |= DISPLAY_FLAG_8BITPIXEL;
@@ -907,6 +912,7 @@ uint16_t driver_framebuffer_getWidth(void)
 {
 	return orientation ? FB_HEIGHT : FB_WIDTH;
 }
+
 uint16_t driver_framebuffer_getHeight(void)
 {
 	return orientation ? FB_WIDTH : FB_HEIGHT;

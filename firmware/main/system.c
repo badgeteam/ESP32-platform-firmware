@@ -15,7 +15,7 @@ void restart()
 
 void halt()
 {
-	printf("--- CPU HALTED ---\n");
+	printf("--- HALTED ---\n");
 	fflush(stdout);
 	while (1) { esp_deep_sleep_start(); }
 }
