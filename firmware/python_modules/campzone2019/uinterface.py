@@ -117,16 +117,14 @@ def _menu_down_callback(pressed):
         _draw_menu_item(menu_state["items"][selected])
 
 def _menu_back_callback(pressed):
+    global menu_state
     if pressed:
-        _menu_add_button_press_state(ACTION_CANCEL)
+        menu_state["pressed_button"] = _add_action_state(menu_state["pressed_button"], ACTION_CANCEL)
 
 def _menu_select_callback(pressed):
-    if pressed:
-        _menu_add_button_press_state(ACTION_CONFIRM)
-
-def _menu_add_button_press_state(button_state):
     global menu_state
-    menu_state["pressed_button"] = menu_state["pressed_button"] | button_state
+    if pressed:
+        menu_state["pressed_button"] = _add_action_state(menu_state["pressed_button"], ACTION_CONFIRM)
 
 def _text_input_up_callback(pressed):
     global text_input_state
@@ -195,15 +193,15 @@ def _text_input_cancel_callback(pressed):
             text_input_state["text"] = text
             _draw_text_input_state(cursor, text)
         else:
-            _text_input_add_action_state(ACTION_CANCEL)
+            text_input_state["action"] = _add_action_state(text_input_state["action"], ACTION_CANCEL)
 
 def _text_input_confirm_callback(pressed):
-    if pressed:
-        _text_input_add_action_state(ACTION_CONFIRM)
-
-def _text_input_add_action_state(action_state):
     global text_input_state
-    text_input_state["action"] = text_input_state["action"] | action_state
+    if pressed:
+        text_input_state["action"] = _add_action_state(text_input_state["action"], ACTION_CONFIRM)
+
+def _add_action_state(action_state, added_state):
+    return action_state | added_state
 
 def _draw_text_input_state(cursor, text):
     rgb.clear()
