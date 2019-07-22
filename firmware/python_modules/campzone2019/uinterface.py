@@ -1,4 +1,4 @@
-import rgb, buttons, defines, time, hub75
+import rgb, buttons, defines, time
 
 ACTION_NO_OPERATION = 0
 ACTION_CONFIRM = 2
@@ -206,7 +206,7 @@ def _text_input_add_action_state(action_state):
     text_input_state["action"] = text_input_state["action"] | action_state
 
 def _draw_text_input_state(cursor, text):
-    hub75.clear()
+    rgb.clear()
     before_mid = text[:cursor][-2:]
     after_mid = text[cursor+1:][:2]
     mid = text[cursor]
@@ -227,11 +227,11 @@ def _draw_text_input_sequence(startx, chars, colour, reverse=False):
 
     if reverse:
         for i in range(length - 1, -1, -1):
-            hub75.text(chars[i], colour[0], colour[1], colour[2], curx, 0)
+            rgb.text(chars[i], colour, (curx, 0))
             curx -= step
     else:
         for i in range(length):
-            hub75.text(chars[i], colour[0], colour[1], colour[2], curx, 0)
+            rgb.text(chars[i], colour, (curx, 0))
             curx += step
 
 def _draw_menu_item(item):
