@@ -9,4 +9,4 @@ btn_ok                 = defines.BTN_A
 btn_cancel             = defines.BTN_B
 
 hatcheryurl            = "https://badge.team"
-otacheckurl            = "https://badge.team/firmware/version"
+otacheckurl            = "https://badge.team/version"

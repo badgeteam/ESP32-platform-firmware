@@ -62,7 +62,7 @@ def populate_apps():
     add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
     add_app("appstore", {"name": "App store", "category": "system", "icon": icon_appstore})
     add_app("setupwifi", {"name": "Set up wifi", "category": "system", "icon": icon_settings})
-    add_app("forceupdate", {"name": "Force OTA update", "category": "system", "icon": icon_settings})
+    add_app("update", {"name": "OTA update", "category": "system", "icon": icon_settings})
     # add_app("update", {"name": "Update apps", "category": "system", "icon": icon_settings})
     # add_app("checkforupdates", {"name": "Update firmware", "category": "system", "icon": icon_nickname})
 
