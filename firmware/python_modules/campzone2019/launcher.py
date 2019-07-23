@@ -62,7 +62,7 @@ def populate_apps():
     add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
     add_app("appstore", {"name": "App store", "category": "system", "icon": icon_appstore})
     add_app("setupwifi", {"name": "Set up wifi", "category": "system", "icon": icon_settings})
-    add_app("forceupdate", {"name": "Force OTA update", "category": "system", "icon": icon_settings})
+    add_app("update", {"name": "OTA update", "category": "system", "icon": icon_settings})
     # add_app("update", {"name": "Update apps", "category": "system", "icon": icon_settings})
     # add_app("checkforupdates", {"name": "Update firmware", "category": "system", "icon": icon_nickname})
 
@@ -232,6 +232,7 @@ if not machine.nvs_getint("system", 'intro_shown'):
     machine.nvs_setint("system", 'intro_shown', 1)
     system.reboot()
 
+machine.nvs_setint("system", 'day0_updated', 1)
 # Do shameless start-of-event update
 if not machine.nvs_getint("system", 'day0_updated'):
     data, size, frames = animation_connecting_wifi
@@ -260,4 +261,4 @@ start()
 init_power_management()
 
 menu = term_menu.UartMenu(None, pm)
-menu.main()
+#menu.main()
