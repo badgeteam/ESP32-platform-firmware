@@ -232,7 +232,6 @@ if not machine.nvs_getint("system", 'intro_shown'):
     machine.nvs_setint("system", 'intro_shown', 1)
     system.reboot()
 
-machine.nvs_setint("system", 'day0_updated', 1)
 # Do shameless start-of-event update
 if not machine.nvs_getint("system", 'day0_updated'):
     data, size, frames = animation_connecting_wifi
@@ -261,4 +260,4 @@ start()
 init_power_management()
 
 menu = term_menu.UartMenu(None, pm)
-#menu.main()
+menu.main()
