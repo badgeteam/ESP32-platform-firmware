@@ -1,4 +1,5 @@
-import rgb, buttons, defines, time
+import rgb, buttons, defines, time, wifi
+from default_icons import icon_no_wifi, animation_loading, animation_connecting_wifi
 
 ACTION_NO_OPERATION = 0
 ACTION_CONFIRM = 2
@@ -36,7 +37,14 @@ text_input_state = {
 
 confirm_dialog_action = ACTION_NO_OPERATION
 
-def menu(items, selected = 0):
+_menu_user_callback_left = None
+_menu_user_callback_right = None
+
+def menu(items, selected = 0, callback_left=None, callback_right=None):
+    global _menu_user_callback_left
+    global _menu_user_callback_right
+    _menu_user_callback_left = callback_left
+    _menu_user_callback_right = callback_right
     state = _menu_init_display_and_state(items, selected)
     while state["pressed_button"] == ACTION_NO_OPERATION:
         time.sleep(0.1)
@@ -66,6 +74,31 @@ def confirmation_dialog(text):
 
     return (confirm_dialog_action == ACTION_CONFIRM)
 
+def connect_wifi():
+    if wifi.status():
+        return True
+
+    rgb.clear()
+    data, size, frames = animation_connecting_wifi
+    rgb.framerate(3)
+    rgb.gif(data, (12, 0), size, frames)
+
+    wifi.connect()
+    wifi.wait()
+
+    if not wifi.status():
+        data, frames = icon_no_wifi
+        rgb.gif(data, (12, 0), (8, 8), frames)
+        time.sleep(3)
+
+    rgb.framerate(20)
+    return wifi.status()
+
+def loading_text(text):
+    data, size, frames = animation_loading
+    rgb.gif(data, (1, 1), size, frames)
+    rgb.scrolltext(text, pos=(8,0), width=(rgb.PANEL_WIDTH - 8))
+
 def _menu_init_display_and_state(items, selected):
     global menu_state
     menu_state["items"] = items
@@ -84,6 +117,8 @@ def _menu_register_callbacks():
     buttons.register(defines.BTN_B, _menu_back_callback)
     buttons.register(defines.BTN_UP, _menu_up_callback)
     buttons.register(defines.BTN_DOWN, _menu_down_callback)
+    buttons.register(defines.BTN_LEFT, _menu_left_callback)
+    buttons.register(defines.BTN_RIGHT, _menu_right_callback)
 
 def _text_input_init_display_and_state(charset):
     global text_input_state
@@ -153,6 +188,20 @@ def _menu_down_callback(pressed):
 
         menu_state["selected"] = selected
         _draw_menu_item(menu_state["items"][selected])
+
+def _menu_left_callback(pressed):
+    global menu_state
+    if callable(_menu_user_callback_left):
+        _menu_user_callback_left(pressed)
+        _menu_back_callback(pressed)
+
+
+def _menu_right_callback(pressed):
+    global menu_state
+    if callable(_menu_user_callback_right):
+        _menu_user_callback_right(pressed)
+        _menu_back_callback(pressed)
+
 
 def _menu_back_callback(pressed):
     global menu_state

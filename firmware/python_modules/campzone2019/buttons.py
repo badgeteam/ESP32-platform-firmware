@@ -8,6 +8,7 @@ button_mappings = []
 
 def init_button_mapping():
 	global button_mappings
+	_register_all_handlers()
 	button_mappings.append(_default_button_mapping())
 	return True
 
@@ -33,9 +34,11 @@ def _cb(pin):
 		callback(not pin.value())
 	
 def _register(gpio):
-	if gpio in _gpios:
-		return False
 	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100)
+	if gpio in _gpios:
+		index = _gpios.index(gpio)
+		_pins[index] = pin
+		return False
 	_gpios.append(gpio)
 	_pins.append(pin)
 	return True
@@ -60,4 +63,3 @@ def _register_all_handlers():
 
 register = assign
 init_button_mapping()
-_register_all_handlers()
