@@ -157,6 +157,9 @@ def set_progress_callback(callback):
     _progress_callback = callback
 
 def _show_progress(text, error=False):
+    if error:
+        machine.nvs_setint('system', 'lastUpdate', 0)
+
     if callable(_progress_callback):
         _progress_callback(text, error)
 

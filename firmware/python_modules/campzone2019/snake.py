@@ -4,6 +4,7 @@ from time import sleep
 
 UP, DOWN, LEFT, RIGHT = defines.BTN_UP, defines.BTN_DOWN, defines.BTN_LEFT, defines.BTN_RIGHT
 
+can_move = True
 direction = RIGHT
 score = 0
 
@@ -22,26 +23,34 @@ def render():
 
 def input_up(pressed):
     global direction
-    if direction != DOWN:
+    global can_move
+    if direction != DOWN and can_move:
         direction = UP
+        can_move = False
 
 
 def input_down(pressed):
     global direction
-    if direction != UP:
+    global can_move
+    if direction != UP and can_move:
         direction = DOWN
+        can_move = False
 
 
 def input_left(pressed):
     global direction
-    if direction != RIGHT:
+    global can_move
+    if direction != RIGHT and can_move:
         direction = LEFT
+        can_move = False
 
 
 def input_right(pressed):
     global direction
-    if direction != LEFT:
+    global can_move
+    if direction != LEFT and can_move:
         direction = RIGHT
+        can_move = False
 
 
 def input_B(pressed):
@@ -86,6 +95,7 @@ while direction != defines.BTN_B:
 
     render()
     sleep(0.2)
+    can_move = True
 
 rgb.clear()
 rgb.scrolltext("Score - " + str(score))

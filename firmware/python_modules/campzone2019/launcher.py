@@ -58,14 +58,13 @@ def populate_apps():
     for app in userApps:
         add_app(app, read_metadata(app))
     add_app("snake", {"name": "Snake", "category": "system", "icon": icon_snake})
-    add_app("nickname", {"name": "Nickname", "category": "system", "icon": icon_nickname})
     add_app("activities", {"name": "Activities", "category": "system", "icon": icon_activities})
     add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
+    add_app("nickname", {"name": "Nickname", "category": "system", "icon": icon_nickname})
     add_app("appstore", {"name": "App store", "category": "system", "icon": icon_appstore})
     add_app("setupwifi", {"name": "Set up wifi", "category": "system", "icon": icon_settings})
-    add_app("update", {"name": "OTA update", "category": "system", "icon": icon_settings})
-    add_app("updateapps", {"name": "Update apps", "category": "system", "icon": icon_settings})
-    # add_app("checkforupdates", {"name": "Update firmware", "category": "system", "icon": icon_nickname})
+    add_app("update", {"name": "Firmware update", "category": "system", "icon": icon_settings})
+    add_app("updateapps", {"name": "App updates", "category": "system", "icon": icon_settings})
 
 
 def render_current_app():

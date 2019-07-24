@@ -27,11 +27,14 @@ def unassign(gpio):
 	return assign(gpio, None)
 
 def _cb(pin):
+	print('_cb', pin)
 	position = _pins.index(pin)
 	gpio = _gpios[position]
 	callback = button_mappings[-1][gpio]
 	if callback and callable(callback):
 		callback(not pin.value())
+	else:
+		print('No callback for button')
 	
 def _register(gpio):
 	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200)
