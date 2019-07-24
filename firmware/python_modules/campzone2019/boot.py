@@ -28,6 +28,7 @@ if app and not app == "shell":
         print("Starting app '%s'..." % app)
         system.__current_app__ = app
         if app:
+            import buttons  # Initialise buttons so by default apps exit on B press
             __import__(app)
     except BaseException as e:
         print("Fatal exception in the running app!")

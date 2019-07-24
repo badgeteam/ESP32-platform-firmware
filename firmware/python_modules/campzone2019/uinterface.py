@@ -91,6 +91,7 @@ def connect_wifi():
         rgb.gif(data, (12, 0), (8, 8), frames)
         time.sleep(3)
 
+    rgb.clear()
     rgb.framerate(20)
     return wifi.status()
 

@@ -1,4 +1,4 @@
-import dashboard.resources.woezel_repo as woezel_repo, term, system, time, wifi, uos, json, sys, gc, woezel
+import term, system, time, wifi, uos, json, sys, gc, woezel
 
 system.serialWarning()
 
@@ -8,6 +8,9 @@ def showMessage(msg, error=False):
 
 # Categories list
 categories = woezel.get_categories()
+
+def woezel_callback(text, error=False):
+	print('[Woezel]: %s' % text)
 
 def show_categories():
 	system.serialWarning()
@@ -30,7 +33,7 @@ def show_category(i):
 	showMessage("Loading "+slug+"...")
 	try:
 		try:
-			category = repo.get_category(slug)
+			category = woezel.get_category(slug)
 		except:
 			showMessage("Failed to open category "+slug+"!", True)
 			time.sleep(1)
@@ -83,6 +86,7 @@ def install_app(i):
 
 showMessage("Loading categories...")
 if not woezel.update_cache():
+	# woezel.set_progress_callback(woezel_callback)
 	showMessage("Failed to load repository. Returning to launcher...")
 	system.launcher()
 

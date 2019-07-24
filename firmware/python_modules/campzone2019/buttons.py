@@ -1,4 +1,4 @@
-import machine
+import machine, system, time
 from defines import *
 
 _gpios     = []
@@ -34,7 +34,7 @@ def _cb(pin):
 		callback(not pin.value())
 	
 def _register(gpio):
-	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100)
+	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200)
 	if gpio in _gpios:
 		index = _gpios.index(gpio)
 		_pins[index] = pin
@@ -43,6 +43,12 @@ def _register(gpio):
 	_pins.append(pin)
 	return True
 
+def _default_B_action(pressed):
+	if pressed:
+		# Make apps reboot when B is pressed, unless they rebind it
+		print('Exit by B button')
+		system.reboot()
+
 def _default_button_mapping():
 	return {
 		BTN_UP: None,
@@ -50,7 +56,7 @@ def _default_button_mapping():
 		BTN_LEFT: None,
 		BTN_RIGHT: None,
 		BTN_A: None,
-		BTN_B: None
+		BTN_B: _default_B_action
 	}
 
 def _register_all_handlers():

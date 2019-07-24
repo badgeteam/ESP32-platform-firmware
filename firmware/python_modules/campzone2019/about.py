@@ -3,7 +3,7 @@ import defines, rgb
 
 names = [
     "Tom Clement", "Renze Nicolai", "Joris Witteman",
-    "Pim de Groot", "Khaled Nassar", "Evan Mandos",
+    "Pim de Groot", "Khaled Nassar", "Eric van Zandvoort",
     "Niek Blankers", "Sebastian Oort", "Bas van Sisseren",
     "Jeroen Domburg", "Christel Sanders", "Markus Bechtold",
     "Prof. Herr Lord I.B. Mobach", "Thomas Roos", "Anne Jan Brouwer",
@@ -11,8 +11,8 @@ names = [
     "Eric Poulsen", "Damien P. George", "Heikki Juva",
     "Teemu Hakala", "Kliment", "Windytan",
     "Purkkaviritys", "Otto Raila", "Jaga",
-    "uGFX", "EMF Badge Team", "MicroPython", "Loboris",
-    "BADGE.TEAM"]
+    "EMF Badge Team", "MicroPython", "Loboris",
+    "BADGE.TEAM", "CTF{w3lc0metoothehackZONECeeTieEf}"]
 
 def action_exit(pushed):
     if (pushed):
@@ -40,7 +40,7 @@ def show_names():
         time.sleep(5)
 
     rgb.clear()
-    rgb.scrolltext("Press A or B to quit!")
+    rgb.scrolltext("Press A or B to quit")
 
 def main():
     buttons.register(defines.BTN_A, action_exit)
