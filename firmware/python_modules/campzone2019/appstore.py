@@ -1,4 +1,4 @@
-import system, time, wifi
+import system, time
 import woezel, rgb, uinterface
 from default_icons import icon_no_wifi, animation_connecting_wifi, animation_loading
 
@@ -61,6 +61,9 @@ while True:
     if chosen_index is None:
         continue
     app = apps[chosen_index]
+
+    # WiFi could have been disconnected by now
+    uinterface.connect_wifi()
 
     if woezel.install(app['slug']):
         rgb.clear()

@@ -1,14 +1,13 @@
-import sys, uos as os, time, ujson
-import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, wifi, woezel
-import rgb
+import sys, uos as os, time, ujson, gc, deepsleep
+import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, woezel
+import rgb, uinterface
 from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, icon_activities, icon_nickname, \
-                            icon_unknown, icon_no_wifi, animation_connecting_wifi
+                            icon_unknown
 
 # Application list
 
 apps = []
 current_index = 0
-b_down = False
 
 
 def show_text(text):
@@ -59,12 +58,13 @@ def populate_apps():
     for app in userApps:
         add_app(app, read_metadata(app))
     add_app("snake", {"name": "Snake", "category": "system", "icon": icon_snake})
+    add_app("activities", {"name": "Activities", "category": "system", "icon": icon_activities})
     add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
+    add_app("nickname", {"name": "Nickname", "category": "system", "icon": icon_nickname})
     add_app("appstore", {"name": "App store", "category": "system", "icon": icon_appstore})
     add_app("setupwifi", {"name": "Set up wifi", "category": "system", "icon": icon_settings})
-    add_app("forceupdate", {"name": "Force OTA update", "category": "system", "icon": icon_settings})
-    # add_app("update", {"name": "Update apps", "category": "system", "icon": icon_settings})
-    # add_app("checkforupdates", {"name": "Update firmware", "category": "system", "icon": icon_nickname})
+    add_app("update", {"name": "Firmware update", "category": "system", "icon": icon_settings})
+    add_app("updateapps", {"name": "App updates", "category": "system", "icon": icon_settings})
 
 
 def render_current_app():
@@ -93,37 +93,19 @@ def read_metadata(app):
 
 
 # Uninstaller
-
-def uninstall():
-    global options
-    selected = options.selected_index()
-    options.destroy()
-
-    global currentListTitles
-    global currentListTargets
-
-    if currentListTargets[selected]["category"] == "system":
+def uninstall(app):
+    if app["category"] == "system":
         # dialogs.notice("System apps can not be removed!","Can not uninstall '"+currentListTitles[selected]+"'")
-        show_text("System apps can not be removed!")
-        time.sleep(2)
-        start()
+        rgb.clear()
+        rgb.scrolltext("System apps can't be removed")
+        time.sleep(10)
+        render_current_app()
         return
 
-    def perform_uninstall(ok):
-        global install_path
-        if ok:
-            show_text("Removing " + currentListTitles[selected] + "...")
-            install_path = woezel.get_install_path()
-            for rm_file in os.listdir("%s/%s" % (install_path, currentListTargets[selected]["file"])):
-                show_text("Deleting '" + rm_file + "'...")
-                os.remove("%s/%s/%s" % (install_path, currentListTargets[selected]["file"], rm_file))
-            show_text("Deleting folder...")
-            os.rmdir("%s/%s" % (install_path, currentListTargets[selected]["file"]))
-            show_text("Uninstall completed!")
-        start()
+    machine.nvs_setstr('launcher', 'uninstall_name', app['title'])
+    machine.nvs_setstr('launcher', 'uninstall_file', app['file'])
+    system.start('uninstall')
 
-    # TODO: add removal dialog again
-    # dialogs.prompt_boolean('Remove %s?' % currentListTitles[selected], cb=perform_uninstall)
 
 
 # Run app
@@ -149,10 +131,10 @@ def input_A(pressed):
 
 
 def input_B(pressed):
-    global b_down
     pm.feed()
-    b_down = pressed
-
+    if pressed:
+        app = apps[current_index]
+        uninstall(app)
 
 
 def input_up(pressed):
@@ -212,6 +194,7 @@ def start():
     options = None
     install_path = None
 
+    buttons.init_button_mapping()
     buttons.register(defines.BTN_A, input_A)
     buttons.register(defines.BTN_B, input_B)
     buttons.register(defines.BTN_UP, input_up)
@@ -232,32 +215,8 @@ if not machine.nvs_getint("system", 'intro_shown'):
     machine.nvs_setint("system", 'intro_shown', 1)
     system.reboot()
 
-# Do shameless start-of-event update
-if not machine.nvs_getint("system", 'day0_updated'):
-    data, size, frames = animation_connecting_wifi
-    rgb.clear()
-    rgb.framerate(3)
-    rgb.gif(data, (12, 0), size, frames)
-    wifi.connect()
-    if wifi.wait():
-        rgb.clear()
-        rgb.framerate(20)
-        rgb.setfont(1)
-        rgb.scrolltext("Updating, don't remove battery")
-        time.sleep(5)
-        machine.nvs_setint("system", 'day0_updated', 1)
-        system.ota()
-    else:
-        print('Need to perform day0 update, but no WiFi connection present')
-        rgb.clear()
-        rgb.framerate(20)
-        data, frames = icon_no_wifi
-        rgb.image(data, (12, 0), (8,8))
-        time.sleep(3)
-        rgb.clear()
-
 start()
 init_power_management()
 
-menu = term_menu.UartMenu(None, pm)
+menu = term_menu.UartMenu(deepsleep.start_sleeping, pm)
 menu.main()

@@ -1,5 +1,5 @@
 import sys, gc, uos as os, uerrno as errno, ujson as json, uzlib, urequests, upip_utarfile as tarfile, time, wifi, machine
-import consts
+import consts, rtc
 gc.collect()
 
 debug = False
@@ -157,6 +157,9 @@ def set_progress_callback(callback):
     _progress_callback = callback
 
 def _show_progress(text, error=False):
+    if error:
+        machine.nvs_setint('system', 'lastUpdate', 0)
+
     if callable(_progress_callback):
         _progress_callback(text, error)
 
@@ -171,14 +174,15 @@ def _set_last_updated():
         pass
 
 def update_cache():
-    if not wifi.status():
+    # Check if RTC has been synced over NTP
+    if not rtc.isSet():
         _show_progress("Connecting to WiFi...", False)
         wifi.connect()
         if not wifi.wait():
             _show_progress("Failed to connect to WiFi.", True)
             return False
 
-    wifi.ntp()
+        wifi.ntp()
     last_update = _get_last_updated()
     if last_update > 0 and time.time() < last_update + (600):
         return True

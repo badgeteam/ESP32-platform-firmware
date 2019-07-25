@@ -1,4 +1,4 @@
-import machine
+import machine, system, time
 from defines import *
 
 _gpios     = []
@@ -8,6 +8,7 @@ button_mappings = []
 
 def init_button_mapping():
 	global button_mappings
+	_register_all_handlers()
 	button_mappings.append(_default_button_mapping())
 	return True
 
@@ -26,19 +27,30 @@ def unassign(gpio):
 	return assign(gpio, None)
 
 def _cb(pin):
+	print('_cb', pin)
 	position = _pins.index(pin)
 	gpio = _gpios[position]
 	callback = button_mappings[-1][gpio]
 	if callback and callable(callback):
 		callback(not pin.value())
+	else:
+		print('No callback for button')
 	
 def _register(gpio):
+	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200)
 	if gpio in _gpios:
+		index = _gpios.index(gpio)
+		_pins[index] = pin
 		return False
-	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100)
 	_gpios.append(gpio)
 	_pins.append(pin)
 	return True
+
+def _default_B_action(pressed):
+	if pressed:
+		# Make apps reboot when B is pressed, unless they rebind it
+		print('Exit by B button')
+		system.reboot()
 
 def _default_button_mapping():
 	return {
@@ -47,7 +59,7 @@ def _default_button_mapping():
 		BTN_LEFT: None,
 		BTN_RIGHT: None,
 		BTN_A: None,
-		BTN_B: None
+		BTN_B: _default_B_action
 	}
 
 def _register_all_handlers():
@@ -60,4 +72,3 @@ def _register_all_handlers():
 
 register = assign
 init_button_mapping()
-_register_all_handlers()

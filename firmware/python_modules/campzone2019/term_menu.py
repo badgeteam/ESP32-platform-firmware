@@ -21,8 +21,8 @@ class UartMenu():
 		import shell
 	
 	def menu_main(self):
-		items = ["Python shell", "Apps", "Installer", "Settings", "Tools", "About", "Check for updates", self.power_off_label]
-		callbacks = [self.drop_to_shell, self.opt_launcher, self.opt_installer, self.menu_settings, self.menu_tools, self.opt_about, self.opt_ota_check, self.go_to_sleep]
+		items = ["Python shell", "Apps", "Installer", "Settings", "About", "Check for updates", self.power_off_label]
+		callbacks = [self.drop_to_shell, self.opt_launcher, self.opt_installer, self.menu_settings, self.opt_about, self.opt_ota_check, self.go_to_sleep]
 		message = "Welcome!\nYour badge is running firmware version "+consts.INFO_FIRMWARE_BUILD+": "+consts.INFO_FIRMWARE_NAME+"\n"
 		cb = term.menu("Main menu", items, 0, message)
 		self.menu = callbacks[cb]
@@ -43,9 +43,6 @@ class UartMenu():
 	def opt_configure_wifi(self):
 		system.start("dashboard.terminal.wifi", True)
 		
-	def opt_configure_orientation(self):
-		system.start("dashboard.terminal.orientation", True)
-		
 	def opt_ota(self):
 		system.ota(True)
 		
@@ -55,12 +52,9 @@ class UartMenu():
 	def opt_about(self):
 		system.start("about", True)
 		
-	def opt_downloader(self):
-		system.start("dashboard.terminal.downloader", True)
-		
 	def menu_settings(self):
-		items = ["Change nickname", "Configure WiFi", "Update firmware", "< Return to main menu"]
-		callbacks = [self.opt_change_nickname, self.opt_configure_wifi, self.opt_ota, self.menu_main, self.menu_main]
+		items = ["Change nickname", "Configure WiFi", "< Return to main menu"]
+		callbacks = [self.opt_change_nickname, self.opt_configure_wifi, self.menu_main]
 		cb = term.menu("Settings", items)
 		self.menu = callbacks[cb]
 	

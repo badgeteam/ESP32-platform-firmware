@@ -19,9 +19,9 @@ void renderChar_7x5(uint8_t charId, Color color, int *x, int y, int endX, int *s
     for(int i = 0; i<5; i++) {
         if(*skip == 0) {
             uint8_t cs = font_7x5[charId*5+i];
+            if(endX > 0 && *x >= endX) return;
             renderCharCol(cs, color, *x, y);
             (*x)++;
-            if(endX > 0 && *x >= endX) return;
         } else {
             (*skip)--;
         }

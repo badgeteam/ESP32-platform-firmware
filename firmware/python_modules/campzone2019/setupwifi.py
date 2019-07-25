@@ -1,7 +1,7 @@
 import rgb, network, machine, time, buttons, defines, system, uinterface
 from default_icons import animation_connecting_wifi
 
-def scan_ssid_list():
+def scan_access_point_list():
         data, size, frames = animation_connecting_wifi
         rgb.clear()
         rgb.framerate(3)
@@ -9,8 +9,8 @@ def scan_ssid_list():
         sta_if = network.WLAN(network.STA_IF)
         sta_if.active(True)
         sta_if.disconnect()
-        ssid_result = sta_if.scan()
-        return [ssid[0].decode('utf-8', 'ignore') for ssid in ssid_result]
+        ap_result = sta_if.scan()
+        return [(ap[0].decode("utf-8", "ignore"), ap[5]) for ap in ap_result]
 
 def prompt_message(message):
         rgb.clear()
@@ -19,15 +19,23 @@ def prompt_message(message):
         rgb.scrolltext(message)
         time.sleep(5)
 
-ssid_list = scan_ssid_list()
-prompt_message('Select network')
+def ap_requires_password(ap_type):
+        return "OPEN" != ap_type
 
-choice = uinterface.menu(ssid_list)
+ap_list = scan_access_point_list()
+ssids = [ap[0] for ap in ap_list]
+prompt_message("Select network")
+
+choice = uinterface.menu(ssids)
 if not (choice is None):
-        chosen_ssid = ssid_list[choice]
-        prompt_message('Enter password')
-        chosen_pass = uinterface.text_input()
-        if chosen_pass:
+        chosen_ssid, chosen_ap_type = ap_list[choice]
+
+        pw_required = ap_requires_password(chosen_ap_type)
+        if pw_required:
+                prompt_message("Enter password")
+
+        chosen_pass = uinterface.text_input() if pw_required else ''
+        if not pw_required or chosen_pass:
                 machine.nvs_setstr("system", "wifi.ssid", chosen_ssid)
                 machine.nvs_setstr("system", "wifi.password", chosen_pass)
 
