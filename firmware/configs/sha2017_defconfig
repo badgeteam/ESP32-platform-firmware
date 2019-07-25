@@ -98,7 +98,7 @@ CONFIG_INFO_HARDWARE_WOEZEL_NAME="generic"
 # OTA and app hatchery servers
 #
 CONFIG_OTA_WEB_SERVER="www.sensorcloud.nl"
-CONFIG_OTA_WEB_PORT="443"
+CONFIG_OTA_WEB_PORT=443
 CONFIG_OTA_WEB_PATH="/firmware.bin"
 CONFIG_WOEZEL_WEB_SERVER="www.sensorcloud.nl"
 

@@ -36,7 +36,7 @@ menu "Firmware & device configuration"
 
 	config OTA_WEB_PORT
 		string "Port of server for OTA updates"
-		default "443"
+		default 443
 
 	config OTA_WEB_PATH
 		string "Path on the server for OTA updates"

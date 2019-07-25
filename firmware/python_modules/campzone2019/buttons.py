@@ -1,14 +1,27 @@
-import machine, system, time
+import machine, system
 from defines import *
 
-_gpios     = []
-_pins      = []
+def _cb(pin):
+	position = _pins.index(pin)
+	gpio = _gpios[position]
+	callback = button_mappings[-1][gpio]
+	if callback and callable(callback):
+		callback(not pin.value())
+
+_gpios     = [BTN_A, BTN_B, BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT]
+_pins      = [
+	machine.Pin(BTN_A, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
+	machine.Pin(BTN_B, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
+	machine.Pin(BTN_UP, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
+	machine.Pin(BTN_DOWN, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
+	machine.Pin(BTN_LEFT, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
+	machine.Pin(BTN_RIGHT, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
+]
 
 button_mappings = []
 
 def init_button_mapping():
 	global button_mappings
-	_register_all_handlers()
 	button_mappings.append(_default_button_mapping())
 	return True
 
@@ -22,26 +35,14 @@ def assign(gpio, action = None):
 	global button_mappings
 	button_mappings[-1][gpio] = action
 	return True
-	
+
 def unassign(gpio):
 	return assign(gpio, None)
 
-def _cb(pin):
-	print('_cb', pin)
-	position = _pins.index(pin)
-	gpio = _gpios[position]
-	callback = button_mappings[-1][gpio]
-	if callback and callable(callback):
-		callback(not pin.value())
-	else:
-		print('No callback for button')
-	
 def _register(gpio):
-	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200)
 	if gpio in _gpios:
-		index = _gpios.index(gpio)
-		_pins[index] = pin
 		return False
+	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100)
 	_gpios.append(gpio)
 	_pins.append(pin)
 	return True
@@ -61,14 +62,6 @@ def _default_button_mapping():
 		BTN_A: None,
 		BTN_B: _default_B_action
 	}
-
-def _register_all_handlers():
-	_register(BTN_UP)
-	_register(BTN_DOWN)
-	_register(BTN_LEFT)
-	_register(BTN_RIGHT)
-	_register(BTN_A)
-	_register(BTN_B)
 
 register = assign
 init_button_mapping()

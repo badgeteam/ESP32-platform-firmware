@@ -12,7 +12,7 @@ def waitfor(text):
 ## Debug on display
 def show_progress(text):
     rgb.clear()
-    rgb.scrolltext(text,(255,255,255),(0,0))
+    rgb.scrolltext(text)
 
 ## Callback for menu (left & right)
 def call_left(pressed):
@@ -62,22 +62,22 @@ def update_cache():
         except:
             print("Err reading")
         return True
-
-    print('Updating activities cache..')
-    if not wifi.status():
-        show_progress("Connecting to WiFi...")
-        uinterface.connect_wifi()
-        if not wifi.wait():
-            show_progress("Failed to connect to WiFi.")
-            return False
-
-    show_progress("Downloading activities...")
+    print("Update required")
     try:
         os.mkdir(cache_path)
     except:
         pass
+
+    print('Updating activities cache..')
+    if not wifi.status():
+        uinterface.connect_wifi()
+        if not wifi.wait():
+            print("Failed to connect to WiFi.")
+            return False
+
+    show_progress("Downloading activities...")
     try:
-        request = urequests.get(url, timeout=30)
+        request = urequests.get(url, timeout=5)
         show_progress("Saving activities...")
         with open(cache_path + cache_file, 'w') as activities_file:
             activities_file.write(request.text)
@@ -101,6 +101,7 @@ def update_cache():
 
 ## Parse json to activities
 def parse_activities():
+    print('parsing')
     prevday = 0
     events = []
     global days
@@ -164,12 +165,14 @@ eventtype = ['Compo','Activity']
 while True:
     menu = []
     rgb.clear()
+    # if not daysindex in days or 'date' not in days[daysindex]:
+    #     system.start('activities')
     rgb.text(days[daysindex]['date'],(0,255,255),(6,1))
     rgb.setfont( rgb.FONT_6x3 )
     utime.sleep(0.5)
     for event in days[daysindex]['events']:
         time_utc = int( event['time'] )
-        time_local = time_utc + 60 * 60
+        time_local = time_utc + 60 * 60 * 2
         hour = str(utime.localtime( time_local )[3])
         minute = str(utime.localtime( time_local )[4])
         if len(minute) != 2:
