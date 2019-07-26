@@ -16,7 +16,7 @@
 #include "extmod/vfs_native.h"
 
 #include <compositor.h>
-#include <displayDriver.h>
+#include <driver_hub75.h>
 #include <particle_simulation.h>
 
 #define TAG "esp32/psim"
