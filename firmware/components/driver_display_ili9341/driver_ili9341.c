@@ -180,45 +180,45 @@ esp_err_t driver_ili9341_set_addr_window(uint16_t x, uint16_t y, uint16_t w, uin
 	return res;
 }
 
-#define MADCTL_MY  0x80  ///< Bottom to top
-#define MADCTL_MX  0x40  ///< Right to left
-#define MADCTL_MV  0x20  ///< Reverse Mode
-#define MADCTL_ML  0x10  ///< LCD refresh Bottom to top
-#define MADCTL_RGB 0x00  ///< Red-Green-Blue pixel order
-#define MADCTL_BGR 0x08  ///< Blue-Green-Red pixel order
-#define MADCTL_MH 0x04 ///< LCD refresh right to left
-
-esp_err_t driver_ili9341_set_cfg(uint8_t rotation, bool colorMode)
-{
-	rotation = rotation & 0x03;
-	uint8_t m = 0;
-
-	switch (rotation) {
-	        case 0:
-	            m |= MADCTL_MX;
-	            break;
-	        case 1:
-	            m |= MADCTL_MV;
-	            break;
-	        case 2:
-	            m |= MADCTL_MY;
-	            break;
-	        case 3:
-	            m |= (MADCTL_MX | MADCTL_MY | MADCTL_MV);
-	            break;
-	}
-
-	if (colorMode) {
-		m |= MADCTL_BGR;
-	} else {
-		m |= MADCTL_RGB;
-	}
-
-	uint8_t commands[2] = {ILI9341_MADCTL, m};
-	esp_err_t res = driver_ili9341_send(commands, 1, false);
-	if (res != ESP_OK) return res;
-	res = driver_ili9341_send(commands+1, 1, true);
-	return res;
+#define MADCTL_MY  0x80  ///< Bottom to topp
+#define MADCTL_MX  0x40  ///< Right to left
+#define MADCTL_MV  0x20  ///< Reverse Mode
+#define MADCTL_ML  0x10  ///< LCD refresh Bottom to top
+#define MADCTL_RGB 0x00  ///< Red-Green-Blue pixel order
+#define MADCTL_BGR 0x08  ///< Blue-Green-Red pixel order
+#define MADCTL_MH 0x04 ///< LCD refresh right to left
+
+esp_err_t driver_ili9341_set_cfg(uint8_t rotation, bool colorMode)
+{
+	rotation = rotation & 0x03;
+	uint8_t m = 0;
+
+	switch (rotation) {
+	        case 0:
+	            m |= MADCTL_MX;
+	            break;
+	        case 1:
+	            m |= MADCTL_MV;
+	            break;
+	        case 2:
+	            m |= MADCTL_MY;
+	            break;
+	        case 3:
+	            m |= (MADCTL_MX | MADCTL_MY | MADCTL_MV);
+	            break;
+	}
+
+	if (colorMode) {
+		m |= MADCTL_BGR;
+	} else {
+		m |= MADCTL_RGB;
+	}
+
+	uint8_t commands[2] = {ILI9341_MADCTL, m};
+	esp_err_t res = driver_ili9341_send(commands, 1, false);
+	if (res != ESP_OK) return res;
+	res = driver_ili9341_send(commands+1, 1, true);
+	return res;
 }
 
 /*esp_err_t driver_ili9341_read_id(uint32_t* result)
@@ -332,11 +332,11 @@ esp_err_t driver_ili9341_init(void)
 	res = driver_ili9341_send_command(ILI9341_DISPON);
 	if (res != ESP_OK) return res;
 	
-	//Configure orientation
+	//Configure orientation
 	#ifdef CONFIG_ILI9341_COLOR_SWAP
-	res = driver_ili9341_set_cfg(CONFIG_ILI9341_ORIENTATION, true);
+	res = driver_ili9341_set_cfg(CONFIG_ILI9341_ORIENTATION, true);
 	#else
-	res = driver_ili9341_set_cfg(CONFIG_ILI9341_ORIENTATION, false);
+	res = driver_ili9341_set_cfg(CONFIG_ILI9341_ORIENTATION, false);
 	#endif
 	if (res != ESP_OK) return res;
 	
