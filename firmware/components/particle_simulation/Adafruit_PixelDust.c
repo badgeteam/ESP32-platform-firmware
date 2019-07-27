@@ -46,8 +46,8 @@ void Adafruit_PixelDust(dimension_t w, dimension_t h,
    width = w;
    height = h;
    w8 = (w+7)/8;
-   xMax = w*256+1;
-   yMax = h*256+1;
+   xMax = w*256-1;
+   yMax = h*256-1;
    n_grains = n;
    scale = s;
    elasticity = e;
@@ -60,6 +60,8 @@ void Adafruit_PixelDust(dimension_t w, dimension_t h,
     grain  = NULL;
   }
    sort = sort_;
+   PixelDust_begin();
+   PixelDust_randomize();
  }
 
 bool PixelDust_begin(void) {
