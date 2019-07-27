@@ -21,7 +21,8 @@ void particle_disp() {
    	int ax, ay, az;
 	dimension_t                x, y;
 	getAccel(&ax, &ay, &az);
-	PixelDust_iterate(ax, ay, az);
+	//printf("%d %d %d\n", ax, ay, az);
+	PixelDust_iterate(ax, -ay, az);
 
 	// Erase canvas and draw new snowflake positions
 	for(int i=0; i<CONFIG_PARTICLE_SIMULATION_WIDTH*CONFIG_PARTICLE_SIMULATION_HEIGHT; i++) {
