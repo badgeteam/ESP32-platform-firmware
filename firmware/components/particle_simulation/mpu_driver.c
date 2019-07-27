@@ -4,17 +4,17 @@ const uint8_t addr = 0x68;
 
 
 esp_err_t init_mpu() {
-    driver_i2c_write_reg(addr, 0x6B, 0b10000001); //Set CLKSEL to X gyro and keep sleep
-    driver_i2c_write_reg(addr, 0x1c, 0b00000000); //Set accel range to 2g
-    driver_i2c_write_reg(addr, 0x1A, 6);    //Enable the 5KHz lpf
-    driver_i2c_write_reg(addr, 0x19, 0);    //Set divider to 0
-    return driver_i2c_write_reg(addr, 0x6B, 0b00000001);   //Power up chip
+    if(driver_i2c_write_reg(addr, 0x19, 0x00) != ESP_OK) return ESP_FAIL;
+    if(driver_i2c_write_reg(addr, 0x1a, 0x00) != ESP_OK) return ESP_FAIL;
+    if(driver_i2c_write_reg(addr, 0x1b, 0x08) != ESP_OK) return ESP_FAIL;
+    if(driver_i2c_write_reg(addr, 0x1c, 0x00) != ESP_OK) return ESP_FAIL;
+    return driver_i2c_write_reg(addr, 0x6b, 0x01);  
 }
 
 void getAccel(int *x, int *y, int *z) {
-    int16_t data[3];
-    driver_i2c_read_reg(addr, 0x3b, (uint8_t *) data, 6);
-    *x = data[0];
-    *y = data[1];
-    *z = data[2];
+    uint8_t data[6];
+    uint8_t p = driver_i2c_read_reg(addr, 0x3b, (uint8_t *) data, 6);
+    *x = ((uint16_t) data[0]) << 8 | ((uint16_t) data[1]);
+    *y = ((uint16_t) data[2]) << 8 | ((uint16_t) data[3]);
+    *z = ((uint16_t) data[4]) << 8 | ((uint16_t) data[5]);
 }
