@@ -23,6 +23,7 @@
 
 STATIC mp_obj_t psim_init(mp_obj_t particles_obj) {
     compositor_disable();
+    driver_hub75_set_framerate(20);
     if(particle_init() != ESP_OK) {
         mp_raise_msg(&mp_type_AssertionError, "MPU Not detected");
         compositor_enable();
