@@ -60,7 +60,7 @@ static esp_err_t driver_ili9341_claim_spi(void)
 
 	static const spi_bus_config_t buscfg = {
 		.mosi_io_num     = CONFIG_PIN_NUM_ILI9341_MOSI,
-		.miso_io_num     = -1,//CONFIG_PIN_NUM_ILI9341_MISO,
+		.miso_io_num     = CONFIG_PIN_NUM_ILI9341_MISO,
 		.sclk_io_num     = CONFIG_PIN_NUM_ILI9341_CLK,
 		.quadwp_io_num   = -1,
 		.quadhd_io_num   = -1,
@@ -69,7 +69,7 @@ static esp_err_t driver_ili9341_claim_spi(void)
 	esp_err_t res = spi_bus_initialize(VSPI_HOST, &buscfg, 2);
 	if (res != ESP_OK) return res;
 	static const spi_device_interface_config_t devcfg = {
-		.clock_speed_hz = 20 * 1000 * 1000,
+		.clock_speed_hz = 40 * 1000 * 1000,
 		.mode           = 0,  // SPI mode 0
 		.spics_io_num   = CONFIG_PIN_NUM_ILI9341_CS,
 		.queue_size     = 1,
@@ -180,6 +180,47 @@ esp_err_t driver_ili9341_set_addr_window(uint16_t x, uint16_t y, uint16_t w, uin
 	return res;
 }
 
+#define MADCTL_MY  0x80  ///< Bottom to top
+#define MADCTL_MX  0x40  ///< Right to left
+#define MADCTL_MV  0x20  ///< Reverse Mode
+#define MADCTL_ML  0x10  ///< LCD refresh Bottom to top
+#define MADCTL_RGB 0x00  ///< Red-Green-Blue pixel order
+#define MADCTL_BGR 0x08  ///< Blue-Green-Red pixel order
+#define MADCTL_MH 0x04 ///< LCD refresh right to left
+
+esp_err_t driver_ili9341_set_cfg(uint8_t rotation, bool colorMode)
+{
+	rotation = rotation & 0x03;
+	uint8_t m = 0;
+
+	switch (rotation) {
+	        case 0:
+	            m |= MADCTL_MX;
+	            break;
+	        case 1:
+	            m |= MADCTL_MV;
+	            break;
+	        case 2:
+	            m |= MADCTL_MY;
+	            break;
+	        case 3:
+	            m |= (MADCTL_MX | MADCTL_MY | MADCTL_MV);
+	            break;
+	}
+
+	if (colorMode) {
+		m |= MADCTL_BGR;
+	} else {
+		m |= MADCTL_RGB;
+	}
+
+	uint8_t commands[2] = {ILI9341_MADCTL, m};
+	esp_err_t res = driver_ili9341_send(commands, 1, false);
+	if (res != ESP_OK) return res;
+	res = driver_ili9341_send(commands+1, 1, true);
+	return res;
+}
+
 /*esp_err_t driver_ili9341_read_id(uint32_t* result)
 {
 	uint8_t commands[2] = {0xD9, 0x04};
@@ -192,11 +233,13 @@ esp_err_t driver_ili9341_set_addr_window(uint16_t x, uint16_t y, uint16_t w, uin
 }*/
 
 esp_err_t driver_ili9341_reset(void) {
+	#if CONFIG_PIN_NUM_ILI9341_RESET >= 0
 	esp_err_t res = gpio_set_level(CONFIG_PIN_NUM_ILI9341_RESET, false);
 	if (res != ESP_OK) return res;
 	ets_delay_us(200000);
 	res = gpio_set_level(CONFIG_PIN_NUM_ILI9341_RESET, true);
 	if (res != ESP_OK) return res;
+	#endif
 	ets_delay_us(200000);
 	return ESP_OK;
 }
@@ -264,8 +307,10 @@ esp_err_t driver_ili9341_init(void)
 	if (!internalBuffer) return ESP_FAIL;
 	
 	//Initialize reset GPIO pin
+	#if CONFIG_PIN_NUM_ILI9341_RESET >= 0
 	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_RESET, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK) return res;
+	#endif
 
 	//Initialize data/clock select GPIO pin
 	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_DCX, GPIO_MODE_OUTPUT);
@@ -285,6 +330,14 @@ esp_err_t driver_ili9341_init(void)
 
 	//Turn on the LCD
 	res = driver_ili9341_send_command(ILI9341_DISPON);
+	if (res != ESP_OK) return res;
+	
+	//Configure orientation
+	#ifdef CONFIG_ILI9341_COLOR_SWAP
+	res = driver_ili9341_set_cfg(CONFIG_ILI9341_ORIENTATION, true);
+	#else
+	res = driver_ili9341_set_cfg(CONFIG_ILI9341_ORIENTATION, false);
+	#endif
 	if (res != ESP_OK) return res;
 	
 	//Turn on backlight
@@ -330,8 +383,7 @@ esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 	uint16_t w = x1-x0+1;
 	uint16_t h = y1-y0+1;
 
-	if (w >= ILI9341_WIDTH) { //Just copy whole lines if most of the line needs to be refreshed anyway
-		//printf("Refreshing %ux%u area at (%u,%u) (%u,%u) using method 1\n", w, h, x0, y0, x1, y1);
+	if (w >= ILI9341_WIDTH) {
 		while (h > 0) {
 			uint16_t lines = h;
 			if (lines > ILI9341_MAX_LINES) lines = ILI9341_MAX_LINES;
@@ -343,19 +395,14 @@ esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 			h -= lines;
 		}
 	} else {
-		//printf("Refreshing %ux%u area at (%u,%u) (%u,%u) using method 2\n", w, h, x0, y0, x1, y1);
-	
 		while (h > 0) {
 			uint16_t lines = h;
 			if (w*2*lines > ILI9341_MAX_TRANSFERSIZE) {
 				lines = ILI9341_MAX_TRANSFERSIZE/(w*2);
-				//printf("Transfer is too large for 1 SPI transaction. Sending %u of %u lines.\n", lines, h);
 			}
-			//printf("Executing transfer of an %ux%u (%u bytes) area at (%u,%u)...\n", w, lines, w*lines*2, x0, y0);
 			for (uint16_t y = 0; y < lines; y++) {
 				uint32_t internalBufferOffset = y*w*2; //Current line * width * 2 (because 16-bit per pixel)
 				uint32_t frameBufferOffset    = (x0+(y0+y)*ILI9341_WIDTH)*2;
-				//printf("Copy %u bytes to offset %u of internal buffer (with size %u)...\n", w*2, internalBufferOffset, ILI9341_MAX_TRANSFERSIZE);
 				memcpy(internalBuffer+internalBufferOffset, frameBuffer+frameBufferOffset, w*2);
 				res = driver_ili9341_set_addr_window(x0, y0, w, lines);
 				if (res != ESP_OK) return res;
@@ -364,9 +411,7 @@ esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 			}
 			h -= lines;
 			y0 += lines;
-			//if (h > 0) printf("%u lines remaining.", h);
 		}
-		//printf("Transfer completed.\n");
 	}
 	return res;
 }
