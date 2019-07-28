@@ -150,8 +150,12 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				}
 				driver_framebuffer_setFont(&freesans6pt7b);
 				char buff[4];
-				sprintf(buff, "%d%%", percentage);
-				driver_framebuffer_print(buff);
+				if (!showPercentage) {
+					driver_framebuffer_print(text);
+				} else {
+					sprintf(buff, "%d%%", percentage);
+					driver_framebuffer_print(buff);
+				}
 				driver_framebuffer_flush();
 			#endif
 		#else
@@ -236,8 +240,8 @@ static void badge_ota_initialise_wifi(void)
 static void __attribute__((noreturn)) task_fatal_error(void)
 {
 	ESP_LOGE(TAG, "Exiting task due to fatal error...");
-	graphics_show("OTA Update failed :(", 0, false, true);
-	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	graphics_show("Failed!", 0, false, true);
+	vTaskDelay(5000 / portTICK_PERIOD_MS);
 	esp_restart();
 	(void)vTaskDelete(NULL);
 }
@@ -351,7 +355,7 @@ badge_ota_task(void *pvParameter)
 	ESP_LOGW(TAG, "Writing to partition type %d subtype %d (offset 0x%08x)",
 			part_update->type, part_update->subtype, part_update->address);
 
-	graphics_show("Connecting to WiFi...", 0, false, true);
+	graphics_show("WiFi...", 0, false, true);
 	/* Wait for the callback to set the CONNECTED_BIT in the
 	   event group.
 	 */
@@ -430,7 +434,7 @@ badge_ota_task(void *pvParameter)
 
 	mbedtls_net_init(&server_fd);
 
-	graphics_show("Handshaking server...", 0, false, true);
+	graphics_show("Get...", 0, false, true);
 
 	ESP_LOGW(TAG, "Connecting to %s:%s...", CONFIG_OTA_WEB_SERVER,
 			CONFIG_OTA_WEB_PORT);
@@ -477,7 +481,7 @@ badge_ota_task(void *pvParameter)
 	}
 	ESP_LOGW(TAG, "%d bytes written", strlen(REQUEST));
 
-	graphics_show("Starting OTA update...", 0, false, true);
+	graphics_show("Starting...", 0, false, true);
 
 	/* read until we have received the status line */
 	ESP_LOGW(TAG, "Reading HTTP response status line.");
@@ -639,7 +643,8 @@ badge_ota_task(void *pvParameter)
 	 * new OTA partition.
 	 */
 
-	graphics_show("Starting firmware...", 0, false, true);
+	graphics_show("Done!", 100, false, true);
+	vTaskDelay(2000 / portTICK_PERIOD_MS);
 
 	err = esp_ota_set_boot_partition(part_update);
 	if (err != ESP_OK) {
