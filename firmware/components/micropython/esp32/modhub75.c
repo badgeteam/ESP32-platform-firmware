@@ -200,7 +200,7 @@ STATIC mp_obj_t hub75_frame(mp_obj_t arr_obj) {
   Color* frame = getFrameBuffer();
   for(int i = 0; i < CONFIG_HUB75_WIDTH*CONFIG_HUB75_HEIGHT; i++) {
       Color k;
-      k.value = mp_obj_get_int(mp_arr[i]);
+      k.value = mp_obj_get_int64(mp_arr[i]);
       frame[i] = k;
   }
 

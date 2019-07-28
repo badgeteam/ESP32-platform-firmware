@@ -1,0 +1,11 @@
+menu "HUB75 Particle simulation"
+	config PARTICLE_SIMULATION_ENABLE
+		bool "Enable the particle simulation, used for running particle simulation based on accelerometer"
+		default n
+	config PARTICLE_SIMULATION_WIDTH
+		int "Width of the particle simulation"
+		default 32
+	config PARTICLE_SIMULATION_HEIGHT
+		int "Height of the particle simulation"
+		default 8
+endmenu
