@@ -4,7 +4,7 @@
 # License: MIT
 # Authors: Renze Nicolai <renze@rnplus.nl>
 
-import machine, time, version
+import machine, time, wifi, consts
 
 def checking_for_update_message():
     # Inform the user that we're checking for an update
@@ -15,11 +15,13 @@ def error_message():
     pass
 
 def download_info():
-    import requests
+    import urequests as requests
     checking_for_update_message()
     result = None
     try:
-        data = requests.get(version.otacheckurl)
+        url = 'https://%s:%s/version-%s' % (consts.OTA_WEB_SERVER, consts.OTA_WEB_PORT.replace('"', ''), consts.INFO_HARDWARE_WOEZEL_NAME)
+        print(url)
+        data = requests.get(url)
         result = data.json()
         result['build'] = int(result['build'])
         result['name'] = str(result['name'])
@@ -34,13 +36,14 @@ def available(update=False):
         if not wifi.status():
             wifi.connect()
             if not wifi.wait():
-                return machine.nvs_getint('badge','OTA.ready') or 0
+                return machine.nvs_getint('system','OTA.ready') or 0
 
         info = download_info()
+        current_build = int(consts.INFO_FIRMWARE_BUILD)
         if info:
-            if info["build"] > version.build:
-                machine.nvs_setint('badge','OTA.ready', 1)
+            if info["build"] > current_build:
+                machine.nvs_setint('system','OTA.ready', 1)
                 return True
 
-        machine.nvs_setint('badge','OTA.ready', 0)
-    return machine.nvs_getint('badge','OTA.ready') or 0
+        machine.nvs_setint('system','OTA.ready', 0)
+    return machine.nvs_getint('system','OTA.ready') or 0

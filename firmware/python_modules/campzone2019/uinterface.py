@@ -1,4 +1,4 @@
-import rgb, buttons, defines, time, wifi
+import rgb, buttons, defines, time, wifi, gc
 from default_icons import icon_no_wifi, animation_loading, animation_connecting_wifi
 
 ACTION_NO_OPERATION = 0

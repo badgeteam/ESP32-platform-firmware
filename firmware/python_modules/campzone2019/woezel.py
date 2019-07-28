@@ -187,6 +187,13 @@ def update_cache():
     if last_update > 0 and time.time() < last_update + (600):
         return True
 
+    if not wifi.status():
+        _show_progress("Connecting to WiFi...", False)
+        wifi.connect()
+        if not wifi.wait():
+            _show_progress("Failed to connect to WiFi.", True)
+            return False
+
     print('Updating woezel cache..')
 
     _show_progress("Downloading categories...")

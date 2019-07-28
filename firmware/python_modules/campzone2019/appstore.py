@@ -7,7 +7,6 @@ def woezel_callback(text, error):
     rgb.clear()
     rgb.framerate(20)
     rgb.setfont(rgb.FONT_7x5)
-
     print(text)
 
     if 'Connecting to WiFi' in text:
@@ -63,9 +62,11 @@ while True:
     app = apps[chosen_index]
 
     # WiFi could have been disconnected by now
-    uinterface.connect_wifi()
-
-    if woezel.install(app['slug']):
+    if not uinterface.connect_wifi():
+        rgb.clear()
+        rgb.scrolltext('No WiFi')
+        time.sleep(5)
+    elif woezel.install(app['slug']):
         rgb.clear()
         rgb.scrolltext('Successfully installed')
         time.sleep(7)

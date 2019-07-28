@@ -1,6 +1,7 @@
-import machine, term, time, defines, rgb
+import machine, term, time, defines, rgb, buttons
 
-pin = machine.Pin(defines.BTN_A)
+pin_index = buttons._gpios.index(defines.BTN_A)
+pin = buttons._pins[pin_index]
 rtc = machine.RTC()
 rtc.wake_on_ext0(pin=pin, level=0)
 
@@ -17,6 +18,16 @@ def start_sleeping(sleepTime=0):
         print("Sleeping until A-button is pressed...")
     else:
         print("Sleeping for " + str(sleepTime) + "ms...")
+    time.sleep(0.1)
+    machine.deepsleep(sleepTime)
+
+def vcc_low(sleepTime=0):
+    term.header(True, "Going to sleep...")
+
+    rgb.clear()
+    rgb.scrolltext('BATT LOW!')
+    time.sleep(4)
+
     time.sleep(0.1)
     machine.deepsleep(sleepTime)
 
