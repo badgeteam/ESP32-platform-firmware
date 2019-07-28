@@ -21,6 +21,16 @@ def start_sleeping(sleepTime=0):
     time.sleep(0.1)
     machine.deepsleep(sleepTime)
 
+def vcc_low(sleepTime=0):
+    term.header(True, "Going to sleep...")
+
+    rgb.clear()
+    rgb.scrolltext('BATT LOW!')
+    time.sleep(4)
+
+    time.sleep(0.1)
+    machine.deepsleep(sleepTime)
+
 
 def reboot():
     machine.deepsleep(1)

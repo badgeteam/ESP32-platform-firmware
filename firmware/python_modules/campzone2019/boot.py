@@ -1,5 +1,5 @@
 import esp, machine, sys, system, os, consts
-import rgb
+import rgb, virtualtimers, deepsleep
 
 # Clear OTA boot magic
 esp.rtcmem_write(0,0)
@@ -22,6 +22,20 @@ else:
         app = machine.nvs_getstr("system", 'default_app')
         if not app:
             app = 'dashboard.home'
+
+## Check voltage
+virtualtimers.activate(1000) # low resolution needed
+def _vcc_callback():
+    try:
+        vcc = system.get_vcc_bat()
+        if vcc != None:
+            if vcc < 3300:
+                deepsleep.vcc_low()
+    finally:
+        virtualtimers.new(10000,_vcc_callback)
+        return 0
+virtualtimers.new(10000,_vcc_callback)
+
 
 if app and not app == "shell":
     try:
