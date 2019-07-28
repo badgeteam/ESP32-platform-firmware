@@ -2,20 +2,24 @@ import machine, system
 from defines import *
 
 def _cb(pin):
+	if disable:
+		return
+
 	position = _pins.index(pin)
 	gpio = _gpios[position]
 	callback = button_mappings[-1][gpio]
 	if callback and callable(callback):
 		callback(not pin.value())
 
+disable = False
 _gpios     = [BTN_A, BTN_B, BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT]
 _pins      = [
-	machine.Pin(BTN_A, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_B, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_UP, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_DOWN, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_LEFT, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_RIGHT, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
+	machine.Pin(BTN_A, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200),
+	machine.Pin(BTN_B, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200),
+	machine.Pin(BTN_UP, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200),
+	machine.Pin(BTN_DOWN, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200),
+	machine.Pin(BTN_LEFT, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200),
+	machine.Pin(BTN_RIGHT, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=200),
 ]
 
 button_mappings = []
@@ -62,6 +66,14 @@ def _default_button_mapping():
 		BTN_A: None,
 		BTN_B: _default_B_action
 	}
+
+def __disable__():
+	global disable
+	disable = True
+
+def __enable__():
+	global disable
+	disable = False
 
 register = assign
 init_button_mapping()

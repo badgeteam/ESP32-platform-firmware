@@ -1,5 +1,6 @@
 import system, rgb, time, gc, urequests as requests, version
-from uinterface import menu, confirmation_dialog, connect_wifi
+import consts
+from uinterface import confirmation_dialog, connect_wifi
 
 _FONT = rgb.FONT_7x5
 _MAIN_FRAMERATE = 20
@@ -26,7 +27,8 @@ def _retrieve_latest_update():
     try:
         _show_progress("Checking for updates")
         gc.collect()
-        request = requests.get(version.otacheckurl, timeout=30)
+        ota_version_url = 'https://' + consts.OTA_WEB_SERVER + ':' + consts.OTA_WEB_PORT.replace('"', '') + '/version-' + consts.INFO_HARDWARE_WOEZEL_NAME
+        request = requests.get(ota_version_url, timeout=10)
         result = request.json()
         request.close()
         update_information = {
@@ -38,15 +40,14 @@ def _retrieve_latest_update():
         raise Exception("Update check failed")
 
 def _prompt_user_for_update(name, build):
-    template = "You have {} firmware. Confirm {}?"
-    if build > version.build:
-            prompt = template.format("a newer", "downgrade")
-    elif build == version.build:
-        prompt = template.format("the latest", "reinstall")
-    else:
-        prompt = "An upgrade to version {}, \"{}\" is available! Confirm upgrade?".format(build, name)
 
-    return _confirm_ota(prompt)
+    current = int(consts.INFO_FIRMWARE_BUILD)
+    to_install = int(build)
+    action = 'Downgrade' if current > to_install else ('Upgrade' if current < to_install else 'Reinstall')
+    text = '%s version %s to %s?' % (action, current, to_install) if action != 'Reinstall' else \
+        'No newer update available, reinstall existing firmware?'
+
+    return _confirm_ota(text)
 
 def _confirm_ota(text):
     return confirmation_dialog(text)
