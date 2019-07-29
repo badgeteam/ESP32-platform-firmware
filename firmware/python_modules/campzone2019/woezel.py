@@ -12,7 +12,7 @@ cache_path = '/cache/woezel'
 woezel_domain = consts.WOEZEL_WEB_SERVER
 device_name = consts.INFO_HARDWARE_WOEZEL_NAME
 
-file_buf = bytearray(512)
+file_buf = bytearray(100)
 
 class NotFoundError(Exception):
     pass
@@ -330,11 +330,13 @@ def install_pkg(pkg_spec, install_path, force_reinstall):
 def install(to_install, install_path=None, force_reinstall=False):
     # Calculate gzip dictionary size to use
     global gzdict_sz
+    # Perform a collect before installing
+    gc.collect()
     sz = gc.mem_free() + gc.mem_alloc()
     if sz <= 65536:
         # this will probably give errors with some packages, but we
         # just don't have enough memory.
-        gzdict_sz = 16 + 13
+        gzdict_sz = 16 + 8
 
     if install_path is None:
         install_path = get_install_path()
