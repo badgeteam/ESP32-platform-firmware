@@ -20,11 +20,11 @@ bool fbReady = false;
 
 void fatal_error(const char* message)
 {
-	printf("A fatal error occcured while initializing the driver for '%s'.\n", message);
+	printf("A fatal error occurred while initializing the driver for '%s'.\n", message);
 	if (fbReady) {
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 		#ifdef CONFIG_DRIVER_EINK_ENABLE
-			driver_framebuffer_fill(COLOR_WHITE);
+			driver_framebuffer_fill(NULL, COLOR_WHITE);
 			driver_framebuffer_setTextColor(COLOR_BLACK);
 			driver_framebuffer_setFont(&freesansbold12pt7b);
 			driver_framebuffer_setCursor(0,0);
@@ -34,7 +34,7 @@ void fatal_error(const char* message)
 			driver_framebuffer_print("Failure while starting driver.\n");
 			driver_framebuffer_print(message);
 			driver_framebuffer_print("\n\nRestart in 10 seconds...\n");
-			driver_framebuffer_flush();
+			driver_framebuffer_flush(0);
 		#endif
 		#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12846_ENABLE)
 			driver_framebuffer_fill(COLOR_BLACK);

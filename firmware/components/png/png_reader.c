@@ -191,7 +191,7 @@ lib_png_paeth(uint8_t _a, uint8_t _b, uint8_t _c)
 }
 
 static inline int
-lib_png_decode(struct lib_png_reader *pr, uint32_t width, uint32_t height, uint32_t scanline_width, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_pixlen, uint32_t dst_linelen, uint8_t bitsPerPixel)
+lib_png_decode(struct lib_png_reader *pr, uint32_t width, uint32_t height, uint32_t scanline_width, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_pixlen, uint32_t dst_linelen)
 {
 	memset(pr->scanline, 0, scanline_width);
 
@@ -391,54 +391,8 @@ lib_png_decode(struct lib_png_reader *pr, uint32_t width, uint32_t height, uint3
 			if (a != 0 && x >= dst_min_x && x < dst_width && y >= dst_min_y && y < dst_height)
 			{
 				#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-				driver_framebuffer_setPixel(offset_x + x, offset_y + y, ((r>>8)<<16)+((g>>8)<<8)+(b>>8));
+				driver_framebuffer_setPixel(NULL, offset_x + x, offset_y + y, ((r>>8)<<16)+((g>>8)<<8)+(b>>8));
 				#endif
-				/*if (bitsPerPixel == 8) {
-					uint32_t grey = ( r + g + b + 1 ) / 3;
-
-					int ptr = y * dst_linelen + x * dst_pixlen;
-					if (a == 0xffff)
-					{
-						dst[ptr] = grey >> 8;
-					}
-					else
-					{
-						uint32_t v = dst[ptr] * 0x0101 * (0xffff - a) + grey * a;
-						v += 0x8000;
-						v /= 0xffff;
-						dst[ptr] = v >> 8;
-					}
-				} else if (bitsPerPixel == 24) {
-					int ptr = (y * dst_linelen + x * dst_pixlen)*3;
-					if (a == 0xffff)
-					{
-						dst[ptr] = r >> 8;
-						dst[ptr+1] = g >> 8;
-						dst[ptr+2] = b >> 8;
-					}
-					else
-					{
-						uint32_t v0 = dst[ptr] * 0x0101 * (0xffff - a) + r * a;
-						v0 += 0x8000;
-						v0 /= 0xffff;
-						dst[ptr] = v0 >> 8;
-						uint32_t v1 = dst[ptr] * 0x0101 * (0xffff - a) + g * a;
-						v1 += 0x8000;
-						v1 /= 0xffff;
-						dst[ptr+1] = v1 >> 8;
-						uint32_t v2 = dst[ptr] * 0x0101 * (0xffff - a) + b * a;
-						v2 += 0x8000;
-						v2 /= 0xffff;
-						dst[ptr+2] = v2 >> 8;
-					}
-				} else if (bitsPerPixel == 1) {
-					bool val = ((( r + g + b + 1 ) / 3) >> 8) & 0x01;
-					uint32_t ptr = ((y/8) * dst_linelen + x * dst_pixlen);
-					uint8_t  bit = ptr % 8;
-					dst[ptr] ^= (-val ^ dst[ptr]) & (1UL << bit);
-				} else {
-					printf("FAIL!\n");
-				}*/
 			}
 		}
 	}
@@ -546,7 +500,7 @@ lib_png_read_header(struct lib_png_reader *pr)
 }
 
 int
-lib_png_load_image(struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_linelen, uint8_t bitsPerPixel)
+lib_png_load_image(struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_linelen)
 {
 	// read header
 	int res = lib_png_read_header(pr);
@@ -629,7 +583,7 @@ lib_png_load_image(struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset
 
 	pr->adler = LIB_ADLER32_INIT;
 
-	res = lib_png_decode(pr, pr->ihdr.width, pr->ihdr.height, pr->scanline_width, offset_x, offset_y, dst_min_x, dst_min_y, dst_width, dst_height, 1, dst_linelen, bitsPerPixel);
+	res = lib_png_decode(pr, pr->ihdr.width, pr->ihdr.height, pr->scanline_width, offset_x, offset_y, dst_min_x, dst_min_y, dst_width, dst_height, 1, dst_linelen);
 	if (res < 0) return res;
 
 	// ensure we're at the end of the deflate stream

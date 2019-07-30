@@ -67,7 +67,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 			#ifdef CONFIG_DRIVER_EINK_ENABLE
 				if (force || percentage == 0 || (percentage>=lastShownPercentage+10)) {
 					if (showPercentage) lastShownPercentage = percentage;
-					driver_framebuffer_fill(COLOR_WHITE);
+					driver_framebuffer_fill(NULL, COLOR_WHITE);
 					driver_framebuffer_setTextColor(COLOR_BLACK);
 					driver_framebuffer_setFont(&freesansbold12pt7b);
 					driver_framebuffer_setCursor(0,0);
@@ -93,7 +93,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 					} else {
 						//driver_framebuffer_setFlags(DISPLAY_FLAG_8BITPIXEL + DISPLAY_FLAG_LUT(DRIVER_EINK_LUT_FASTEST));
 					}
-					driver_framebuffer_flush();
+					driver_framebuffer_flush(0);
 				}
 			#endif
 			#ifdef CONFIG_DRIVER_ILI9341_ENABLE

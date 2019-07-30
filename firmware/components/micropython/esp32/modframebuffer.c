@@ -17,9 +17,9 @@
 static mp_obj_t framebuffer_orientation(mp_uint_t n_args, const mp_obj_t *args) {
 	if (n_args > 0){
 		int a = mp_obj_get_int(args[0]);
-		driver_framebuffer_set_orientation(a);
+		driver_framebuffer_set_orientation_angle(NULL, a);
 	}
-	return mp_obj_new_int(driver_framebuffer_get_orientation());
+	return mp_obj_new_int(driver_framebuffer_get_orientation_angle(NULL));
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_orientation_obj, 0, 1, framebuffer_orientation);
 
@@ -43,7 +43,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_cursor_obj, 0, 2, framebu
 static mp_obj_t framebuffer_get_pixel(mp_obj_t x_in, mp_obj_t y_in) {
 	int x = mp_obj_get_int(x_in);
 	int y = mp_obj_get_int(y_in);
-	return mp_obj_new_int(driver_framebuffer_getPixel(x,y));
+	return mp_obj_new_int(driver_framebuffer_getPixel(NULL, x, y));
 }
 static MP_DEFINE_CONST_FUN_OBJ_2(framebuffer_get_pixel_obj, framebuffer_get_pixel);
 
@@ -51,7 +51,7 @@ static mp_obj_t framebuffer_set_pixel(mp_obj_t x_in, mp_obj_t y_in, mp_obj_t col
 	int x = mp_obj_get_int(x_in);
 	int y = mp_obj_get_int(y_in);
 	int color = mp_obj_get_int(color_in);
-	driver_framebuffer_setPixel(x,y,color);
+	driver_framebuffer_setPixel(NULL, x, y, color);
 	return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_3(framebuffer_set_pixel_obj, framebuffer_set_pixel);
@@ -68,14 +68,14 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_set_text_color_obj, 0, 1,
 static mp_obj_t framebuffer_fill(mp_uint_t n_args, const mp_obj_t *args)
 {
 	int color = n_args == 0 ? COLOR_FILL_DEFAULT : mp_obj_get_int(args[0]);
-	driver_framebuffer_fill(color);
+	driver_framebuffer_fill(NULL, color);
 	return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_fill_obj, 0, 1, framebuffer_fill);
 
 static mp_obj_t framebuffer_flush()
 {
-	driver_framebuffer_flush();
+	driver_framebuffer_flush(0);
 	return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(framebuffer_flush_obj, framebuffer_flush);
@@ -126,7 +126,7 @@ static mp_obj_t framebuffer_line(mp_uint_t n_args, const mp_obj_t *args)
 	int x1 =  mp_obj_get_int(args[2]);
 	int y1 =  mp_obj_get_int(args[3]);
 	int color =  mp_obj_get_int(args[4]);
-	driver_framebuffer_line(x0, y0, x1, y1, color);
+	driver_framebuffer_line(NULL, x0, y0, x1, y1, color);
 	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_line_obj, 5, 5, framebuffer_line);
@@ -139,7 +139,7 @@ static mp_obj_t framebuffer_rect(mp_uint_t n_args, const mp_obj_t *args)
         int h     =  mp_obj_get_int(args[3]);
         int fill  =  mp_obj_get_int(args[4]);
         int color =  mp_obj_get_int(args[5]);
-        driver_framebuffer_rect(x, y, w, h, fill, color);
+        driver_framebuffer_rect(NULL, x, y, w, h, fill, color);
         return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_rect_obj, 6, 6, framebuffer_rect);
@@ -153,7 +153,7 @@ static mp_obj_t framebuffer_circle(mp_uint_t n_args, const mp_obj_t *args)
         int a1    =  mp_obj_get_int(args[4]);
         int fill  =  mp_obj_get_int(args[5]);
         int color =  mp_obj_get_int(args[6]);
-        driver_framebuffer_circle(x, y, r, a0, a1, fill, color);
+        driver_framebuffer_circle(NULL, x, y, r, a0, a1, fill, color);
         return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_circle_obj, 7, 7, framebuffer_circle);
@@ -162,7 +162,8 @@ static mp_obj_t framebuffer_get_dirty()
 {
 	if (driver_framebuffer_is_dirty()) {
 		int16_t x0, y0, x1, y1;
-		driver_framebuffer_get_dirty(&x0, &y0, &x1, &y1);
+		driver_framebuffer_get_dirty_area(&x0, &y0, &x1, &y1);
+		driver_framebuffer_orientation_revert_square(NULL, &x0, &y0, &x1, &y1);
 		mp_obj_t tuple[2];
 		mp_obj_t tuple0[2];
 		mp_obj_t tuple1[2];
@@ -181,7 +182,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(framebuffer_get_dirty_obj, framebuffer_get_dirt
 
 static mp_obj_t framebuffer_set_greyscale(mp_obj_t value_in)
 {
-        driver_framebuffer_set_greyscale(mp_obj_get_int(value_in));
 	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(framebuffer_set_greyscale_obj, framebuffer_set_greyscale);
@@ -202,7 +202,7 @@ static mp_obj_t framebuffer_raw(mp_uint_t n_args, const mp_obj_t *args)
 	
 	for (int16_t px = 0; px < w; px++) {
 		for (int16_t py = 0; py < h; py++) {
-			driver_framebuffer_setPixel(x+px,y+py,data[(x+px) + (y+py)*w]);
+			driver_framebuffer_setPixel(NULL, x+px, y+py, data[(x+px) + (y+py)*w]);
 		}
 	}
 	return mp_const_none;
@@ -230,7 +230,7 @@ static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 			return mp_const_none;
 		}
 		reader = (lib_reader_read_t) &lib_mem_read;
-		renderRes = driver_framebuffer_png(x, y, reader, mr);
+		renderRes = driver_framebuffer_png(NULL, x, y, reader, mr);
 		lib_mem_destroy(mr);
 	} else {
 		const char* filename = mp_obj_str_get_str(args[2]);
@@ -246,7 +246,7 @@ static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 			return mp_const_none;
 		}
 		reader = (lib_reader_read_t) &lib_file_read;
-		renderRes = driver_framebuffer_png(x, y, reader, fr);
+		renderRes = driver_framebuffer_png(NULL, x, y, reader, fr);
 		lib_file_destroy(fr);
 	}
 	
