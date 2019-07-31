@@ -73,12 +73,13 @@ static mp_obj_t framebuffer_fill(mp_uint_t n_args, const mp_obj_t *args)
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_fill_obj, 0, 1, framebuffer_fill);
 
-static mp_obj_t framebuffer_flush()
+static mp_obj_t framebuffer_flush(mp_uint_t n_args, const mp_obj_t *args)
 {
-	driver_framebuffer_flush(0);
+	uint32_t flags = n_args ? mp_obj_get_int(args[0]) : 0;
+	driver_framebuffer_flush(flags);
 	return mp_const_none;
 }
-static MP_DEFINE_CONST_FUN_OBJ_0(framebuffer_flush_obj, framebuffer_flush);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_flush_obj, 0, 1, framebuffer_flush);
 
 static mp_obj_t framebuffer_get_width()
 {

@@ -26,42 +26,31 @@ typedef struct Window_t {
 	struct Window_t* _prevWindow;
 	struct Window_t* _nextWindow;
 	
-	/* Identifier */
-	uint16_t id;
-	
-	/* Placement */
+	/* Properties */
+	char* name;                     //The name of the window
 	int16_t x, y;                   // Position (x,y)
 	uint16_t width, height;         // Size
 	bool visible;                   // Visible or hidden
-	
-	/* Transparency */
 	uint8_t tpEnabled;              // Enable transparency (0 = completely visible, 255 = completely transparent)
-	uint8_t tpValue;                // Which value (on or off) is transparent
-	
-	/* Movement */
-	int16_t moveX, moveY;           // Amount of pixels to move on each step
-	uint8_t moveDiv, _currMoveDiv;  // Move every X steps
-	bool moveLoop;                  // Warp to the other side of the screen when moving ouf of bounds
-
-	/* Frames */
-	Frame* firstFrame;       // Starting point of linked list of frames
-	
-	/* State */
+	uint32_t tpValue;               // Which value (on or off) is transparent
 	enum Orientation orientation;   // Current orientation
-	
-	/* Animation */
-	uint8_t aniDiv, _currAniDiv;    // Go to next frame every X steps
-	bool aniLoop;                   // Loop animation
-	
-	/* Text */
-	const GFXfont *font;            // Text drawing font
-	uint8_t textScaleX;             // Horizontal text scale
-	uint8_t textScaleY;             // Vertical text scale
 	int16_t textCursorX;            // Current horizontal position
 	int16_t textCursorX0;           // Starting position after newline
 	int16_t textCursorY;            // Current vertical position
-	bool textWrap;                  // Wrap text when reaching border of buffer
-	uint32_t textColor;             // Text drawing color
+	
+	/* Frames */
+	Frame* frames;                  // Starting point of linked list of frames
 } Window;
+
+Frame* driver_framebuffer_add_frame_to_window(Window* window);
+void driver_framebuffer_compositor_delete_frame(Frame* frame);
+void driver_framebuffer_remove_all_frames_from_window(Window* window);
+
+Window* driver_framebuffer_create_window(const char* name, uint16_t width, uint16_t height);
+void driver_framebuffer_delete_window(Window* window);
+Window* driver_framebuffer_find_window(const char* name);
+Window* driver_framebuffer_first_window();
+Window* driver_framebuffer_last_window();
+void driver_framebuffer_focus_window(Window* window);
 
 #endif

@@ -86,13 +86,10 @@ void driver_framebuffer_line(Frame* frame, int16_t x0, int16_t y0, int16_t x1, i
 
 void driver_framebuffer_rect(Frame* frame, int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color)
 {
-	if (x > FB_WIDTH) return;
-	if (y > FB_HEIGHT) return;
-	if (x+w > FB_WIDTH) w = FB_WIDTH - x;
-	if (y+h > FB_WIDTH) h = FB_HEIGHT - y;
-
 	if (fill) {
-		for (int16_t i=x; i<x+w; i++) driver_framebuffer_line(frame, i, y, i, y+h-1, color);
+		for (int16_t i=x; i<x+w; i++) {
+			driver_framebuffer_line(frame, i, y, i, y+h-1, color);
+		}
 	} else {
 		driver_framebuffer_line(frame, x,    y,     x+w-1, y,     color);
 		driver_framebuffer_line(frame, x,    y+h-1, x+w-1, y+h-1, color);

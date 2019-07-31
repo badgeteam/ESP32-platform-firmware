@@ -18,12 +18,10 @@ inline Frame* _create_frame(Window* window)
 	memset(frame, 0, sizeof(Frame));
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
 		frame->buffer                       = heap_caps_malloc((window->width*window->height*PIXEL_SIZE)/8, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-		#ifdef FB_ALPHA_ENABLED
-			if (frame->buffer) frame->alpha = heap_caps_malloc(window->width*window->height, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-		#endif
 	#else
 		frame->buffer                       = heap_caps_malloc((window->width*window->height*PIXEL_SIZE)/8, MALLOC_CAP_8BIT);
 	#endif
+	frame->window = window;
 	if (!frame->buffer) {
 		free(frame);
 		return NULL;
@@ -36,7 +34,7 @@ inline Frame* _create_frame(Window* window)
 Frame* driver_framebuffer_add_frame_to_window(Window* window)
 {
 	if (!window) return NULL;
-	Frame* lastFrame = window->firstFrame;
+	Frame* lastFrame = window->frames;
 	while (lastFrame && lastFrame->_nextFrame) lastFrame = lastFrame->_nextFrame;
 	Frame* newFrame = _create_frame(window);
 	if (!newFrame) return NULL;
@@ -59,8 +57,8 @@ void driver_framebuffer_compositor_delete_frame(Frame* frame)
 void driver_framebuffer_remove_all_frames_from_window(Window* window)
 {
 	if (!window) return;
-	Frame* frame = window->firstFrame;
-	window->firstFrame = NULL;
+	Frame* frame = window->frames;
+	window->frames = NULL;
 	
 	while (frame) {
 		Frame* nextFrame = frame->_nextFrame;

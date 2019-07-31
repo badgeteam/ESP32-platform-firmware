@@ -84,6 +84,25 @@ esp_err_t driver_framebuffer_init()
 	driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
 	
+	/* Window test */
+	/*Window* testWindow = driver_framebuffer_create_window("testWindow", 50, 50);
+	testWindow->visible = true;
+	driver_framebuffer_fill(testWindow->frames, 0xFFFFFF);
+	driver_framebuffer_rect(testWindow->frames, 0, 0, testWindow->width, testWindow->height, false, 0x000000);
+	driver_framebuffer_line(testWindow->frames, testWindow->width-1, 0, 0, testWindow->height-1, 0x000000);
+	
+	testWindow = driver_framebuffer_create_window("testWindow #2", 50, 50);
+	testWindow->x = 20;
+	testWindow->y = 20;
+	testWindow->visible = true;
+	driver_framebuffer_fill(testWindow->frames, 0xFFFFFF);
+	driver_framebuffer_rect(testWindow->frames, 0, 0, testWindow->width, testWindow->height, false, 0x000000);
+	driver_framebuffer_line(testWindow->frames, 0, 0, testWindow->width-1, testWindow->height-1, 0x000000);
+	
+	testWindow = driver_framebuffer_find_window("testWindow");
+	driver_framebuffer_focus_window(testWindow);*/
+	/* ----------- */
+	
 	driver_framebuffer_init_done = true;
 	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
@@ -101,6 +120,10 @@ bool _getContext(Frame* frame, uint8_t** buffer, uint16_t* width, uint16_t* heig
 			return false;
 		}
 	} else {
+		if (frame->window == NULL) {
+			ESP_LOGE(TAG, "Window is NULL!");
+			return false;
+		}
 		*width  = frame->window->width;
 		*height = frame->window->height;
 		*buffer = frame->buffer;
@@ -238,6 +261,39 @@ void driver_framebuffer_flush(uint32_t flags)
 	if (!framebuffer) {
 		ESP_LOGE(TAG, "flush without alloc!");
 		return;
+	}
+	
+	Window* currentWindow = driver_framebuffer_first_window();
+	while (currentWindow != NULL) {
+		/*printf("Window: %s\n", currentWindow->name);
+		if (currentWindow->_prevWindow) {
+			printf(" - Previous: %s\n", currentWindow->_prevWindow->name);
+		} else {
+			printf(" - Previous: none\n");
+		}
+		if (currentWindow->_nextWindow) {
+			printf(" - Next: %s\n", currentWindow->_nextWindow->name);
+		} else {
+			printf(" - Next: none\n");
+		}*/
+		if (currentWindow->visible) {
+			Frame* currentFrame = currentWindow->frames; //Fixme.
+			for (uint16_t wy = 0; wy < currentWindow->height; wy++) {
+				for (uint16_t wx = 0; wx < currentWindow->width; wx++) {
+					driver_framebuffer_setPixel(
+						NULL,
+						currentWindow->x + wx,
+						currentWindow->y + wy,
+						driver_framebuffer_getPixel(
+							currentFrame,
+							wx,
+							wy
+						)
+					);
+				}
+			}
+		}
+		currentWindow = currentWindow->_nextWindow;
 	}
 
 	uint8_t eink_flags = 0;
