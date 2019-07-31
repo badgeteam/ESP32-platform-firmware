@@ -83,16 +83,14 @@ def currentApp():
 	return __current_app__
 
 def get_vcc_bat():
-	import machine
+	import machine, buttons
 	voltage_bat = None
 	try:
-		buttons.__disable__()
 		vcc_bat = machine.ADC(machine.Pin(35))
 		vcc_bat.width(machine.ADC.WIDTH_12BIT)
 		vcc_bat.atten(machine.ADC.ATTN_11DB)
 		voltage_bat = int(vcc_bat.read() / (4095 / 4034) * 2 )
 		vcc_bat.deinit()
-		buttons.__enable__()
 	finally:
 		return voltage_bat
 	

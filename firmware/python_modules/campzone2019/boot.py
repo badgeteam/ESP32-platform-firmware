@@ -34,7 +34,8 @@ def _vcc_callback():
     finally:
         virtualtimers.new(10000,_vcc_callback)
         return 0
-virtualtimers.new(10000,_vcc_callback)
+
+virtualtimers.new(1000,_vcc_callback)
 
 
 if app and not app == "shell":
