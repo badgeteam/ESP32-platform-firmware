@@ -35,7 +35,6 @@
 #include "letsencrypt.h"
 
 #include "include/ota_update.h"
-
 #include "driver_framebuffer.h"
 #include "driver_framebuffer_devices.h"
 
@@ -77,7 +76,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 					driver_framebuffer_print(text);
 					driver_framebuffer_write('\n');
 					if (showPercentage) {
-						driver_framebuffer_setCursor(driver_framebuffer_getWidth()-100,driver_framebuffer_getHeight()-50);
+						driver_framebuffer_setCursor(driver_framebuffer_getWidth(NULL)-100,driver_framebuffer_getHeight(NULL)-50);
 						driver_framebuffer_setFont(&freesansmono9pt7b);
 						driver_framebuffer_setTextScale(2,2);
 						char buffer[16];
@@ -85,7 +84,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 						driver_framebuffer_print(buffer);
 					}
 					driver_framebuffer_setFont(&fairlight8pt7b);
-					driver_framebuffer_setCursor(0,driver_framebuffer_getHeight()-15);
+					driver_framebuffer_setCursor(0,driver_framebuffer_getHeight(NULL)-15);
 					driver_framebuffer_setTextScale(1,1);
 					driver_framebuffer_print("BADGE.TEAM\n");
 					if (force) {
@@ -98,7 +97,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 			#endif
 			#ifdef CONFIG_DRIVER_ILI9341_ENABLE
 				if (showPercentage) lastShownPercentage = percentage;
-				driver_framebuffer_fill(COLOR_WHITE);
+				driver_framebuffer_fill(NULL, COLOR_WHITE);
 				driver_framebuffer_setTextColor(COLOR_BLACK);
 				driver_framebuffer_setFont(&freesansbold12pt7b);
 				driver_framebuffer_setCursor(0,0);
@@ -108,7 +107,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				driver_framebuffer_print(text);
 				driver_framebuffer_write('\n');
 				if (showPercentage) {
-					driver_framebuffer_setCursor(driver_framebuffer_getWidth()-100,driver_framebuffer_getHeight()-50);
+					driver_framebuffer_setCursor(driver_framebuffer_getWidth(NULL)-100,driver_framebuffer_getHeight(NULL)-50);
 					driver_framebuffer_setFont(&freesansmono9pt7b);
 					driver_framebuffer_setTextScale(2,2);
 					char buffer[16];
@@ -116,13 +115,13 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 					driver_framebuffer_print(buffer);
 				}
 				driver_framebuffer_setFont(&fairlight8pt7b);
-				driver_framebuffer_setCursor(0,driver_framebuffer_getHeight()-15);
+				driver_framebuffer_setCursor(0,driver_framebuffer_getHeight(NULL)-15);
 				driver_framebuffer_setTextScale(1,1);
 				driver_framebuffer_print("BADGE.TEAM\n");
-				driver_framebuffer_flush();
+				driver_framebuffer_flush(0);
 			#endif
 			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12864_ENABLE)
-				driver_framebuffer_fill(COLOR_BLACK);
+				driver_framebuffer_fill(NULL, COLOR_BLACK);
 				driver_framebuffer_setTextColor(COLOR_WHITE);
 				driver_framebuffer_setCursor(0,0);
 				driver_framebuffer_setTextScale(1,1);
@@ -134,11 +133,11 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				char buffer[16];
 				snprintf(buffer, 16, "%*u%%", 3, percentage);
 				if (showPercentage) driver_framebuffer_print(buffer);
-				driver_framebuffer_flush();
+				driver_framebuffer_flush(0);
 			#endif
 			#ifdef CONFIG_DRIVER_HUB75_ENABLE
 				compositor_disable(); //Don't use the compositor if we have the framebuffer driver
-				driver_framebuffer_fill(COLOR_BLACK);
+				driver_framebuffer_fill(NULL, COLOR_BLACK);
 				driver_framebuffer_setCursor(0,0);
 				uint16_t progressPosition = (percentage*FB_WIDTH)/100;
 				for (uint8_t i = 0; i < FB_WIDTH; i++) {
@@ -156,7 +155,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 					sprintf(buff, "%d%%", percentage);
 					driver_framebuffer_print(buff);
 				}
-				driver_framebuffer_flush();
+				driver_framebuffer_flush(0);
 			#endif
 		#else
 			#ifdef CONFIG_DRIVER_HUB75_ENABLE

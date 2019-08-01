@@ -47,10 +47,24 @@ void driver_framebuffer_compositor_delete_frame(Frame* frame);
 void driver_framebuffer_remove_all_frames_from_window(Window* window);
 
 Window* driver_framebuffer_create_window(const char* name, uint16_t width, uint16_t height);
+/* Create a window */
+
 void driver_framebuffer_delete_window(Window* window);
+/* Delete a window */
+
 Window* driver_framebuffer_find_window(const char* name);
+/* Find an existing window by name */
+
 Window* driver_framebuffer_first_window();
+/* Find the first window */
+
 Window* driver_framebuffer_last_window();
+/* Find the last window */
+
 void driver_framebuffer_focus_window(Window* window);
+/* Move a window to the end of the list */
+
+void driver_framebuffer_window_getSize(Window* window, int16_t* width, int16_t* height);
+/* Get the width and height of a window */
 
 #endif

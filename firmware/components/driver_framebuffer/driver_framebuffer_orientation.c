@@ -2,7 +2,7 @@
  * The functions in this file translate coordinates between
  * the point-of-view of the user and the point-of-view of the
  * buffer in memory when changing the orientation of the framebuffer
- * or the orientation of a compositor frame.
+ * or the orientation of a compositor window.
  * 
  * Additionally the functions in this file allow for setting and 
  * querying the orientation for both the global framebuffer and
@@ -19,47 +19,47 @@
 enum Orientation globalOrientation;
 
 /* Private functions */
-inline enum Orientation* _getOrientationContext(Frame* frame)
+inline enum Orientation* _getOrientationContext(Window* window)
 {
-	if (frame == NULL) {
-		//No frame provided, use global context
+	if (window == NULL) {
+		//No window provided, use global context
 		return &globalOrientation;
 	} else {
-		//Frame provided, use frame context
-		return &frame->window->orientation;
+		//Window provided, use window context
+		return &window->orientation;
 	}
 }
 
-inline void _getSizeContext(Frame* frame, uint16_t* width, uint16_t* height)
+inline void _getSizeContext(Window* window, uint16_t* width, uint16_t* height)
 {
-	if (frame == NULL) {
-		//No frame provided, use global context
+	if (window == NULL) {
+		//No window provided, use global context
 		*width       = FB_WIDTH;
 		*height      = FB_HEIGHT;
 	} else {
-		//Frame provided, use frame context
-		*width       = frame->window->width;
-		*height      = frame->window->height;
+		//Window provided, use window context
+		*width       = window->width;
+		*height      = window->height;
 	}
 }
 
 /* Public functions */
 
-enum Orientation driver_framebuffer_get_orientation(Frame* frame)
+enum Orientation driver_framebuffer_get_orientation(Window* window)
 {
-	enum Orientation *orientation = _getOrientationContext(frame);
+	enum Orientation *orientation = _getOrientationContext(window);
 	return *orientation;
 }
 
-void driver_framebuffer_set_orientation(Frame* frame, enum Orientation newOrientation)
+void driver_framebuffer_set_orientation(Window* window, enum Orientation newOrientation)
 {
-	enum Orientation *orientation = _getOrientationContext(frame);
+	enum Orientation *orientation = _getOrientationContext(window);
 	*orientation = newOrientation;
 }
 
-uint16_t driver_framebuffer_get_orientation_angle(Frame* frame)
+uint16_t driver_framebuffer_get_orientation_angle(Window* window)
 {
-	enum Orientation *orientation = _getOrientationContext(frame);
+	enum Orientation *orientation = _getOrientationContext(window);
 	switch(*orientation) {
 		case portrait:
 			return 90;
@@ -73,9 +73,9 @@ uint16_t driver_framebuffer_get_orientation_angle(Frame* frame)
 	}
 }
 
-void driver_framebuffer_set_orientation_angle(Frame* frame, uint16_t angle)
+void driver_framebuffer_set_orientation_angle(Window* window, uint16_t angle)
 {
-	enum Orientation *orientation = _getOrientationContext(frame);
+	enum Orientation *orientation = _getOrientationContext(window);
 	switch(angle) {
 		case 90:
 			ESP_LOGE(TAG, "Orientation set to portrait");
@@ -96,11 +96,11 @@ void driver_framebuffer_set_orientation_angle(Frame* frame, uint16_t angle)
 	}
 }
 
-bool driver_framebuffer_orientation_apply(Frame* frame, int16_t* x, int16_t* y)
+bool driver_framebuffer_orientation_apply(Window* window, int16_t* x, int16_t* y)
 {
-	enum Orientation *orientation = _getOrientationContext(frame);
+	enum Orientation *orientation = _getOrientationContext(window);
 	uint16_t width, height;
-	_getSizeContext(frame, &width, &height);
+	_getSizeContext(window, &width, &height);
 	
 	if (*orientation == portrait || *orientation == reverse_portrait) { //90 degrees
 		int16_t t = *y;
@@ -115,11 +115,11 @@ bool driver_framebuffer_orientation_apply(Frame* frame, int16_t* x, int16_t* y)
 	return (*x >= 0) && (*x < width) && (*y >= 0) && (*y < height);
 }
 
-void driver_framebuffer_orientation_revert(Frame* frame, int16_t* x, int16_t* y)
+void driver_framebuffer_orientation_revert(Window* window, int16_t* x, int16_t* y)
 {
-	enum Orientation *orientation = _getOrientationContext(frame);
+	enum Orientation *orientation = _getOrientationContext(window);
 	uint16_t width, height;
-	_getSizeContext(frame, &width, &height);
+	_getSizeContext(window, &width, &height);
 
 	printf("Orientation revert %u, %u\n", *x, *y);
 
@@ -135,11 +135,11 @@ void driver_framebuffer_orientation_revert(Frame* frame, int16_t* x, int16_t* y)
 	}
 }
 
-void driver_framebuffer_orientation_revert_square(Frame* frame, int16_t* x0, int16_t* y0, int16_t* x1, int16_t* y1)
+void driver_framebuffer_orientation_revert_square(Window* window, int16_t* x0, int16_t* y0, int16_t* x1, int16_t* y1)
 {
-	enum Orientation *orientation = _getOrientationContext(frame);
+	enum Orientation *orientation = _getOrientationContext(window);
 	uint16_t width, height;
-	_getSizeContext(frame, &width, &height);
+	_getSizeContext(window, &width, &height);
 
 	if (*orientation == reverse_landscape || *orientation == reverse_portrait) { //90 degrees
 		int16_t tx0 = *x0;

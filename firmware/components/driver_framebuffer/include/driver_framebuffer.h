@@ -29,32 +29,34 @@
 #define FB_FLAG_LUT_FAST      16
 #define FB_FLAG_LUT_FASTEST   32
 
-esp_err_t driver_framebuffer_init();
-/* Initialize the framebuffer driver (called once at system boot from platform.c) */
-
-void driver_framebuffer_flush(uint32_t flags);
-/* Flush the framebuffer to the display */
-
-void driver_framebuffer_set_greyscale(bool use);
-void driver_framebuffer_setFlags(uint8_t newFlags);
-
-//Size
-uint16_t driver_framebuffer_getWidth(void);
-uint16_t driver_framebuffer_getHeight(void);
-
-//Drawing
-void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t value);
-uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y);
-void driver_framebuffer_fill(Frame* frame, uint32_t value);
-
-//Image decoders
-esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p);
-
-//Colors
+/* Colors */
 #define COLOR_BLACK 0x000000
 #define COLOR_WHITE 0xFFFFFF
 #define COLOR_RED   0xFF0000
 #define COLOR_GREEN 0x00FF00
 #define COLOR_BLUE  0x0000FF
+
+esp_err_t driver_framebuffer_init();
+/* Initialize the framebuffer driver (called once at system boot from platform.c) */
+
+bool driver_framebuffer_flush(uint32_t flags);
+/* Flush the framebuffer to the display */
+
+void driver_framebuffer_fill(Frame* frame, uint32_t value);
+/* Fill the framebuffer or the provided frame with a single color */
+
+void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t value);
+/* Set a pixel in the framebuffer or the provided frame to a color */
+
+uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y);
+/* Get the color of a pixel in the framebuffer or the provided frame */
+
+uint16_t driver_framebuffer_getWidth(Window* window);
+/* Get the width of the framebuffer or the provided window */
+
+uint16_t driver_framebuffer_getHeight(Window* window);
+/* Get the height of the framebuffer or the provided window */
+
+esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p);
 
 #endif //_DRIVER_FRAMEBUFFER_H_

@@ -85,7 +85,7 @@ esp_err_t driver_framebuffer_init()
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
 	
 	/* Window test */
-	/*Window* testWindow = driver_framebuffer_create_window("testWindow", 50, 50);
+	Window* testWindow = driver_framebuffer_create_window("testWindow", 50, 50);
 	testWindow->visible = true;
 	driver_framebuffer_fill(testWindow->frames, 0xFFFFFF);
 	driver_framebuffer_rect(testWindow->frames, 0, 0, testWindow->width, testWindow->height, false, 0x000000);
@@ -99,8 +99,8 @@ esp_err_t driver_framebuffer_init()
 	driver_framebuffer_rect(testWindow->frames, 0, 0, testWindow->width, testWindow->height, false, 0x000000);
 	driver_framebuffer_line(testWindow->frames, 0, 0, testWindow->width-1, testWindow->height-1, 0x000000);
 	
-	testWindow = driver_framebuffer_find_window("testWindow");
-	driver_framebuffer_focus_window(testWindow);*/
+	//testWindow = driver_framebuffer_find_window("testWindow");
+	//driver_framebuffer_focus_window(testWindow);
 	/* ----------- */
 	
 	driver_framebuffer_init_done = true;
@@ -108,7 +108,7 @@ esp_err_t driver_framebuffer_init()
 	return ESP_OK;
 }
 
-bool _getContext(Frame* frame, uint8_t** buffer, uint16_t* width, uint16_t* height)
+bool _getFrameContext(Frame* frame, uint8_t** buffer, int16_t* width, int16_t* height)
 {
 	if (frame == NULL) {
 		//No frame provided, use global context
@@ -134,8 +134,8 @@ bool _getContext(Frame* frame, uint8_t** buffer, uint16_t* width, uint16_t* heig
 void driver_framebuffer_fill(Frame* frame, uint32_t value)
 {
 	uint8_t* buffer;
-	uint16_t width, height;
-	if (!_getContext(frame, &buffer, &width, &height)) return;
+	int16_t width, height;
+	if (!_getFrameContext(frame, &buffer, &width, &height)) return;
 	if (!frame) driver_framebuffer_set_dirty_area(0,0,width-1,height-1, true);
 	
 	#if   defined(FB_TYPE_1BPP)
@@ -143,27 +143,27 @@ void driver_framebuffer_fill(Frame* frame, uint32_t value)
 	#elif defined(FB_TYPE_8BPP)
 		memset(buffer, rgbToGrey(value), width*height);
 	#elif defined(FB_TYPE_16BPP)
-		color = rgbTo565(color);
-		uint8_t c0 = (color>>8)&0xFF;
-		uint8_t c1 = color&0xFF;
+		value = rgbTo565(value);
+		uint8_t c0 = (value>>8)&0xFF;
+		uint8_t c1 = value&0xFF;
 		for (uint32_t i = 0; i < width*height*2; i+=2) {
 			buffer[i + 0] = c0;
 			buffer[i + 1] = c1;
 		}
 	#elif defined(FB_TYPE_24BPP)
-		uint8_t r = (color>>16)&0xFF;
-		uint8_t g = (color>>8)&0xFF;
-		uint8_t b = color&0xFF;
+		uint8_t r = (value>>16)&0xFF;
+		uint8_t g = (value>>8)&0xFF;
+		uint8_t b = value&0xFF;
 		for (uint32_t i = 0; i < width*height*3; i+=3) {
 			buffer[i + 0] = r;
 			buffer[i + 1] = g;
 			buffer[i + 2] = b;
 		}
 	#elif defined(FB_TYPE_32BPP)
-		uint8_t a = (color>>24)&0xFF;
-		uint8_t r = (color>>16)&0xFF;
-		uint8_t g = (color>>8)&0xFF;
-		uint8_t b = color&0xFF;
+		uint8_t a = (value>>24)&0xFF;
+		uint8_t r = (value>>16)&0xFF;
+		uint8_t g = (value>>8)&0xFF;
+		uint8_t b = value&0xFF;
 		for (uint32_t i = 0; i < width*height*4; i+=4) {
 			buffer[i + 0] = a;
 			buffer[i + 1] = b;
@@ -177,9 +177,9 @@ void driver_framebuffer_fill(Frame* frame, uint32_t value)
 
 void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t value)
 {
-	uint8_t* buffer; uint16_t width, height;
-	if (!_getContext(frame, &buffer, &width, &height)) return;
-	if (!driver_framebuffer_orientation_apply(frame, &x, &y)) return;
+	uint8_t* buffer; int16_t width, height;
+	if (!_getFrameContext(frame, &buffer, &width, &height)) return;
+	if (!driver_framebuffer_orientation_apply(frame ? frame->window : NULL, &x, &y)) return;
 	if (!frame) driver_framebuffer_set_dirty_area(x,y,x,y,false);
 	
 	#if defined(FB_TYPE_1BPP)
@@ -197,15 +197,25 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 		uint32_t position = (y * width) + x;
 		buffer[position] = value;
 	#elif defined(FB_TYPE_16BPP)
+		value = rgbTo565(value);
+		uint8_t c0 = (value>>8)&0xFF;
+		uint8_t c1 = value&0xFF;
 		uint32_t position = (y * width * 2) + (x * 2);
 		buffer[position + 0] = c0;
 		buffer[position + 1] = c1;
 	#elif defined(FB_TYPE_24BPP)
+		uint8_t r = (value>>16)&0xFF;
+		uint8_t g = (value>>8)&0xFF;
+		uint8_t b = value&0xFF;
 		uint32_t position = (y * width * 3) + (x * 3);
 		buffer[position + 0] = r;
 		buffer[position + 1] = g;
 		buffer[position + 2] = b;
 	#elif defined(FB_TYPE_32BPP)
+		uint8_t a = (value>>24)&0xFF;
+		uint8_t r = (value>>16)&0xFF;
+		uint8_t g = (value>>8)&0xFF;
+		uint8_t b = value&0xFF;
 		uint32_t position = (y * width * 4) + (x * 4);
 		buffer[position + 0] = r;
 		buffer[position + 1] = g;
@@ -218,9 +228,9 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 
 uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y)
 {
-	uint8_t* buffer; uint16_t width, height;
-	if (!_getContext(frame, &buffer, &width, &height)) return 0;
-	if (!driver_framebuffer_orientation_apply(frame, &x, &y)) return 0;
+	uint8_t* buffer; int16_t width, height;
+	if (!_getFrameContext(frame, &buffer, &width, &height)) return 0;
+	if (!driver_framebuffer_orientation_apply(frame ? frame->window : NULL, &x, &y)) return 0;
 
 	#if defined(FB_TYPE_1BPP)
 		#ifndef FB_1BPP_VERT
@@ -256,11 +266,11 @@ uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y)
 	#endif
 }
 
-void driver_framebuffer_flush(uint32_t flags)
+bool driver_framebuffer_flush(uint32_t flags)
 {
 	if (!framebuffer) {
 		ESP_LOGE(TAG, "flush without alloc!");
-		return;
+		return false;
 	}
 	
 	Window* currentWindow = driver_framebuffer_first_window();
@@ -304,7 +314,7 @@ void driver_framebuffer_flush(uint32_t flags)
 			eink_flags |= DRIVER_EINK_LUT_FULL << DISPLAY_FLAG_LUT_BIT;
 		#endif
 	} else if (!driver_framebuffer_is_dirty()) {
-		return; //No need to update, stop.
+		return false; //No need to update, stop.
 	}
 	
 	#ifdef CONFIG_DRIVER_HUB75_ENABLE
@@ -326,7 +336,8 @@ void driver_framebuffer_flush(uint32_t flags)
 		FB_FLUSH_GS(framebuffer, eink_flags);
 	} else {
 	#endif
-		
+		int16_t dirty_x0, dirty_y0, dirty_x1, dirty_y1;
+		driver_framebuffer_get_dirty_area(&dirty_x0, &dirty_y0, &dirty_x1, &dirty_y1);
 		FB_FLUSH(framebuffer,eink_flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
 	#ifdef FB_FLUSH_GS
 	}
@@ -342,7 +353,8 @@ void driver_framebuffer_flush(uint32_t flags)
 	}
 	#endif
 
-	driver_framebuffer_set_dirty_area(0, 0, FB_WIDTH-1, FB_HEIGHT-1, true);
+	driver_framebuffer_set_dirty_area(FB_WIDTH-1, FB_HEIGHT-1, 0, 0, true); //Not dirty.
+	return true;
 }
 
 esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p)
@@ -386,14 +398,22 @@ esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_
 	return ESP_OK;
 }
 
-uint16_t driver_framebuffer_getWidth(void)
+uint16_t driver_framebuffer_getWidth(Window* window)
 {
-	return FB_WIDTH;
+	int16_t width, height;
+	driver_framebuffer_window_getSize(window, &width, &height);
+	Frame* frame = NULL; if (window) frame = window->frames; //Temporary workaround
+	driver_framebuffer_orientation_revert(frame ? frame->window : NULL, &width, &height);
+	return width;
 }
 
-uint16_t driver_framebuffer_getHeight(void)
+uint16_t driver_framebuffer_getHeight(Window* window)
 {
-	return FB_HEIGHT;
+	int16_t width, height;
+	driver_framebuffer_window_getSize(window, &width, &height);
+	Frame* frame = NULL; if (window) frame = window->frames; //Temporary workaround
+	driver_framebuffer_orientation_revert(frame ? frame->window : NULL, &width, &height);
+	return height;
 }
 
 #else

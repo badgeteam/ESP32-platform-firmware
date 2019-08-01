@@ -102,4 +102,17 @@ void driver_framebuffer_focus_window(Window* window)
 	window->_nextWindow = NULL;
 }
 
+void driver_framebuffer_window_getSize(Window* window, int16_t* width, int16_t* height)
+{
+	if (window == NULL) {
+		//No window provided, use global context
+		*width = FB_WIDTH;
+		*height = FB_HEIGHT;
+	} else {
+		//Window provided, use window context
+		*width  = window->width;
+		*height = window->height;
+	}
+}
+
 #endif /* CONFIG_DRIVER_FRAMEBUFFER_ENABLE */
