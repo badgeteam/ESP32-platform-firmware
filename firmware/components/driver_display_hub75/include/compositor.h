@@ -26,6 +26,7 @@ typedef struct scrollText {
     char *text;
     int skip;
     int speed;
+    bool firstshow;
 } scrollText_t;
 
 void compositor_init();

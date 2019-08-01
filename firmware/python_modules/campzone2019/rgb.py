@@ -8,7 +8,7 @@ MAX_BRIGHTNESS = PANEL_WIDTH
 
 FONT_7x5 = 0
 FONT_6x3 = 1
-
+current_framerate = 20
 current_font = FONT_7x5
 font_heights = [7, 6]
 
@@ -18,6 +18,11 @@ font_heights = [7, 6]
 
 for name in dir(hub75):
     globals()[name] = getattr(hub75, name)
+
+def framerate(frame):
+    global current_framerate
+    current_framerate = frame
+    hub75.framerate(frame)
 
 def text(text, color=(255, 255, 255), pos=None):
     if pos is None:

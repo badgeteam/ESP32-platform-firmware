@@ -21,6 +21,5 @@ for app in apps:
     woezel.install(app)
 
 rgb.clear()
-rgb.scrolltext('Done updating')
-time.sleep(6)
+uinterface.skippabletext('Done updating')
 system.reboot()

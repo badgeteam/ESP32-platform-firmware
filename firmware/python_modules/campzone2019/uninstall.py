@@ -21,6 +21,5 @@ machine.nvs_setstr('launcher', 'uninstall_name', '')
 machine.nvs_setstr('launcher', 'uninstall_file', '')
 
 rgb.clear()
-rgb.scrolltext("Uninstall completed!")
-time.sleep(6)
+uinterface.skippabletext("Uninstall completed!")
 system.reboot()

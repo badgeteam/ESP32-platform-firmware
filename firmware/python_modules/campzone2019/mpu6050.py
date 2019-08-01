@@ -9,6 +9,15 @@ def cmd_i2c(sensor,addr,val):
     except:
         return None
 
+def noisy_readfrom_mem(device, address, length, n_tries=5):
+    ## Tries reading a few times due to buggy i2c bus
+    for _ in range(0, n_tries):
+        try:
+            return i2c.readfrom_mem(device, address, length)
+        except:
+            pass
+    raise OSError('NODEV')
+
 def has_sensor():
     return sensor is not None
 
@@ -23,21 +32,21 @@ def init():
 def get_gyro():
     result = (0,0,0)
     try:
-        result = (ustruct.unpack(">h",i2c.readfrom_mem(sensor,0x43,2)) [0],
-                  ustruct.unpack(">h",i2c.readfrom_mem(sensor,0x45,2)) [0],
-                  ustruct.unpack(">h",i2c.readfrom_mem(sensor,0x47,2)) [0])
+        result = (ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x43,2)) [0],
+                  ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x45,2)) [0],
+                  ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x47,2)) [0])
     finally:
         return result
 
 def get_accel():
     result = (0,0,0)
     try:
-        result = (ustruct.unpack(">h",i2c.readfrom_mem(sensor,0x3b,2)) [0],
-                  ustruct.unpack(">h",i2c.readfrom_mem(sensor,0x3d,2)) [0],
-                  ustruct.unpack(">h",i2c.readfrom_mem(sensor,0x3f,2)) [0])
+        result = (ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3b,2)) [0],
+                  ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3d,2)) [0],
+                  ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3f,2)) [0])
     finally:
         return result
 
 def get_temp():
-    return ustruct.unpack(">h",i2c.readfrom_mem(sensor,0x41,2)) [0] / 340 + 36.53
+    return ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x41,2)) [0] / 340 + 36.53
 

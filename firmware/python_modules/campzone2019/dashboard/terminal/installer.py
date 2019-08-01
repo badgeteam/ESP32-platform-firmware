@@ -46,7 +46,7 @@ def show_category(i):
 		sel = term.menu("Installer - "+name, opt)
 		if sel == len(category):
 			show_categories()
-		install_app(sel)
+		install_app(sel,i)
 	except BaseException as e:
 		sys.print_exception(e)
 		showMessage(e, True)
@@ -55,7 +55,7 @@ def show_category(i):
 
 # Install application
 
-def install_app(i):
+def install_app(i,fromcat):
 	system.serialWarning()
 	global category
 	slug = category[i]["slug"]
@@ -67,20 +67,21 @@ def install_app(i):
 		if not wifi.status():
 			showMessage("Unable to connect to WiFi.")
 			time.sleep(2)
-			show_category()
+			show_category(fromcat)
 	showMessage("Installing "+slug+"...")
 	try:
 		woezel.install(slug)
+		time.sleep(2)
 	except woezel.LatestInstalledError:
 		showMessage("Latest version is already installed.")
 		time.sleep(2)
-		show_category()
+		show_category(fromcat)
 	except:
 		showMessage("Failed to install "+slug+"!")
 		time.sleep(2)
-		show_category()
+		show_category(fromcat)
 	showMessage(slug+" has been installed!")
-	show_category()
+	show_category(fromcat)
 
 #Main application
 

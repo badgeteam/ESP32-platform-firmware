@@ -349,3 +349,26 @@ def _draw_image(image, x, y):
         (image["width"], 
         image["height"])
         )
+def _abort_scroll(pressed):
+    if pressed:
+        global abort
+        abort = True
+
+def skippabletext(text, color=(255, 255, 255), pos=None, width=rgb.PANEL_WIDTH):
+    
+    buttons.init_button_mapping()
+    buttons.register(defines.BTN_A, _abort_scroll)
+    buttons.register(defines.BTN_B, _abort_scroll)
+
+    rgb.scrolltext(text,color,pos,width)
+    framerate = rgb.current_framerate #scroll time per pixel
+    length_text_pixels = rgb.textwidth(text)
+    delay_loop = (1 / framerate) * (length_text_pixels+10) * 10
+    global abort
+    abort = False
+
+    while (not abort) and (delay_loop >= 0):
+        time.sleep(0.1)
+        delay_loop -= 1
+
+    buttons.clear_button_mapping()

@@ -4,11 +4,6 @@ rgb.clear()
 
 has_switched = False
 
-## Sleep during scrolling of text (quickhack)
-def waitfor(text):
-    time = 1.6+ (len(text)*0.3)
-    utime.sleep(time)
-
 ## Debug on display
 def show_progress(text):
     rgb.clear()
@@ -188,7 +183,7 @@ while True:
 
         rgb.clear()
         rgb.scrolltext(eventtext,(255,0,0),(0,0))
-        waitfor(eventtext)
+        uinterface.skippabletext(eventtext)
     elif has_switched:
         has_switched = False
     else:

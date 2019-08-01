@@ -1,5 +1,5 @@
 import system, term, sys, time, version, buttons
-import defines, rgb
+import defines, rgb, uinterface
 
 names = [
     "Tom Clement", "Renze Nicolai", "Joris Witteman",
@@ -36,8 +36,7 @@ def show_names():
 
     for n in range(0, len(names)):
         rgb.clear()
-        rgb.scrolltext(names[n])
-        time.sleep(5)
+        uinterface.skippabletext(names[n])
 
     rgb.clear()
     rgb.scrolltext("Press A or B to quit")

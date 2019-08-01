@@ -97,8 +97,7 @@ def uninstall(app):
     if app["category"] == "system":
         # dialogs.notice("System apps can not be removed!","Can not uninstall '"+currentListTitles[selected]+"'")
         rgb.clear()
-        rgb.scrolltext("System apps can't be removed")
-        time.sleep(10)
+        uinterface.skippabletext("System apps can't be removed")
         render_current_app()
         return
 

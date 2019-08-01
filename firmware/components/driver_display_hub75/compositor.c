@@ -36,7 +36,7 @@ int (*font_char_width[])(uint8_t charId) = {&getCharWidth_7x5, &getCharWidth_6x3
 void addTask(renderTask_t *node);
 void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY);
 void renderCharCol(uint8_t ch, Color color, int x, int y);
-void renderText(char *text, Color color, int x, int y, int sizeX, int skip);
+void renderText(char *text, Color color, int x, int y, int sizeX, int skip, bool firstshow);
 
 
 Color genColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
@@ -123,7 +123,8 @@ void compositor_addScrollText(char *text, Color color, int x, int y, int sizeX) 
 	scrollText_t *scroll = (scrollText_t *) malloc(sizeof(scrollText_t));
 	scroll->text = text_store;
 	scroll->speed = 1;
-	scroll->skip = -sizeX;
+	scroll->skip = -10;
+	scroll->firstshow = true;
 	renderTask_t *node = (renderTask_t *) malloc(sizeof(renderTask_t));
 	node->payload = scroll;
 	node->id = 2;
@@ -199,10 +200,17 @@ void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
 	}
 }
 
-void renderText(char *text, Color color, int x, int y, int sizeX, int skip) {
+void renderText(char *text, Color color, int x, int y, int sizeX, int skip, bool firstshow) {
 	int endX = sizeX > 0 ? x+sizeX : CONFIG_HUB75_WIDTH - 1;
 	if(skip < 0) {
-		x += -skip;
+		if (!firstshow)
+		{
+			x += -skip;
+		}
+		else
+		{
+		    x += 1;
+		}
 		skip = 0;
 	}
 	for(int i = 0; i<strlen(text); i++) {
@@ -220,7 +228,8 @@ unsigned int compositor_getTextWidth(char *text) {
 		uint8_t charId = (uint8_t)text[i] - 32;
 		width += (*font_char_width[font_index])(charId);
 	}
-
+	if (strlen(text) > 1)
+		width += strlen(text);
 	return width;
 }
 
@@ -243,7 +252,7 @@ void display_crash() {
 		}
 	}
 	renderImage((uint8_t *) smiley, 24, 0, 8, 8);   
-	renderText("FML", white, 0, 0, -1, 0);     
+	renderText("FML", white, 0, 0, -1, 0, false);     
 }
 
 void composite() {
@@ -257,14 +266,18 @@ void composite() {
 	renderTask_t *node = head;
 	while(node != NULL) {
 		if(node->id == 0) { //Render text
-			renderText((char *)node->payload, node->color, node->x, node->y, -1, 0);
+			renderText((char *)node->payload, node->color, node->x, node->y, -1, 0, false);
 		} else if(node->id == 1) {  //Render image
 			renderImage((uint8_t *)node->payload, node->x, node->y, node->sizeX, node->sizeY);
 		} else if(node->id == 2) {  //Render scrolling text
 			scrollText_t *scroll = (scrollText_t *) node->payload;
-			renderText(scroll->text, node->color, node->x, node->y, node->sizeX, scroll->skip);
+			renderText(scroll->text, node->color, node->x, node->y, node->sizeX, scroll->skip, scroll->firstshow);
 			scroll->skip++;
-			if(scroll->skip == strlen(scroll->text)*6+6) scroll->skip = -node->sizeX;
+			if(scroll->skip == strlen(scroll->text)*6+6) 
+			{
+				scroll->skip = -node->sizeX;
+				scroll->firstshow = false;
+			}
 		} else if(node->id == 3) {//Render animation
 			animation_t *gif = (animation_t *) node->payload;
 			int index = node->sizeX*node->sizeY*4*gif->showFrame;

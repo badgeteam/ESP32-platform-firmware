@@ -1,6 +1,7 @@
-import defines, rgb, buttons, system
+import defines, rgb, buttons, system, uinterface
 from random import randint
 from time import sleep
+
 
 UP, DOWN, LEFT, RIGHT = defines.BTN_UP, defines.BTN_DOWN, defines.BTN_LEFT, defines.BTN_RIGHT
 
@@ -98,6 +99,5 @@ while direction != defines.BTN_B:
     can_move = True
 
 rgb.clear()
-rgb.scrolltext("Score - " + str(score))
-sleep(4)
+uinterface.skippabletext("Score - " + str(score))
 system.reboot()

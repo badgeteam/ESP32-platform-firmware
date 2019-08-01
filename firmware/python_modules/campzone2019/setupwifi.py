@@ -16,8 +16,7 @@ def prompt_message(message):
         rgb.clear()
         rgb.framerate(20)
         rgb.setfont(rgb.FONT_7x5)
-        rgb.scrolltext(message)
-        time.sleep(5)
+        uinterface.skippabletext(message)
 
 def ap_requires_password(ap_type):
         return "OPEN" != ap_type

@@ -55,8 +55,7 @@ active_categories = [cat for cat in categories if cat['eggs'] > 0]
 if len(active_categories) == 0:
     rgb.clear()
     rgb.framerate(20)
-    rgb.scrolltext('Error loading')
-    time.sleep(6)
+    uinterface.skippabletext('Error loading')
     system.start("appstore")
 
 while True:
@@ -76,14 +75,11 @@ while True:
     # WiFi could have been disconnected by now
     if not uinterface.connect_wifi():
         rgb.clear()
-        rgb.scrolltext('No WiFi')
-        time.sleep(5)
+        uinterface.skippabletext('No WiFi')
     elif woezel.install(app['slug']):
         rgb.clear()
-        rgb.scrolltext('Successfully installed')
-        time.sleep(7)
+        uinterface.skippabletext('Successfully installed')
     else:
         rgb.clear()
-        rgb.scrolltext('Error installing')
-        time.sleep(6)
+        uinterface.skippabletext('Error installing')
     system.reboot()

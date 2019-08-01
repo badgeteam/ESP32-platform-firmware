@@ -1,25 +1,21 @@
-import rgb, time, system
+import rgb, time, system, uinterface
 
 rgb.clear()
 rgb.setfont(rgb.FONT_7x5)
 
-rgb.scrolltext("Your badge was sponsored by:")
-time.sleep(10)
+uinterface.skippabletext("Your badge was sponsored by:")
 rgb.clear()
 time.sleep(1)
 
-rgb.scrolltext("Espressif")
-time.sleep(4)
+uinterface.skippabletext("Espressif")
 rgb.clear()
 time.sleep(1)
 
-rgb.scrolltext("AllNet")
-time.sleep(3.5)
+uinterface.skippabletext("AllNet")
 rgb.clear()
 time.sleep(1)
 
-rgb.scrolltext("and")
-time.sleep(2.5)
+uinterface.skippabletext("and")
 rgb.clear()
 time.sleep(1)
 

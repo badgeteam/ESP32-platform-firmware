@@ -6,8 +6,7 @@ should_set = False
 
 def set_nickname():
     rgb.clear()
-    rgb.scrolltext('Set nickname:')
-    time.sleep(5)
+    uinterface.skippabletext('Set nickname:')
     new_name = uinterface.text_input()
     if new_name is not None and new_name != '':
         machine.nvs_setstr('badge', 'nickname', new_name)

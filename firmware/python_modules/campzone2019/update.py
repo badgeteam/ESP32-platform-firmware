@@ -1,5 +1,5 @@
 import system, rgb, time, gc, urequests as requests, version
-import consts
+import uinterface, consts
 from uinterface import confirmation_dialog, connect_wifi
 
 _FONT = rgb.FONT_7x5
@@ -10,16 +10,13 @@ def main():
         _initialize_display()
         latest_update = _retrieve_latest_update()
         if _prompt_user_for_update(latest_update["name"], latest_update["build"]):
-            _show_progress("Starting update")
-            time.sleep(5)
+            uinterface.skippabletext("Starting update")
             system.ota()
         else:
-            _show_progress("Cancelled OTA update")
-            time.sleep(6)
+            uinterface.skippabletext("Cancelled OTA update")
 
     except Exception as e:
-        _show_progress(str(e))
-        time.sleep(6)
+        uinterface.skippabletext(str(e))
 
 def _retrieve_latest_update():
     if not connect_wifi():
