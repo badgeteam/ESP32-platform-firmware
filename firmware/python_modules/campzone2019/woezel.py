@@ -182,7 +182,9 @@ def update_cache():
             _show_progress("Failed to connect to WiFi.", True)
             return False
 
-        wifi.ntp()
+        while wifi.status() and (time.time() < 1482192000):
+            wifi.ntp()
+
     last_update = _get_last_updated()
     if last_update > 0 and time.time() < last_update + (600):
         return True
@@ -206,7 +208,8 @@ def update_cache():
 
         _show_progress("Parsing categories...")
         categories = request.json()
-
+        request.close()
+        del request
         for index, category in enumerate(categories):
             gc.collect()
             cat_slug = category["slug"]
@@ -215,7 +218,9 @@ def update_cache():
 
             with open(cache_path + '/' + cat_slug + '.json', 'w') as f_file:
                 f_file.write(f.text)
-
+            f.close()
+            del f
+            gc.collect()
         _set_last_updated()
 
         _show_progress("Done!")
@@ -243,7 +248,7 @@ def get_categories():
             if len(contents) > 0:
                 category['eggs'] = len(contents)
                 active_categories.append(category)
-
+    gc.collect()
     return active_categories
 
 def get_category(category_name):
@@ -259,6 +264,7 @@ def get_pkg_metadata(name):
         return json.load(f)
     finally:
         f.close()
+        del f
 
 def get_pkg_list():
     f = _url_open("https://badge.team/basket/campzone2019/list/json")
@@ -266,6 +272,7 @@ def get_pkg_list():
         return json.load(f)
     finally:
         f.close()
+        del f
 
 def search_pkg_list(query):
     f = _url_open("https://badge.team/basket/campzone2019/search/%s/json" % query)
@@ -273,6 +280,7 @@ def search_pkg_list(query):
         return json.load(f)
     finally:
         f.close()
+        del f
 
 def install_pkg(pkg_spec, install_path, force_reinstall):
     data = get_pkg_metadata(pkg_spec)
@@ -319,6 +327,7 @@ def install_pkg(pkg_spec, install_path, force_reinstall):
         meta = _install_tar(f3, "%s%s/" % (install_path, pkg_spec))
     finally:
         f1.close()
+        del f1
     del f3
     del f2
     with open(verf, "w") as fver:

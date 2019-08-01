@@ -1,5 +1,5 @@
-import system, time
-import woezel, rgb, uinterface
+import system, time, gc
+import woezel, rgb, uinterface, wifi
 from default_icons import icon_no_wifi, animation_connecting_wifi, animation_loading
 
 def woezel_callback(text, error):
@@ -37,6 +37,18 @@ def woezel_callback(text, error):
         pass
 
 woezel.set_progress_callback(woezel_callback)
+# make sure we have an updated cache:
+retry = 5
+while (not woezel.update_cache()) and (retry > 0):
+    print("Updating cache failed.")
+    wifi.disconnect()
+    gc.collect()
+    uinterface.connect_wifi()
+    retry -= 1
+    if retry == 0:
+        print("This is not ok, rebooting")
+        system.reboot()
+
 categories = woezel.get_categories()
 active_categories = [cat for cat in categories if cat['eggs'] > 0]
 
@@ -45,7 +57,7 @@ if len(active_categories) == 0:
     rgb.framerate(20)
     rgb.scrolltext('Error loading')
     time.sleep(6)
-    system.reboot()
+    system.start("appstore")
 
 while True:
     current_category = 0

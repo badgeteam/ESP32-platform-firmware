@@ -32,10 +32,10 @@ def _vcc_callback():
             if vcc < 3300:
                 deepsleep.vcc_low()
     finally:
-        virtualtimers.new(10000,_vcc_callback)
-        return 0
+        # Return 10000 to start again in 10 seconds
+        return 10000
 
-virtualtimers.new(1000,_vcc_callback)
+virtualtimers.new(10000,_vcc_callback)
 
 
 if app and not app == "shell":

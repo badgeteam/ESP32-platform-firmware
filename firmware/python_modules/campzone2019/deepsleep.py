@@ -23,7 +23,8 @@ def start_sleeping(sleepTime=0):
 
 def vcc_low(sleepTime=0):
     term.header(True, "Going to sleep...")
-
+    rgb.enablecomp()
+    rgb.background((0,0,0))
     rgb.clear()
     rgb.scrolltext('BATT LOW!')
     time.sleep(4)

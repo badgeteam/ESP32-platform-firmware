@@ -50,17 +50,16 @@ def pm_task():
         return userResponseTime
 
     idleTime = virtualtimers.idle_time()
-
-    if idleTime > 30000 and not ((usb_attached() and machine.nvs_getint('badge', 'usb_stay_awake') or 0) != 0 ):
+    if not ((usb_attached() and machine.nvs_getint('badge', 'usb_stay_awake') or 0) != 0 ):
         global onSleepCallback
         if not onSleepCallback==None:
             print("[Power management] Running onSleepCallback...")
             try:
-                onSleepCallback(idleTime)
+                onSleepCallback(0)
             except BaseException as e:
                 print("[ERROR] An error occured in the on sleep callback.")
                 sys.print_exception(e)
-        deepsleep.start_sleeping(idleTime)
+        deepsleep.start_sleeping(0)
 
     return userResponseTime
 
