@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 /* Fonts */
+
 extern const GFXfont fairlight8pt7b;
 extern const GFXfont fairlight12pt7b;
 extern const GFXfont freesans6pt7b;
@@ -29,21 +30,12 @@ extern const GFXfont pixelade9pt7b;
 extern const GFXfont pixelade13pt7b;
 extern const GFXfont weather42pt8b;
 
-void driver_framebuffer_setFont(const GFXfont *font);
-bool driver_framebuffer_selectFont(const char* fontName);
-void driver_framebuffer_setCursor(int16_t x, int16_t y);
-void driver_framebuffer_getCursor(int16_t* x, int16_t* y);
-void driver_framebuffer_setTextScale(uint8_t w, uint8_t h);
-void driver_framebuffer_getTextScale(uint8_t* w, uint8_t* h);
-void driver_framebuffer_setTextColor(uint32_t value);
-uint32_t driver_framebuffer_getTextColor();
-void print_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color);
-void driver_framebuffer_write(uint8_t c);
-uint8_t driver_framebuffer_get_font_height();
-uint16_t driver_framebuffer_get_char_width(uint8_t c);
-void driver_framebuffer_print(const char* str);
-uint16_t driver_framebuffer_get_string_width(const char* str);
-uint16_t driver_framebuffer_get_string_height(const char* str);
-void driver_framebuffer_print_len(const char* str, int16_t len);
+/* Functions */
+
+const GFXfont* driver_framebuffer_findFontByName(const char* fontName);
+uint16_t driver_framebuffer_print(Frame* frame, const char* str, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font);
+uint16_t driver_framebuffer_print_len(Frame* frame, const char* str, int16_t len, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font);
+uint16_t driver_framebuffer_get_string_width(const char* str, const GFXfont *font);
+uint16_t driver_framebuffer_get_string_height(const char* str, const GFXfont *font);
 
 #endif

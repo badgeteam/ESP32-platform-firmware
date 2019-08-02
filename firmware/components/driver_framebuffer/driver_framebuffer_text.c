@@ -45,127 +45,42 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
-const GFXfont *gfxFont;
-uint8_t textScaleX = 1;
-uint8_t textScaleY = 1;
-int16_t cursor_x = 0, cursor_x0 = 0, cursor_y = 0;
-bool textWrap = true;
-uint32_t textColor = COLOR_TEXT_DEFAULT;
-
 /* Fonts */
 
 #define FONTS_AMOUNT 19
 
 const char* fontNames[] = {
-	//NEW:
-	"freesans6",
-	"freesans9",
-	"freesansmono9",
-	"freesansbold9",
-	"freesansbold12",
+	"freesans6", "freesans9", "freesansmono9", "freesansbold9", "freesansbold12",
 	"org18",
-	"fairlight8",
-	"fairlight12",
-	"pixelade9",
-	//SHA2017:
+	"fairlight8", "fairlight12",
 	"dejavusans20",
-	"permanentmarker22",
-	"permanentmarker36",
-	"roboto_black22",
-	"roboto_blackitalic24",
-	"roboto_regular12",
-	"roboto_regular18",
-	"roboto_regular22",
-	"pixelade13",
+	"permanentmarker22", "permanentmarker36",
+	"roboto_black22", "roboto_blackitalic24", "roboto_regular12", "roboto_regular18", "roboto_regular22",
+	"pixelade9", "pixelade13",
 	"weather42"
 };
 const GFXfont* fontPointers[] = {
-	//NEW:
-	&freesans6pt7b,
-	&freesans9pt7b,
-	&freesansmono9pt7b,
-	&freesansbold9pt7b,
-	&freesansbold12pt7b,
+	&freesans6pt7b, &freesans9pt7b, &freesansmono9pt7b, &freesansbold9pt7b, &freesansbold12pt7b,
 	&org_018pt7b,
-	&fairlight8pt7b,
-	&fairlight12pt7b,
-	&pixelade9pt7b,
-	//SHA2017:
+	&fairlight8pt7b, &fairlight12pt7b,
 	&dejavusans20pt7b,
-	&permanentmarker22pt7b,
-	&permanentmarker36pt7b,
-	&robotoblack22pt7b,
-	&robotoblackitalic24pt7b,
-	&roboto12pt7b,
-	&roboto18pt7b,
-	&roboto22pt7b,
-	&pixelade13pt7b,
+	&permanentmarker22pt7b, &permanentmarker36pt7b,
+	&robotoblack22pt7b, &robotoblackitalic24pt7b, &roboto12pt7b, &roboto18pt7b, &roboto22pt7b,
+	&pixelade9pt7b, &pixelade13pt7b,
 	&weather42pt8b
 };
 
-void driver_framebuffer_setFont(const GFXfont *font)
+/* Private functions */
+void _print_char(Frame* frame, unsigned char c, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
-	gfxFont = font;
-}
-
-bool driver_framebuffer_selectFont(const char* fontName)
-{
-	char buffer[32];
-	if (strlen(fontName) > 31) return false;
-	strcpy(buffer, fontName);
-	strlwr(buffer);
-	for (uint16_t i = 0; i < FONTS_AMOUNT; i++) {
-		if (strcmp(fontNames[i],buffer)==0) {
-			driver_framebuffer_setFont(fontPointers[i]);
-			return true;
-		}
+	if ((c < font->first) || (c > font->last)) {
+		ESP_LOGE(TAG, "print_char called with unprintable character");
+		return;
 	}
-	return false;
-}
 
-void driver_framebuffer_setCursor(int16_t x, int16_t y)
-{
-	cursor_x = x;
-	cursor_x0 = x;
-	cursor_y = y;
-}
-
-void driver_framebuffer_getCursor(int16_t* x, int16_t* y)
-{
-	*x = cursor_x;
-	*y = cursor_y;
-}
-
-void driver_framebuffer_setTextScale(uint8_t w, uint8_t h)
-{
-	textScaleX = w;
-	textScaleY = h;
-}
-
-void driver_framebuffer_getTextScale(uint8_t* w, uint8_t* h)
-{
-	*w = textScaleX;
-	*h = textScaleY;
-}
-
-void driver_framebuffer_setTextColor(uint32_t value)
-{
-	textColor = value;
-}
-
-uint32_t driver_framebuffer_getTextColor()
-{
-	return textColor;
-}
-
-void print_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t yScale, uint32_t color)
-{
-	if (gfxFont == NULL) return;
-	if ((c < gfxFont->first) || (c > gfxFont->last)) return;
-
-	c -= (uint8_t) gfxFont->first;
-	const GFXglyph *glyph   = gfxFont->glyph + c;
-	const uint8_t  *bitmap  = gfxFont->bitmap;
+	c -= (uint8_t) font->first;
+	const GFXglyph *glyph   = font->glyph + c;
+	const uint8_t  *bitmap  = font->bitmap;
 
 	uint16_t bitmapOffset = glyph->bitmapOffset;
 	uint8_t  width        = glyph->width;
@@ -179,9 +94,9 @@ void print_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t
 			if(!(bit++ & 7)) bits = bitmap[bitmapOffset++];
 			if(bits & 0x80) {
 				if (xScale == 1 && yScale == 1) {
-					driver_framebuffer_setPixel(NULL, x0+xOffset+x, y0+yOffset+y, color);
+					driver_framebuffer_setPixel(frame, x0+xOffset+x, y0+yOffset+y, color);
 				} else {
-					driver_framebuffer_rect(NULL, x0+(xOffset+x)*xScale, y0+(yOffset+y)*yScale, xScale, yScale, true, color);
+					driver_framebuffer_rect(frame, x0+(xOffset+x)*xScale, y0+(yOffset+y)*yScale, xScale, yScale, true, color);
 				}
 			}
 			bits <<= 1;
@@ -189,62 +104,76 @@ void print_char(int16_t x0, int16_t y0, unsigned char c, uint8_t xScale, uint8_t
 	}
 }
 
-void driver_framebuffer_write(uint8_t c)
+void _write(Frame* frame, uint8_t c, int16_t x0, int16_t *x, int16_t *y, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
-	if (gfxFont == NULL) return;
-	const GFXglyph *glyph = gfxFont->glyph + c - (uint8_t) gfxFont->first;
+	if (font == NULL) { ESP_LOGE(TAG, "write called without font"); return; }
+	const GFXglyph *glyph = font->glyph + c - (uint8_t) font->first;
 	if (c == '\n') {
-		cursor_x = cursor_x0;
-		cursor_y += gfxFont->yAdvance * textScaleY;
+		*x = x0;
+		*y += font->yAdvance * yScale;
 	} else if (c != '\r') {
-		print_char(cursor_x, cursor_y+((gfxFont->yAdvance/2)*textScaleY), c, textScaleX, textScaleY, textColor);
-		cursor_x += glyph->xAdvance * textScaleX;
+		_print_char(frame, c, *x, *y+((font->yAdvance/2)*yScale), xScale, yScale, color, font);
+		*x += glyph->xAdvance * xScale;
 	}
 }
 
-uint8_t driver_framebuffer_get_font_height()
+uint16_t _char_width(uint8_t c, const GFXfont *font)
 {
-	if (gfxFont == NULL) return 0;
-	return gfxFont->yAdvance;
+	if (font == NULL) return 0;
+	if ((c < font->first) || (c > font->last)) return 0;
+	const GFXglyph *glyph = font->glyph + c - (uint8_t) font->first;
+	if ((c == '\r') || (c == '\n')) return 0;
+	return glyph->xAdvance;
 }
 
-uint16_t driver_framebuffer_get_char_width(uint8_t c)
+/* Public functions */
+
+const GFXfont* driver_framebuffer_findFontByName(const char* fontName)
 {
-	if (gfxFont == NULL) return 0;
-	if ((c < gfxFont->first) || (c > gfxFont->last)) return 0;
-	const GFXglyph *glyph = gfxFont->glyph + c - (uint8_t) gfxFont->first;
-	if ((c != '\r') && (c != '\n')) {
-		return glyph->xAdvance * textScaleX;
+	char buffer[32];
+	if (strlen(fontName) > 31) return false;
+	strcpy(buffer, fontName);
+	strlwr(buffer);
+	for (uint16_t i = 0; i < FONTS_AMOUNT; i++) {
+		if (strcmp(fontNames[i],buffer)==0) return fontPointers[i];
 	}
-	return 0;
+	return NULL;
 }
 
-void driver_framebuffer_print(const char* str)
+uint16_t driver_framebuffer_print(Frame* frame, const char* str, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
-	for (uint16_t i = 0; i < strlen(str); i++) driver_framebuffer_write(str[i]);
+	printf("\nPrint text %s with color %u\n", str, color);
+	int16_t x = x0, y = y0;
+	for (uint16_t i = 0; i < strlen(str); i++) {
+		_write(frame, str[i], x0, &x, &y, xScale, yScale, color, font);
+	}
+	return y;
 }
 
-uint16_t driver_framebuffer_get_string_width(const char* str)
+uint16_t driver_framebuffer_print_len(Frame* frame, const char* str, int16_t len, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
+{
+	int16_t x = x0, y = y0;
+	for (uint16_t i = 0; i < len; i++) {
+		_write(frame, str[i], x0, &x, &y, xScale, yScale, color, font);
+	}
+	return y;
+}
+
+uint16_t driver_framebuffer_get_string_width(const char* str, const GFXfont *font)
 {
 	uint16_t width = 0;
-	for (uint16_t i = 0; i < strlen(str); i++) width += driver_framebuffer_get_char_width(str[i]);
+	for (uint16_t i = 0; i < strlen(str); i++) width += _char_width(str[i], font);
 	return width;
 }
 
-uint16_t driver_framebuffer_get_string_height(const char* str)
+uint16_t driver_framebuffer_get_string_height(const char* str, const GFXfont *font)
 {
-	uint8_t lineHeight = driver_framebuffer_get_font_height();
-	uint16_t height = lineHeight;
+	uint16_t height = font->yAdvance;
 	if (strlen(str) < 1) return 0;
 	for (uint16_t i = 0; i < strlen(str)-1; i++) {
-		if (str[i]=='\n') height += lineHeight;
+		if (str[i]=='\n') height += font->yAdvance;
 	}
 	return height;
-}
-
-void driver_framebuffer_print_len(const char* str, int16_t len)
-{
-	for (uint16_t i = 0; i < len; i++) driver_framebuffer_write(str[i]);
 }
 
 #endif

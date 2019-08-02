@@ -34,19 +34,31 @@ inline void _add_window(Window* window)
 	lastWindow->_nextWindow = window;
 }
 
+void _debug_windows()
+{
+	Window* window = windows;
+	printf("Windows: ");
+	while (window != NULL) {
+		printf("%s ", window->name);
+		window = window->_nextWindow;
+	}
+	printf("\n");
+}
+
 inline void _remove_window(Window* window)
 { //Remove a window from the linked list
 	Window* prevWindow = window->_prevWindow;
 	Window* nextWindow = window->_nextWindow;
 	if (prevWindow) prevWindow->_nextWindow = nextWindow; //Link previous to next
 	if (nextWindow) nextWindow->_prevWindow = prevWindow; //Link next to previous
-	if (prevWindow == NULL) windows = window;
+	if (windows == window) windows = nextWindow; //Change the start window of the linked list
 }
 
 /* Public functions */
 
 Window* driver_framebuffer_create_window(const char* name, uint16_t width, uint16_t height)
 {
+	if (driver_framebuffer_find_window(name)) return NULL; //If the window already exists do nothing and return.
 	Window* window = _create_window();
 	window->name = strdup(name);
 	window->width = width;
@@ -55,18 +67,20 @@ Window* driver_framebuffer_create_window(const char* name, uint16_t width, uint1
 	window->_prevWindow = driver_framebuffer_last_window();
 	window->_nextWindow = NULL;
 	_add_window(window); //Add window to linked list of windows
+	_debug_windows();
 	return window;
 }
 
-void driver_framebuffer_delete_window(Window* window)
+void driver_framebuffer_remove_window(Window* window)
 {
 	_remove_window(window);
-	if (windows == window) windows = NULL;
 	free(window);
+	_debug_windows();
 }
 
 Window* driver_framebuffer_find_window(const char* name)
 {
+	_debug_windows();
 	Window* currentWindow = windows;
 	while (currentWindow != NULL) {
 		if ((strlen(name) == strlen(currentWindow->name)) &&

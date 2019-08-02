@@ -27,4 +27,7 @@ void driver_framebuffer_orientation_revert(Window *window, int16_t *x, int16_t *
 void driver_framebuffer_orientation_revert_square(Window *window, int16_t* x0, int16_t* y0, int16_t* x1, int16_t* y1);
 /* Revert the orientation of the window to the provided square coordinates. */
 
+void driver_framebuffer_get_orientation_size(Window* window, int16_t* width, int16_t* height);
+/* Get the width and height of the framebuffer or a window, orientation corrected */
+
 #endif

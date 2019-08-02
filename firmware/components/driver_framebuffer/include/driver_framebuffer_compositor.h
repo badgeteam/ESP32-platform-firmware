@@ -49,7 +49,7 @@ void driver_framebuffer_remove_all_frames_from_window(Window* window);
 Window* driver_framebuffer_create_window(const char* name, uint16_t width, uint16_t height);
 /* Create a window */
 
-void driver_framebuffer_delete_window(Window* window);
+void driver_framebuffer_remove_window(Window* window);
 /* Delete a window */
 
 Window* driver_framebuffer_find_window(const char* name);

@@ -23,31 +23,21 @@ void fatal_error(const char* message)
 	printf("A fatal error occurred while initializing the driver for '%s'.\n", message);
 	if (fbReady) {
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-		#ifdef CONFIG_DRIVER_EINK_ENABLE
-			driver_framebuffer_fill(NULL, COLOR_WHITE);
-			driver_framebuffer_setTextColor(COLOR_BLACK);
-			driver_framebuffer_setFont(&freesansbold12pt7b);
-			driver_framebuffer_setCursor(0,0);
-			driver_framebuffer_setTextScale(1,1);
-			driver_framebuffer_print("Fatal error\n");
-			driver_framebuffer_setFont(&freesans8pt7b);
-			driver_framebuffer_print("Failure while starting driver.\n");
-			driver_framebuffer_print(message);
-			driver_framebuffer_print("\n\nRestart in 10 seconds...\n");
-			driver_framebuffer_flush(0);
+			#if defined(CONFIG_DRIVER_EINK_ENABLE) || defined(CONFIG_DRIVER_ILI9341_ENABLE)
+				driver_framebuffer_fill(NULL, COLOR_WHITE);
+				uint16_t y = driver_framebuffer_print(NULL, "Fatal error\n",                     0, 0, 1, 1, COLOR_BLACK, &freesansbold12pt7b);
+				y          = driver_framebuffer_print(NULL, "Failure while starting driver.\n",  y, 0, 1, 1, COLOR_BLACK, &freesans8pt7b);
+				y          = driver_framebuffer_print(NULL, message,                             y, 0, 1, 1, COLOR_BLACK, &freesans8pt7b);
+				y          = driver_framebuffer_print(NULL, "\n\nRestarting in 10 seconds...\n", y, 0, 1, 1, COLOR_BLACK, &freesans8pt7b);
+				driver_framebuffer_flush(0);
+			#endif
+			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12846_ENABLE)
+				driver_framebuffer_fill(NULL, COLOR_BLACK);
+				uint16_t y = driver_framebuffer_print(NULL, "Fatal error\n", 0, 0, 1, 1, COLOR_WHITE, &freesan8pt7b);
+				y          = driver_framebuffer_print(NULL, message,         y, 0, 1, 1, COLOR_BLACK, &freesans8pt7b);
+				driver_framebuffer_flush(0);
+			#endif
 		#endif
-		#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12846_ENABLE)
-			driver_framebuffer_fill(COLOR_BLACK);
-			driver_framebuffer_setTextColor(COLOR_WHITE);
-			driver_framebuffer_setCursor(0,0);
-			driver_framebuffer_setTextScale(1,1);
-			driver_framebuffer_setFont(&freesan8pt7b);
-			driver_framebuffer_print("Fatal error\n");
-			driver_framebuffer_print("Driver failed:\n");
-			driver_framebuffer_print(message);
-			driver_framebuffer_flush();
-	#endif
-	#endif
 	}
 	restart();
 }

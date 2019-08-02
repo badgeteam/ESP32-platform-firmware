@@ -77,32 +77,10 @@ esp_err_t driver_framebuffer_init()
 		}
 	#endif
 	
-	driver_framebuffer_setFont(&freesans9pt7b);
-		
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //1st framebuffer
-	driver_framebuffer_setTextColor(COLOR_TEXT_DEFAULT);
 	driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
-	
-	/* Window test */
-	Window* testWindow = driver_framebuffer_create_window("testWindow", 50, 50);
-	testWindow->visible = true;
-	driver_framebuffer_fill(testWindow->frames, 0xFFFFFF);
-	driver_framebuffer_rect(testWindow->frames, 0, 0, testWindow->width, testWindow->height, false, 0x000000);
-	driver_framebuffer_line(testWindow->frames, testWindow->width-1, 0, 0, testWindow->height-1, 0x000000);
-	
-	testWindow = driver_framebuffer_create_window("testWindow #2", 50, 50);
-	testWindow->x = 20;
-	testWindow->y = 20;
-	testWindow->visible = true;
-	driver_framebuffer_fill(testWindow->frames, 0xFFFFFF);
-	driver_framebuffer_rect(testWindow->frames, 0, 0, testWindow->width, testWindow->height, false, 0x000000);
-	driver_framebuffer_line(testWindow->frames, 0, 0, testWindow->width-1, testWindow->height-1, 0x000000);
-	
-	//testWindow = driver_framebuffer_find_window("testWindow");
-	//driver_framebuffer_focus_window(testWindow);
-	/* ----------- */
-	
+		
 	driver_framebuffer_init_done = true;
 	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
@@ -401,18 +379,14 @@ esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_
 uint16_t driver_framebuffer_getWidth(Window* window)
 {
 	int16_t width, height;
-	driver_framebuffer_window_getSize(window, &width, &height);
-	Frame* frame = NULL; if (window) frame = window->frames; //Temporary workaround
-	driver_framebuffer_orientation_revert(frame ? frame->window : NULL, &width, &height);
+	driver_framebuffer_get_orientation_size(window, &width, &height);
 	return width;
 }
 
 uint16_t driver_framebuffer_getHeight(Window* window)
 {
 	int16_t width, height;
-	driver_framebuffer_window_getSize(window, &width, &height);
-	Frame* frame = NULL; if (window) frame = window->frames; //Temporary workaround
-	driver_framebuffer_orientation_revert(frame ? frame->window : NULL, &width, &height);
+	driver_framebuffer_get_orientation_size(window, &width, &height);
 	return height;
 }
 
