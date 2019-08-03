@@ -34,14 +34,81 @@ inline Frame* _create_frame(Window* window)
 Frame* driver_framebuffer_add_frame_to_window(Window* window)
 {
 	if (!window) return NULL;
-	Frame* lastFrame = window->frames;
-	while (lastFrame && lastFrame->_nextFrame) lastFrame = lastFrame->_nextFrame;
 	Frame* newFrame = _create_frame(window);
 	if (!newFrame) return NULL;
-	newFrame->_prevFrame = lastFrame;
-	if (lastFrame) lastFrame->_nextFrame = newFrame;
+	
+	newFrame->_prevFrame = window->_lastFrame; //Add pointer to previous last frame
+	if (window->lastFrame) {
+		//Add ourselves as next frame if there already is a frame
+		window->_lastFrame->_nextFrame = newFrame;
+	} else {
+		//We are the first frame added to the window, add ourselves as the first frame and the last frame
+		window->_lastFrame = newFrame;
+		window->_firstFrame = newFrame;
+	}
+	window->frame = newFrame; //Switch the window to the new frame
 	return newFrame;
 }
+
+void driver_framebuffer_window_set_frame(Window* window, Frame* frame)
+{
+	if (!window) return NULL;
+	window->currentFrame = frame;
+}
+
+bool driver_framebuffer_window_next_frame(Window* window)
+{
+	if (!window) return NULL;
+	if (window->frame->_nextFrame) {
+		//There is a frame after the current frame
+		window->frame = window->frame->_nextFrame;
+	} else {
+		//At the last frame...
+		if (window->loopFrames) {
+			//Loop back to the first frame
+			window->frame = window->_firstFrame;
+		} else {
+			//Last frame already reached, report failure
+			return false;
+		}
+	}
+	return true;
+}
+
+bool driver_framebuffer_window_prev_frame(Window* window)
+{
+	if (!window) return NULL;
+	if (window->frame->_prevFrame) {
+		//There is a frame before the current frame
+		window->frame = window->frame->_prevFrame;
+	} else {
+		//At the first frame...
+		if (window->loopFrames) {
+			//Loop back to the last frame
+			window->frame = window->_lastFrame;
+		} else {
+			//First frame already reached, report failure
+			return false;
+		}
+	}
+	return true;
+}
+
+bool driver_framebuffer_window_seek_frame(Window* window, uint16_t nr)
+{
+	if (!window) return NULL;
+	Frame* targetFrame = window->_firstFrame;
+	for (uint16_t i = 0; i < nr; i++) {
+		if (targetFrame->_nextFrame) {
+			targetFrame = targetFrame->_nextFrame;
+		} else {
+			return false;
+		}
+	}
+	window->frame = targetFrame;
+	return true;
+}
+
 
 void driver_framebuffer_compositor_delete_frame(Frame* frame)
 {

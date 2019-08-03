@@ -31,15 +31,17 @@ typedef struct Window_t {
 	int16_t x, y;                   // Position (x,y)
 	uint16_t width, height;         // Size
 	bool visible;                   // Visible or hidden
-	uint8_t tpEnabled;              // Enable transparency (0 = completely visible, 255 = completely transparent)
-	uint32_t tpValue;               // Which value (on or off) is transparent
 	enum Orientation orientation;   // Current orientation
-	int16_t textCursorX;            // Current horizontal position
-	int16_t textCursorX0;           // Starting position after newline
-	int16_t textCursorY;            // Current vertical position
 	
 	/* Frames */
-	Frame* frames;                  // Starting point of linked list of frames
+	Frame* _firstFrame;             // Starting point of linked list of frames
+	Frame* _lastFrame;              // The last frame in the linked list of frames
+	Frame* frame;                   // The currently selected frame
+	bool   loopFrames;              // Go to the first frame when reaching the last frame and vice versa
+	
+	/* Not implemented yet */
+	uint8_t tpEnabled;              // Enable transparency (0 = completely visible, 255 = completely transparent)
+	uint32_t tpValue;               // Which value (on or off) is transparent
 } Window;
 
 Frame* driver_framebuffer_add_frame_to_window(Window* window);

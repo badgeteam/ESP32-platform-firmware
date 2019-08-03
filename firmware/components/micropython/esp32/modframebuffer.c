@@ -657,33 +657,29 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_width                         ), MP_ROM_PTR( &framebuffer_get_width_obj            )}, //Get the width of the framebuffer or a window
 	{MP_ROM_QSTR( MP_QSTR_height                        ), MP_ROM_PTR( &framebuffer_get_height_obj           )}, //Get the height of the framebuffer or a window
 	{MP_ROM_QSTR( MP_QSTR_orientation                   ), MP_ROM_PTR( &framebuffer_orientation_obj          )}, //Get or set the orientation
-	{MP_ROM_QSTR( MP_QSTR_raw                           ), MP_ROM_PTR( &framebuffer_raw_obj                  )}, //Write raw data to the buffer
+	{MP_ROM_QSTR( MP_QSTR_pngInfo                       ), MP_ROM_PTR( &framebuffer_png_info_obj             )}, //Get information about a PNG image
+	{MP_ROM_QSTR( MP_QSTR_getTextWidth                  ), MP_ROM_PTR( &framebuffer_get_string_width_obj     )}, //Get the width a string would take
+	{MP_ROM_QSTR( MP_QSTR_getTextHeight                 ), MP_ROM_PTR( &framebuffer_get_string_height_obj    )}, //Get the height a string would take
 	
 	/* Functions: compositor */
-	{MP_ROM_QSTR( MP_QSTR_window_create                 ), MP_ROM_PTR( &framebuffer_create_window_obj        )}, //Create a new window
-	{MP_ROM_QSTR( MP_QSTR_window_remove                 ), MP_ROM_PTR( &framebuffer_remove_window_obj        )}, //Delete a window
-	{MP_ROM_QSTR( MP_QSTR_window_move                   ), MP_ROM_PTR( &framebuffer_move_window_obj          )}, //Move a window
-	{MP_ROM_QSTR( MP_QSTR_window_hide                   ), MP_ROM_PTR( &framebuffer_hide_window_obj          )}, //Hide a window
-	{MP_ROM_QSTR( MP_QSTR_window_show                   ), MP_ROM_PTR( &framebuffer_show_window_obj          )}, //Show a window
-	{MP_ROM_QSTR( MP_QSTR_window_set_visibility         ), MP_ROM_PTR( &framebuffer_window_set_visiblity_obj )}, //Get or set the visibility of a window
-	{MP_ROM_QSTR( MP_QSTR_window_focus                  ), MP_ROM_PTR( &framebuffer_focus_window_obj         )}, //Bring a window to the front
+	{MP_ROM_QSTR( MP_QSTR_windowCreate                  ), MP_ROM_PTR( &framebuffer_create_window_obj        )}, //Create a new window
+	{MP_ROM_QSTR( MP_QSTR_windowRemove                  ), MP_ROM_PTR( &framebuffer_remove_window_obj        )}, //Delete a window
+	{MP_ROM_QSTR( MP_QSTR_windowMove                    ), MP_ROM_PTR( &framebuffer_move_window_obj          )}, //Move a window
+	{MP_ROM_QSTR( MP_QSTR_windowHide                    ), MP_ROM_PTR( &framebuffer_hide_window_obj          )}, //Hide a window
+	{MP_ROM_QSTR( MP_QSTR_windowShow                    ), MP_ROM_PTR( &framebuffer_show_window_obj          )}, //Show a window
+	{MP_ROM_QSTR( MP_QSTR_windowVisibility              ), MP_ROM_PTR( &framebuffer_window_set_visiblity_obj )}, //Get or set the visibility of a window
+	{MP_ROM_QSTR( MP_QSTR_windowFocus                   ), MP_ROM_PTR( &framebuffer_focus_window_obj         )}, //Bring a window to the front
 	
 	/* Functions: drawing */
-	{MP_ROM_QSTR( MP_QSTR_get                           ), MP_ROM_PTR( &framebuffer_get_pixel_obj            )}, //Get the color of a pixel
-	{MP_ROM_QSTR( MP_QSTR_set                           ), MP_ROM_PTR( &framebuffer_set_pixel_obj            )}, //Set the color of a pixel
-	{MP_ROM_QSTR( MP_QSTR_fill                          ), MP_ROM_PTR( &framebuffer_fill_obj                 )}, //Fill the framebuffer or a window
-	{MP_ROM_QSTR( MP_QSTR_line                          ), MP_ROM_PTR( &framebuffer_line_obj                 )}, //Draw a line
-	{MP_ROM_QSTR( MP_QSTR_rect                          ), MP_ROM_PTR( &framebuffer_rect_obj                 )}, //Draw a rectangle
-	{MP_ROM_QSTR( MP_QSTR_circle                        ), MP_ROM_PTR( &framebuffer_circle_obj               )}, //Draw a circle
-	
-	/* Functions: text */
-	{MP_ROM_QSTR( MP_QSTR_text                          ), MP_ROM_PTR( &framebuffer_text_obj                 )}, //Print text
-	{MP_ROM_QSTR( MP_QSTR_get_string_width              ), MP_ROM_PTR( &framebuffer_get_string_width_obj     )}, //Get the width a string would take
-	{MP_ROM_QSTR( MP_QSTR_get_string_height             ), MP_ROM_PTR( &framebuffer_get_string_height_obj    )}, //Get the height a string would take
-	
-	/* Functions: format parsers */
-	{MP_ROM_QSTR( MP_QSTR_png_info                      ), MP_ROM_PTR( &framebuffer_png_info_obj             )}, //Get information about a PNG image
-	{MP_ROM_QSTR( MP_QSTR_png                           ), MP_ROM_PTR( &framebuffer_png_obj                  )}, //Display a PNG image
+	{MP_ROM_QSTR( MP_QSTR_getPixel                      ), MP_ROM_PTR( &framebuffer_get_pixel_obj            )}, //Get the color of a pixel
+	{MP_ROM_QSTR( MP_QSTR_drawPixel                     ), MP_ROM_PTR( &framebuffer_set_pixel_obj            )}, //Set the color of a pixel
+	{MP_ROM_QSTR( MP_QSTR_drawFill                      ), MP_ROM_PTR( &framebuffer_fill_obj                 )}, //Fill the framebuffer or a window
+	{MP_ROM_QSTR( MP_QSTR_drawLine                      ), MP_ROM_PTR( &framebuffer_line_obj                 )}, //Draw a line
+	{MP_ROM_QSTR( MP_QSTR_drawRect                      ), MP_ROM_PTR( &framebuffer_rect_obj                 )}, //Draw a rectangle
+	{MP_ROM_QSTR( MP_QSTR_drawCircle                    ), MP_ROM_PTR( &framebuffer_circle_obj               )}, //Draw a circle
+	{MP_ROM_QSTR( MP_QSTR_drawText                      ), MP_ROM_PTR( &framebuffer_text_obj                 )}, //Draw text
+	{MP_ROM_QSTR( MP_QSTR_drawPng                       ), MP_ROM_PTR( &framebuffer_png_obj                  )}, //Display a PNG image
+	{MP_ROM_QSTR( MP_QSTR_drawRaw                       ), MP_ROM_PTR( &framebuffer_raw_obj                  )}, //Write raw data to the buffer
 };
 
 static MP_DEFINE_CONST_DICT(framebuffer_module_globals, framebuffer_module_globals_table);
