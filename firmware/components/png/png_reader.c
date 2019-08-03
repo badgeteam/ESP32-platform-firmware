@@ -10,6 +10,7 @@
 #include "png_reader.h"
 
 #include <stdio.h>
+#include "driver_framebuffer_compositor.h"
 #include "driver_framebuffer.h"
 
 /* http://www.libpng.org/pub/png/spec/1.2/PNG-Contents.html */
@@ -191,7 +192,7 @@ lib_png_paeth(uint8_t _a, uint8_t _b, uint8_t _c)
 }
 
 static inline int
-lib_png_decode(struct lib_png_reader *pr, uint32_t width, uint32_t height, uint32_t scanline_width, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_pixlen, uint32_t dst_linelen)
+lib_png_decode(Frame* frame, struct lib_png_reader *pr, uint32_t width, uint32_t height, uint32_t scanline_width, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_pixlen, uint32_t dst_linelen)
 {
 	memset(pr->scanline, 0, scanline_width);
 
@@ -391,7 +392,7 @@ lib_png_decode(struct lib_png_reader *pr, uint32_t width, uint32_t height, uint3
 			if (a != 0 && x >= dst_min_x && x < dst_width && y >= dst_min_y && y < dst_height)
 			{
 				#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-				driver_framebuffer_setPixel(NULL, offset_x + x, offset_y + y, ((r>>8)<<16)+((g>>8)<<8)+(b>>8));
+				driver_framebuffer_setPixel(frame, offset_x + x, offset_y + y, ((r>>8)<<16)+((g>>8)<<8)+(b>>8));
 				#endif
 			}
 		}
@@ -499,8 +500,7 @@ lib_png_read_header(struct lib_png_reader *pr)
 	return 0;
 }
 
-int
-lib_png_load_image(struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_linelen)
+int lib_png_load_image(Frame *frame, struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_linelen)
 {
 	// read header
 	int res = lib_png_read_header(pr);
@@ -583,7 +583,7 @@ lib_png_load_image(struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset
 
 	pr->adler = LIB_ADLER32_INIT;
 
-	res = lib_png_decode(pr, pr->ihdr.width, pr->ihdr.height, pr->scanline_width, offset_x, offset_y, dst_min_x, dst_min_y, dst_width, dst_height, 1, dst_linelen);
+	res = lib_png_decode(frame, pr, pr->ihdr.width, pr->ihdr.height, pr->scanline_width, offset_x, offset_y, dst_min_x, dst_min_y, dst_width, dst_height, 1, dst_linelen);
 	if (res < 0) return res;
 
 	// ensure we're at the end of the deflate stream

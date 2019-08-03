@@ -505,18 +505,34 @@ static mp_obj_t framebuffer_png_info(mp_uint_t n_args, const mp_obj_t *args)
 
 static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 {
-	int16_t x = mp_obj_get_int(args[0]);
-	int16_t y = mp_obj_get_int(args[1]);
+	Window* window = NULL;
+	int paramOffset = 0;
+	
+	if (MP_OBJ_IS_STR(args[0])) {
+		if (n_args < 4) {
+			mp_raise_ValueError("Expected: window, x, y, file");
+			return mp_const_none;
+		}
+		window = driver_framebuffer_find_window(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
+	}
+	
+	int16_t x = mp_obj_get_int(args[paramOffset++]);
+	int16_t y = mp_obj_get_int(args[paramOffset++]);
 	
 	lib_reader_read_t reader;
 	
-	bool is_bytes = MP_OBJ_IS_TYPE(args[2], &mp_type_bytes);
+	bool is_bytes = MP_OBJ_IS_TYPE(args[paramOffset], &mp_type_bytes);
 	
 	esp_err_t renderRes = ESP_FAIL;
 	
 	if (is_bytes) {
 		mp_uint_t len;
-		uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[2], &len);
+		uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[paramOffset], &len);
 		struct lib_mem_reader *mr = lib_mem_new(data, len);
 		if (mr == NULL) {
 			mp_raise_ValueError("Out of memory");
@@ -526,7 +542,7 @@ static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 		renderRes = driver_framebuffer_png(NULL, x, y, reader, mr);
 		lib_mem_destroy(mr);
 	} else {
-		const char* filename = mp_obj_str_get_str(args[2]);
+		const char* filename = mp_obj_str_get_str(args[paramOffset]);
 		char fullname[128] = {'\0'};
 		int res = physicalPathN(filename, fullname, sizeof(fullname));
 		if ((res != 0) || (strlen(fullname) == 0)) {
@@ -539,7 +555,7 @@ static mp_obj_t framebuffer_png(mp_uint_t n_args, const mp_obj_t *args)
 			return mp_const_none;
 		}
 		reader = (lib_reader_read_t) &lib_file_read;
-		renderRes = driver_framebuffer_png(NULL, x, y, reader, fr);
+		renderRes = driver_framebuffer_png(window ? window->frames : NULL, x, y, reader, fr);
 		lib_file_destroy(fr);
 	}
 	
@@ -619,7 +635,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_get_string_height_obj,  
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_info_obj, 1, 1, framebuffer_png_info);
 /* Get information about a PNG image. Arguments: buffer with PNG data or filename of PNG image */
 
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_obj, 3, 3, framebuffer_png);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_obj,                   3, 4, framebuffer_png);
 /* Get information about a PNG image. Arguments: x, y, buffer with PNG data or filename of PNG image */
 
 static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {

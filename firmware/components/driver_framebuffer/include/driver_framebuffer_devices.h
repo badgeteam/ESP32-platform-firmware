@@ -61,7 +61,7 @@
 	#define FB_SIZE HUB75_BUFFER_SIZE
 	#define FB_WIDTH HUB75_WIDTH
 	#define FB_HEIGHT HUB75_HEIGHT
-	#define FB_TYPE_24BPP
+	#define FB_TYPE_32BPP
 	#define FB_ALPHA_ENABLED
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_hub75_switch_buffer(buffer)
 	#define COLOR_FILL_DEFAULT 0x000000
@@ -78,6 +78,8 @@
 	#define PIXEL_SIZE 16
 #elif defined(FB_TYPE_24BPP)
 	#define PIXEL_SIZE 24
+#elif defined(FB_TYPE_32BPP)
+	#define PIXEL_SIZE 32
 #endif
 
 #endif //_DRIVER_FRAMEBUFFER_DEVICES_H_

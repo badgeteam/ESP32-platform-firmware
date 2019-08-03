@@ -89,7 +89,6 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 			#ifdef CONFIG_DRIVER_HUB75_ENABLE
 				compositor_disable(); //Don't use the compositor if we have the framebuffer driver
 				driver_framebuffer_fill(NULL, COLOR_BLACK);
-				driver_framebuffer_setCursor(0,0);
 				uint16_t progressPosition = (percentage*FB_WIDTH)/100;
 				for (uint8_t i = 0; i < FB_WIDTH; i++) {
 					driver_framebuffer_line(NULL, i, 0, i, FB_HEIGHT-1, (i < progressPosition) ? 0x008800 : 0x880000);

@@ -7,7 +7,7 @@
 #include "esp_system.h"
 
 #include "driver_framebuffer_orientation_internal.h"
-#include "driver_framebuffer_font.h"
+//#include "driver_framebuffer_font.h"
 
 typedef struct Frame_t {
 	/* Linked list */

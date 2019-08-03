@@ -67,7 +67,6 @@ Window* driver_framebuffer_create_window(const char* name, uint16_t width, uint1
 	window->_prevWindow = driver_framebuffer_last_window();
 	window->_nextWindow = NULL;
 	_add_window(window); //Add window to linked list of windows
-	_debug_windows();
 	return window;
 }
 
@@ -75,12 +74,10 @@ void driver_framebuffer_remove_window(Window* window)
 {
 	_remove_window(window);
 	free(window);
-	_debug_windows();
 }
 
 Window* driver_framebuffer_find_window(const char* name)
 {
-	_debug_windows();
 	Window* currentWindow = windows;
 	while (currentWindow != NULL) {
 		if ((strlen(name) == strlen(currentWindow->name)) &&
