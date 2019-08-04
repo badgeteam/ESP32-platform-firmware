@@ -73,7 +73,7 @@ void kchal_sound_push(uint8_t *buf, int len) {
 			if (s<0) s=0;
 			tmpb[j]=((s)<<8)+((s)<<24);
 		}
-		i2s_write_bytes(0, (char*)tmpb, plen*4, portMAX_DELAY);
+		i2s_write_bytes(CONFIG_DRIVER_SNDMIXER_I2S_NUM, (char*)tmpb, plen*4, portMAX_DELAY);
 		i+=plen;
 	}
 }
