@@ -6,4 +6,8 @@ menu "Driver: framebuffer support"
 		depends on DRIVER_FRAMEBUFFER_ENABLE
 		bool "Double buffered"
 		default n
+	config DRIVER_FRAMEBUFFER_FLIP
+		depends on DRIVER_FRAMEBUFFER_ENABLE
+		bool "Flip by 180 degrees"
+		default n
 endmenu

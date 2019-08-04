@@ -80,7 +80,9 @@ esp_err_t driver_framebuffer_init()
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //1st framebuffer
 	driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
-		
+	
+	driver_framebuffer_set_orientation_angle(NULL, 0); //Apply global orientation (needed for flip)
+	
 	driver_framebuffer_init_done = true;
 	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
@@ -169,7 +171,12 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 			uint32_t position = ( (y / 8) * width) + x;
 			uint8_t  bit      = y % 8;
 		#endif
-		buffer[position] ^= (-value ^ buffer[position]) & (1UL << bit);
+			
+		if (value) {
+			buffer[position] |= 1UL << bit;
+		} else {
+			buffer[position] &= ~(1UL << bit);
+		}
 	#elif defined(FB_TYPE_8BPP)
 		value = rgbToGrey(value);
 		uint32_t position = (y * width) + x;
@@ -218,7 +225,7 @@ uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y)
 			uint32_t position = ( (y / 8) * width) + x;
 			uint8_t  bit      = y % 8;
 		#endif
-		if ((buffer[position] >> bit) && 0x01) {
+		if ((buffer[position] >> bit) & 0x01) {
 			return 0xFFFFFF;
 		} else {
 			return 0x000000;
@@ -251,21 +258,10 @@ bool driver_framebuffer_flush(uint32_t flags)
 		return false;
 	}
 	
-	Window* currentWindow = driver_framebuffer_first_window();
+	Window* currentWindow = driver_framebuffer_window_first();
 	while (currentWindow != NULL) {
-		/*printf("Window: %s\n", currentWindow->name);
-		if (currentWindow->_prevWindow) {
-			printf(" - Previous: %s\n", currentWindow->_prevWindow->name);
-		} else {
-			printf(" - Previous: none\n");
-		}
-		if (currentWindow->_nextWindow) {
-			printf(" - Next: %s\n", currentWindow->_nextWindow->name);
-		} else {
-			printf(" - Next: none\n");
-		}*/
 		if (currentWindow->visible) {
-			Frame* currentFrame = currentWindow->frames; //Fixme.
+			Frame* currentFrame = currentWindow->frame;
 			for (uint16_t wy = 0; wy < currentWindow->height; wy++) {
 				for (uint16_t wx = 0; wx < currentWindow->width; wx++) {
 					driver_framebuffer_setPixel(

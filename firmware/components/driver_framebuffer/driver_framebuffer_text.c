@@ -47,7 +47,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /* Fonts */
 
-#define FONTS_AMOUNT 19
+#define FONTS_AMOUNT 20
 
 const char* fontNames[] = {
 	"freesans6", "freesans9", "freesansmono9", "freesansbold9", "freesansbold12",
@@ -57,7 +57,8 @@ const char* fontNames[] = {
 	"permanentmarker22", "permanentmarker36",
 	"roboto_black22", "roboto_blackitalic24", "roboto_regular12", "roboto_regular18", "roboto_regular22",
 	"pixelade9", "pixelade13",
-	"weather42"
+	"weather42",
+	"7x5"
 };
 const GFXfont* fontPointers[] = {
 	&freesans6pt7b, &freesans9pt7b, &freesansmono9pt7b, &freesansbold9pt7b, &freesansbold12pt7b,
@@ -67,7 +68,8 @@ const GFXfont* fontPointers[] = {
 	&permanentmarker22pt7b, &permanentmarker36pt7b,
 	&robotoblack22pt7b, &robotoblackitalic24pt7b, &roboto12pt7b, &roboto18pt7b, &roboto22pt7b,
 	&pixelade9pt7b, &pixelade13pt7b,
-	&weather42pt8b
+	&weather42pt8b,
+	&ipane7x5
 };
 
 /* Private functions */

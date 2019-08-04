@@ -33,8 +33,8 @@ void fatal_error(const char* message)
 			#endif
 			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12846_ENABLE)
 				driver_framebuffer_fill(NULL, COLOR_BLACK);
-				uint16_t y = driver_framebuffer_print(NULL, "Fatal error\n", 0, 0, 1, 1, COLOR_WHITE, &freesan8pt7b);
-				y          = driver_framebuffer_print(NULL, message,         y, 0, 1, 1, COLOR_BLACK, &freesans8pt7b);
+				uint16_t y = driver_framebuffer_print(NULL, "Fatal error\n", 0, 0, 1, 1, COLOR_WHITE, &ipane7x5);
+				driver_framebuffer_print(NULL, message, y, 0, 1, 1, COLOR_BLACK, &ipane7x5);
 				driver_framebuffer_flush(0);
 			#endif
 		#endif
@@ -57,6 +57,7 @@ void platform_init()
 	INIT_DRIVER(mpr121       , "MPR121"     ) //I/O expander with touch inputs as found on the SHA2017 and HackerHotel 2019 badges
 	INIT_DRIVER(disobey_samd , "SAMD"       ) //I/O via the SAMD co-processor on the Disobey 2019 badge
 	INIT_DRIVER(neopixel     , "NEOPIXEL"   ) //Addressable LEDs as found on the SHA2017 and HackerHotel 2019 badges
+	INIT_DRIVER(microphone   , "MICROPHONE" ) //Microphone driver
 	fflush(stdout);
 	vTaskDelay(100 / portTICK_PERIOD_MS); //Give things time to settle.
 }

@@ -8,5 +8,9 @@ fontconvert: fontconvert.c
 	$(CC) $(CFLAGS) $< $(LIBS) -o $@
 	strip $@
 	
+adafruit: fontconvert_adafruit.c
+	$(CC) $(CFLAGS) $< $(LIBS) -o $@
+	strip $@
+	
 clean:
 	rm -f fontconvert fontheader

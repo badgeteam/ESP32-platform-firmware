@@ -61,6 +61,17 @@ uint16_t driver_framebuffer_get_orientation_angle(Window* window)
 {
 	enum Orientation *orientation = _getOrientationContext(window);
 	switch (*orientation) {
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_FLIP
+		case portrait:
+			return 270;
+		case reverse_landscape:
+			return 0;
+		case reverse_portrait:
+			return 90;
+		default:
+		case landscape:
+			return 180;
+#else
 		case portrait:
 			return 90;
 		case reverse_landscape:
@@ -70,30 +81,44 @@ uint16_t driver_framebuffer_get_orientation_angle(Window* window)
 		default:
 		case landscape:
 			return 0;
+#endif
 	}
 }
 
 void driver_framebuffer_set_orientation_angle(Window* window, uint16_t angle)
 {
 	enum Orientation *orientation = _getOrientationContext(window);
-	switch (angle) {
-		case 90:
-			ESP_LOGE(TAG, "Orientation set to portrait");
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_FLIP
+	switch (angle % 360) {
+		case 270:
 			*orientation = portrait;
 			break;
-		case 180:
-			ESP_LOGE(TAG, "Orientation set to reverse landscape");
+		case 0:
 			*orientation = reverse_landscape;
 			break;
-		case 270:
-			ESP_LOGE(TAG, "Orientation set to reverse portrait");
+		case 90:
 			*orientation = reverse_portrait;
 			break;
 		default:
-			ESP_LOGE(TAG, "Orientation set to landscape");
 			*orientation = landscape;
 			break;
 	}
+#else
+	switch (angle % 360) {
+		case 90:
+			*orientation = portrait;
+			break;
+		case 180:
+			*orientation = reverse_landscape;
+			break;
+		case 270:
+			*orientation = reverse_portrait;
+			break;
+		default:
+			*orientation = landscape;
+			break;
+	}
+#endif
 }
 
 bool driver_framebuffer_orientation_apply(Window* window, int16_t* x, int16_t* y)

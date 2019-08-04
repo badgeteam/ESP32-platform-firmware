@@ -83,7 +83,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				driver_framebuffer_print(NULL, "UPDATE\n", 0, 0, 1, 1, COLOR_WHITE, &freesansbold9pt7b);
 				char buffer[16];
 				snprintf(buffer, 16, "%*u%%", 3, percentage);
-				driver_framebuffer_print(NULL, buffer, 0, y, 1, 1, COLOR_BLACK, &org_018pt7b);
+				driver_framebuffer_print(NULL, buffer, 0, FB_HEIGHT-8, 1, 1, COLOR_BLACK, &org_018pt7b);
 				driver_framebuffer_flush(0);
 			#endif
 			#ifdef CONFIG_DRIVER_HUB75_ENABLE
@@ -91,14 +91,14 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				driver_framebuffer_fill(NULL, COLOR_BLACK);
 				uint16_t progressPosition = (percentage*FB_WIDTH)/100;
 				for (uint8_t i = 0; i < FB_WIDTH; i++) {
-					driver_framebuffer_line(NULL, i, 0, i, FB_HEIGHT-1, (i < progressPosition) ? 0x008800 : 0x880000);
+					driver_framebuffer_line(NULL, i, FB_HEIGHT-1, i, FB_HEIGHT-1, (i < progressPosition) ? 0x008800 : 0x880000);
 				}
 				if (!showPercentage) {
-					driver_framebuffer_print(NULL, text, 0, 0, 1, 1, COLOR_BLACK, &freesans6pt7b);
+					driver_framebuffer_print(NULL, text, 0, 0, 1, 1, COLOR_WHITE, &ipane7x5);
 				} else {
 					char buff[4];
 					sprintf(buff, "%d%%", percentage);
-					driver_framebuffer_print(NULL, buff, 0, 0, 1, 1, COLOR_BLACK, &freesans6pt7b);
+					driver_framebuffer_print(NULL, buff, 0, 0, 1, 1, COLOR_WHITE, &ipane7x5);
 				}
 				driver_framebuffer_flush(0);
 			#endif

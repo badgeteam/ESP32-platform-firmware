@@ -285,6 +285,10 @@ extern const struct _mp_obj_module_t esp_module;
 extern const struct _mp_obj_module_t espnow_module;
 extern const struct _mp_obj_module_t consts_module;
 
+#ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
+extern const struct _mp_obj_module_t sndmixer_module;
+#endif
+
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 extern const struct _mp_obj_module_t hub75_module;
 #endif
@@ -427,31 +431,38 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_PSIM
 #endif
 
+#ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
+#define BUILTIN_MODULE_SNDMIXER { MP_OBJ_NEW_QSTR(MP_QSTR_sndmixer), (mp_obj_t)&sndmixer_module },
+#else
+#define BUILTIN_MODULE_SNDMIXER
+#endif
+
 
 #define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),    (mp_obj_t)&utime_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uos),      (mp_obj_t)&uos_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),  (mp_obj_t)&mp_module_usocket }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_machine),  (mp_obj_t)&mp_module_machine }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_network),  (mp_obj_t)&mp_module_network }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_ymodem),   (mp_obj_t)&mp_module_ymodem }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_consts), (mp_obj_t)&consts_module }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_utime),    (mp_obj_t)&utime_module }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_uos),      (mp_obj_t)&uos_module }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_usocket),  (mp_obj_t)&mp_module_usocket }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_machine),  (mp_obj_t)&mp_module_machine }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_network),  (mp_obj_t)&mp_module_network }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_ymodem),   (mp_obj_t)&mp_module_ymodem }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_consts), (mp_obj_t)&consts_module }, \
+	BUILTIN_MODULE_SNDMIXER \
 	BUILTIN_MODULE_CURL \
-    BUILTIN_MODULE_REQUESTS \
+	BUILTIN_MODULE_REQUESTS \
 	BUILTIN_MODULE_BLUETOOTH \
-    BUILTIN_MODULE_I2C \
-    BUILTIN_MODULE_MPR121 \
-    BUILTIN_MODULE_ERC12864 \
-    BUILTIN_MODULE_SSD1306 \
-    BUILTIN_MODULE_FRAMEBUFFER \
-    BUILTIN_MODULE_NEOPIXEL \
-    BUILTIN_MODULE_HUB75 \
-    BUILTIN_MODULE_PSIM \
-    BUILTIN_MODULE_EINK \
-    BUILTIN_MODULE_DISOBEY_SAMD \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
+	BUILTIN_MODULE_I2C \
+	BUILTIN_MODULE_MPR121 \
+	BUILTIN_MODULE_ERC12864 \
+	BUILTIN_MODULE_SSD1306 \
+	BUILTIN_MODULE_FRAMEBUFFER \
+	BUILTIN_MODULE_NEOPIXEL \
+	BUILTIN_MODULE_HUB75 \
+	BUILTIN_MODULE_PSIM \
+	BUILTIN_MODULE_EINK \
+	BUILTIN_MODULE_DISOBEY_SAMD \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_binascii), (mp_obj_t)&mp_module_ubinascii }, \
