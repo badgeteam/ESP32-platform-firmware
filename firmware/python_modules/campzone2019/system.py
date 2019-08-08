@@ -5,11 +5,15 @@ def clear_boot_magic():
 	esp.rtcmem_write(1, 0)
 
 def reboot():
-	import machine
+	import machine, rgb
+	rgb.enablecomp()
+	rgb.clear()
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):
-	import machine, time
+	import machine, time, rgb
+	rgb.enablecomp()
+	rgb.clear()
 	machine.RTC().wake_on_ext0(pin = machine.Pin(25), level = 0)
 	machine.RTC().wake_on_ext1([machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)], 0)
 	if (duration >= 86400000): #One day
@@ -66,7 +70,7 @@ def shell(status=False):
 # Over-the-air updating
 
 def ota(status=False):
-	import esp, deepsleep
+	import esp
 	if status:
 		import term
 		term.header(True, "Starting update...")

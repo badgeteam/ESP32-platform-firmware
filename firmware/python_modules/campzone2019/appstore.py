@@ -1,5 +1,5 @@
 import system, time
-import woezel, rgb, uinterface
+import woezel, rgb, uinterface, gc
 from default_icons import icon_no_wifi, animation_connecting_wifi, animation_loading
 
 def woezel_callback(text, error):
@@ -28,7 +28,9 @@ def woezel_callback(text, error):
         rgb.scrolltext(text, pos=(8,0), width=(rgb.PANEL_WIDTH - 8))
     elif "Downloading '" in text:
         cur, total = text.split('(')[1].split(')')[0].split('/')  # Definitely not proud of this
-        progress = '(%s/%s)' % (cur, total)
+        if len(cur) < 2:
+            cur = " "+cur
+        progress = '%s/%s' % (cur, total)
         data, size, frames = animation_loading
         rgb.gif(data, (1, 1), size, frames)
         rgb.setfont(rgb.FONT_6x3)
@@ -60,6 +62,14 @@ while True:
     if chosen_index is None:
         continue
     app = apps[chosen_index]
+    
+    #Attempt to free some RAM
+    categories = None
+    category = None
+    apps = None
+    icon_no_wifi = None
+    animation_connecting_wifi = None
+    gc.collect()
 
     # WiFi could have been disconnected by now
     if not uinterface.connect_wifi():
