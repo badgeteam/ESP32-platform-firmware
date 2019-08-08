@@ -32,7 +32,7 @@
 
 //#define CONFIG_DRIVER_MICROPHONE_I2S_NUM 1
 
-#define READ_LEN (1024*256)
+#define READ_LEN (1024*64)
 
 void ICS41350_disp_buf(uint8_t* buf, int length)
 {

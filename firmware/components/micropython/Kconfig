@@ -615,7 +615,7 @@ menu "MicroPython"
 
 		config MICROPY_FATFS_MAX_OPEN_FILES
 			int "Maximum number of opened files"
-			range 3 24
+			range 2 24
 			default 6
 			help
 				Maximum number of opened files

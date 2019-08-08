@@ -1,4 +1,4 @@
-import orientation, dashboard.resources.woezel_repo as woezel_repo, term, easydraw, system, time, gc, ugfx, wifi, uos, json, sys, woezel
+import orientation, dashboard.resources.woezel_repo as woezel_repo, term, easydraw, system, time, gc, ugfx, wifi, uos, json, sys, woezel, display
 
 repo = woezel_repo
 
@@ -18,7 +18,7 @@ def showMessage(msg, error=False, icon_wifi=False, icon_ok=False):
 
 # Generic actions
 def btn_unhandled(pressed):
-	ugfx.flush()
+	display.flush(display.FLAG_LUT_FASTEST)
 
 def btn_exit(pressed):
 	if pressed:
@@ -57,7 +57,7 @@ def show_categories(pressed=True):
 	easydraw.disp_string_right_bottom(1, "A: Open category")
 	easydraw.disp_string_right_bottom(2, "SELECT: Update repo")
 	#Flush screen
-	ugfx.flush()
+	display.flush(display.FLAG_LUT_NORMAL)
 
 # Category browsing
 
@@ -78,7 +78,8 @@ def show_category(pressed=True):
 	try:
 		try:
 			category = repo.getCategory(slug)
-		except:
+		except BaseException as e:
+			print("CAT OPEN ERR", e)
 			showMessage("Failed to open category "+slug+"!", True)
 			time.sleep(1)
 			show_categories()
@@ -102,10 +103,11 @@ def show_category(pressed=True):
 		easydraw.disp_string_right_bottom(1, "A: Install app")
 		easydraw.disp_string_right_bottom(2, "B: Back")
 		#Flush screen
-		ugfx.flush()
+		display.flush(display.FLAG_LUT_NORMAL)
 	except BaseException as e:
 		sys.print_exception(e)
-		showMessage(e, True)
+		print("ERROR", e)
+		showMessage("Internal error", True)
 		time.sleep(1)
 		show_categories()
 
@@ -115,9 +117,11 @@ def install_app(pressed=True):
 	global category	
 	if pressed:
 		slug = category[category_list.selected_index()]["slug"]
+		category = []
 		gc.collect()
 		category_list.visible(False)
 		category_list.enabled(False)
+		category_list.clear()
 		#Input handling
 		ugfx.input_attach(ugfx.BTN_START, btn_unhandled)
 		ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
@@ -137,17 +141,18 @@ def install_app(pressed=True):
 		showMessage("Installing "+slug+"...")
 		try:
 			woezel.install(slug)
+			showMessage("OK\n\n"+slug+" has been installed!", False, False, True)
+			time.sleep(2)
+			show_category()
 		except woezel.LatestInstalledError:
 			showMessage("NOTICE\n\nLatest version is already installed.", False, False, True)
 			time.sleep(2)
 			show_category()
-		except:
+		except BaseException as e:
+			print("WOEZEL ERROR", e)
 			showMessage("Failed to install "+slug+"!", True)
 			time.sleep(2)
 			show_category()
-		showMessage("OK\n\n"+slug+" has been installed!", False, False, True)
-		time.sleep(2)
-		show_category()
 
 #Main application
 

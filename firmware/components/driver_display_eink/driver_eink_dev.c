@@ -131,11 +131,11 @@ xSemaphoreHandle driver_eink_dev_intr_trigger = NULL;
 void
 driver_eink_dev_busy_wait(void)
 {
-	uint16_t timeout = 20;
+	uint16_t timeout = 50;
 	while (driver_eink_dev_is_busy() && (timeout > 0))
 	{
 		xSemaphoreTake(driver_eink_dev_intr_trigger, 100 / portTICK_PERIOD_MS);
-		//printf("timeout %u\n", timeout);
+		printf("timeout %u\n", timeout);
 		timeout--;
 	}
 	

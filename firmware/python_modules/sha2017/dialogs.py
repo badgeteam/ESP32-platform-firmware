@@ -3,19 +3,26 @@
 ### Description: Some basic UGFX powered dialogs
 ### License: MIT
 
-import machine, ugfx, utime as time
+import machine, display, utime as time, mpr121, ugfx
 
 wait_for_interrupt = True
 button_pushed = ''
 
-def notice(text, title="SHA2017", close_text="Close", width = None, height = None, font="Roboto_Regular12"):
+def notice(text, title="Notice", close_text="Close", width = None, height = None, font="Roboto_Regular12"):
 	"""Show a notice which can be closed with button A.
 
 	The caller is responsible for flushing the display after the user has confirmed the notice.
 	"""
 	prompt_boolean(text, title = title, true_text = close_text, false_text = None, width = width, height = height, font=font)
 
-def prompt_boolean(text, title="SHA2017", true_text="Yes", false_text="No", width = None, height = None, font="Roboto_Regular12", cb=None):
+def _label(window, x, y, text, color, font):
+	display.drawText(window, x, y, text, color, font)
+	
+def _button(window, x, y, text, color, font):
+	display.drawText(window, x, y, text, color, font)
+	
+
+def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width = None, height = None, font="Roboto_Regular12", cb=None):
 	"""A simple one and two-options dialog
 
 	if 'false_text' is set to None only one button is displayed.
@@ -28,29 +35,32 @@ def prompt_boolean(text, title="SHA2017", true_text="Yes", false_text="No", widt
 	global wait_for_interrupt, button_pushed
 
 	if width == None:
-		width = ugfx.width()
+		width = display.width()
 	if height == None:
-		height = ugfx.height()
+		height = display.height()
 
-	x = (ugfx.width() - width) // 2
-	y = (ugfx.height() - height) // 2
+	x = (display.width() - width) // 2
+	y = (display.height() - height) // 2
 	if (x < 0):
 		x = 0
 	if (y < 0):
 		y = 0
 	#print("Container", x, y, width, height)
-	window = ugfx.Container(x, y, width, height)
-	window.show()
-	ugfx.set_default_font(font)
-	window.text(5, 10, title, ugfx.BLACK)
-	window.line(0, 30, width, 30, ugfx.BLACK)
+	try:
+		display.windowCreate("dialog", width, height)
+	except:
+		pass
+	display.drawFill("dialog", 0xFFFFFF)
+	display.windowShow("dialog")
+	display.drawText("dialog", 5, 10, title, 0x000000, font)
+	display.drawLine("dialog", 0, 30, width, 30, 0x000000)
 
 	if false_text:
 		false_text = "B: " + false_text
 		true_text = "A: " + true_text
 
 	def done(result):
-		window.destroy()
+		display.windowRemove("dialog")
 		if cb:
 			cb(result)
 		return result
@@ -75,19 +85,22 @@ def prompt_boolean(text, title="SHA2017", true_text="Yes", false_text="No", widt
 		if evt:
 			done(False)
 
-	label = ugfx.Label(5, 30, width - 10, height - 80, text = text, parent=window)
-	button_no = ugfx.Button(5, height - 40, width // 2 - 15, 30, false_text, parent=window) if false_text else None
-	button_yes = ugfx.Button(width // 2 + 5 if true_text else 5, height - 40, width // 2 - 15 if false_text else width - 10, 30, true_text, parent=window)
-	button_yes.set_focus()
+	_label("dialog", 5, 35, text, 0x000000, font)
+	if false_text:
+		_button("dialog", 10, height-display.getTextHeight(false_text, font), false_text, 0x000000, font)
+		_button("dialog", (width - display.getTextWidth(true_text, font) - 10), height - display.getTextHeight(true_text, font), true_text, 0x000000, font)
+	else:
+		_button("dialog", width - 10 - display.getTextWidth(true_text, font), height - display.getTextHeight(true_text, font), true_text, 0x000000, font)
 
-	ugfx.input_init()
+	#label = ugfx.Label(5, 30, width - 10, height - 80, text = text, parent=window)
+	#button_no = ugfx.Button(5, height - 40, width // 2 - 15, 30, false_text, parent=window) if false_text else None
+	#button_yes = ugfx.Button(width // 2 + 5 if true_text else 5, height - 40, width // 2 - 15 if false_text else width - 10, 30, true_text, parent=window)
+	#button_yes.set_focus()
 
-	window.show()
-	ugfx.set_lut(ugfx.LUT_NORMAL)
-	ugfx.flush()
+	display.flush()
 
-	if button_no: ugfx.input_attach(ugfx.BTN_B, asyncCancel if cb else syncCancel)
-	ugfx.input_attach(ugfx.BTN_A, asyncSuccess if cb else syncSuccess)
+	if false_text: mpr121.attach(1, asyncCancel if cb else syncCancel)
+	mpr121.attach(0, asyncSuccess if cb else syncSuccess)
 
 	if cb:
 		return
@@ -100,108 +113,8 @@ def prompt_boolean(text, title="SHA2017", true_text="Yes", false_text="No", widt
 		return done(True)
 
 def prompt_text(description, init_text = "", true_text="OK", false_text="Back", width = 300, height = 200, font="Roboto_BlackItalic24", cb=None):
-	"""Shows a dialog and keyboard that allows the user to input/change a string
-
-	Calls the 'cb' callback or return None if user aborts with button B. Using a callback is highly recommended as it's not
-	possible to process events inside an event callback.
-
-	The caller is responsible for flushing the display after processing the response.
-	"""
-	global wait_for_interrupt, button_pushed
-
-	window = ugfx.Container(int((ugfx.width()-width)/2), int((ugfx.height()-height)/2), width, height)
-	window.show()
-
-	ugfx.set_default_font("Roboto_Regular12")
-	kb_height = int(height/2) + 30
-	kb = ugfx.Keyboard(0, height - kb_height, width, kb_height, parent=window)
-
-	ugfx.set_default_font("Roboto_Regular18")
-	edit_height = 25
-	edit = ugfx.Textbox(5, height-kb_height-5-edit_height, int(width*4/5)-10, edit_height, text = init_text, parent=window)
-	ugfx.set_default_font("Roboto_Regular12")
-	button_height = 25
-
-	def done(result):
-		window.destroy()
-		if cb:
-			cb(result)
-		return result
-
-	def syncSuccess(evt):
-		if evt:
-			# We'd like promises here, but for now this should do
-			global wait_for_interrupt, button_pushed
-			button_pushed = "A"
-			wait_for_interrupt = False
-	def syncCancel(evt):
-		if evt:
-			# We'd like promises here, but for now this should do
-			global wait_for_interrupt, button_pushed
-			button_pushed = "B"
-			wait_for_interrupt = False
-
-	def asyncSuccess(evt):
-		if evt:
-			done(edit.text())
-	def asyncCancel(evt):
-		if evt:
-			done(None)
-
-	button_yes = ugfx.Button(int(width*4/5), height-kb_height-button_height, int(width*1/5)-3, button_height, true_text, parent=window, cb=asyncSuccess if cb else syncSuccess)
-	button_no = ugfx.Button(int(width*4/5), height-kb_height-button_height-button_height, int(width/5)-3, button_height, false_text, parent=window) if false_text else None
-	ugfx.set_default_font(font)
-	label = ugfx.Label(5, 1, int(width*4/5), height-kb_height-5-edit_height-5, description, parent=window)
-
-	def vkey_backspace():
-		edit.backspace()
-		ugfx.flush()
-
-	focus = 0
-
-	def toggle_focus(pressed):
-		if pressed:
-			if focus == 0:
-				edit.set_focus()
-				kb.enabled(1)
-				ugfx.input_attach(ugfx.BTN_B, lambda pressed: vkey_backspace() if pressed else 0)
-				ugfx.input_attach(ugfx.BTN_A, lambda pressed: 0 if pressed else ugfx.flush())
-				focus = 1
-			elif focus == 1 or not button_no:
-				button_yes.set_focus()
-				kb.enabled(0)
-				ugfx.input_attach(ugfx.BTN_A, asyncSuccess if cb else syncSuccess)
-				ugfx.input_attach(ugfx.BTN_B, asyncCancel if cb else syncCancel)
-				focus = (2 if button_no else 0)
-			else:
-				button_no.set_focus()
-				kb.enabled(0)
-				ugfx.input_attach(ugfx.BTN_A, asyncCancel if cb else syncCancel)
-				ugfx.input_attach(ugfx.BTN_B, asyncCancel if cb else syncCancel)
-				focus = 0
-			ugfx.flush()
-
-	ugfx.input_init()
-	ugfx.input_attach(ugfx.BTN_SELECT, toggle_focus)
-	ugfx.input_attach(ugfx.JOY_LEFT, lambda pressed: ugfx.flush() if pressed else 0)
-	ugfx.input_attach(ugfx.JOY_RIGHT, lambda pressed: ugfx.flush() if pressed else 0)
-	ugfx.input_attach(ugfx.JOY_UP, lambda pressed: ugfx.flush() if pressed else 0)
-	ugfx.input_attach(ugfx.JOY_DOWN, lambda pressed: ugfx.flush() if pressed else 0)
-
-	toggle_focus(True)
-
-	ugfx.set_lut(ugfx.LUT_NORMAL)
-	ugfx.flush()
-
-	wait_for_interrupt = True
-	if cb:
-		return
-	else:
-		while wait_for_interrupt:
-			time.sleep(0.2)
-
-		if (focus == 0 and no_button) or button_pushed == "B": return done(False)
-		return done(edit.text())
+	print("Keyboard is not yet implemented...")
+	return "NOT IMPLEMENTED"
 
 def prompt_option(options, index=0, text = "Please select one of the following:", title=None, select_text="OK", none_text=None):
 	"""Shows a dialog prompting for one of multiple options

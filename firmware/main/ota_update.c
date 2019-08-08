@@ -42,9 +42,6 @@
 
 #define TAG "ota-update"
 
-static uint8_t buffer[1024];
-static int buffer_len = 0;
-
 static const char *REQUEST = "GET " CONFIG_OTA_WEB_PATH " HTTP/1.0\r\n"
                              "Host: " CONFIG_OTA_WEB_SERVER "\r\n"
                              "User-Agent: BADGE.TEAM/1.0 esp32\r\n"
@@ -282,6 +279,8 @@ static void
 badge_ota_task(void *pvParameter)
 {
 	esp_err_t err;
+	uint8_t buffer[1024];
+	int buffer_len = 0;
 
 	ESP_LOGW(TAG, "Starting OTA update ...");
 

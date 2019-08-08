@@ -70,7 +70,6 @@ esp_err_t driver_framebuffer_init()
 		#else
 		framebuffer = heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
 		#endif
-		
 		if (!framebuffer) {
 			ESP_LOGE(TAG, "Unable to allocate memory for the framebuffer.");
 			return ESP_FAIL;
@@ -80,9 +79,7 @@ esp_err_t driver_framebuffer_init()
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //1st framebuffer
 	driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
-	
 	driver_framebuffer_set_orientation_angle(NULL, 0); //Apply global orientation (needed for flip)
-	
 	driver_framebuffer_init_done = true;
 	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
@@ -165,7 +162,7 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 	#if defined(FB_TYPE_1BPP)
 		value = greyToBw(rgbToGrey(value));
 		#ifndef FB_1BPP_VERT
-			uint32_t position = (y * width) + (x / 8);
+			uint32_t position = (y * (width/8)) + (x / 8);
 			uint8_t  bit      = x % 8;
 		#else
 			uint32_t position = ( (y / 8) * width) + x;
@@ -219,7 +216,7 @@ uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y)
 
 	#if defined(FB_TYPE_1BPP)
 		#ifndef FB_1BPP_VERT
-			uint32_t position = (y * width) + (x / 8);
+			uint32_t position = (y * (width/8)) + (x / 8);
 			uint8_t  bit      = x % 8;
 		#else
 			uint32_t position = ( (y / 8) * width) + x;
@@ -280,7 +277,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 		currentWindow = currentWindow->_nextWindow;
 	}
 
-	uint8_t eink_flags = 0;
+	uint32_t eink_flags = 0;
 	
 	if ((flags & FB_FLAG_FULL) || (flags & FB_FLAG_FORCE)) {
 		driver_framebuffer_set_dirty_area(0, 0, FB_WIDTH-1, FB_HEIGHT-1, true);
@@ -300,11 +297,24 @@ bool driver_framebuffer_flush(uint32_t flags)
 	#endif
 
 	#ifdef DISPLAY_FLAG_LUT_BIT
-		if (flags & FB_FLAG_LUT_NORMAL) eink_flags |= DRIVER_EINK_LUT_NORMAL << DISPLAY_FLAG_LUT_BIT;
-		if (flags & FB_FLAG_LUT_FAST) eink_flags |= DRIVER_EINK_LUT_FASTER << DISPLAY_FLAG_LUT_BIT;
-		if (flags & FB_FLAG_LUT_FASTEST) eink_flags |= DRIVER_EINK_LUT_FASTEST << DISPLAY_FLAG_LUT_BIT;
+		if (flags & FB_FLAG_LUT_NORMAL) {
+			eink_flags |= DRIVER_EINK_LUT_NORMAL << DISPLAY_FLAG_LUT_BIT;
+			printf("NORMAL %u << %u\n", DRIVER_EINK_LUT_NORMAL, DISPLAY_FLAG_LUT_BIT);
+		}
+		if (flags & FB_FLAG_LUT_FAST) {
+			eink_flags |= DRIVER_EINK_LUT_FASTER << DISPLAY_FLAG_LUT_BIT;
+			printf("FAST %u << %u\n", DRIVER_EINK_LUT_FASTER, DISPLAY_FLAG_LUT_BIT);
+		}
+		if (flags & FB_FLAG_LUT_FASTEST) {
+			eink_flags |= DRIVER_EINK_LUT_FASTEST << DISPLAY_FLAG_LUT_BIT;
+			printf("FASTEST %u << %u\n", DRIVER_EINK_LUT_FASTEST, DISPLAY_FLAG_LUT_BIT);
+		}
+#else
+#error "NO LUT BIT"
 	#endif
 
+	printf("EINK FLAGS %u\n", eink_flags);
+		
 	#ifdef FB_FLUSH_GS
 	if (flags & FB_FLAG_LUT_GREYSCALE) {
 		FB_FLUSH_GS(framebuffer, eink_flags);

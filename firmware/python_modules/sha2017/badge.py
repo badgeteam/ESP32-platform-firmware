@@ -1,7 +1,15 @@
-import machine, display, mpr121, eink
+import machine, display, mpr121, eink, consts, time
+
+deviceType = consts.INFO_HARDWARE_NAME
 
 def init():
 	pass
+
+def eink_init():
+	pass
+
+def eink_png(x,y,img):
+	display.drawPng(x,y,img)
 
 def nvs_get_u8(space, item, default=None):
 	if space == "badge":
@@ -52,15 +60,13 @@ def safe_mode():
 	return False
 
 def png_info(arg):
-	return display.png_info(arg)
+	return display.pngInfo(arg)
 
 def png(x,y,arg):
-	return display.png(x,y,arg)
+	return display.drawPng(x,y,arg)
 
 def setPower(state):
 	mpr121.set(10, state);
-
-deviceType = "FIXME"
 
 def usb_volt_sense():
 	return 0
