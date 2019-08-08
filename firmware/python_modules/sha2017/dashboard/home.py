@@ -227,8 +227,13 @@ def drawTask(onSleep=False):
 			app_height = ugfx.height()-16-currHeight
 			logoHeight = drawLogo(currHeight, app_height, True)
 			if logoHeight < 1:
-				display.drawText((display.width()-display.getTextWidth("BADGE.TEAM", "permanentmarker36"))//2, app_height,"BADGE.TEAM", 0x000000, "permanentmarker36")
-				logoHeight = display.getTextHeight("BADGE.TEAM", "permanentmarker36")
+				title = "BADGE.TEAM"
+				subtitle = "PLATFORM"
+				logoHeight = display.getTextHeight(title, "permanentmarker22")+display.getTextHeight(subtitle, "fairlight12")
+				display.drawText((display.width()-display.getTextWidth(title, "permanentmarker22"))//2, currHeight + (app_height - logoHeight)//2,title, 0x000000, "permanentmarker22")
+				currHeight += display.getTextHeight(title, "permanentmarker22")
+				display.drawText((display.width()-display.getTextWidth(subtitle, "fairlight12"))//2, currHeight + (app_height - logoHeight)//2,subtitle, 0x000000, "fairlight12")
+				currHeight += display.getTextHeight(subtitle, "fairlight12")
 		else:
 			display_app(currHeight)
 

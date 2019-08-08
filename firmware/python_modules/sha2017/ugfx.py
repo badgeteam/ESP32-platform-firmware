@@ -185,7 +185,7 @@ class List():
 				self.selected+=1
 				if self.selected >= self.offset+self.lines:
 					self.offset = self.selected
-				print("onDown", self.selected, len(self.items), self.offset, self.items[self.selected])
+				#print("onDown", self.selected, len(self.items), self.offset, self.items[self.selected])
 				self._draw()
 		if listDownCallback:
 			listDownCallback(pressed)

@@ -299,21 +299,21 @@ bool driver_framebuffer_flush(uint32_t flags)
 	#ifdef DISPLAY_FLAG_LUT_BIT
 		if (flags & FB_FLAG_LUT_NORMAL) {
 			eink_flags |= DRIVER_EINK_LUT_NORMAL << DISPLAY_FLAG_LUT_BIT;
-			printf("NORMAL %u << %u\n", DRIVER_EINK_LUT_NORMAL, DISPLAY_FLAG_LUT_BIT);
+			//printf("NORMAL %u << %u\n", DRIVER_EINK_LUT_NORMAL, DISPLAY_FLAG_LUT_BIT);
 		}
 		if (flags & FB_FLAG_LUT_FAST) {
 			eink_flags |= DRIVER_EINK_LUT_FASTER << DISPLAY_FLAG_LUT_BIT;
-			printf("FAST %u << %u\n", DRIVER_EINK_LUT_FASTER, DISPLAY_FLAG_LUT_BIT);
+			//printf("FAST %u << %u\n", DRIVER_EINK_LUT_FASTER, DISPLAY_FLAG_LUT_BIT);
 		}
 		if (flags & FB_FLAG_LUT_FASTEST) {
 			eink_flags |= DRIVER_EINK_LUT_FASTEST << DISPLAY_FLAG_LUT_BIT;
-			printf("FASTEST %u << %u\n", DRIVER_EINK_LUT_FASTEST, DISPLAY_FLAG_LUT_BIT);
+			//printf("FASTEST %u << %u\n", DRIVER_EINK_LUT_FASTEST, DISPLAY_FLAG_LUT_BIT);
 		}
 #else
 #error "NO LUT BIT"
 	#endif
 
-	printf("EINK FLAGS %u\n", eink_flags);
+	//printf("EINK FLAGS %u\n", eink_flags);
 		
 	#ifdef FB_FLUSH_GS
 	if (flags & FB_FLAG_LUT_GREYSCALE) {

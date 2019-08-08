@@ -135,12 +135,12 @@ driver_eink_dev_busy_wait(void)
 	while (driver_eink_dev_is_busy() && (timeout > 0))
 	{
 		xSemaphoreTake(driver_eink_dev_intr_trigger, 100 / portTICK_PERIOD_MS);
-		printf("timeout %u\n", timeout);
+		//printf("timeout %u\n", timeout);
 		timeout--;
 	}
 	
 	if (timeout < 1) {
-		printf("HARDWARE ERROR: EINK BUSY WAIT TIMEOUT!\n");
+		ESP_LOGE(TAG, "HARDWARE ERROR: EINK BUSY WAIT TIMEOUT!");
 	}
 }
 
