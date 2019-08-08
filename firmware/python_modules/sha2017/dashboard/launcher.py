@@ -152,7 +152,7 @@ def input_select(pressed):
 def input_other(pressed):
 	pm.feed()
 	if pressed:
-		ugfx.flush()
+		display.flush(display.FLAG_LUT_FASTEST)
 
 # Power management
 def pm_cb(dummy):
@@ -173,33 +173,32 @@ def start():
 	# Instructions
 	if orientation.isLandscape():
 		x0 = int(display.width()/2)
-		display.font("fairlight8")
 		currentY = 20
-		display.cursor(x0+int((display.width()-x0)/2)-int(display.get_string_width("BADGE.TEAM")/2),currentY)
-		display.print("BADGE.TEAM\n")
-		display.font("pixelade9")
-		(_, currentY) = display.cursor()
-		display.cursor(x0+int((display.width()-x0)/2)-int(display.get_string_width("ESP32 platform")/2),currentY)
-		display.print("ESP32 platform\n")
-		display.line(x0,0,x0,display.height()-1,0x000000)
-		display.textColor(0x000000)
-		display.font("pixelade9")
-		currentY = display.get_string_height(" ")*5-5
-		display.line(x0,currentY,display.width()-1,currentY,0x000000)
-		display.cursor(x0+5,currentY+5)
-		display.print("A: Run\n")
-		display.print("B: Return to home\n")
-		display.print("SELECT: Uninstall app\n")
-		(_, currentY) = display.cursor()
-		display.line(x0,currentY,display.width()-1,currentY,0x000000)
-		_ = display.cursor(x0+5,currentY+5)
-		display.print(consts.INFO_FIRMWARE_NAME)
+		
+		display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("BADGE.TEAM", "fairlight8")/2), currentY, "BADGE.TEAM\n", 0x000000, "fairlight8")
+		currentY += display.getTextHeight("BADGE.TEAM", "fairlight8")
+		
+		display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("ESP32 platform", "pixelade9")/2), currentY, "ESP32 platform\n", 0x000000, "pixelade9")
+		display.drawLine(x0,0,x0,display.height()-1,0x000000)
+		pixHeight = display.getTextHeight(" ", "pixelade9")
+		currentY = pixHeight*5-5
+		
+		display.drawLine(x0,currentY,display.width()-1,currentY,0x000000)
+		
+		display.drawText(x0+5, currentY+5,             "A: Run\n", 0x000000, "pixelade9")
+		display.drawText(x0+5, currentY+5+pixHeight,   "B: Return to home\n", 0x000000, "pixelade9")
+		display.drawText(x0+5, currentY+5+pixHeight*2, "SELECT: Uninstall app\n", 0x000000, "pixelade9")
+		
+		currentY += pixHeight*3
+		
+		display.drawLine(x0, currentY, display.width()-1, currentY, 0x000000)
+		display.drawText(x0+5, currentY+5, consts.INFO_FIRMWARE_NAME, 0x000000, "pixelade9")
 	else:
-		ugfx.line(0, ugfx.height()-18*4, ugfx.width(), ugfx.height()-18*4, ugfx.BLACK)
+		ugfx.drawLine(0, ugfx.height()-18*4, ugfx.width(), ugfx.height()-18*4, ugfx.BLACK)
 		ugfx.string_box(0,ugfx.height()-18*4,ugfx.width(),18, " A: Run", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
 		ugfx.string_box(0,ugfx.height()-18*3,ugfx.width(),18, " B: Return to home", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
 		ugfx.string_box(0,ugfx.height()-18*2,ugfx.width(),18, " SELECT: Uninstall", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
-		ugfx.line(0, ugfx.height()-18*1, ugfx.width(), ugfx.height()-18*1, ugfx.BLACK)
+		ugfx.drawLine(0, ugfx.height()-18*1, ugfx.width(), ugfx.height()-18*1, ugfx.BLACK)
 		ugfx.string_box(0,ugfx.height()-18*1,ugfx.width(),18, " " + consts.INFO_FIRMWARE_NAME, "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
 
 	global options

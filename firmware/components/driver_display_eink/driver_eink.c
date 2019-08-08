@@ -178,6 +178,7 @@ void driver_eink_update(const uint32_t *buf, const struct driver_eink_update *up
 	driver_eink_dev_write_command_p1(0x3b, upd_conf->reg_0x3b);
 
 	uint16_t y_len = upd_conf->y_end - upd_conf->y_start;
+	
 	// configure length of update
 	driver_eink_dev_write_command_p3(0x01, y_len & 0xff, y_len >> 8, 0x00);
 

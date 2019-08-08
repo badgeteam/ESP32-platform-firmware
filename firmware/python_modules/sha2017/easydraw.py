@@ -1,9 +1,9 @@
 import display, badge, version, time, orientation, machine
 
 if orientation.isLandscape():
-	NUM_LINES = 9
+	NUM_LINES = 6
 else:
-	NUM_LINES = 21
+	NUM_LINES = 18
 
 # Functions
 def msg_nosplit(message, title = 'Loading...', reset = False):
@@ -13,39 +13,31 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 	title can be optionaly set when resetting or first call
 	"""
 	global messageHistory
-	
+		
 	try:
 		messageHistory
 		if reset:
 			raise exception
 	except:
-		display.greyscale(False)
-		display.fill(0xFFFFFF)
-		display.textColor(0x000000)
-		display.font(version.font_header)
-		display.cursor(0,0)
-		display.print(title)
+		display.drawFill(0xFFFFFF)
+		display.drawText(0, 0, title, 0x000000, version.font_header)
+		h = display.getTextHeight(" ", version.font_header)
+		display.drawLine(0, h, display.width(), h, 0x000000)
 		messageHistory = []
 
-	display.font(version.font_default)
-	lineHeight = display.get_string_height(" ")
+	lineHeight = int(display.getTextHeight(" ", version.font_default) / 2)+5
 
 	if len(messageHistory)<NUM_LINES:
-		display.textColor(0x000000)
-		display.cursor(0,19 + (len(messageHistory) * lineHeight))
-		display.print(message)
+		display.drawText(0, 28 + (len(messageHistory) * lineHeight), message, 0x000000, version.font_default)
 		messageHistory.append(message)
 	else:
 		messageHistory.pop(0)
 		messageHistory.append(message)
-		display.rect(0, 15, display.width(), display.height()-15, True, 0xFFFFFF)
+		display.drawRect(0, 15, display.width(), display.height()-15, True, 0xFFFFFF)
 		for i, message in enumerate(messageHistory):
-			display.textColor(0x000000)
-			display.font(version.font_default)
-			display.cursor(0, 19 + (i * lineHeight))
-			display.print(message)
+			display.drawText(0, 28 + (i * lineHeight), message, 0x000000, version.font_default)
 
-	display.flush()
+	display.flush(display.FLAG_LUT_FASTEST)
 	
 def msg(message, title = "Loading...", reset = False, wait = 0):
 	global NUM_LINES
@@ -63,11 +55,15 @@ def msg(message, title = "Loading...", reset = False, wait = 0):
 		print(e)
 
 def lineCentered(pos_y, line, font, color):
-	display.font(font)
-	pos_x = int((display.width()-display.get_string_width(line)) / 2)
-	display.cursor(pos_x, pos_y)
-	display.textColor(color)
-	display.print(line)
+	if font:
+		width = display.getTextWidth(line, font)
+	else:
+		width = display.getTextWidth(line)
+	pos_x = int((display.width()-width) / 2)
+	if font:
+		display.drawText(pos_x, pos_y, line, color, font)
+	else:
+		display.drawText(pos_x, pos_y, line, color)
 
 def messageCentered(message, firstLineTitle=True, png=None):
 	#try:
@@ -75,7 +71,7 @@ def messageCentered(message, firstLineTitle=True, png=None):
 		font1 = "Roboto_Regular18"
 		font2 = "Roboto_Regular12"
 		color = 0x000000
-		display.fill(0xFFFFFF)
+		display.drawFill(0xFFFFFF)
 		parts = message.split("\n")
 		lines = []
 		font = font1
@@ -99,7 +95,7 @@ def messageCentered(message, firstLineTitle=True, png=None):
 				img_info = badge.png_info(png)
 				offset_y -= int(img_info[1] / 2) + 4
 				img_x = int((display.width() - img_info[0]) / 2)
-				display.png(img_x, offset_y, png)
+				display.drawPng(img_x, offset_y, png)
 				offset_y += img_info[1] + 8 
 			except:
 				pass
@@ -125,23 +121,20 @@ def nickname(y = 5, font = "freesansbold12", color = 0x000000, unusedParameter=N
 	lines = lineSplit(nick, display.width(), font)
 	for i in range(len(lines)):
 		line = lines[len(lines)-i-1]
-		display.font(font)
-		pos_x = int((display.width()-display.get_string_width(line)) / 2)
-		lineHeight = display.get_string_height(line)
-		display.cursor(pos_x, y+lineHeight*(len(lines)-i-1))
-		display.textColor(color)
-		display.print(line)
+		pos_x = int((display.width()-display.getTextWidth(line, font)) / 2)
+		lineHeight = display.getTextHeight(line, font)
+		if font:
+			display.drawText(pos_x, y+lineHeight*(len(lines)-i-1), line, color, font)
+		else:
+			display.drawText(pos_x, y+lineHeight*(len(lines)-i-1), line, color)
 	return len(lines) * lineHeight
 
 def battery(on_usb, vBatt, charging):
 	pass
 
 def disp_string_right_bottom(y, s, font="freesans9"):
-	display.font(font)
-	l = display.get_string_width(s)
-	display.cursor(display.width()-l, display.height()-(y+1)*14)
-	display.textColor(0x000000)
-	display.print(s)
+	l = display.getTextWidth(s, font)
+	display.drawText(display.width()-l, display.height()-(y+1)*14, s, 0x000000, font)
 
 def lineSplit(message, width=None, font=version.font_default):
 	words = message.split(" ")
@@ -152,9 +145,8 @@ def lineSplit(message, width=None, font=version.font_default):
 		width=display.width()
     
 	for word in words:
-		display.font(font)
-		wordLength = display.get_string_width(word)
-		lineLength = display.get_string_width(line)
+		wordLength = display.getTextWidth(word, font)
+		lineLength = display.getTextWidth(line, font)
 		if wordLength > width:
 			lines.append(line)
 			lines.append(word)

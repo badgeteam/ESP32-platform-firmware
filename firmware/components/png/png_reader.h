@@ -5,6 +5,11 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#ifndef _DRIVER_FRAMEBUFFER_COMPOSITOR_H_
+#include "driver_framebuffer_compositor.h"
+#include "driver_framebuffer.h"
+#endif
+
 #include "reader.h"
 
 enum lib_png_error_t {
@@ -65,7 +70,7 @@ struct lib_png_reader {
 
 extern struct lib_png_reader * lib_png_new(lib_reader_read_t read, void *read_p);
 extern int lib_png_read_header(struct lib_png_reader *pr);
-extern int lib_png_load_image(struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_linelen, uint8_t bpp);
+extern int lib_png_load_image(Frame *frame, struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_linelen);
 extern void lib_png_destroy(struct lib_png_reader *pr);
 
 #endif // LIB_PNG_READER_H

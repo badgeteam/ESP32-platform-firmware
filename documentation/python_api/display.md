@@ -20,3 +20,5 @@ Even if you have a black and white display then 0x000000 is black and 0xFFFFFF i
 | circle            | x, y, radius, start_angle, end_angle, fill, color   | Draw a circle                                                                   | display.circle(10,10,10,0,359,True,0x000000)            |
 | line              | x0, y0, x1, y1, color                               | Draw a line                                                                     | display.line(30,30,40,40,0x000000)                      |
 | greyscale         | enable                                              | Enable or disable greyscale mode on E-ink displays (Ignored on other platforms) | display.greyscale(True)                                 |
+
+## Flags

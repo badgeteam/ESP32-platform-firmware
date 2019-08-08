@@ -1,0 +1,5 @@
+menu "Driver: Audio"
+	config DRIVER_SNDMIXER_ENABLE
+		bool "Enable the audio driver"
+		default n
+endmenu

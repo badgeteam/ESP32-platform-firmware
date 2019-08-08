@@ -1,4 +1,6 @@
-import display, mpr121
+import display, mpr121, gc
+
+display_flags = 0
 
 activeList = None
 listUpCallback = None
@@ -17,30 +19,34 @@ def input_attach(button, callback=None):
 	global activeList, listUpCallback, listDownCallback
 	if button < 0 or button > 7:
 		return
+	doAttach = True
 	if button == JOY_UP:
-		print("SET JOY UP LIST CB")
 		listUpCallback = callback
-	if button == JOY_DOWN:
-		print("SET JOY DOWN LIST CB")
+		if activeList:
+			doAttach = False
+	elif button == JOY_DOWN:
 		listDownCallback = callback
-	if not (button != JOY_UP or button != JOY_DOWN) or not activeList:
-		print("MPR ATTACH",button)
+		if activeList:
+			doAttach = False
+	if doAttach:
 		mpr121.attach(button, callback)
 
-LUT_NORMAL = 0
-LUT_FASTER = 1
-LUT_FULL   = 3
-GREYSCALE = 900
+LUT_NORMAL = display.FLAG_LUT_NORMAL
+LUT_FASTER = display.FLAG_LUT_FAST
+LUT_FASTEST = display.FLAG_LUT_FASTEST
+LUT_FULL   = display.FLAG_FULL
+GREYSCALE = display.FLAG_LUT_GREYSCALE
 
 BLACK = 0x000000
 WHITE = 0xFFFFFF
 
 def string(x,y,text,font,color):
+	if not color:
+		color = 0
 	if font:
-		display.font(font)
-	_ = display.cursor(x,y)
-	_ = display.textColor(color)
-	display.print(text)
+		display.drawText(x, y, text, color, font)
+	else:
+		display.drawText(x, y, text, color)
 
 def width():
 	return display.width()
@@ -49,59 +55,50 @@ def height():
 	return display.height()
 
 def display_image(x,y,data):
-	display.png(x,y,data)
+	display.drawPng(x,y,data)
 
 def fill_circle(x, y, r, color):
-	display.circle(x, y, r, 0, 359, True, color)
+	display.drawCircle(x, y, r, 0, 359, True, color)
 
 def circle(x, y, r, color):
-	display.circle(x, y, r, 0, 359, False, color)
+	display.drawCircle(x, y, r, 0, 359, False, color)
 
 def clear(arg=None):
 	if arg:
-		display.fill(arg)
+		display.drawFill(arg)
 	else:
-		display.fill()
+		display.drawFill()
 
 def line(x0, y0, x1, y1, color):
-	display.line(x0, y0, x1, y1, color)
+	display.drawLine(x0, y0, x1, y1, color)
 
 def flush(arg=None):
-	display.flush()
+	display.flush(display_flags)
 	
-def get_string_width(arg, font=None):
+def get_string_width(text, font=None):
 	if font:
-		display.font(font)
-	return display.get_string_width(arg)
+		return display.getTextWidth(text, font)
+	else:
+		return display.getTextWidth(text)
 
-def get_string_height(arg, font=None):
+def get_string_height(text, font=None):
 	if font:
-		display.font(font)
-	return display.get_string_height(arg)
+		return display.getTextHeight(text, font)
+	else:
+		return display.getTextHeight(text)
 
 def init():
-	pass
+	print("This app uses the UGFX compatibility layer, using UGFX is deprecated, please check the wiki for details!")
 
 def input_init():
 	pass
 
 def set_lut(arg):
-	pass
+	display_flags = arg
 
 justifyLeft = 0
 justifyCenter = 1
 justifyRight = 2
-
-def string_box(x,y,w,h,text,font,color,align):
-	if font:
-		display.font(font)
-	if align == justifyRight:
-		x = x + w - display.get_string_width(text)
-	elif align == justifyCenter:
-		x = x + int((w-display.get_string_width(text))/2)
-	if x < 0:
-		x = 0
-	string(x,y,text,font,color)
 
 class List():
 	def __init__(self, x, y, w, h):
@@ -113,34 +110,30 @@ class List():
 		self.selected = 0
 		global activeList
 		activeList = self
-		display.font("freesans9")
-		self.lines = int(self.h / display.get_string_height(" "))
+		self.lines = int(self.h / display.getTextHeight(" ", "freesans9"))
 		self.offset = 0
 		self.visible(True)
 		self.enabled(True)
 	
 	def _draw(self):
 		if self._visible:
-			display.rect(self.x, self.y, self.w, self.h, True, 0xFFFFFF)
-			display.rect(self.x, self.y, self.w, self.h, False, 0x000000)
-			display.font("freesans9")
-			_ = display.textColor(0x000000)
-			display.cursor(self.x+1,self.y+1)
+			display.drawRect(self.x, self.y, self.w, self.h, True, 0xFFFFFF)
+			display.drawRect(self.x, self.y, self.w, self.h, False, 0x000000)
+			cursor = (self.x+1,self.y+1)
 			totalHeight = 0
-			for i in range(self.offset, len(self.items)):
-				display.cursor(self.x+1,display.cursor()[1])
+			for i in range(self.offset, len(self.items)-self.offset):
+				cursor = (self.x+1,cursor[1])
 				item = self.items[i]
-				lineHeight = display.get_string_height(item)
+				lineHeight = display.getTextHeight(item, "freesans9")
 				totalHeight += lineHeight
 				if totalHeight < self.h:
+					color = 0x000000
 					if i == self.selected:
-						display.rect(self.x, display.cursor()[1], self.w, lineHeight, True, 0x000000)
-						_ = display.textColor(0xFFFFFF)
-					else:
-						_ = display.textColor(0x000000)
-					display.cursor(self.x+1,display.cursor()[1]+3)
-					display.print(item+"\n")
-					display.cursor(self.x+1,display.cursor()[1]-3)
+						display.drawRect(self.x, cursor[1], self.w, lineHeight, True, 0x000000)
+						color = 0xFFFFFF
+					cursor = (self.x+1,cursor[1]+3)
+					display.drawText(cursor[0], cursor[1], item+"\n", color, "freesans9")
+					cursor = (self.x+1,cursor[1]-3+display.getTextHeight(item+"\n", "freesans9"))
 	
 	def add_item(self, caption):
 		i = self.items.append(caption)
@@ -155,9 +148,17 @@ class List():
 		self.items.pop(pos)
 		if self._enabled:
 			self._draw()
+			
+	def clear(self):
+		self.selected = 0
+		self.items = []
+		gc.collect()
 	
-	def selected_index(self):
-		return self.selected
+	def selected_index(self, setValue=None):
+		if setValue:
+			self.selected = setValue
+		else:
+			return self.selected
 	
 	def destroy(self):
 		self.items = []
@@ -180,10 +181,11 @@ class List():
 	def _onDown(self, pressed):
 		global listDownCallback
 		if (pressed):
-			if self.selected < len(self.items):
+			if self.selected < len(self.items)-1:
 				self.selected+=1
-				if self.selected > self.offset+self.lines:
+				if self.selected >= self.offset+self.lines:
 					self.offset = self.selected
+				#print("onDown", self.selected, len(self.items), self.offset, self.items[self.selected])
 				self._draw()
 		if listDownCallback:
 			listDownCallback(pressed)
@@ -205,21 +207,32 @@ class List():
 			mpr121.attach(JOY_DOWN, listDownCallback)
 		
 def area(x,y,w,h,color):
-	display.rect(x,y,w,h,True,color)
+	display.drawRect(x,y,w,h,True,color)
 	
 def rounded_box(x,y,w,h,r,color):
-	display.rect(x,y,w,h,False,color)
+	display.drawLine(x+r,   y,     x+w-1-r, y,       color)
+	display.drawLine(x+r,   y+h-1, x+w-1-r, y+h-1,   color)
+	display.drawLine(x,     y+r,   x,       y+h-1-r, color)
+	display.drawLine(x+w-1, y+r,   x+w-1,   y+h-1-r, color)
+	display.drawCircle(x+r,     y+r,     r, 270, 359, False, color)
+	display.drawCircle(x+w-1-r, y+r,     r, 0,   90,  False, color)
+	display.drawCircle(x+r,     y+h-1-r, r, 180, 270, False, color)
+	display.drawCircle(x+w-1-r, y+h-1-r, r, 90,  180, False, color)
+	#display.drawRect(x,y,w,h,False,color)
 
 def fill_rounded_box(x,y,w,h,r,color):
-	display.rect(x,y,w,h,True,color)
+	display.drawRect(x,y,w,h,True,color)
 
-def string_box(x,y,w,h,text,font,color,justify):
-	display.textColor(color)
-	display.font(font)
-	if justify == justifyCenter:
-		display.cursor(x+int(display.get_string_width(text)/2),y+int(display.get_string_height(text)/2))
-	elif justify == justifyRight:
-		display.cursor(x+display.get_string_width(text),y+int(display.get_string_height(text)/2))
+def string_box(x,y,w,h,text,font,color,align):
+	textWidth = 0
+	if font:
+		textWidth = display.getTextWidth(text, font)
 	else:
-		display.cursor(x,y+int(display.get_string_height(text)/2))
-	display.print(text)
+		textWidth = display.getTextWidth(text)
+	if align == justifyRight:
+		x = x + w - textWidth
+	elif align == justifyCenter:
+		x = x + int((w-textWidth)/2)
+	if x < 0:
+		x = 0
+	display.drawText(x, y, text, color, font)

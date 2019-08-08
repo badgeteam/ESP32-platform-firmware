@@ -1,6 +1,6 @@
 # Home menu application
 
-import ugfx, time, badge, machine, gc, system, virtualtimers, easydraw, wifi, rtc, term, term_menu, orientation, tasks.powermanagement as pm, uos, json, sys, tasks.otacheck as otacheck
+import ugfx, time, badge, machine, gc, system, virtualtimers, easydraw, wifi, rtc, term, term_menu, orientation, tasks.powermanagement as pm, uos, json, sys, tasks.otacheck as otacheck, display
 
 # Default values
 default_logo = '/media/hackerhotel.png'
@@ -12,14 +12,6 @@ cfg_services         = badge.nvs_get_u8('splash', 'services', True)
 cfg_logo             = badge.nvs_get_str('splash', 'logo', default_logo)
 cfg_nickname         = badge.nvs_get_u8('splash', 'nickname', True)
 cfg_led_animation    = badge.nvs_get_str('splash', 'ledApp', None)
-
-# Small hack to install logo if needed
-try:
-	media = uos.listdir("/media")
-	if not "hackerhotel.png" in media:
-		raise(BaseException("Logo not available"))
-except:
-	import dashboard.resources.png_hackerhotel
 
 try:
 	media = uos.listdir("/media")
@@ -78,13 +70,11 @@ def wifiTask():
 	if wifi_status_curr:
 		wifi.ntp(True)
 	if wifi_status_curr != wifi_status_prev:
-		#print("WiFi status changed", wifi_status_curr)
 		pm.feed()
 		wifi_status_prev = wifi_status_curr
 		gui_redraw = True
 		if wifi_status_curr:
 			ota_available = otacheck.available(True)
-			#print("Check OTA",ota_available)
 	return 1000
 
 virtualtimers.new(0, wifiTask, True)
@@ -186,11 +176,7 @@ def drawLogo(offset = 0, max_height = ugfx.height(), center = True):
 	try:
 		info = badge.png_info(cfg_logo)
 	except:
-		try:
-			cfg_logo = default_logo
-			info = badge.png_info(cfg_logo)
-		except:
-			return 0
+		return 0
 	width = info[0]
 	height = info[1]
 	if width > ugfx.width():
@@ -209,7 +195,6 @@ def drawLogo(offset = 0, max_height = ugfx.height(), center = True):
 	else:
 		y = offset
 	try:
-		#badge.png(x,y,cfg_logo)
 		ugfx.display_image(x,y,cfg_logo)
 		return height
 	except BaseException as e:
@@ -241,6 +226,14 @@ def drawTask(onSleep=False):
 				currHeight += 4
 			app_height = ugfx.height()-16-currHeight
 			logoHeight = drawLogo(currHeight, app_height, True)
+			if logoHeight < 1:
+				title = "BADGE.TEAM"
+				subtitle = "PLATFORM"
+				logoHeight = display.getTextHeight(title, "permanentmarker22")+display.getTextHeight(subtitle, "fairlight12")
+				display.drawText((display.width()-display.getTextWidth(title, "permanentmarker22"))//2, currHeight + (app_height - logoHeight)//2,title, 0x000000, "permanentmarker22")
+				currHeight += display.getTextHeight(title, "permanentmarker22")
+				display.drawText((display.width()-display.getTextWidth(subtitle, "fairlight12"))//2, currHeight + (app_height - logoHeight)//2,subtitle, 0x000000, "fairlight12")
+				currHeight += display.getTextHeight(subtitle, "fairlight12")
 		else:
 			display_app(currHeight)
 
