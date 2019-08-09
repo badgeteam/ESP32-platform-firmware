@@ -42,6 +42,8 @@
 
 #define TAG "ota-update"
 
+#define STR(x) #x
+
 static const char *REQUEST = "GET " CONFIG_OTA_WEB_PATH " HTTP/1.0\r\n"
                              "Host: " CONFIG_OTA_WEB_SERVER "\r\n"
                              "User-Agent: BADGE.TEAM/1.0 esp32\r\n"
@@ -379,10 +381,10 @@ badge_ota_task(void *pvParameter)
 
 	graphics_show("Get...", 0, false, true);
 
-	ESP_LOGW(TAG, "Connecting to %s:%s...", CONFIG_OTA_WEB_SERVER,
+	ESP_LOGW(TAG, "Connecting to %s:%u...", CONFIG_OTA_WEB_SERVER,
 			CONFIG_OTA_WEB_PORT);
 
-	ret = mbedtls_net_connect(&server_fd, CONFIG_OTA_WEB_SERVER, CONFIG_OTA_WEB_PORT, MBEDTLS_NET_PROTO_TCP);
+	ret = mbedtls_net_connect(&server_fd, CONFIG_OTA_WEB_SERVER, STR(CONFIG_OTA_WEB_PORT), MBEDTLS_NET_PROTO_TCP);
 	if (ret != 0) {
 		ESP_LOGE(TAG, "mbedtls_net_connect returned -%x", -ret);
 		task_fatal_error();

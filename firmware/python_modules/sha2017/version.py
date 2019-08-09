@@ -1,9 +1,9 @@
-import ugfx, badge
+import ugfx, badge, consts
 
 build                  = 0
-name                   = "FIXME"
-badge_name             = "FIXME"
-dialog_title           = "Alert"
+name                   = consts.INFO_FIRMWARE_NAME
+badge_name             = consts.INFO_HARDWARE_NAME
+dialog_title           = "Notice"
 default_orientation    = 0
 
 font_header            = "Roboto_Regular18"
@@ -19,5 +19,4 @@ nick_height_small      = 22
 btn_ok = ugfx.BTN_START
 btn_cancel = ugfx.BTN_B
 
-hatcheryurl             = "https://badge.team"
-otacheckurl             = "https://badge.team/version-hackerhotel2019"
+hatcheryurl             = "https://"+consts.WOEZEL_WEB_SERVER

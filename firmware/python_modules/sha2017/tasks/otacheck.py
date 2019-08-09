@@ -1,24 +1,17 @@
-import wifi, easydraw, badge, time, version
+import wifi, easydraw, badge, time, consts
 
 def download_info(show=False):
-	import urequests as requests
-	if show:
-		easydraw.msg("Checking for firmware updates...")
+	import urequests as req
 	result = False
 	try:
-		data = requests.get(version.otacheckurl)
-	except:
-		if show:
-			easydraw.msg("Error: can not fetch information.")
-			time.sleep(5)
+		data = req.get(consts.OTA_WEB_PROTOCOL+"://"+consts.OTA_WEB_SERVER+":"+consts.OTA_WEB_PORT+consts.OTA_WEB_VERSION_PATH)
+	except BaseException as e:
+		print("Exception", e)
 		return False
 	try:
 		result = data.json()
 	except:
 		data.close()
-		if show:
-			easydraw.msg("")
-			time.sleep(5)
 		return False
 	data.close()
 	return result
@@ -30,7 +23,7 @@ def available(update=False, show=False):
 
 		info = download_info(show)
 		if info:
-			if info["build"] > version.build:
+			if info["build"] > consts.INFO_FIRMWARE_BUILD:
 				badge.nvs_set_u8('badge','OTA.ready',1)
 				return True
 

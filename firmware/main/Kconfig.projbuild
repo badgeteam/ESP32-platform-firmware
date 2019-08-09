@@ -34,13 +34,21 @@ menu "Firmware & device configuration"
 		string "Hostname of server for OTA updates"
 		default "www.sensorcloud.nl"
 
+	config OTA_WEB_USE_HTTPS
+		bool "Use HTTPS for OTA updates"
+		default y
+
 	config OTA_WEB_PORT
-		string "Port of server for OTA updates"
+		int "Port of server for OTA updates"
 		default 443
 
 	config OTA_WEB_PATH
 		string "Path on the server for OTA updates"
 		default "/firmware.bin"
+
+	config OTA_WEB_VERSION_PATH
+		string "Path on the server for OTA update version"
+		default "/version.txt"
 
 	config WOEZEL_WEB_SERVER
 		string "Hostname of server for app hatchery that contains user apps"
