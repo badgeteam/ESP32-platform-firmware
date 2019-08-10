@@ -6,8 +6,8 @@ badge_name             = consts.INFO_HARDWARE_NAME
 dialog_title           = "Notice"
 default_orientation    = 0
 
-font_header            = "Roboto_Regular18"
-font_default           = "Roboto_Regular12"
+font_header            = "Roboto_Regular12"
+font_default           = "7x5"
 
 font_nickname_large    = "Roboto_Regular18"
 font_nickname_small    = "Roboto_Regular12"

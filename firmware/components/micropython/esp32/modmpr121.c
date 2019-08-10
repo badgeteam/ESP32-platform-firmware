@@ -98,9 +98,9 @@ static mp_obj_t mpr121_get_touch_info(void) {
 		mp_raise_OSError(MP_EIO);
 	}
 
-	mp_obj_t list_items[8];
+	mp_obj_t list_items[12];
 	int i;
-	for (i=0; i<8; i++) {
+	for (i=0; i<12; i++) {
 		list_items[i] = mp_obj_new_dict(0);
 
 		mp_obj_dict_t *dict = MP_OBJ_TO_PTR(list_items[i]);
@@ -110,10 +110,30 @@ static mp_obj_t mpr121_get_touch_info(void) {
 		store_dict_int(dict, "touch",    info.touch[i]);
 		store_dict_int(dict, "release",  info.release[i]);
 	}
-	mp_obj_t list = mp_obj_new_list(8, list_items);
+	mp_obj_t list = mp_obj_new_list(12, list_items);
 	return list;
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(mpr121_get_touch_info_obj, mpr121_get_touch_info);
+
+static mp_obj_t mpr121_configure(mp_obj_t baseline_in, mp_obj_t strict_in)
+{
+	mp_uint_t len;
+    mp_obj_t *items;
+    mp_obj_list_get(baseline_in, &len, &items);
+	uint32_t baseline[12];
+	for (uint8_t i = 0; i < 12; i++) {
+		if (len > i) {
+			baseline[i] = mp_obj_get_int(items[i]);
+		} else {
+			baseline[i] = 0x0000;
+		}
+	}
+	bool strict = mp_obj_get_int(strict_in);
+	driver_mpr121_configure(baseline, strict);
+	return mp_const_none;
+}
+
+static MP_DEFINE_CONST_FUN_OBJ_2(mpr121_configure_obj, mpr121_configure);
 
 static const mp_rom_map_elem_t mpr121_module_globals_table[] = {	
     {MP_ROM_QSTR(MP_QSTR_isInput), MP_ROM_PTR(&mpr121_is_digital_input_obj)},             //mpr121.isInput(pin)
@@ -127,6 +147,7 @@ static const mp_rom_map_elem_t mpr121_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_get), MP_ROM_PTR(&mpr121_input_read_obj)},                       //mpr121.get(pin)
     
     {MP_ROM_QSTR(MP_QSTR_touchInfo), MP_ROM_PTR(&mpr121_get_touch_info_obj)},             //mpr121.touchInfo()
+    {MP_ROM_QSTR(MP_QSTR_configure), MP_ROM_PTR(&mpr121_configure_obj)},                  //mpr121.configure(baseline, strict)
 };
 
 static MP_DEFINE_CONST_DICT(mpr121_module_globals, mpr121_module_globals_table);

@@ -12,6 +12,7 @@ def sleep(duration=0, status=False):
 	except:
 		pass
 	badge.setPower(False)
+	badge.eink_busy_wait()
 	#---
 	machine.RTC().wake_on_ext0(pin = machine.Pin(25), level = 0)
 	machine.RTC().wake_on_ext1([machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)], 0)
@@ -49,11 +50,13 @@ def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
 def start(app, status=False):
 	import esp
 	if status:
-		import term
+		import term, easydraw
 		if app == "" or app == "launcher":
 			term.header(True, "Loading menu...")
+			easydraw.messageCentered("PLEASE WAIT\nStarting the menu...", True, "/media/busy.png")
 		else:
 			term.header(True, "Loading application "+app+"...")
+			easydraw.messageCentered("PLEASE WAIT\nStarting '"+app+"'...", True, "/media/busy.png")
 	esp.rtcmem_write_string(app)
 	reboot()
 
@@ -71,14 +74,16 @@ def shell(status=False):
 def ota(status=False):
 	import esp
 	if status:
-		import term
+		import term, easydraw
 		term.header(True, "Starting update...")
+		easydraw.messageCentered("PLEASE WAIT\nStarting update...", True, "/media/busy.png")
 	esp.rtcmem_write(0,1)
 	esp.rtcmem_write(1,254)
 	reboot()
 
 def serialWarning():
-	pass
+	import easydraw
+	easydraw.messageCentered("NOTICE\n\nThis app can only be controlled using the USB-serial connection.", True, "/media/crown.png")
 
 __current_app__ = None
 

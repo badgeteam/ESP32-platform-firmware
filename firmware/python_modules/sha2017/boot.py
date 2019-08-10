@@ -1,10 +1,10 @@
-import esp, machine, sys, system, os, badge, mpr121
+import esp, machine, sys, system, mpr121, time
 
 esp.rtcmem_write(0,0)
 esp.rtcmem_write(1,0)
 
 #Application starting
-if mpr121.get(2): #Start button is being held down
+if machine.wake_reason() == (7, 0) and mpr121.get(2): #Start button is being held down after reset
 	app = "dashboard.recovery"
 else:
 	app = esp.rtcmem_read_string()
@@ -26,4 +26,7 @@ if app and not app == "shell":
 			__import__(app)
 	except BaseException as e:
 		print("Fatal exception in the running app!")
+		system.crashedWarning()
 		sys.print_exception(e)
+		time.sleep(3)
+		system.launcher()
