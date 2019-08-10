@@ -18,6 +18,10 @@ def start(pressed):
 	if pressed:
 		system.ota()
 
+def cancel(pressed):
+	if pressed:
+		system.launcher()
+
 if not easywifi.status():
 	if not easywifi.enable():
 		easydraw.msg("Error: could not connect to WiFi!")
@@ -74,8 +78,9 @@ else:
 	title = "Update check"
 	message = "Could not connect to the WiFi network. You can still choose to start the OTA procedure."
 
-ugfx.input_attach(ugfx.BTN_START, start)
-
+ugfx.input_attach(ugfx.BTN_A, start)
+ugfx.input_attach(ugfx.BTN_START, cancel)
+ugfx.input_attach(ugfx.BTN_B, cancel)
 
 items = ["Cancel", "Start OTA update"]
 callbacks = [system.home, system.ota]

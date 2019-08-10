@@ -84,8 +84,8 @@ CONFIG_MONITOR_BAUD=115200
 #
 # Firmware description
 #
-CONFIG_INFO_FIRMWARE_NAME="Bleeding edge"
-CONFIG_INFO_FIRMWARE_BUILD=0
+CONFIG_INFO_FIRMWARE_NAME="A new hope"
+CONFIG_INFO_FIRMWARE_BUILD=26
 
 #
 # Hardware description
@@ -97,10 +97,10 @@ CONFIG_INFO_HARDWARE_WOEZEL_NAME="sha2017"
 #
 # OTA and app hatchery servers
 #
-CONFIG_OTA_WEB_SERVER="ota.tkkrlab.space"
+CONFIG_OTA_WEB_SERVER="badge.team"
 CONFIG_OTA_WEB_USE_HTTPS=y
 CONFIG_OTA_WEB_PORT=443
-CONFIG_OTA_WEB_PATH="/firmware/sha2017-nightly.bin"
+CONFIG_OTA_WEB_PATH="/firmware/sha2017.bin"
 CONFIG_OTA_WEB_VERSION_PATH="/firmware/sha2017-version.txt"
 CONFIG_WOEZEL_WEB_SERVER="badge.team"
 

@@ -1,19 +1,22 @@
-import esp, machine, sys, system, os, badge
+import esp, machine, sys, system, os, badge, mpr121
 
 esp.rtcmem_write(0,0)
 esp.rtcmem_write(1,0)
 
 #Application starting
-app = esp.rtcmem_read_string()
-if app:
-	esp.rtcmem_write_string("")
+if mpr121.get(2): #Start button is being held down
+	app = "dashboard.recovery"
 else:
-	if not machine.nvs_getint("system", 'factory_checked'):
-		app = "factory_checks"
+	app = esp.rtcmem_read_string()
+	if app:
+		esp.rtcmem_write_string("")
 	else:
-		app = machine.nvs_getstr("system", 'default_app')
-		if not app:
-			app = 'dashboard.home'
+		if not machine.nvs_getint("system", 'factory_checked'):
+			app = "factory_checks"
+		else:
+			app = machine.nvs_getstr("system", 'default_app')
+			if not app:
+				app = 'dashboard.home'
 
 if app and not app == "shell":
 	try:

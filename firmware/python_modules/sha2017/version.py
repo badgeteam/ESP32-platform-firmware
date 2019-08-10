@@ -1,6 +1,6 @@
 import ugfx, badge, consts
 
-build                  = 0
+build                  = consts.INFO_FIRMWARE_BUILD
 name                   = consts.INFO_FIRMWARE_NAME
 badge_name             = consts.INFO_HARDWARE_NAME
 dialog_title           = "Notice"

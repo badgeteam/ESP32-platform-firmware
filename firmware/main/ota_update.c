@@ -42,7 +42,8 @@
 
 #define TAG "ota-update"
 
-#define STR(x) #x
+#define XSTR(x) #x
+#define STR(s) XSTR(s)
 
 static const char *REQUEST = "GET " CONFIG_OTA_WEB_PATH " HTTP/1.0\r\n"
                              "Host: " CONFIG_OTA_WEB_SERVER "\r\n"
@@ -66,7 +67,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				if (force || percentage == 0 || (percentage>=lastShownPercentage+10)) {
 					if (showPercentage) lastShownPercentage = percentage;
 					driver_framebuffer_fill(NULL, COLOR_WHITE);
-					uint16_t y = driver_framebuffer_print(NULL, "Firmware update\n", 0, 0, 1, 1, COLOR_BLACK, &freesansbold12pt7b);
+					uint16_t y = driver_framebuffer_print(NULL, "Firmware update\n", 0, 4, 1, 1, COLOR_BLACK, &freesansbold12pt7b);
 					driver_framebuffer_print(NULL, text, 0, y, 1, 1, COLOR_BLACK, &freesansmono9pt7b);
 					if (showPercentage) {
 						char buffer[16];
@@ -384,6 +385,8 @@ badge_ota_task(void *pvParameter)
 	ESP_LOGW(TAG, "Connecting to %s:%u...", CONFIG_OTA_WEB_SERVER,
 			CONFIG_OTA_WEB_PORT);
 
+	printf("CONNECTING %s, %s\n", CONFIG_OTA_WEB_SERVER, STR(CONFIG_OTA_WEB_PORT));
+	
 	ret = mbedtls_net_connect(&server_fd, CONFIG_OTA_WEB_SERVER, STR(CONFIG_OTA_WEB_PORT), MBEDTLS_NET_PROTO_TCP);
 	if (ret != 0) {
 		ESP_LOGE(TAG, "mbedtls_net_connect returned -%x", -ret);

@@ -3,7 +3,7 @@
 ### Description: Some basic UGFX powered dialogs
 ### License: MIT
 
-import machine, display, utime as time, mpr121, ugfx
+import machine, display, utime as time, mpr121, ugfx, keyboard
 
 wait_for_interrupt = True
 button_pushed = ''
@@ -113,8 +113,7 @@ def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width
 		return done(True)
 
 def prompt_text(description, init_text = "", true_text="OK", false_text="Back", width = 300, height = 200, font="Roboto_BlackItalic24", cb=None):
-	print("Keyboard is not yet implemented...")
-	return "NOT IMPLEMENTED"
+	keyboard.show(description, init_text, cb)
 
 def prompt_option(options, index=0, text = "Please select one of the following:", title=None, select_text="OK", none_text=None):
 	"""Shows a dialog prompting for one of multiple options

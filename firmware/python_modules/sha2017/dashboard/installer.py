@@ -72,6 +72,7 @@ def show_category(pressed=True):
 	categories_list.enabled(False)
 	slug = repo.categories[categories_list.selected_index()]["slug"]
 	showMessage("Loading "+slug+"...")
+	display.drawFill()
 	#Clean up list
 	while category_list.count() > 0:
 		category_list.remove_item(0)
@@ -81,6 +82,7 @@ def show_category(pressed=True):
 		except BaseException as e:
 			print("CAT OPEN ERR", e)
 			showMessage("Failed to open category "+slug+"!", True)
+			display.drawFill()
 			time.sleep(1)
 			show_categories()
 		gc.collect()
@@ -108,6 +110,7 @@ def show_category(pressed=True):
 		sys.print_exception(e)
 		print("ERROR", e)
 		showMessage("Internal error", True)
+		display.drawFill()
 		time.sleep(1)
 		show_categories()
 
@@ -136,31 +139,38 @@ def install_app(pressed=True):
 			wifi.wait()
 			if not wifi.status():
 				showMessage("Unable to connect to WiFi.")
+				display.drawFill()
 				time.sleep(2)
 				show_category()
 		showMessage("Installing "+slug+"...")
+		display.drawFill()
 		try:
 			woezel.install(slug)
 			showMessage("OK\n\n"+slug+" has been installed!", False, False, True)
+			display.drawFill()
 			time.sleep(2)
 			show_category()
 		except woezel.LatestInstalledError:
 			showMessage("NOTICE\n\nLatest version is already installed.", False, False, True)
+			display.drawFill()
 			time.sleep(2)
 			show_category()
 		except BaseException as e:
 			print("WOEZEL ERROR", e)
 			showMessage("Failed to install "+slug+"!", True)
+			display.drawFill()
 			time.sleep(2)
 			show_category()
 
 #Main application
 
 showMessage("Loading categories...")
+display.drawFill()
 if not repo.load():
 	if not repo.update():
 		if repo.lastUpdate==0:
 			showMessage("Failed to load repository. Returning to launcher...")
+			display.drawFill()
 			system.launcher()
 
 for category in repo.categories:

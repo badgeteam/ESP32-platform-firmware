@@ -56,7 +56,7 @@ class UartMenu():
 		system.ota(True)
 		
 	def opt_ota_check(self):
-		system.start("checkforupdates", True)
+		system.start("dashboard.tools.update_firmware", True)
 	
 	def opt_about(self):
 		system.start("about", True)

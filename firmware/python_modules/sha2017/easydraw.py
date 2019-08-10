@@ -5,6 +5,8 @@ if orientation.isLandscape():
 else:
 	NUM_LINES = 18
 
+lastTitle = ""
+
 # Functions
 def msg_nosplit(message, title = 'Loading...', reset = False):
 	global NUM_LINES
@@ -12,19 +14,20 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 
 	title can be optionaly set when resetting or first call
 	"""
-	global messageHistory
-		
+	global messageHistory, lastTitle
+	
+	if reset:
+		lastTitle = title
+	
 	try:
 		messageHistory
 		if reset:
 			raise exception
 	except:
 		display.drawFill(0xFFFFFF)
-		display.drawText(0, 0, title, 0x000000, version.font_header)
-		h = display.getTextHeight(" ", version.font_header)
-		display.drawLine(0, h, display.width(), h, 0x000000)
 		messageHistory = []
-
+		lastTitle = title
+		
 	lineHeight = int(display.getTextHeight(" ", version.font_default) / 2)+5
 
 	if len(messageHistory)<NUM_LINES:
@@ -36,6 +39,10 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 		display.drawRect(0, 15, display.width(), display.height()-15, True, 0xFFFFFF)
 		for i, message in enumerate(messageHistory):
 			display.drawText(0, 28 + (i * lineHeight), message, 0x000000, version.font_default)
+
+	display.drawText(0, 0, lastTitle, 0x000000, version.font_header)
+	#h = display.getTextHeight(" ", version.font_header)
+	#display.drawLine(0, h, display.width(), h, 0x000000)
 
 	display.flush(display.FLAG_LUT_FASTEST)
 	
@@ -66,53 +73,62 @@ def lineCentered(pos_y, line, font, color):
 		display.drawText(pos_x, pos_y, line, color)
 
 def messageCentered(message, firstLineTitle=True, png=None):
-	#try:
-	if 1:
+	try:
+		color = 0x000000
 		font1 = "Roboto_Regular18"
 		font2 = "Roboto_Regular12"
-		color = 0x000000
-		display.drawFill(0xFFFFFF)
-		parts = message.split("\n")
+		font1Height = 22#display.getTextHeight(" ", font1)
+		font2Height = 16#display.getTextHeight(" ", font2)
+		
+		message = message.split("\n")
 		lines = []
-		font = font1
-		for part in parts:
-			if len(part) < 1:
+		for i in range(len(message)):
+			line = message[i]
+			if len(line) < 1:
 				lines.append("")
 			else:
-				lines.extend(lineSplit(part, display.width(), font))
-			if firstLineTitle:
-				font = font2
+				if firstLineTitle and i == 0:
+					lines.extend(lineSplit(line, display.width(), font1))
+				else:
+					lines.extend(lineSplit(line, display.width(), font2))
 		
-		offset_y = int(display.height()/2) #Half of the screen height
-		offset_y -= 9 #Height of the first line divided by 2
-		if firstLineTitle:
-			offset_y -= 6*len(lines)-1 #Height of font1 divided by 2
-		else:
-			offset_y -= 9*len(lines)-1 #Height of font2 divided by 2
-
+		pngSize = (0,0)
 		if png != None:
 			try:
-				img_info = badge.png_info(png)
-				offset_y -= int(img_info[1] / 2) + 4
-				img_x = int((display.width() - img_info[0]) / 2)
-				display.drawPng(img_x, offset_y, png)
-				offset_y += img_info[1] + 8 
-			except:
-				pass
+				pngSize = badge.png_info(png)
+				pngSize = [pngSize[0], pngSize[1]+8] #Little bit of extra offset
+			except BaseException as e:
+				print("Error in PNG height",e)
 		
-		lineCentered(offset_y, lines[0], font1, color)
-		offset_y += 18
+		textHeight = len(lines)*font2Height
 		
-		for i in range(len(lines)-1):
-			if not firstLineTitle:
-				lineCentered(offset_y, lines[i+1], font1, color)
-				offset_y += 18
+		if firstLineTitle:
+			textHeight -= font2Height
+			textHeight += font1Height
+		
+		offset_y = (display.height()-pngSize[1]-textHeight)//2
+		
+		display.drawFill()
+		#display.drawLine(0,display.height()//2,display.width()-1,display.height()//2,0)
+		
+		if png != None:
+			try:
+				display.drawPng((display.width()-pngSize[0])//2, offset_y, png)
+				offset_y += pngSize[1]
+			except BaseException as e:
+				print("Error in PNG draw",e)
+		
+		for i in range(len(lines)):
+			if firstLineTitle and i == 0:
+				lineCentered(offset_y, lines[i], font1, color)
+				offset_y += font1Height
 			else:
-				lineCentered(offset_y, lines[i+1], font2, color)
-				offset_y += 12
-		display.flush()
-	#except:
-	#	print("!!! Exception in easydraw.messageCentered !!!")
+				lineCentered(offset_y, lines[i], font2, color)
+				offset_y += font2Height
+		
+		display.flush(display.FLAG_LUT_FASTEST)
+	except BaseException as e:
+		print("Error in messageCentered!",e)
 
 def nickname(y = 5, font = "freesansbold12", color = 0x000000, unusedParameter=None):
 	nick = machine.nvs_getstr("owner", "name")

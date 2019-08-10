@@ -146,6 +146,6 @@ const GFXglyph freesans8pt7bGlyphs[] = {
 const GFXfont freesans8pt7b = {
   (uint8_t  *)freesans8pt7bBitmaps,
   (GFXglyph *)freesans8pt7bGlyphs,
-  0x20, 0x7E, 17 };
+  0x20, 0x7E, 16 };
 
 // Approx. 1205 bytes

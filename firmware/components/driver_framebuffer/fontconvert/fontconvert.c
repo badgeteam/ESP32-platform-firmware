@@ -26,7 +26,7 @@ See notes at end for glyph nomenclature & other tidbits.
 #include FT_TRUETYPE_DRIVER_H
 #include "../include/driver_framebuffer_font.h" // Adafruit_GFX font structures
 
-#define DEFAULT_DPI 112
+#define DEFAULT_DPI 105//112
 
 // Accumulate bits for output, with periodic hexadecimal byte write
 void enbit(uint8_t value) {
@@ -49,7 +49,7 @@ void enbit(uint8_t value) {
 }
 
 int main(int argc, char *argv[]) {
-	int                i, j, err, size, dpi=112, first=' ', last='~', offset=0,
+	int                i, j, err, size, dpi=DEFAULT_DPI, first=' ', last='~', offset=0,
 	                   bitmapOffset = 0, x, y, byte;
 	char              *fontName, c, *ptr;
 	FT_Library         library;

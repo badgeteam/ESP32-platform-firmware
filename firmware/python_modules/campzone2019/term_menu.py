@@ -23,7 +23,7 @@ class UartMenu():
 	def menu_main(self):
 		items = ["Python shell", "Apps", "Installer", "Settings", "About", "Check for updates", self.power_off_label]
 		callbacks = [self.drop_to_shell, self.opt_launcher, self.opt_installer, self.menu_settings, self.opt_about, self.opt_ota_check, self.go_to_sleep]
-		message = "Welcome!\nYour badge is running firmware version "+consts.INFO_FIRMWARE_BUILD+": "+consts.INFO_FIRMWARE_NAME+"\n"
+		message = "Welcome!\nYour badge is running firmware version "+str(consts.INFO_FIRMWARE_BUILD)+": "+consts.INFO_FIRMWARE_NAME+"\n"
 		cb = term.menu("Main menu", items, 0, message)
 		self.menu = callbacks[cb]
 		return

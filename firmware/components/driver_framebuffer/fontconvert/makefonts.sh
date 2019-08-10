@@ -33,10 +33,10 @@ do
 			#echo $infile
 			if [ -f $infile ] # Does source combination exist?
 			  then
-				$convert $infile $si 112 > $outpath$f$st$si"pt7b.c"
+				$convert $infile $si 105 > $outpath$f$st$si"pt7b.c"
 			fi
 		done
 	done
 done
 
-$convert weather.ttf 42 112 59905 59923 -59905 > ../../font_weather42pt8b.c
+$convert weather.ttf 42 105 59905 59923 -59905 > ../../font_weather42pt8b.c
