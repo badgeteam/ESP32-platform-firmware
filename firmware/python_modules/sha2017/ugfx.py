@@ -128,18 +128,16 @@ def fill_rounded_box(x,y,w,h,r,color):
 	display.drawRect(x,y,w,h,True,color)
 
 def string_box(x,y,w,h,text,font,color,align):
-	textWidth = 0
-	if font:
-		textWidth = display.getTextWidth(text, font)
-	else:
-		textWidth = display.getTextWidth(text)
-	if align == justifyRight:
-		x = x + w - textWidth
-	elif align == justifyCenter:
-		x = x + int((w-textWidth)/2)
-	if x < 0:
-		x = 0
-	display.drawText(x, y, text, color, font)
+	lines = wordWrap(text, w, font).split("\n")
+	if len(lines) < 1:
+		return
+	
+	for i in range(len(lines)):
+		text_x = x + w//2 - display.getTextWidth(lines[i], font)//2
+		text_y = y + h//2 - ((display.getTextHeight(lines[0], font)+3)*(len(lines)-i-1))//2
+		display.drawText(text_x, text_y, lines[i], 0x000000, font)
+		
+	
 
 
 # Listbox UI element
