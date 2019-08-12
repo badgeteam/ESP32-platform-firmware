@@ -132,7 +132,7 @@ def install_app(pressed=True):
 	if pressed:
 		slug = category[myList.selected_index()]["slug"]
 		#Input handling
-		ugfx.input_attach(ugfx.BTN_START, btn_unhandled)
+		ugfx.input_attach(ugfx.BTN_START, btn_exit)
 		ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
 		ugfx.input_attach(ugfx.BTN_A, btn_unhandled)
 		ugfx.input_attach(ugfx.BTN_B, btn_unhandled)
