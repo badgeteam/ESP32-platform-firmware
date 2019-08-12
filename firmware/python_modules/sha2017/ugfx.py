@@ -262,3 +262,36 @@ class List():
 			activeList = None
 			mpr121.attach(JOY_UP, listUpCallback)
 			mpr121.attach(JOY_DOWN, listDownCallback)
+			
+def wordWrap(message, width=None, font="7x5"):
+	message = message.split("\n")
+	lines = []
+	line = ""
+    
+	if width==None:
+		width=display.width()
+    
+	for messagePart in message:
+		if line != "":
+			lines.append(line)
+			line = ""
+		words = messagePart.split(" ")
+		for word in words:
+			wordLength = display.getTextWidth(word, font)
+			lineLength = display.getTextWidth(line, font)
+			if wordLength > width:
+				lines.append(line)
+				lines.append(word)
+				line = ""
+			elif lineLength+wordLength < width:
+				if (line==""):
+					line = word
+				else:
+					line += " "+word
+			else:
+				lines.append(line)
+				line = word
+	if len(line) > 0:
+		lines.append(line)
+	return "\n".join(lines)
+

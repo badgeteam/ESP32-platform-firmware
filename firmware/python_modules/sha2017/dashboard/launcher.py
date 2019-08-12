@@ -86,9 +86,11 @@ def uninstall():
 	global currentListTargets
 		
 	if currentListTargets[selected]["category"] == "system":
-		#dialogs.notice("System apps can not be removed!","Can not uninstall '"+currentListTitles[selected]+"'")
-		easydraw.msg("System apps can not be removed!","Error",True)
-		time.sleep(2)
+		print("System apps can not be removed.")
+		dialogs.notice("Can not uninstall '"+currentListTitles[selected]+"'!\nSystem apps can not be removed!","UNINSTALL APPLICATION")
+		#easydraw.msg("System apps can not be removed!","Error",True)
+		#time.sleep(2)
+		print("Returning to menu.")
 		start()
 		return
 	
@@ -105,7 +107,7 @@ def uninstall():
 			easydraw.msg("Uninstall completed!")
 		start()
 
-	uninstall = dialogs.prompt_boolean('Are you sure you want to remove %s?' % currentListTitles[selected], cb=perform_uninstall)
+	uninstall = dialogs.prompt_boolean('Are you sure you want to remove %s?' % currentListTitles[selected], cb=perform_uninstall, title="UNINSTALL APPLICATION")
 
 # Run app
 		

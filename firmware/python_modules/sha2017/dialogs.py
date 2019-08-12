@@ -15,11 +15,9 @@ def notice(text, title="Notice", close_text="Close", width = None, height = None
 	"""
 	prompt_boolean(text, title = title, true_text = close_text, false_text = None, width = width, height = height, font=font)
 
-def _label(window, x, y, text, color, font):
-	display.drawText(window, x, y, text, color, font)
 	
-def _button(window, x, y, text, color, font):
-	display.drawText(window, x, y, text, color, font)
+def _button(x, y, text, color, font):
+	display.drawText(x, y, text, color, font)
 	
 
 def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width = None, height = None, font="Roboto_Regular12", cb=None):
@@ -45,72 +43,55 @@ def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width
 		x = 0
 	if (y < 0):
 		y = 0
-	#print("Container", x, y, width, height)
-	try:
-		display.windowCreate("dialog", width, height)
-	except:
-		pass
-	display.drawFill("dialog", 0xFFFFFF)
-	display.windowShow("dialog")
-	display.drawText("dialog", 5, 10, title, 0x000000, font)
-	display.drawLine("dialog", 0, 30, width, 30, 0x000000)
+		    
+	display.drawFill(0xFFFFFF)
+	display.drawRect(0, 0, display.width() - 1, 14, True, 0)
+	display.drawText(0, 0, title, 0xFFFFFF, "Roboto_Regular12")
 
 	if false_text:
 		false_text = "B: " + false_text
-		true_text = "A: " + true_text
-
-	def done(result):
-		display.windowRemove("dialog")
-		if cb:
-			cb(result)
-		return result
-
-	def syncSuccess(evt):
-		if evt:
-			# We'd like promises here, but for now this should do
-			global wait_for_interrupt, button_pushed
-			button_pushed = "A"
-			wait_for_interrupt = False
-	def syncCancel(evt):
-		if evt:
-			# We'd like promises here, but for now this should do
-			global wait_for_interrupt, button_pushed
-			button_pushed = "B"
-			wait_for_interrupt = False
+	true_text = "A: " + true_text
 
 	def asyncSuccess(evt):
-		if evt:
-			done(True)
+		if evt and cb:
+			cb(True)
+	
 	def asyncCancel(evt):
-		if evt:
-			done(False)
-
-	_label("dialog", 5, 35, text, 0x000000, font)
+		if evt and cb:
+			cb(False)
+	
+	display.drawText(0, 36, ugfx.wordWrap(text, None, font), 0x000000, font)
+	
 	if false_text:
-		_button("dialog", 10, height-display.getTextHeight(false_text, font), false_text, 0x000000, font)
-		_button("dialog", (width - display.getTextWidth(true_text, font) - 10), height - display.getTextHeight(true_text, font), true_text, 0x000000, font)
+		_button(10, height-display.getTextHeight(false_text, font), false_text, 0x000000, font)
+		_button((width - display.getTextWidth(true_text, font) - 10), height - display.getTextHeight(true_text, font), true_text, 0x000000, font)
 	else:
-		_button("dialog", width - 10 - display.getTextWidth(true_text, font), height - display.getTextHeight(true_text, font), true_text, 0x000000, font)
-
-	#label = ugfx.Label(5, 30, width - 10, height - 80, text = text, parent=window)
-	#button_no = ugfx.Button(5, height - 40, width // 2 - 15, 30, false_text, parent=window) if false_text else None
-	#button_yes = ugfx.Button(width // 2 + 5 if true_text else 5, height - 40, width // 2 - 15 if false_text else width - 10, 30, true_text, parent=window)
-	#button_yes.set_focus()
+		_button(width - 10 - display.getTextWidth(true_text, font), height - display.getTextHeight(true_text, font), true_text, 0x000000, font)
 
 	display.flush()
 
-	if false_text: mpr121.attach(1, asyncCancel if cb else syncCancel)
-	mpr121.attach(0, asyncSuccess if cb else syncSuccess)
-
 	if cb:
-		return
+		mpr121.attach(1, asyncCancel)
+		mpr121.attach(0, asyncSuccess)
+		
+		#Done :-)
 	else:
-		wait_for_interrupt = True
-		while wait_for_interrupt:
-			time.sleep(0.2)
-
-		if button_pushed == "B": return done(False)
-		return done(True)
+		mpr121.attach(1, None)
+		mpr121.attach(0, None)
+		
+		while True:
+			if mpr121.get(0):
+				display.drawFill(0xFFFFFF)
+				display.flush()
+				while mpr121.get(0) or mpr121.get(1):
+					time.sleep(0.1)
+				return True
+			if mpr121.get(1):
+				display.drawFill(0xFFFFFF)
+				display.flush()
+				while mpr121.get(0) or mpr121.get(1):
+					time.sleep(0.1)
+				return False
 
 def prompt_text(description, init_text = "", true_text="OK", false_text="Back", width = 300, height = 200, font="Roboto_BlackItalic24", cb=None):
 	keyboard.show(description, init_text, cb)

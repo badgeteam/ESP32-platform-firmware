@@ -153,28 +153,33 @@ def disp_string_right_bottom(y, s, font="freesans9"):
 	display.drawText(display.width()-l, display.height()-(y+1)*14, s, 0x000000, font)
 
 def lineSplit(message, width=None, font=version.font_default):
-	words = message.split(" ")
+	message = message.split("\n")
 	lines = []
 	line = ""
     
 	if width==None:
 		width=display.width()
     
-	for word in words:
-		wordLength = display.getTextWidth(word, font)
-		lineLength = display.getTextWidth(line, font)
-		if wordLength > width:
+	for messagePart in message:
+		if line != "":
 			lines.append(line)
-			lines.append(word)
 			line = ""
-		elif lineLength+wordLength < width:
-			if (line==""):
-				line = word
+		words = messagePart.split(" ")
+		for word in words:
+			wordLength = display.getTextWidth(word, font)
+			lineLength = display.getTextWidth(line, font)
+			if wordLength > width:
+				lines.append(line)
+				lines.append(word)
+				line = ""
+			elif lineLength+wordLength < width:
+				if (line==""):
+					line = word
+				else:
+					line += " "+word
 			else:
-				line += " "+word
-		else:
-			lines.append(line)
-			line = word
+				lines.append(line)
+				line = word
 	if len(line) > 0:
 		lines.append(line)
 	return lines
