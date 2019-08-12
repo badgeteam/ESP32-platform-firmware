@@ -45,7 +45,7 @@ def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width
 		y = 0
 		    
 	display.drawFill(0xFFFFFF)
-	display.drawRect(0, 0, display.width() - 1, 14, True, 0)
+	display.drawRect(0, 0, display.width(), 14, True, 0)
 	display.drawText(0, 0, title, 0xFFFFFF, "Roboto_Regular12")
 
 	if false_text:

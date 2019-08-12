@@ -137,8 +137,6 @@ def string_box(x,y,w,h,text,font,color,align):
 		text_y = y + h//2 - ((display.getTextHeight(lines[0], font)+3)*(len(lines)-i-1))//2
 		display.drawText(text_x, text_y, lines[i], 0x000000, font)
 		
-	
-
 
 # Listbox UI element
 class List():
@@ -200,17 +198,19 @@ class List():
 	
 	def remove_item(self, pos):
 		self.items.pop(pos)
+		if self.selected >= pos and self.selected > 0:
+			self.selected -= 1
 		if self._enabled:
 			self._draw()
-			
-	def clear(self):
-		self.selected = 0
-		self.items = []
-		gc.collect()
+		print("Remove item from pos", pos,"selected",self.selected)
 	
 	def selected_index(self, setValue=None):
 		if setValue:
 			self.selected = setValue
+			if self.selected < self.offset:
+				self.offset = self.selected
+			if self.selected >= self.offset+self.lines:
+				self.offset = self.selected+self.lines-1
 			self._draw()
 		else:
 			return self.selected
@@ -244,7 +244,7 @@ class List():
 				self._draw()
 		if listDownCallback:
 			listDownCallback(pressed)
-		
+	
 	def visible(self, arg):
 		self._visible = arg
 		self._draw()
@@ -260,6 +260,13 @@ class List():
 			activeList = None
 			mpr121.attach(JOY_UP, listUpCallback)
 			mpr121.attach(JOY_DOWN, listDownCallback)
+	
+	def clear(self):
+		while len(self.items): #Keep the same list!
+			self.items.pop()
+		self.offset = 0
+		self.selected = 0
+		gc.collect()
 			
 def wordWrap(message, width=None, font="7x5"):
 	message = message.split("\n")

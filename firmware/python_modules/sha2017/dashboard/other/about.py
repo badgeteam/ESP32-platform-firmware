@@ -11,8 +11,12 @@ names = [
 	"Eric Poulsen", "Damien P. George", "Heikki Juva",
 	"Teemu Hakala", "Kliment", "Windytan",
 	"Purkkaviritys", "Otto Raila", "Jaga",
-	"uGFX", "EMF Badge Team", "MicroPython", "Loboris", " ",
-	" ", "BADGE.TEAM"]
+	"EMF Badge Team", "MicroPython", "Loboris", " ",
+	"Everyone who helped with the sweatshops.",
+	"Everyone else that helped create this awesome badge!",
+	"You, for using our badge.",
+	" ", "ESP32 platform firmware", "BADGE.TEAM 2019",
+	"https://github.com/badgeteam/"]
 
 def action_exit(pushed):
     if (pushed):
@@ -34,8 +38,8 @@ def show_names():
 	easydraw.msg("Your badge has been made possible by the following people:", "About", True)
 	
 	for n in range(0, len(names)):
-		easydraw.msg(names[n])
-		time.sleep(0.5)
+		if easydraw.msg(names[n]):
+			time.sleep(0.5)
 	
 	easydraw.msg("Press back or start to quit!")
 

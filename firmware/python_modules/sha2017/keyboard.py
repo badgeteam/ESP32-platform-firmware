@@ -172,7 +172,7 @@ def draw():
         modeText = "actions"
 
     display.drawText(0, yOffset - 12, "[SELECT] " + modeText, 0xFFFFFF, "freesans9")
-    display.drawRect(0, 0, display.width() - 1, 14, True, 0)
+    display.drawRect(0, 0, display.width(), 14, True, 0)
     display.drawText(0, 0, title, 0xFFFFFF, "Roboto_Regular12")
 
     if cursorPos > len(text):

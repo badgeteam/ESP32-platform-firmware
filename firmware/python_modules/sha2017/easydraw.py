@@ -1,20 +1,16 @@
 import display, badge, version, time, orientation, machine
 
-if orientation.isLandscape():
-	NUM_LINES = 6
-else:
-	NUM_LINES = 18
+NUM_LINES = ((display.height() - 16)//display.getTextHeight(" ", version.font_default)) - 2
 
 lastTitle = ""
 
 # Functions
 def msg_nosplit(message, title = 'Loading...', reset = False):
-	global NUM_LINES
 	"""Show a terminal style loading screen with title
 
 	title can be optionaly set when resetting or first call
 	"""
-	global messageHistory, lastTitle
+	global NUM_LINES, messageHistory, lastTitle
 	
 	if reset:
 		lastTitle = title
@@ -31,35 +27,40 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 	lineHeight = int(display.getTextHeight(" ", version.font_default) / 2)+5
 
 	if len(messageHistory)<NUM_LINES:
-		display.drawText(0, 28 + (len(messageHistory) * lineHeight), message, 0x000000, version.font_default)
+		display.drawText(0, 16 + (len(messageHistory) * lineHeight), message, 0x000000, version.font_default)
 		messageHistory.append(message)
 	else:
 		messageHistory.pop(0)
 		messageHistory.append(message)
-		display.drawRect(0, 15, display.width(), display.height()-15, True, 0xFFFFFF)
+		display.drawRect(0, 16, display.width(), display.height()-15, True, 0xFFFFFF)
 		for i, message in enumerate(messageHistory):
-			display.drawText(0, 28 + (i * lineHeight), message, 0x000000, version.font_default)
+			display.drawText(0, 16 + (i * lineHeight), message, 0x000000, version.font_default)
 
-	display.drawText(0, 0, lastTitle, 0x000000, version.font_header)
+	display.drawRect(0, 0, display.width(), 14, True, 0)
+	display.drawText(0, 0, lastTitle, 0xFFFFFF, "Roboto_Regular12")
 	#h = display.getTextHeight(" ", version.font_header)
 	#display.drawLine(0, h, display.width(), h, 0x000000)
 
 	display.flush(display.FLAG_LUT_FASTEST)
 	
+	return len(messageHistory)>=NUM_LINES-1
+	
 def msg(message, title = "Loading...", reset = False, wait = 0):
 	global NUM_LINES
+	scroll = False
 	try:
 		lines = lineSplit(str(message))
 		for i in range(len(lines)):
 			if i > 0:
-				msg_nosplit(lines[i])
+				scroll = msg_nosplit(lines[i])
 			else:
-				msg_nosplit(lines[i], title, reset)
+				scroll = msg_nosplit(lines[i], title, reset)
 			if (i > 1) and (wait > 0):
 				time.sleep(wait)
 	except BaseException as e:
 		print("!!! Exception in easydraw.msg !!!")
 		print(e)
+	return scroll
 
 def lineCentered(pos_y, line, font, color):
 	if font:

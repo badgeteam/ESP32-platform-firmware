@@ -32,36 +32,57 @@ if wifi.status():
 			print("Server has: ",info['name']," (Build "+str(info['build'])+")")
 			if info["build"] > version.build:
 				print("Update available!")
-				easydraw.msg("Update available!")
-				easydraw.msg_nosplit(info["name"]+" (Build "+str(info["build"])+")")
-				easydraw.msg("Update now?")
+				easydraw.msg(" ")
+				easydraw.msg("An update is available!")
+				easydraw.msg(" ")
+				easydraw.msg_nosplit("Currently installed: "+version.name+" (Build "+str(version.build)+")")
+				easydraw.msg_nosplit("Available          : "+info["name"]+" (Build "+str(info["build"])+")")
+				easydraw.msg(" ")
+				easydraw.msg("Press A to start the update")
+				easydraw.msg("Press B to cancel")
 				title = "Firmware update available"
 				message  = "A new firmware version is available. Update?\n"
 				message += "Currently installed: "+version.name+" (Build "+str(version.build)+")\n"
 				message += "Available          : "+info["name"]+" (Build "+str(info["build"])+")"
 			elif info["build"] < version.build:
 				print("Server has an older version.")
-				easydraw.msg("Downgrade available!")
-				easydraw.msg_nosplit(str(info["build"])+") "+info["name"])
-				easydraw.msg("Downgrade now?")
+				easydraw.msg(" ")
+				easydraw.msg("A downgrade is available!")
+				easydraw.msg(" ")
+				easydraw.msg_nosplit("Currently installed: "+version.name+" (Build "+str(version.build)+")")
+				easydraw.msg_nosplit("Available          : "+info["name"]+" (Build "+str(info["build"])+")")
+				easydraw.msg(" ")
+				easydraw.msg("Press A to start the downgrade")
+				easydraw.msg("Press B to cancel")
 				title = "Firmware downgrade available"
 				message  = "An older firmware version is available. Update?\n"
 				message += "Currently installed: "+version.name+" (Build "+str(version.build)+")\n"
 				message += "Available          : "+info["name"]+" (Build "+str(info["build"])+")"
 			else:
 				print("You are up-to-date!")
-				easydraw.msg("Up-to-date!")
-				easydraw.msg_nosplit(str(version.build)+") "+version.name)
-				easydraw.msg("Update anyway?")
+				easydraw.msg(" ")
+				easydraw.msg("Your badge is up-to-date!")
+				easydraw.msg(" ")
+				easydraw.msg_nosplit("Currently installed: "+version.name+" (Build "+str(version.build)+")")
+				easydraw.msg_nosplit("Available          : "+info["name"]+" (Build "+str(info["build"])+")")
+				easydraw.msg(" ")
+				easydraw.msg("Press A to start the update anyway")
+				easydraw.msg("Press B to cancel")
 				title = "Up-to-date"
 				message = "You are up-to-date.\n"
 				message += "Currently installed: "+version.name+" (Build "+str(version.build)+")\n"
 				message += "Available          : "+info["name"]+" (Build "+str(info["build"])+")"
 	else:
 		print("An error occured!")
-		easydraw.msg("Check failed.")
-		easydraw.msg_nosplit(str(version.build)+") "+version.name)
-		easydraw.msg("Update anyway?")
+		easydraw.msg(" ")
+		easydraw.msg("An error occured while checking for available updates.")
+		easydraw.msg(" ")
+		easydraw.msg_nosplit("Currently installed: "+version.name+" (Build "+str(version.build)+")")
+		easydraw.msg(" ")
+		easydraw.msg("Press A to start the update anyway")
+		easydraw.msg("Press B to cancel")
+		easydraw.msg(" ")
+		easydraw.msg("(Updating now will not harm your badge.)")
 		title = "Update check"
 		message = "An error occured while fetching information. You can still choose to start the OTA procedure."
 else:
