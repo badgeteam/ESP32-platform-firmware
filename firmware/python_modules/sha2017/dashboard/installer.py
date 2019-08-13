@@ -142,47 +142,10 @@ def install_app(pressed=True):
 		ugfx.input_attach(ugfx.JOY_RIGHT, btn_unhandled)
 		category = []
 		myList.clear()
-		gc.collect()
-		if not wifi.status():
-			wifi.connect()
-			wifi.wait()
-			if not wifi.status():
-				showMessage("Unable to connect to WiFi.")
-				display.drawFill()
-				time.sleep(2)
-				system.start("dashboard.installer")
 		showMessage("Installing "+slug+"...")
-		display.drawFill()
-		try:
-			gc.collect()
-			woezel.install(slug)
-			showMessage("OK\n\n"+slug+" has been installed!", False, False, True)
-			display.drawFill()
-			time.sleep(2)
-			system.start("dashboard.installer")
-		except woezel.LatestInstalledError:
-			showMessage("NOTICE\n\nLatest version is already installed.", False, False, True)
-			display.drawFill()
-			time.sleep(2)
-			system.start("dashboard.installer")
-		except MemoryError:
-			gc.collect()
-			print("ENOMEM, TRY AGAIN")
-			gc.collect()
-			try:
-				woezel.install(slug)
-			except BaseException as e:
-				showMessage("Failed to install "+slug+"! (2)", True)
-				display.drawFill()
-				print("WOEZEL ERROR 2", e)
-				time.sleep(2)
-				system.start("dashboard.installer")
-		except BaseException as e:
-			showMessage("Failed to install "+slug+"!", True)
-			display.drawFill()
-			print("WOEZEL ERROR", e)
-			time.sleep(2)
-			system.start("dashboard.installer")
+		with open("/cache/installList", "w") as f:
+			f.write(slug)
+		system.start("dashboard._installer_exec")
 
 #Main application
 
