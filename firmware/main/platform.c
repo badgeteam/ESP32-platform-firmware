@@ -58,6 +58,7 @@ void platform_init()
 	INIT_DRIVER(disobey_samd , "SAMD"       ) //I/O via the SAMD co-processor on the Disobey 2019 badge
 	INIT_DRIVER(neopixel     , "NEOPIXEL"   ) //Addressable LEDs as found on the SHA2017 and HackerHotel 2019 badges
 	INIT_DRIVER(microphone   , "MICROPHONE" ) //Microphone driver
+	INIT_DRIVER(mpu6050      , "MPU6050"    ) //Accelerometer driver
 	fflush(stdout);
 	vTaskDelay(100 / portTICK_PERIOD_MS); //Give things time to settle.
 }

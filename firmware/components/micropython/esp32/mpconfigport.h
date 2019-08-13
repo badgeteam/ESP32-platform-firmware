@@ -285,6 +285,10 @@ extern const struct _mp_obj_module_t esp_module;
 extern const struct _mp_obj_module_t espnow_module;
 extern const struct _mp_obj_module_t consts_module;
 
+#ifdef CONFIG_DRIVER_MPU6050_ENABLE
+extern const struct _mp_obj_module_t mpu6050_module;
+#endif
+
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 extern const struct _mp_obj_module_t sndmixer_module;
 #endif
@@ -437,6 +441,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_SNDMIXER
 #endif
 
+#ifdef CONFIG_DRIVER_MPU6050_ENABLE
+#define BUILTIN_MODULE_MPU6050 { MP_OBJ_NEW_QSTR(MP_QSTR_mpu6050), (mp_obj_t)&mpu6050_module },
+#else
+#define BUILTIN_MODULE_MPU6050
+#endif
+
 
 #define MICROPY_PORT_BUILTIN_MODULES \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_utime),    (mp_obj_t)&utime_module }, \
@@ -462,6 +472,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 	BUILTIN_MODULE_PSIM \
 	BUILTIN_MODULE_EINK \
 	BUILTIN_MODULE_DISOBEY_SAMD \
+	BUILTIN_MODULE_MPU6050 \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \

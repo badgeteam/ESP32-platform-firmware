@@ -110,6 +110,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_disobey_samd/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sndmixer
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_mpu6050/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/particle_simulation/include
@@ -196,6 +197,7 @@ SRC_C =  $(addprefix esp32/,\
 	moddisobeysamd.c \
 	modframebuffer.c \
 	modsndmixer.c \
+	modmpu6050.c \
 	)
 
 ifdef CONFIG_DRIVER_I2C_ENABLE
