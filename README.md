@@ -34,10 +34,18 @@ First, make sure you pull the submodules in the project:
 git submodule update --init --recursive
 ```
 
-Next, copy the xtensa build toolchain for your OS (currently supporting Linux and Mac OS) from /toolchains/, and unpack and save it as /xtensa-esp32-elf/ in the project root folder.
+Next, copy the xtensa build toolchain for your OS (currently supporting Linux and Mac OS) from /toolchains/, and unpack and save it as /xtensa-esp32-elf/ in the project root folder:
+
+```
+unzip -p toolchain/xtensa-esp32-elf-linux64.zip xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar | tar xvf -
+```
 
 # Building for a specific existing badge
-Copy the relevant config file from `/firmware/configs/<badge>_defconfig` to `/firmware/sdkconfig`, build, flash, and enjoy!
+Copy the relevant config file from `/firmware/configs/<badge>_defconfig` to `/firmware/sdkconfig`:
+
+```
+cp firmware/configs/sha2017_defconfig firmware/sdkconfig
+```
 
 # Build instructions
 To build and flash the basic generic firmware:
