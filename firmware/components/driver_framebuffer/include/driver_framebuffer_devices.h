@@ -4,6 +4,8 @@
 #ifndef _DRIVER_FRAMEBUFFER_DEVICES_H_
 #define _DRIVER_FRAMEBUFFER_DEVICES_H_
 
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+
 #include "driver_ssd1306.h"
 #include "driver_erc12864.h"
 #include "driver_eink.h"
@@ -86,6 +88,8 @@
 	#define PIXEL_SIZE 24
 #elif defined(FB_TYPE_32BPP)
 	#define PIXEL_SIZE 32
+#endif
+
 #endif
 
 #endif //_DRIVER_FRAMEBUFFER_DEVICES_H_
