@@ -8,14 +8,15 @@ menu "Driver: Neopixel LED driver"
 		depends on DRIVER_NEOPIXEL_ENABLE
 		int "GPIO pin used for data output"
 		default 32
-	
-	choice
-		prompt "Led type"
-		default NEOPIXEL_TYPE_RGBW
-		depends on DRIVER_NEOPIXEL_ENABLE
-	config NEOPIXEL_TYPE_RGBW
-		bool "RGBW (SK6812)"
-	config NEOPIXEL_TYPE_RGB
-		bool "RGB (WS2812)"
-	endchoice
+		
+	config DRIVER_NEOPIXEL_USE_MPR121_PIN
+		depends on DRIVER_NEOPIXEL_ENABLE && DRIVER_MPR121_ENABLE
+		bool "Use a GPIO pin of the MPR121 to enable SD card power"
+		default n
+		help
+			Turn on an output on a connected MPR121 I/O expander before mounting the SD card.
+		
+	config DRIVER_NEOPIXEL_MPR121_PIN
+		depends on DRIVER_NEOPIXEL_ENABLE && DRIVER_MPR121_ENABLE && DRIVER_NEOPIXEL_USE_MPR121_PIN
+		int "MPR121 pin number"
 endmenu

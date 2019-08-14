@@ -59,6 +59,7 @@ void platform_init()
 	INIT_DRIVER(neopixel     , "NEOPIXEL"   ) //Addressable LEDs as found on the SHA2017 and HackerHotel 2019 badges
 	INIT_DRIVER(microphone   , "MICROPHONE" ) //Microphone driver
 	INIT_DRIVER(mpu6050      , "MPU6050"    ) //Accelerometer driver
+	INIT_DRIVER(sdcard       , "SDCARD"     ) //SD card driver
 	fflush(stdout);
 	vTaskDelay(100 / portTICK_PERIOD_MS); //Give things time to settle.
 }
