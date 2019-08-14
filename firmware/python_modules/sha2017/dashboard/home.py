@@ -3,7 +3,7 @@
 import ugfx, time, badge, machine, gc, system, virtualtimers, easydraw, wifi, rtc, term, term_menu, orientation, tasks.powermanagement as pm, uos, json, sys, tasks.otacheck as otacheck, display
 
 # Default values
-default_logo = '/media/hackerhotel.png'
+default_logo = None
 
 # Read splashscreen configuration from NVS
 cfg_term_menu        = badge.nvs_get_u8('splash', 'term_menu', True)
@@ -218,15 +218,16 @@ def drawTask(onSleep=False):
 		gui_redraw = False
 		ugfx.clear(ugfx.WHITE)
 		currHeight = 0
+		noLine = False
 		if gui_app_current < 0:
-			if cfg_nickname:
+			if cfg_logo and cfg_nickname:
 				currHeight += easydraw.nickname()
 				currHeight += 4
 				ugfx.line(0, currHeight, ugfx.width(), currHeight, ugfx.BLACK)
 				currHeight += 4
 			app_height = ugfx.height()-16-currHeight
 			logoHeight = drawLogo(currHeight, app_height, True)
-			if logoHeight < 1:
+			if logoHeight < 1 and cfg_logo:
 				title = "BADGE.TEAM"
 				subtitle = "PLATFORM"
 				logoHeight = display.getTextHeight(title, "permanentmarker22")+display.getTextHeight(subtitle, "fairlight12")
@@ -234,6 +235,14 @@ def drawTask(onSleep=False):
 				currHeight += display.getTextHeight(title, "permanentmarker22")
 				display.drawText((display.width()-display.getTextWidth(subtitle, "fairlight12"))//2, currHeight + (app_height - logoHeight)//2,subtitle, 0x000000, "fairlight12")
 				currHeight += display.getTextHeight(subtitle, "fairlight12")
+			if (not cfg_logo) and cfg_nickname:
+				noLine = True
+				nick = machine.nvs_getstr("owner", "name")
+				if nick == None:
+					nick = "BADGE.TEAM"
+				currHeight += (display.getTextHeight(nick, "permanentmarker22")//2) - 8
+				display.drawText((display.width()-display.getTextWidth(nick, "permanentmarker22"))//2, currHeight,nick, 0x000000, "permanentmarker22")
+				currHeight += display.getTextHeight(nick, "permanentmarker22")
 		else:
 			display_app(currHeight)
 
@@ -249,7 +258,8 @@ def drawTask(onSleep=False):
 		#	info = "WiFi connected"
 		else:
 			info = 'Press START'
-		ugfx.line(0, ugfx.height()-16, ugfx.width(), ugfx.height()-16, ugfx.BLACK)
+		if not noLine:
+			ugfx.line(0, ugfx.height()-16, ugfx.width(), ugfx.height()-16, ugfx.BLACK)
 		easydraw.disp_string_right_bottom(0, info)
 		if len(gui_apps) > 0:
 			drawPageIndicator(len(gui_apps), gui_app_current)

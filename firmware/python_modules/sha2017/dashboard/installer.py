@@ -30,7 +30,7 @@ def btn_exit(pressed):
 def btn_update(pressed):
 	if pressed:
 		repo.update()
-		system.start("installer", True)
+		system.start("dashboard.installer", True)
 
 # Categories list
 
