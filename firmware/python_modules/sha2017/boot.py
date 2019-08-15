@@ -1,15 +1,16 @@
-import esp, machine, sys, system, mpr121, time
+import machine, sys, system, mpr121, time
 
-esp.rtcmem_write(0,0)
-esp.rtcmem_write(1,0)
+rtc = machine.RTC()
+rtc.write(0,0)
+rtc.write(1,0)
 
 #Application starting
 if machine.wake_reason() == (7, 0) and mpr121.get(2): #Start button is being held down after reset
 	app = "dashboard.recovery"
 else:
-	app = esp.rtcmem_read_string()
+	app = rtc.read_string()
 	if app:
-		esp.rtcmem_write_string("")
+		rtc.write_string("")
 	else:
 		if not machine.nvs_getint("system", 'factory_checked'):
 			app = "factory_checks"
@@ -30,3 +31,6 @@ if app and not app == "shell":
 		sys.print_exception(e)
 		time.sleep(3)
 		system.launcher()
+
+if app and app == "shell":
+	print("Welcome to the python shell of your badge!\nCheck out https://wiki.badge.team/MicroPython for instructions.")

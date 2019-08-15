@@ -112,6 +112,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_disobey_samd/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sndmixer
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_mpu6050/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/particle_simulation/include
@@ -187,7 +188,6 @@ SRC_C =  $(addprefix esp32/,\
 	machine_ulp.c \
 	machine_ow.c \
 	modesp.c \
-	esprtcmem.c \
 	modconsts.c \
 	modmpr121.c \
 	moderc12864.c \

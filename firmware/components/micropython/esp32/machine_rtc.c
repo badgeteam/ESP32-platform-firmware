@@ -47,18 +47,11 @@
 #include "modmachine.h"
 #include "mpsleep.h"
 
-
-#define RTC_MEM_INT_SIZE 64
-#define RTC_MEM_STR_SIZE 2048
+#include "driver_rtcmem.h"
 
 extern int MainTaskCore;
 
 char mpy_time_zone[64] = {'\0'};
-
-static int RTC_DATA_ATTR rtc_mem_int[RTC_MEM_INT_SIZE] = { 0 };
-static char RTC_DATA_ATTR rtc_mem_str[RTC_MEM_STR_SIZE] = { 0 };
-static uint16_t RTC_DATA_ATTR rtc_mem_int_crc;
-static uint16_t RTC_DATA_ATTR rtc_mem_str_crc;
 
 static TaskHandle_t sntp_handle = NULL;
 xSemaphoreHandle sntp_mutex = NULL;
@@ -79,22 +72,13 @@ static mach_rtc_obj_t mach_rtc_obj;
 const mp_obj_type_t mach_rtc_type;
 
 
-//------------------------
-static void rtc_init_mem()
-{
-    memset(rtc_mem_int, 0, sizeof(rtc_mem_int));
-	memset(rtc_mem_str, 0, sizeof(rtc_mem_str));
-	rtc_mem_int_crc = 0;
-	rtc_mem_str_crc = 0;
-}
-
 //--------------------
 void rtc_init0(void) {
 	mpsleep_reset_cause_t rstc = mpsleep_get_reset_cause();
 	if ((rstc != MPSLEEP_DEEPSLEEP_RESET) && (rstc != MPSLEEP_SOFT_RESET) && (rstc != MPSLEEP_SOFT_CPU_RESET)) {
 		seconds_at_boot = 0;
 		setTicks_base(0);
-	    rtc_init_mem();
+		driver_rtcmem_clear();
 	}
 }
 
@@ -565,15 +549,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(machine_rtc_wake_on_ext1_obj, 1, machine_rtc_w
 STATIC mp_obj_t esp_rtcmem_write(mp_obj_t self_in, mp_obj_t _pos, mp_obj_t _val) {
 	int pos = mp_obj_get_int(_pos);
 	int val = mp_obj_get_int(_val);
-
-	if (pos >= RTC_MEM_INT_SIZE) {
-		//mp_raise_msg(&mp_type_IndexError, "Index out of range");
-		return mp_const_false;
-	}
-	rtc_mem_int[pos] = val;
-	// Set CRC
-	rtc_mem_int_crc = crc16_le(0, (uint8_t const *)rtc_mem_int, RTC_MEM_INT_SIZE*sizeof(int));
-
+	if (driver_rtcmem_int_write(pos, val) != ESP_OK) return mp_const_false;
 	return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(esp_rtcmem_write_obj, esp_rtcmem_write);
@@ -581,51 +557,31 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(esp_rtcmem_write_obj, esp_rtcmem_write);
 //----------------------------------------------------------------
 STATIC mp_obj_t esp_rtcmem_read(mp_obj_t self_in, mp_obj_t _pos) {
 	int pos = mp_obj_get_int(_pos);
-
-	if (pos >= RTC_MEM_INT_SIZE) {
-		//mp_raise_msg(&mp_type_IndexError, "Index out of range");
-		return mp_const_none;
-	}
-
-	if (rtc_mem_int_crc != crc16_le(0, (uint8_t const *)rtc_mem_int, RTC_MEM_INT_SIZE*sizeof(int))) {
-		return mp_const_none;
-	}
-	return mp_obj_new_int(rtc_mem_int[pos]);
+	int value;
+	if (driver_rtcmem_int_read(pos, &value) != ESP_OK) return mp_const_none;	
+	return mp_obj_new_int(value);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(esp_rtcmem_read_obj, esp_rtcmem_read);
 
 //--------------------------------------------------------------------------
 STATIC mp_obj_t esp_rtcmem_write_string(mp_obj_t self_in, mp_obj_t str_in) {
 	const char *str = mp_obj_str_get_str(str_in);
-
-	if (strlen(str) >= RTC_MEM_STR_SIZE) {
-		//mp_raise_msg(&mp_type_ValueError, "String length too big");
-		return mp_const_false;
-	}
-	memset(rtc_mem_str, 0, sizeof(rtc_mem_str));
-	strcpy(rtc_mem_str, str);
-	// Set CRC
-	rtc_mem_str_crc = crc16_le(0, (uint8_t const *)rtc_mem_str, RTC_MEM_STR_SIZE);
-
+	if (driver_rtcmem_string_write(str) != ESP_OK) return mp_const_false;
 	return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(esp_rtcmem_write_string_obj, esp_rtcmem_write_string);
 
 //--------------------------------------------------------
 STATIC mp_obj_t esp_rtcmem_read_string(mp_obj_t self_in) {
-
-	if (rtc_mem_str_crc != crc16_le(0, (uint8_t const *)rtc_mem_str, RTC_MEM_STR_SIZE)) {
-		return mp_const_none;
-	}
-	return mp_obj_new_str(rtc_mem_str, strlen(rtc_mem_str));
+	const char* str;
+	if (driver_rtcmem_string_read(&str) != ESP_OK) return mp_const_none;
+	return mp_obj_new_str(str, strlen(str));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(esp_rtcmem_read_string_obj, esp_rtcmem_read_string);
 
 //--------------------------------------------------
 STATIC mp_obj_t esp_rtcmem_clear(mp_obj_t self_in) {
-
-    rtc_init_mem();
-
+    driver_rtcmem_clear();
 	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(esp_rtcmem_clear_obj, esp_rtcmem_clear);

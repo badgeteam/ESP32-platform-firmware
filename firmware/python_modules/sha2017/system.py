@@ -1,11 +1,10 @@
-# Power management
+import machine
 
 def reboot():
-	import machine
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):
-	import machine, time, os, badge
+	import time, os, badge
 	#---SHA2017 specific---
 	try:
 		os.umountsd()
@@ -28,13 +27,11 @@ def sleep(duration=0, status=False):
 	machine.deepsleep(duration)
 
 def isColdBoot():
-	import machine
 	if machine.wake_reason() == (7, 0):
 		return True
 	return False
 
 def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
-	import machine
 	if fromButton and machine.wake_reason() == (3, 1):
 		return True
 	if fromIr     and machine.wake_reason() == (3, 2):
@@ -48,7 +45,6 @@ def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
 # Application launching
 
 def start(app, status=False):
-	import esp
 	if status:
 		import term, easydraw
 		if app == "" or app == "launcher":
@@ -57,7 +53,7 @@ def start(app, status=False):
 		else:
 			term.header(True, "Loading application "+app+"...")
 			easydraw.messageCentered("PLEASE WAIT\nStarting '"+app+"'...", True, "/media/busy.png")
-	esp.rtcmem_write_string(app)
+	machine.RTC().write_string(app)
 	reboot()
 
 def home(status=False):
@@ -72,13 +68,13 @@ def shell(status=False):
 # Over-the-air updating
 
 def ota(status=False):
-	import esp
 	if status:
 		import term, easydraw
 		term.header(True, "Starting update...")
 		easydraw.messageCentered("PLEASE WAIT\nStarting update...", True, "/media/busy.png")
-	esp.rtcmem_write(0,1)
-	esp.rtcmem_write(1,254)
+	rtc = machine.RTC()
+	rtc.write(0,1)
+	rtc.write(1,254)
 	reboot()
 
 def serialWarning():
