@@ -84,8 +84,8 @@ CONFIG_MONITOR_BAUD=115200
 #
 # Firmware description
 #
-CONFIG_INFO_FIRMWARE_NAME="Return of the Jedi"
-CONFIG_INFO_FIRMWARE_BUILD=44
+CONFIG_INFO_FIRMWARE_NAME="The Phantom Menace"
+CONFIG_INFO_FIRMWARE_BUILD=45
 
 #
 # Hardware description
