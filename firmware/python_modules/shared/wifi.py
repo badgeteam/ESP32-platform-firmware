@@ -24,7 +24,7 @@ def status():
 	return sta_if.isconnected()
 
 def wait(duration=timeout, UNUSED_LEGACY_PARAMETER=None):
-	t = duration*10
+	t = int(duration*10)
 	while not status():
 		if t <= 0:
 			break
@@ -32,7 +32,7 @@ def wait(duration=timeout, UNUSED_LEGACY_PARAMETER=None):
 		time.sleep(0.1)
 	return status()
 
-def ntp(onlyIfNeeded=True):
+def ntp(onlyIfNeeded=True, server='pool.ntp.org'):
 	if onlyIfNeeded and time.time() > 1482192000:
 		return True
 	rtc = machine.RTC()
@@ -41,4 +41,4 @@ def ntp(onlyIfNeeded=True):
 		if not wait():
 			return False
 
-	return rtc.ntp_sync('pool.ntp.org')
+	return rtc.ntp_sync(server)

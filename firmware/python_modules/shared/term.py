@@ -20,6 +20,8 @@ def header(cls = False, text = ""):
 		home()
 	if text:
 		text = consts.INFO_HARDWARE_NAME+" - "+text
+	else:
+		text = consts.INFO_HARDWARE_NAME
 	color(37, 44, 1)
 	# print(badge.deviceType.replace("_"," ")+" "+text+u"\r\n")
 	print(" "+text+u"\r\n")

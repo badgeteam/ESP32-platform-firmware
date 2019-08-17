@@ -1,31 +1,128 @@
-import machine
+# SHA2017 badge specific input wrapper
+# Versions for other badges must expose the same API
 
-_gpios     = []
-_pins      = []
-_callbacks = []
+import mpr121, _buttons
 
-def _cb(pin):
-	position = _pins.index(pin)
-	gpio = _gpios[position]
-	callback = _callbacks[position]
-	if callable(callback):
-		callback(not pin.value())
+# --- BUTTON CONSTANTS  ---
+BTN_A      = 0
+BTN_B      = 1
+BTN_START  = 2
+BTN_SELECT = 3
+BTN_DOWN   = 4
+BTN_RIGHT  = 5
+BTN_UP     = 6
+BTN_LEFT   = 7
+BTN_FLASH  = 8
+
+# --- INTERNAL MAPPING TABLES ---
+
+__num = 9
+__mprMap = [0,1,2,3,4,5,6,7,-1]
+
+# --- CALLBACKS ---
+__cb = []
+
+# --- DEFAULT ACTION ---
+def __cbReboot(pressed):
+	if pressed:
+		system.reboot()
+
+# --- INTERNAL CALLBACK WRAPPERS ---
+
+def __cb_btn_a(arg):
+	if __cb[-1][BTN_A]:
+		__cb[-1][BTN_A](arg)
+
+def __cb_btn_b(arg):
+	if __cb[-1][BTN_B]:
+		__cb[-1][BTN_B](arg)
+
+def __cb_btn_start(arg):
+	if __cb[-1][BTN_START]:
+		__cb[-1][BTN_START](arg)
+
+def __cb_btn_select(arg):
+	if __cb[-1][BTN_SELECT]:
+		__cb[-1][BTN_SELECT](arg)
+
+def __cb_btn_down(arg):
+	if __cb[-1][BTN_DOWN]:
+		__cb[-1][BTN_DOWN](arg)
+
+def __cb_btn_right(arg):
+	if __cb[-1][BTN_RIGHT]:
+		__cb[-1][BTN_RIGHT](arg)
+
+def __cb_btn_up(arg):
+	if __cb[-1][BTN_UP]:
+		__cb[-1][BTN_UP](arg)
+
+def __cb_btn_left(arg):
+	if __cb[-1][BTN_LEFT]:
+		__cb[-1][BTN_LEFT](arg)
+
+def __cb_btn_flash(arg):
+	if __cb[-1][BTN_FLASH]:
+		__cb[-1][BTN_FLASH](arg)
+
+def __init():
+	global mappings
+	_buttons.register( 0,                    __cb_btn_flash  ) # The flash button is connected to the badge on GPIO 0
+	mpr121.attach    ( __mprMap[BTN_A],      __cb_btn_a      ) # The A button is connected to input 0 of the MPR121
+	mpr121.attach    ( __mprMap[BTN_B],      __cb_btn_b      ) # The B button is connected to input 1 of the MPR121
+	mpr121.attach    ( __mprMap[BTN_START],  __cb_btn_start  ) # The START button is connected to input 2 of the MPR121
+	mpr121.attach    ( __mprMap[BTN_SELECT], __cb_btn_select ) # The SELECT button is connected to input 3 of the MPR121
+	mpr121.attach    ( __mprMap[BTN_DOWN],   __cb_btn_down   ) # The DOWN button is connected to input 4 of the MPR121
+	mpr121.attach    ( __mprMap[BTN_RIGHT],  __cb_btn_right  ) # The RIGHT button is connected to input 5 of the MPR121
+	mpr121.attach    ( __mprMap[BTN_UP],     __cb_btn_up     ) # The UP button is connected to input 6 of the MPR121
+	mpr121.attach    ( __mprMap[BTN_LEFT],   __cb_btn_left   ) # The LEFT button is connected to input 7 of the MPR121
+	pushMapping() #Add the initial / default mapping
 	
-def register(gpio, action=None):
-	if gpio in _gpios:
-		return False
-	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100)
-	_gpios.append(gpio)
-	_pins.append(pin)
-	_callbacks.append(action)
-	return True
+# --- PUBLIC API ---
 
-def assign(gpio, action):
-	if not gpio in _gpios:
-		return False
-	position = _gpios.index(gpio)
-	_callbacks[position] = action
-	return True
+def attach(button, callback):
+	# This function attachs a callback to a button
+	global __num, __cb
+	if button < 0 or button >= __num:
+		raise ValueError("Invalid button!")
+	__cb[-1][button] = callback
+
+def detach(button):
+	# This function removes the callback of a button
+	global __num, __cb
+	if button < 0 or button >= __num:
+		raise ValueError("Invalid button!")
+	__cb[-1][button] = None
+
+def value(button):
+	# Reads the state of a button
+	global _buttons, __mprMap, __num
+	if button < 0 or button >= __num:
+		raise ValueError("Invalid button!")
+	if button == BTN_FLASH:
+		return not _buttons.pin(0).value() # This input has is active LOW
+	else:
+		return mpr121.get(__mprMap[button])
+
+def getCallback(button):
+	# Returns the currently attached callback function
+	global __num, __cb
+	if button < 0 or button >= __num:
+		raise ValueError("Invalid button!")
+	return __cb[-1][button]
+
+def pushMapping(newMapping=None):
+	global __cb
+	if newMapping == None:
+		newMapping = { BTN_UP: None, BTN_DOWN: None, BTN_LEFT: None, BTN_RIGHT: None, BTN_A: None, BTN_B: None, BTN_SELECT: None, BTN_START: __cbReboot }
+	__cb.append(newMapping)
+
+def popMapping():
+	global __cb
+	if len(__cb) > 0:
+		__cb = __cb[:-1]
+	if len(__cb) < 1:
+		pushMapping()
 	
-def unassign(gpio):
-	return assign(gpio, None)
+# ---
+__init()

@@ -1,61 +1,82 @@
-# Home menu application
+# Homescreen application
+import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, term_menu, orientation, display, buttons, neopixel
+import tasks.powermanagement as pm, tasks.otacheck as otacheck
+import easydraw, rtc
 
-import ugfx, time, badge, machine, gc, system, virtualtimers, easydraw, wifi, rtc, term, term_menu, orientation, tasks.powermanagement as pm, uos, json, sys, tasks.otacheck as otacheck, display
+# Read configuration from NVS or apply default values
+cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
+if cfg_term_menu == None:
+	cfg_term_menu = True # If not set the menu is shown
 
-# Default values
-default_logo = None
+cfg_wifi = machine.nvs_get_u8('splash', 'wifi') # Allow the use of WiFi on the splash screen
+if cfg_wifi == None:
+	cfg_wifi = True # If not set the use of WiFi is allowed
 
-# Read splashscreen configuration from NVS
-cfg_term_menu        = badge.nvs_get_u8('splash', 'term_menu', True)
-cfg_wifi             = badge.nvs_get_u8('splash', 'wifi', True)
-cfg_services         = badge.nvs_get_u8('splash', 'services', True)
-cfg_logo             = badge.nvs_get_str('splash', 'logo', default_logo)
-cfg_nickname         = badge.nvs_get_u8('splash', 'nickname', True)
-cfg_led_animation    = badge.nvs_get_str('splash', 'ledApp', None)
+cfg_services = machine.nvs_get_u8('splash', 'services') # Enable splash screen services (fun but dangerous)
+if cfg_services == None:
+	cfg_services = False # If not set services are disabled
 
-try:
-	media = uos.listdir("/media")
-	icons = ["alert", "bell", "bug", "busy", "charge", "crown", "earth", "flag", "music", "ok", "wifi", "usb"]
-	for icon in icons:
-		if not icon+".png" in media:
-			raise(BaseException(""))
-except:
-	import dashboard.resources.png_icons
+cfg_logo = machine.nvs_getstr('splash', 'logo') # Filename of a PNG image to show on the splash screen
 
-# Initialise the default button actions
-def btn_start(pressed):
+cfg_nickname = machine.nvs_get_u8('splash', 'nickname') # Show the nickname of the user on the splash screen
+if cfg_nickname == None:
+	cfg_nickname = True # If not set we want to show the nickname
+
+cfg_led_animation = machine.nvs_getstr('splash', 'ledApp') # Application which shows a LED animation while the splash screen is visible
+
+# Button callbacks
+def cbStartLauncher(pressed):
 	if pressed:
 		system.launcher(True)
 
-def btn_unhandled(pressed):
+def cbFeedPowerManagement(pressed):
 	pm.feed()
 
-ugfx.input_attach(ugfx.BTN_START, btn_start)
-ugfx.input_attach(ugfx.BTN_A, btn_unhandled)
-ugfx.input_attach(ugfx.BTN_B, btn_unhandled)
-ugfx.input_attach(ugfx.JOY_UP, btn_unhandled)
-ugfx.input_attach(ugfx.JOY_DOWN, btn_unhandled)
-ugfx.input_attach(ugfx.JOY_LEFT, btn_unhandled)
-ugfx.input_attach(ugfx.JOY_RIGHT, btn_unhandled)
+# Flashlight
+flashlightStatus = False
+def cbFlashlight(pressed):
+	global led_app, flashlightStatus
+	if pressed:
+		if flashlightStatus:
+			pm.enable()
+			neopixel.send(bytes([0x00]*24))
+		else:
+			pm.disable()
+			neopixel.send(bytes([0xFF]*24))
 
-# Task scheduler
+		if led_app:
+			try:
+				if flashlightStatus:
+					led_app.resume()
+				else:
+					led_app.pause()
+			except:
+				pass
+		flashlightStatus = not flashlightStatus
+
+buttons.attach(buttons.BTN_A,      cbFeedPowerManagement)
+buttons.attach(buttons.BTN_B,      cbFeedPowerManagement)
+buttons.attach(buttons.BTN_START,  cbStartLauncher      )
+buttons.attach(buttons.BTN_SELECT, cbFeedPowerManagement)
+buttons.attach(buttons.BTN_DOWN,   cbFeedPowerManagement)
+buttons.attach(buttons.BTN_RIGHT,  cbFeedPowerManagement)
+buttons.attach(buttons.BTN_UP,     cbFeedPowerManagement)
+buttons.attach(buttons.BTN_LEFT,   cbFeedPowerManagement)
+buttons.attach(buttons.BTN_FLASH,  cbFlashlight         )
+
+# Scheduler
 virtualtimers.activate(25)
 
 # Power management
-def onSleep(idleTime=None):
+def cbSleep(idleTime=None):
 	if idleTime == None:
 		idleTime = virtualtimers.idle_time()
 	gui_redraw = True
 	drawTask(True)
-	if (idleTime >= 86400000): #One day
-		idleTime = 0
-	if idleTime < 1:
-		term.header(True, "Sleeping until touchbutton is pressed...")
-	else:
-		term.header(True, "Sleeping for "+str(idleTime)+"ms...")
-	system.sleep(idleTime)
+	system.sleep(idleTime, True)
 
-pm.callback(onSleep)
+pm.callback(cbSleep)
+pm.enable()
 pm.feed()
 
 # WiFi
@@ -77,7 +98,7 @@ def wifiTask():
 			ota_available = otacheck.available(True)
 	return 1000
 
-virtualtimers.new(0, wifiTask, True)
+virtualtimers.new(50, wifiTask, True)
 
 # Services
 gui_apps = []
@@ -123,8 +144,7 @@ def display_app(position):
 		gui_apps[gui_app_current].draw(position)
 	except BaseException as e:
 		sys.print_exception(e)
-		ugfx.string(5, position, "("+gui_app_names[gui_app_current]+")", "Roboto_Regular18", ugfx.BLACK)
-	
+		display.drawText(5, position, "("+gui_app_names[gui_app_current]+")", 0x000000, "Roboto_Regular18")
 
 def redraw_cb():
 	global gui_redraw
@@ -164,27 +184,27 @@ if cfg_services:
 	
 	gui_app_current = -1
 
-	ugfx.input_attach(ugfx.JOY_LEFT, prev_app)
-	ugfx.input_attach(ugfx.JOY_RIGHT, next_app)
+	buttons.attach(buttons.BTN_LEFT, prev_app)
+	buttons.attach(buttons.BTN_RIGHT, next_app)
 
 # Basic UI elements and drawing task
 orientation.default()
 gui_redraw = True
 
-def drawLogo(offset = 0, max_height = ugfx.height(), center = True):
-	global cfg_logo, default_logo
+def drawLogo(offset = 0, max_height = display.height(), center = True):
+	global cfg_logo
 	try:
-		info = badge.png_info(cfg_logo)
+		info = display.pngInfo(cfg_logo)
 	except:
 		return 0
 	width = info[0]
 	height = info[1]
-	if width > ugfx.width():
+	if width > display.width():
 		print("Image too large (x)")
 		return
-	if height > ugfx.height():
+	if height > display.height():
 		print("Image too large (y)")
-	x = int((ugfx.width() - width) / 2)
+	x = int((display.width() - width) / 2)
 	if center:
 		if max_height - height < 0:
 			print("Not enough space for logo",max_height,height)
@@ -195,7 +215,7 @@ def drawLogo(offset = 0, max_height = ugfx.height(), center = True):
 	else:
 		y = offset
 	try:
-		ugfx.display_image(x,y,cfg_logo)
+		display.drawPng(x,y,cfg_logo)
 		return height
 	except BaseException as e:
 		sys.print_exception(e)
@@ -206,26 +226,23 @@ def drawPageIndicator(amount, position):
 	size = 4
 	offset = 6
 	for i in range(amount):
-		if i==position:
-			ugfx.fill_circle(x, ugfx.height()-8, size, ugfx.BLACK)
-		else:
-			ugfx.circle(x, ugfx.height()-8, size, ugfx.BLACK)
+		display.drawCircle(x, display.height()-8, size, 0, 359, i==position, 0x000000)
 		x+= size + offset
 
 def drawTask(onSleep=False):
 	global gui_redraw, cfg_nickname, gui_apps, gui_app_current, ota_available
 	if gui_redraw or onSleep:
 		gui_redraw = False
-		ugfx.clear(ugfx.WHITE)
+		display.drawFill(0xFFFFFF)
 		currHeight = 0
 		noLine = False
 		if gui_app_current < 0:
 			if cfg_logo and cfg_nickname:
 				currHeight += easydraw.nickname()
 				currHeight += 4
-				ugfx.line(0, currHeight, ugfx.width(), currHeight, ugfx.BLACK)
+				display.drawLine(0, currHeight, display.width()-1, currHeight, 0x000000)
 				currHeight += 4
-			app_height = ugfx.height()-16-currHeight
+			app_height = display.height()-16-currHeight
 			logoHeight = drawLogo(currHeight, app_height, True)
 			if logoHeight < 1 and cfg_logo:
 				title = "BADGE.TEAM"
@@ -248,10 +265,8 @@ def drawTask(onSleep=False):
 
 		if onSleep:
 			info = 'Sleeping...'
-		#elif badge.safe_mode():
-		#	info = "Recovery mode"
 		#elif not rtc.isSet():
-		#	info = "Clock not set"
+		#	info = "RTC not available"
 		elif ota_available:
 			info = "Update available!"
 		#elif wifi_status_curr:
@@ -259,11 +274,11 @@ def drawTask(onSleep=False):
 		else:
 			info = 'Press START'
 		if not noLine:
-			ugfx.line(0, ugfx.height()-16, ugfx.width(), ugfx.height()-16, ugfx.BLACK)
+			display.drawLine(0, display.height()-16, display.width(), display.height()-16, 0x000000)
 		easydraw.disp_string_right_bottom(0, info)
 		if len(gui_apps) > 0:
 			drawPageIndicator(len(gui_apps), gui_app_current)
-		ugfx.flush(ugfx.LUT_NORMAL)
+		display.flush(display.FLAG_LUT_NORMAL)
 	return 1000
 
 virtualtimers.new(0, drawTask, True)
@@ -276,9 +291,8 @@ if not rtc.isSet() and cfg_wifi:
 	wifi.connect() #Connecting to WiFi automatically sets the time using NTP (see wifiTask)
 
 # LED animation
+led_app = None
 if cfg_led_animation != None:
-	badge.leds_init()
-	badge.leds_enable()
 	try:
 		led_app = __import__('/lib/'+cfg_led_animation+'/ledsrv')
 		try:
@@ -291,5 +305,5 @@ if cfg_led_animation != None:
 
 # Terminal menu
 if cfg_term_menu:
-	umenu = term_menu.UartMenu(onSleep, pm, badge.safe_mode())
+	umenu = term_menu.UartMenu(cbSleep, pm, False)
 	umenu.main()

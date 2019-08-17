@@ -12,9 +12,9 @@ def sleep(duration=0, status=False):
 		pass
 	badge.setPower(False)
 	badge.eink_busy_wait()
-	#---
 	machine.RTC().wake_on_ext0(pin = machine.Pin(25), level = 0)
 	machine.RTC().wake_on_ext1([machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)], 0)
+	#---
 	if (duration >= 86400000): #One day
 		duration = 0
 	if status:
@@ -25,24 +25,6 @@ def sleep(duration=0, status=False):
 			term.header(True, "Sleeping for "+str(duration)+"ms...")
 	time.sleep(0.05)
 	machine.deepsleep(duration)
-
-def isColdBoot():
-	if machine.wake_reason() == (7, 0):
-		return True
-	return False
-
-def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
-	if fromButton and machine.wake_reason() == (3, 1):
-		return True
-	if fromIr     and machine.wake_reason() == (3, 2):
-		return True
-	if fromTimer  and machine.wake_reason() == (3, 4):
-		return True
-	if fromUlp    and machine.wake_reason() == (3, 5):
-		return True
-	return False
-
-# Application launching
 
 def start(app, status=False):
 	if status:
@@ -84,6 +66,22 @@ def serialWarning():
 def crashedWarning():
 	import easydraw
 	easydraw.messageCentered("An error occured!\n\nThe running app has crashed.", True, "/media/alert.png")
+
+def isColdBoot():
+	if machine.wake_reason() == (7, 0):
+		return True
+	return False
+
+def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
+	if fromButton and machine.wake_reason() == (3, 1):
+		return True
+	if fromIr     and machine.wake_reason() == (3, 2):
+		return True
+	if fromTimer  and machine.wake_reason() == (3, 4):
+		return True
+	if fromUlp    and machine.wake_reason() == (3, 5):
+		return True
+	return False
 
 __current_app__ = None
 

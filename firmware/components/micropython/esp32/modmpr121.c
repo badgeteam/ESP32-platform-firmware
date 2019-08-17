@@ -5,6 +5,7 @@
 #include "py/mperrno.h"
 #include "py/mphal.h"
 #include "py/runtime.h"
+#include "py/obj.h"
 
 #include <driver_mpr121.h>
 
@@ -58,16 +59,24 @@ static void mpr121_event_handler(void *b, bool state)
 	int pin = (uint32_t) b;
 	if ((pin < 0) || (pin > 11)) return;
 	if(button_callbacks[pin] != mp_const_none){
-		mp_sched_schedule(button_callbacks[pin], mp_obj_new_bool(state), NULL);
+		if ((!MP_OBJ_IS_FUN(button_callbacks[pin])) && (!MP_OBJ_IS_METH(button_callbacks[pin]))) {
+			printf("MPR121 ERROR: CALLBACK IS NOT FUN OR METH?!?! (pin %u)\n", pin);
+		} else {
+			mp_sched_schedule(button_callbacks[pin], mp_obj_new_bool(state), NULL);
+		}
 	}
 }
 
 static mp_obj_t mpr121_input_attach(mp_obj_t _pin, mp_obj_t _func) {
-  int pin = mp_obj_get_int(_pin);
-  if ((pin < 0) || (pin > 11)) return mp_const_none;
-  driver_mpr121_set_interrupt_handler(pin, mpr121_event_handler, (void*) (pin));
-  button_callbacks[pin] = _func;
-  return mp_const_none;
+	int pin = mp_obj_get_int(_pin);
+	if ((pin < 0) || (pin > 11)) return mp_const_none;
+	driver_mpr121_set_interrupt_handler(pin, mpr121_event_handler, (void*) (pin));
+	if ((!MP_OBJ_IS_FUN(_func) && (!MP_OBJ_IS_METH(_func)))) {
+		mp_raise_ValueError("callback function expected");
+		return mp_const_none;
+	}
+	button_callbacks[pin] = _func;
+	return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_2(mpr121_input_attach_obj, mpr121_input_attach);
 

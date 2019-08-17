@@ -787,7 +787,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_circle_obj,        
 /* Draw a circle in the framebuffer or a window. Arguments: window (optional), x, y, radius, starting-angle, ending-angle, fill, color */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_text_obj,            3, 8, framebuffer_draw_text);
-/* Draw text in the framebuffer or a window. Arguments: window (optional), text, x, y, color (optional), font (optional), x-scale (optional), y-scale (optional) */
+/* Draw text in the framebuffer or a window. Arguments: window (optional), x, y, text, color (optional), font (optional), x-scale (optional), y-scale (optional) */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_get_text_width_obj,       1, 2, framebuffer_get_text_width);
 /* Get the width of a string when printed with a font. Arguments: text, font (optional) */

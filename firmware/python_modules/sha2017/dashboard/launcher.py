@@ -1,4 +1,4 @@
-import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display
+import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display, eink
 
 orientation.default()
 
@@ -150,21 +150,32 @@ def input_select(pressed):
 	pm.feed()
 	if pressed:
 		uninstall()
-	
+
 def input_other(pressed):
 	pm.feed()
 	if pressed:
-		display.flush(display.FLAG_LUT_FASTEST)
+		global einkNeedsUpdate
+		einkNeedsUpdate = True
+		#display.flush(display.FLAG_LUT_FASTEST)
 
 # Power management
 def pm_cb(dummy):
 	system.home()
 
+einkNeedsUpdate = False
+def updateEink():
+	global einkNeedsUpdate
+	if einkNeedsUpdate:
+		einkNeedsUpdate = False
+		display.flush(display.FLAG_LUT_FASTEST)
+	return 100
+
 def init_power_management():
-	virtualtimers.activate(1000) # Start scheduler with 1 second ticks
+	virtualtimers.activate(100) # Start scheduler with 100ms ticks
 	pm.set_timeout(5*60*1000) # Set timeout to 5 minutes
 	pm.callback(pm_cb) # Go to splash instead of sleep
 	pm.feed() # Feed the power management task, starts the countdown...
+	virtualtimers.new(100, updateEink)
 
 # Main application
 def start():

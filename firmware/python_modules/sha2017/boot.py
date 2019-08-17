@@ -9,9 +9,7 @@ if machine.wake_reason() == (7, 0) and mpr121.get(2): #Start button is being hel
 	app = "dashboard.recovery"
 else:
 	app = rtc.read_string()
-	if app:
-		rtc.write_string("")
-	else:
+	if not app:
 		if not machine.nvs_getint("system", 'factory_checked'):
 			app = "factory_checks"
 		else:

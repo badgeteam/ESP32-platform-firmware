@@ -50,7 +50,18 @@ else:
 	time.sleep(2)
 	import calibtouch
 
-machine.nvs_setint('system', 'factory_checked', 1) # We have completed the factory script
+# Install icons to the filesystem if needed
+try:
+	media = uos.listdir("/media")
+	icons = ["alert", "bell", "bug", "busy", "charge", "crown", "earth", "flag", "music", "ok", "wifi", "usb"]
+	for icon in icons:
+		if not icon+".png" in media:
+			raise(BaseException(""))
+except:
+	import dashboard.resources.png_icons
+	
+# We have completed the factory script
+machine.nvs_setint('system', 'factory_checked', 1)
 
 display.drawFill(0xFFFFFF)
 display.drawText(0,0,"Welcome to the BADGE.TEAM platform firmware!", 0x000000, "7x5")

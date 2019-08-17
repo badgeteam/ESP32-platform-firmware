@@ -1,77 +1,130 @@
-import machine, system
-from defines import *
+# CampZone2019 badge specific input wrapper
+# Versions for other badges must expose the same API
 
-def _cb(pin):
-	position = _pins.index(pin)
-	gpio = _gpios[position]
-	callback = button_mappings[-1][gpio]
-	state = not pin.value() # True if pressed, otherwise False
-	previous_state = _states[position]
+import _buttons
 
-	# Workaround for false triggers on GPIO36/39 after enabling ADC
-	# https://github.com/espressif/esp-idf/issues/1096
-	if previous_state == state:
-		return
+# --- BUTTON CONSTANTS  ---
+BTN_UP     = 0
+BTN_DOWN   = 1
+BTN_LEFT   = 2
+BTN_RIGHT  = 3
+BTN_A      = 4
+BTN_B      = 5
 
-	_states[position] = state
-	if callback and callable(callback):
-		callback(not pin.value())
+# --- INTERNAL MAPPING TABLES ---
 
-_gpios     = [BTN_A, BTN_B, BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT]
-_pins      = [
-	machine.Pin(BTN_A, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_B, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_UP, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_DOWN, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_LEFT, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-	machine.Pin(BTN_RIGHT, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100),
-]
-_states = [False] * len(_pins)
+__num = 6
+_gpioMap = [26, 27. 32, 33, 36, 39]
 
-button_mappings = []
+# --- CALLBACKS ---
+__cb = []
+
+# --- DEFAULT ACTION ---
+def __cbReboot(pressed):
+	if pressed:
+		system.reboot()
+
+# --- INTERNAL CALLBACK WRAPPERS ---
+
+def __cb_btn_a(arg):
+	if __cb[-1][BTN_A]:
+		__cb[-1][BTN_A](arg)
+
+def __cb_btn_b(arg):
+	if __cb[-1][BTN_B]:
+		__cb[-1][BTN_B](arg)
+
+def __cb_btn_up(arg):
+	if __cb[-1][BTN_UP]:
+		__cb[-1][BTN_UP](arg)
+
+def __cb_btn_down(arg):
+	if __cb[-1][BTN_DOWN]:
+		__cb[-1][BTN_DOWN](arg)
+
+def __cb_btn_left(arg):
+	if __cb[-1][BTN_LEFT]:
+		__cb[-1][BTN_LEFT](arg)
+
+def __cb_btn_right(arg):
+	if __cb[-1][BTN_RIGHT]:
+		__cb[-1][BTN_RIGHT](arg)
+
+def __init():
+	global mappings
+	_buttons.register( _gpioMap(BTN_A),     __cb_btn_a     )
+	_buttons.register( _gpioMap(BTN_B),     __cb_btn_b     )
+	_buttons.register( _gpioMap(BTN_UP),    __cb_btn_up    )
+	_buttons.register( _gpioMap(BTN_DOWN),  __cb_btn_down  )
+	_buttons.register( _gpioMap(BTN_LEFT),  __cb_btn_left  )
+	_buttons.register( _gpioMap(BTN_RIGHT), __cb_btn_right )
+	pushMapping() #Add the initial / default mapping
+	
+# --- PUBLIC API ---
+
+def attach(button, callback):
+	# This function attachs a callback to a button
+	global __num, __cb
+	if button < 0 or button >= __num:
+		raise ValueError("Invalid button!")
+	__cb[-1][button] = callback
+
+def detach(button):
+	# This function removes the callback of a button
+	global __num, __cb
+	if button < 0 or button >= __num:
+		raise ValueError("Invalid button!")
+	__cb[-1][button] = None
+
+def value(button):
+	# Reads the state of a button
+	global _buttons, __mprMap, __num
+	if button < 0 or button >= __num:
+		raise ValueError("Invalid button!")
+	if button == BTN_FLASH:
+		return not _buttons.pin(0).value() # This input has is active LOW
+	else:
+		return mpr121.get(__mprMap[button])
+
+def getCallback(button):
+	# Returns the currently attached callback function
+	global __num, __cb
+	if button < 0 or button >= __num:
+		raise ValueError("Invalid button!")
+	return __cb[-1][button]
+
+def pushMapping(newMapping=None):
+	global __cb
+	if newMapping == None:
+		newMapping = { BTN_UP: None, BTN_DOWN: None, BTN_LEFT: None, BTN_RIGHT: None, BTN_A: None, BTN_B: __cbReboot }
+	__cb.append(newMapping)
+
+def popMapping():
+	global __cb
+	if len(__cb) > 0:
+		__cb = __cb[:-1]
+	if len(__cb) < 1:
+		pushMapping()
+	
+
+# --- CampZone2019 specific legacy API compatibility ---
 
 def init_button_mapping():
-	global button_mappings
-	button_mappings.append(_default_button_mapping())
+	pushMapping()
 	return True
 
 def clear_button_mapping():
-	global button_mappings
-	if len(button_mappings) > 1:
-		button_mappings = button_mappings[:-1]
+	popMapping()
 	return True
 
-def assign(gpio, action = None):
-	global button_mappings
-	button_mappings[-1][gpio] = action
+def assign(button, action = None):
+	attach(button, action)
 	return True
-
-def unassign(gpio):
-	return assign(gpio, None)
-
-def _register(gpio):
-	if gpio in _gpios:
-		return False
-	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=100, acttime=100)
-	_gpios.append(gpio)
-	_pins.append(pin)
-	return True
-
-def _default_B_action(pressed):
-	if pressed:
-		# Make apps reboot when B is pressed, unless they rebind it
-		print('Exit by B button')
-		system.reboot()
-
-def _default_button_mapping():
-	return {
-		BTN_UP: None,
-		BTN_DOWN: None,
-		BTN_LEFT: None,
-		BTN_RIGHT: None,
-		BTN_A: None,
-		BTN_B: _default_B_action
-	}
 
 register = assign
-init_button_mapping()
+
+def unassign(button):
+	return assign(button, None)
+
+# ---
+__init()

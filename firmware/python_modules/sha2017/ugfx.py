@@ -37,6 +37,30 @@ def input_attach(button, callback=None):
 	if doAttach:
 		mpr121.attach(button, callback)
 
+
+_internalListUpCallback = None
+_internalListDownCallback = None
+
+def _internalGlobalUpCallback(pressed):
+	global _internalListUpCallback
+	if _internalListUpCallback:
+		_internalListUpCallback(pressed)
+
+def _internalGlobalDownCallback(pressed):
+	global _internalListDownCallback
+	if _internalListDownCallback:
+		_internalListDownCallback(pressed)
+
+def _inputAttach(button, realCallback,thisList=None):
+	global _internalListUpCallback, _internalListDownCallback, activeList
+	activeList = thisList
+	if button == JOY_UP:
+		_internalListUpCallback = realCallback
+		mpr121.attach(JOY_UP, _internalGlobalUpCallback)
+	if button == JOY_DOWN:
+		_internalListDownCallback = realCallback
+		mpr121.attach(JOY_DOWN, _internalGlobalDownCallback)
+
 LUT_NORMAL = display.FLAG_LUT_NORMAL
 LUT_FASTER = display.FLAG_LUT_FAST
 LUT_FASTEST = display.FLAG_LUT_FASTEST
@@ -127,15 +151,29 @@ def rounded_box(x,y,w,h,r,color):
 def fill_rounded_box(x,y,w,h,r,color):
 	display.drawRect(x,y,w,h,True,color)
 
-def string_box(x,y,w,h,text,font,color,align):
+def __test_string_box(font,text="TEST"):
+	display.drawFill()
+	display.drawRect(20,20,100,100,0,0)
+	string_box(20,20,100,100,text, font, 0, ugfx.justifyCenter, True)
+	display.flush()
+
+
+def string_box(x,y,w,h,text,font,color,align,testMode=False):
 	lines = wordWrap(text, w, font).split("\n")
 	if len(lines) < 1:
 		return
 	
 	for i in range(len(lines)):
-		text_x = x + w//2 - display.getTextWidth(lines[i], font)//2
-		text_y = y + h//2 - ((display.getTextHeight(lines[0], font)+3)*(len(lines)-i-1))//2
-		display.drawText(text_x, text_y, lines[i], 0x000000, font)
+		textWidth  = display.getTextWidth(lines[i], font)
+		textHeight = display.getTextHeight(lines[0], font)
+		text_x = x + w//2 - textWidth//2
+		text_y = y + h//2 - textHeight//2 + textHeight*i - (textHeight*(len(lines)-1))//2
+		if testMode:
+			print("Components", y, h//2, textHeight//2, textHeight*i, (textHeight*(len(lines)-1))//2)
+			print("Line",i,lines[i],text_x, text_y)
+		display.drawText(text_x, text_y, lines[i], color, font)
+		if testMode:
+			display.drawRect(text_x, text_y, textWidth, textHeight, 0, 0)
 		
 
 # Listbox UI element
@@ -202,7 +240,7 @@ class List():
 			self.selected -= 1
 		if self._enabled:
 			self._draw()
-		print("Remove item from pos", pos,"selected",self.selected)
+		#print("Remove item from pos", pos,"selected",self.selected)
 	
 	def selected_index(self, setValue=None):
 		if setValue:
@@ -219,8 +257,8 @@ class List():
 		self.items = []
 		self.selected = 0
 		activeList = None
-		mpr121.attach(JOY_UP, listUpCallback)
-		mpr121.attach(JOY_DOWN, listDownCallback)
+		_inputAttach(JOY_UP, listUpCallback, self)
+		_inputAttach(JOY_DOWN, listDownCallback, self)
 		
 	def _onUp(self, pressed):
 		global listUpCallback
@@ -229,7 +267,7 @@ class List():
 				self.selected-=1
 				if self.selected < self.offset:
 					self.offset = self.selected
-				self._draw()
+			self._draw()
 		if listUpCallback:
 			listUpCallback(pressed)
 			
@@ -241,7 +279,7 @@ class List():
 				if self.selected >= self.offset+self.lines:
 					self.offset += 1
 				#print("onDown", self.selected, len(self.items), self.offset, self.items[self.selected])
-				self._draw()
+			self._draw()
 		if listDownCallback:
 			listDownCallback(pressed)
 	
@@ -254,12 +292,12 @@ class List():
 		global activeList, listUpCallback, listDownCallback
 		if self._enabled:
 			activeList = self
-			mpr121.attach(JOY_UP, self._onUp)
-			mpr121.attach(JOY_DOWN, self._onDown)
+			_inputAttach(JOY_UP, self._onUp, self)
+			_inputAttach(JOY_DOWN, self._onDown, self)
 		else:
 			activeList = None
-			mpr121.attach(JOY_UP, listUpCallback)
-			mpr121.attach(JOY_DOWN, listDownCallback)
+			_inputAttach(JOY_UP, listUpCallback, self)
+			_inputAttach(JOY_DOWN, listDownCallback, self)
 	
 	def clear(self):
 		while len(self.items): #Keep the same list!

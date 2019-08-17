@@ -269,7 +269,8 @@ def draw():
 
 
 def show(newTitle, initialText, cbAccept, cbCancel=None):
-    global cx, cy, text, originalText, title, cursorPos, _cbAccept, _cbCancel
+    global cx, cy, text, originalText, title, cursorPos, _cbAccept, _cbCancel, mode
+    mode = 0
     title = newTitle
     display.drawFill(0xFFFFFF)
     cx = 0
