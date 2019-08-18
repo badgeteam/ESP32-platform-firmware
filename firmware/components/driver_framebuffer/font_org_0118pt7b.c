@@ -286,6 +286,6 @@ const GFXglyph org_0118pt7bGlyphs[] = {
 const GFXfont org_0118pt7b = {
   (uint8_t  *)org_0118pt7bBitmaps,
   (GFXglyph *)org_0118pt7bGlyphs,
-  0x20, 0x7E, 38 };
+  0x20, 0x7E, 18 };//B
 
 // Approx. 2891 bytes

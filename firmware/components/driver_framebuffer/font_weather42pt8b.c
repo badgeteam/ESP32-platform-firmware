@@ -619,6 +619,6 @@ const GFXglyph weather42pt8bGlyphs[] = {
 const GFXfont weather42pt8b = {
   (uint8_t  *)weather42pt8bBitmaps,
   (GFXglyph *)weather42pt8bGlyphs,
-  0x00, 0x12, 61 };
+  0x00, 0x12, 42 };//B
 
 // Approx. 7268 bytes

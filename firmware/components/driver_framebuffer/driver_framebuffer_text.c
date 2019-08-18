@@ -96,9 +96,9 @@ void _print_char(Frame* frame, unsigned char c, int16_t x0, int16_t y0, uint8_t 
 			if(!(bit++ & 7)) bits = bitmap[bitmapOffset++];
 			if(bits & 0x80) {
 				if (xScale == 1 && yScale == 1) {
-					driver_framebuffer_setPixel(frame, x0+xOffset+x, y0+yOffset+y, color);
+					driver_framebuffer_setPixel(frame, x0+xOffset+x-1, y0+yOffset+y-1, color);
 				} else {
-					driver_framebuffer_rect(frame, x0+(xOffset+x)*xScale, y0+(yOffset+y)*yScale, xScale, yScale, true, color);
+					driver_framebuffer_rect(frame, x0+(xOffset+x)*xScale-1, y0+(yOffset+y)*yScale-1, xScale, yScale, true, color);
 				}
 			}
 			bits <<= 1;
@@ -114,7 +114,7 @@ void _write(Frame* frame, uint8_t c, int16_t x0, int16_t *x, int16_t *y, uint8_t
 		*x = x0;
 		*y += font->yAdvance * yScale;
 	} else if (c != '\r') {
-		_print_char(frame, c, *x, *y+((font->yAdvance/2)*yScale), xScale, yScale, color, font);
+		_print_char(frame, c, *x, *y+(font->yAdvance*yScale), xScale, yScale, color, font);
 		*x += glyph->xAdvance * xScale;
 	}
 }

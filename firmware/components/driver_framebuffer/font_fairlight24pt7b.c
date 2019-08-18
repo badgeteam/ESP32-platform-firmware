@@ -568,6 +568,6 @@ const GFXglyph fairlight24pt7bGlyphs[] = {
 const GFXfont fairlight24pt7b = {
   (uint8_t  *)fairlight24pt7bBitmaps,
   (GFXglyph *)fairlight24pt7bGlyphs,
-  0x20, 0x7E, 40 };
+  0x20, 0x7E, 24 };//B
 
 // Approx. 6269 bytes

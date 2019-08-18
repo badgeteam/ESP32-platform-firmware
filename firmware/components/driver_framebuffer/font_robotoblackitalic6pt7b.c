@@ -135,6 +135,6 @@ const GFXglyph robotoblackitalic6pt7bGlyphs[] = {
 const GFXfont robotoblackitalic6pt7b = {
   (uint8_t  *)robotoblackitalic6pt7bBitmaps,
   (GFXglyph *)robotoblackitalic6pt7bGlyphs,
-  0x20, 0x7E, 12 };
+  0x20, 0x7E, 6 };//B
 
 // Approx. 1075 bytes

@@ -414,6 +414,6 @@ const GFXglyph robotoblack22pt7bGlyphs[] = {
 const GFXfont robotoblack22pt7b = {
   (uint8_t  *)robotoblack22pt7bBitmaps,
   (GFXglyph *)robotoblack22pt7bGlyphs,
-  0x20, 0x7E, 42 };
+  0x20, 0x7E, 22 };//B
 
 // Approx. 4418 bytes

@@ -189,6 +189,6 @@ const GFXglyph pixelade16pt7bGlyphs[] = {
 const GFXfont pixelade16pt7b = {
   (uint8_t  *)pixelade16pt7bBitmaps,
   (GFXglyph *)pixelade16pt7bGlyphs,
-  0x20, 0x7E, 23 };
+  0x20, 0x7E, 16 };//B
 
 // Approx. 1727 bytes
