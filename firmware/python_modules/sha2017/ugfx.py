@@ -181,7 +181,7 @@ class List():
 		self.selected = 0
 		global activeList
 		activeList = self
-		self.lines = int(self.h / display.getTextHeight(" ", "freesans9"))
+		self.lines = self.h // (display.getTextHeight(" ", "freesans9")+6)
 		self.offset = 0
 		self.visible(True)
 		self.enabled(True)
@@ -200,16 +200,16 @@ class List():
 				while display.getTextWidth(item, "freesans9") > self.w:
 					item = item[:-1]
 				
-				totalHeight += lineHeight
+				totalHeight += lineHeight+6
 				if totalHeight >= self.h:
 					break
 				color = 0x000000
 				if self.offset+i == self.selected:
-					display.drawRect(self.x, cursor[1], self.w, lineHeight, True, 0x000000)
+					display.drawRect(self.x, cursor[1], self.w, lineHeight+6, True, 0x000000)
 					color = 0xFFFFFF
-				cursor = (self.x+1,cursor[1]+3)
-				display.drawText(cursor[0], cursor[1], item+"\n", color, "freesans9")
-				cursor = (self.x+1,cursor[1]-3+display.getTextHeight(item+"\n", "freesans9"))
+				cursor = (self.x,cursor[1]+3)
+				display.drawText(cursor[0]+2, cursor[1], item+"\n", color, "freesans9")
+				cursor = (self.x,cursor[1]+3+display.getTextHeight(item+"\n", "freesans9"))
 	
 	def add_item(self, caption):
 		if type(caption) == type(""):

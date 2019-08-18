@@ -96,9 +96,9 @@ void _print_char(Frame* frame, unsigned char c, int16_t x0, int16_t y0, uint8_t 
 			if(!(bit++ & 7)) bits = bitmap[bitmapOffset++];
 			if(bits & 0x80) {
 				if (xScale == 1 && yScale == 1) {
-					driver_framebuffer_setPixel(frame, x0+xOffset+x-1, y0+yOffset+y-1, color);
+					driver_framebuffer_setPixel(frame, x0+xOffset+x, y0+yOffset+y-1, color);
 				} else {
-					driver_framebuffer_rect(frame, x0+(xOffset+x)*xScale-1, y0+(yOffset+y)*yScale-1, xScale, yScale, true, color);
+					driver_framebuffer_rect(frame, x0+(xOffset+x)*xScale, y0+(yOffset+y)*yScale-1, xScale, yScale, true, color);
 				}
 			}
 			bits <<= 1;

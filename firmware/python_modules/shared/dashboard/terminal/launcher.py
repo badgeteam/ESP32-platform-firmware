@@ -1,4 +1,4 @@
-import term, system, sys, badge, uos as os, ujson, easydraw
+import term, system, sys, badge, uos as os, ujson, easydraw, machine
 
 system.serialWarning()
 

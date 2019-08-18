@@ -1,6 +1,8 @@
-import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display, eink
+import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display, eink, machine, term, term_menu
 
 orientation.default()
+
+term.header(True, "Loading...")
 
 # Application list
 
@@ -65,12 +67,12 @@ def read_metadata(app):
 	try:
 		install_path = get_install_path()
 		info_file = "%s/%s/metadata.json" % (install_path, app)
-		print("Reading "+info_file+"...")
+		#print("Reading "+info_file+"...")
 		with open(info_file) as f:
 			information = f.read()
 		return ujson.loads(information)
 	except BaseException as e:
-		print("[ERROR] Can not read metadata for app "+app)
+		#print("[ERROR] Can not read metadata for app "+app)
 		sys.print_exception(e)
 		information = {"name":app,"description":"","category":"", "author":"","revision":0}
 		return [app,""]
@@ -86,11 +88,11 @@ def uninstall():
 	global currentListTargets
 		
 	if currentListTargets[selected]["category"] == "system":
-		print("System apps can not be removed.")
+		#print("System apps can not be removed.")
 		dialogs.notice("Can not uninstall '"+currentListTitles[selected]+"'!\nSystem apps can not be removed!","UNINSTALL APPLICATION")
 		#easydraw.msg("System apps can not be removed!","Error",True)
 		#time.sleep(2)
-		print("Returning to menu.")
+		#print("Returning to menu.")
 		start()
 		return
 	
@@ -194,18 +196,19 @@ def start():
 		display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("ESP32 platform", "pixelade9")/2), currentY, "ESP32 platform\n", 0x000000, "pixelade9")
 		display.drawLine(x0,0,x0,display.height()-1,0x000000)
 		pixHeight = display.getTextHeight(" ", "pixelade9")
-		currentY = pixHeight*5-5
+		currentY = pixHeight*5
 		
 		display.drawLine(x0,currentY,display.width()-1,currentY,0x000000)
-		
+		currentY += 2
 		display.drawText(x0+5, currentY+5,             "A: Run\n", 0x000000, "pixelade9")
 		display.drawText(x0+5, currentY+5+pixHeight,   "B: Return to home\n", 0x000000, "pixelade9")
 		display.drawText(x0+5, currentY+5+pixHeight*2, "SELECT: Uninstall app\n", 0x000000, "pixelade9")
 		
 		currentY += pixHeight*3
 		
-		display.drawLine(x0, currentY, display.width()-1, currentY, 0x000000)
-		display.drawText(x0+5, currentY+5, consts.INFO_FIRMWARE_NAME, 0x000000, "pixelade9")
+		display.drawLine(x0, display.height()-pixHeight*2-2, display.width()-1, display.height()-pixHeight*2-2, 0x000000)
+		display.drawText(x0+5, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "pixelade9")
+		display.drawText(x0+5, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "pixelade9")
 	else:
 		display.drawLine(0, display.height()-18*4, display.width(), display.height()-18*4, ugfx.BLACK)
 		ugfx.string_box(0,ugfx.height()-18*4,ugfx.width(),18, " A: Run", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
@@ -241,6 +244,12 @@ init_power_management()
 def goToSleep(unused_variable=None):
 	system.home()
 
-import term_menu
-umenu = term_menu.UartMenu(goToSleep, pm, badge.safe_mode(), "< Back")
-umenu.main()
+# Read configuration from NVS or apply default values
+cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
+if cfg_term_menu == None:
+	cfg_term_menu = True # If not set the menu is shown
+
+# Terminal menu
+if cfg_term_menu:
+	umenu = term_menu.UartMenu(system.home, pm, False, "< Back")
+	umenu.main()
