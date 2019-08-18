@@ -307,3 +307,14 @@ if cfg_led_animation != None:
 if cfg_term_menu:
 	umenu = term_menu.UartMenu(cbSleep, pm, False)
 	umenu.main()
+else:
+	print("Welcome!")
+	print("The homescreen and it's services are currently being run.")
+	print("Press CTRL+C to reboot directly to a Python prompt.")
+	wait = True
+	while wait:
+		c = machine.stdin_get(1,-1)
+		if c == "\x03" or c == "\x04": # CTRL+C or CTRL+D
+			# CTRL+C
+			wait = False
+	import shell

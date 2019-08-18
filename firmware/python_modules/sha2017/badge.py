@@ -77,10 +77,10 @@ def setPower(state):
 	mpr121.set(10, state)
 
 def usb_volt_sense():
-	return _vusb.read()*3.1436 # Determined by measuring the relevant voltage using a shitty multimeter :-)
+	return int(_vusb.read()*3.1436) # Determined by measuring the relevant voltage using a shitty multimeter :-)
 
 def battery_volt_sense():
-	return _vbat.read()*3.1603 # Determined by measuring the relevant voltage using a shitty multimeter :-)
+	return int(_vbat.read()*3.1603) # Determined by measuring the relevant voltage using a shitty multimeter :-)
 
 def eink_busy_wait():
 	eink.busy_wait()

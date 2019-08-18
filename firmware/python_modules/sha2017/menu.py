@@ -1,3 +1,3 @@
-import term_menu
-umenu = term_menu.UartMenu(goToSleep, pm, badge.safe_mode())
+import term_menu, tasks.powermanagement as pm
+umenu = term_menu.UartMenu(None, pm, False)
 umenu.main()

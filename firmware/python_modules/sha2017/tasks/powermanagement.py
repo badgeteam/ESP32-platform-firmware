@@ -59,14 +59,16 @@ def pm_task():
 	
 	return timeout
 
-def feed():
-    ''' Start / resets the power management task '''
+def feed(start=True):
+    ''' Resets the timer '''
     global timeout, enabled
-    if timeout < 1: #Disabled by setting
-		return
-    if not virtualtimers.update(timeout, pm_task):
+    if start:
 		enabled = True
-		virtualtimers.new(timeout, pm_task, True)
+    if enabled:
+		if timeout < 1: #Disabled by setting
+			return
+		if not virtualtimers.update(timeout, pm_task):
+			virtualtimers.new(timeout, pm_task, True)
 
 def kill():
     ''' Kills the power management task '''
