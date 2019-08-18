@@ -54,7 +54,7 @@ def leds_init():
 	pass
 
 def leds_enable():
-	mpr121.set(10, true);
+	mpr121.set(10, True);
 
 def safe_mode():
 	return False
