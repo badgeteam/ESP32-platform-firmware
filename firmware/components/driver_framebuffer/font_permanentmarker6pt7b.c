@@ -137,6 +137,6 @@ const GFXglyph permanentmarker6pt7bGlyphs[] = {
 const GFXfont permanentmarker6pt7b = {
   (uint8_t  *)permanentmarker6pt7bBitmaps,
   (GFXglyph *)permanentmarker6pt7bGlyphs,
-  0x20, 0x7E, 13 };
+  0x20, 0x7E, 6 };//B
 
 // Approx. 1095 bytes

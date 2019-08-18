@@ -151,14 +151,7 @@ def rounded_box(x,y,w,h,r,color):
 def fill_rounded_box(x,y,w,h,r,color):
 	display.drawRect(x,y,w,h,True,color)
 
-def __test_string_box(font,text="TEST"):
-	display.drawFill()
-	display.drawRect(20,20,100,100,0,0)
-	string_box(20,20,100,100,text, font, 0, ugfx.justifyCenter, True)
-	display.flush()
-
-
-def string_box(x,y,w,h,text,font,color,align,testMode=False):
+def string_box(x,y,w,h,text,font,color,align,testMode=False,newHeight=0):
 	lines = wordWrap(text, w, font).split("\n")
 	if len(lines) < 1:
 		return
@@ -174,6 +167,7 @@ def string_box(x,y,w,h,text,font,color,align,testMode=False):
 		display.drawText(text_x, text_y, lines[i], color, font)
 		if testMode:
 			display.drawRect(text_x, text_y, textWidth, textHeight, 0, 0)
+			display.drawRect(text_x, text_y, textWidth, newHeight, 0, 0)
 		
 
 # Listbox UI element

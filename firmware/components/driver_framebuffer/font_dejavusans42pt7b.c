@@ -1237,6 +1237,6 @@ const GFXglyph dejavusans42pt7bGlyphs[] = {
 const GFXfont dejavusans42pt7b = {
   (uint8_t  *)dejavusans42pt7bBitmaps,
   (GFXglyph *)dejavusans42pt7bGlyphs,
-  0x20, 0x7E, 71 };
+  0x20, 0x7E, 42 };//B
 
 // Approx. 14297 bytes
