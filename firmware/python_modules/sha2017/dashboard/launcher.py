@@ -239,7 +239,6 @@ def start():
 	ugfx.flush(ugfx.GREYSCALE)
 
 start()
-init_power_management()
 
 def goToSleep(unused_variable=None):
 	system.home()
@@ -251,5 +250,11 @@ if cfg_term_menu == None:
 
 # Terminal menu
 if cfg_term_menu:
+	init_power_management()
 	umenu = term_menu.UartMenu(system.home, pm, False, "< Back")
 	umenu.main()
+
+#(Note: power management is disabled when the menu is disabled, to keep the python prompt clean and usefull)
+
+term.header(True, "Python shell")
+print("Type \"import menu\" to access the menu.")
