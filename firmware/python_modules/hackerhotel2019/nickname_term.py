@@ -1,1 +1,1 @@
-import dashboard.terminal.nickname
+../sha2017/nickname_term.py

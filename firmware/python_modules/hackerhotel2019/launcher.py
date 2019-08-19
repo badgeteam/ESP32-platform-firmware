@@ -1,1 +1,1 @@
-import dashboard.launcher
+../sha2017/launcher.py

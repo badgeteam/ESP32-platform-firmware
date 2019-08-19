@@ -370,10 +370,13 @@ esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_
 	uint32_t dst_min_x = x < 0 ? -x : 0;
 	uint32_t dst_min_y = y < 0 ? -y : 0;
 	
-	uint16_t screenWidth = FB_WIDTH;
-	if (frame) screenWidth = driver_framebuffer_getWidth(frame->window);
-	uint16_t screenHeight = FB_HEIGHT;
-	if (frame) screenHeight = driver_framebuffer_getHeight(frame->window);
+	int16_t screenWidth;
+	int16_t screenHeight;
+	
+	Window* window = NULL;
+	if (frame) window = frame->window;
+	
+	driver_framebuffer_get_orientation_size(window, &screenWidth, &screenHeight);
 	
 	res = lib_png_load_image(frame, pr, x, y, dst_min_x, dst_min_y, screenWidth - x, screenHeight - y, screenWidth);
 

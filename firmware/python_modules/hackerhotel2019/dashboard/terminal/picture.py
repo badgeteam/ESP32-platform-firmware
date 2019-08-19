@@ -1,1 +1,0 @@
-../../../shared/dashboard/terminal/picture.py

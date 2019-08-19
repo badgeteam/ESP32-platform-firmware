@@ -1,1 +1,1 @@
-import dashboard.terminal.launcher
+../sha2017/launcher_term.py

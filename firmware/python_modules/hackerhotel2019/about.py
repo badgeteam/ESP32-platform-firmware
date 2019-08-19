@@ -1,1 +1,1 @@
-import dashboard.other.about
+../sha2017/about.py

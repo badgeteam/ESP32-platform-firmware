@@ -1,4 +1,4 @@
-import display, mpr121
+import display, buttons
 
 shift = 0  # 0 = lower, 1 = upper, 2 = caps, 3 = numbers, 4 = symbols
 mode = 0  # 0 = keyboard, 1 = select, 2 = buttons
@@ -103,14 +103,14 @@ def onLeft(pressed):
 
 
 def removeInputs():
-    mpr121.attach(0, None)
-    mpr121.attach(1, None)
-    mpr121.attach(3, None)
-    mpr121.attach(4, None)
-    mpr121.attach(5, None)
-    mpr121.attach(6, None)
-    mpr121.attach(7, None)
-
+    buttons.detach(buttons.BTN_A)
+    buttons.detach(buttons.BTN_B)
+    #buttons.detach(buttons.BTN_START)
+    buttons.detach(buttons.BTN_SELECT)
+    buttons.detach(buttons.BTN_DOWN)
+    buttons.detach(buttons.BTN_RIGHT)
+    buttons.detach(buttons.BTN_UP)
+    buttons.detach(buttons.BTN_LEFT)
 
 def onA(pressed):
     global text, shift, cursorPos, _cbAccept, _cbCancel
@@ -280,11 +280,11 @@ def show(newTitle, initialText, cbAccept, cbCancel=None):
     _cbAccept = cbAccept
     _cbCancel = cbCancel
     cursorPos = len(text)
-    mpr121.attach(0, onA)
-    mpr121.attach(1, onB)
-    mpr121.attach(3, onSelect)
-    mpr121.attach(4, onDown)
-    mpr121.attach(5, onRight)
-    mpr121.attach(6, onUp)
-    mpr121.attach(7, onLeft)
+    buttons.attach(buttons.BTN_A, onA)
+    buttons.attach(buttons.BTN_B, onB)
+    buttons.attach(buttons.BTN_SELECT, onSelect)
+    buttons.attach(buttons.BTN_DOWN, onDown)
+    buttons.attach(buttons.BTN_RIGHT, onRight)
+    buttons.attach(buttons.BTN_UP, onUp)
+    buttons.attach(buttons.BTN_LEFT, onLeft)
     draw()

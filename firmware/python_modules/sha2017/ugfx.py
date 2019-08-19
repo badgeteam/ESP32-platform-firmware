@@ -1,4 +1,4 @@
-import display, mpr121, gc
+import display, mpr121, gc, _mpr121mapping
 
 display_flags = 0
 
@@ -12,14 +12,14 @@ activeList = None
 listUpCallback = None
 listDownCallback = None
 
-BTN_A      = 0
-BTN_B      = 1
-BTN_START  = 2
-BTN_SELECT = 3
-JOY_DOWN   = 4
-JOY_RIGHT  = 5
-JOY_UP     = 6
-JOY_LEFT   = 7
+BTN_A      = _mpr121mapping.buttons[0]
+BTN_B      = _mpr121mapping.buttons[1]
+BTN_START  = _mpr121mapping.buttons[2]
+BTN_SELECT = _mpr121mapping.buttons[3]
+JOY_DOWN   = _mpr121mapping.buttons[4]
+JOY_RIGHT  = _mpr121mapping.buttons[5]
+JOY_UP     = _mpr121mapping.buttons[6]
+JOY_LEFT   = _mpr121mapping.buttons[7]
 
 def input_attach(button, callback=None):
 	global activeList, listUpCallback, listDownCallback

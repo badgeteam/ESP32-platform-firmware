@@ -1,7 +1,7 @@
 # SHA2017 badge specific input wrapper
 # Versions for other badges must expose the same API
 
-import mpr121, _buttons
+import mpr121, _buttons, _mpr121mapping
 
 # --- BUTTON CONSTANTS  ---
 BTN_A      = 0
@@ -17,7 +17,7 @@ BTN_FLASH  = 8
 # --- INTERNAL MAPPING TABLES ---
 
 __num = 9
-__mprMap = [0,1,2,3,4,5,6,7,-1]
+__mprMap = _mpr121mapping.buttons
 
 # --- CALLBACKS ---
 __cb = []

@@ -1,2 +1,1 @@
-import appglue
-appglue.start_ota()
+../sha2017/ota_update.py

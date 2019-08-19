@@ -1,1 +1,1 @@
-import dashboard.home
+../sha2017/splash.py
