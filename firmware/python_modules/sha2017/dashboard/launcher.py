@@ -173,11 +173,9 @@ def updateEink():
 	return 100
 
 def init_power_management():
-	virtualtimers.activate(100) # Start scheduler with 100ms ticks
 	pm.set_timeout(5*60*1000) # Set timeout to 5 minutes
 	pm.callback(pm_cb) # Go to splash instead of sleep
-	pm.feed() # Feed the power management task, starts the countdown...
-	virtualtimers.new(100, updateEink)
+	pm.feed(True)
 
 # Main application
 def start():
@@ -198,15 +196,15 @@ def start():
 		pixHeight = display.getTextHeight(" ", "pixelade9")
 		currentY = pixHeight*5
 		
-		display.drawLine(x0,currentY,display.width()-1,currentY,0x000000)
-		currentY += 2
-		display.drawText(x0+5, currentY+5,             "A: Run\n", 0x000000, "pixelade9")
-		display.drawText(x0+5, currentY+5+pixHeight,   "B: Return to home\n", 0x000000, "pixelade9")
-		display.drawText(x0+5, currentY+5+pixHeight*2, "SELECT: Uninstall app\n", 0x000000, "pixelade9")
+		lineY = display.height()-pixHeight*6-pixHeight//2
+		display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
 		
-		currentY += pixHeight*3
+		display.drawText(x0+5, display.height()-pixHeight*6, "A: Run\n", 0x000000, "pixelade9")
+		display.drawText(x0+5, display.height()-pixHeight*5, "B: Return to home\n", 0x000000, "pixelade9")
+		display.drawText(x0+5, display.height()-pixHeight*4, "SELECT: Uninstall app\n", 0x000000, "pixelade9")
 		
-		display.drawLine(x0, display.height()-pixHeight*2-2, display.width()-1, display.height()-pixHeight*2-2, 0x000000)
+		lineY = display.height()-pixHeight*2-pixHeight//2
+		display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
 		display.drawText(x0+5, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "pixelade9")
 		display.drawText(x0+5, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "pixelade9")
 	else:
@@ -247,6 +245,10 @@ def goToSleep(unused_variable=None):
 cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
 if cfg_term_menu == None:
 	cfg_term_menu = True # If not set the menu is shown
+
+# Scheduler
+virtualtimers.activate(100) # Start scheduler with 100ms ticks
+virtualtimers.new(100, updateEink)
 
 # Terminal menu
 if cfg_term_menu:
