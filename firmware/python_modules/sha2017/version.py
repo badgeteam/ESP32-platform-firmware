@@ -16,7 +16,7 @@ nick_width_small       = 8
 nick_height_large      = 36
 nick_height_small      = 22
 
-btn_ok = ugfx.BTN_START
-btn_cancel = ugfx.BTN_B
+btn_ok                 = ugfx.BTN_START
+btn_cancel             = ugfx.BTN_B
 
 hatcheryurl             = "https://"+consts.WOEZEL_WEB_SERVER

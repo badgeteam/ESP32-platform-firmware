@@ -61,7 +61,7 @@ def leds_init():
 def leds_enable():
 	neopixel.enable()
 
-def leds_send_data(data):
+def leds_send_data(data, length=0):
 	neopixel.send(data)
 
 def safe_mode():
@@ -84,3 +84,14 @@ def battery_volt_sense():
 
 def eink_busy_wait():
 	eink.busy_wait()
+
+def eink_busy():
+	return eink.busy()
+
+def vibrator_init():
+	pass
+
+def vibrator_activate(duration):
+	mpr121.set(8,1)
+	time.sleep_ms(duration*10)
+	mpr121.set(8,0)

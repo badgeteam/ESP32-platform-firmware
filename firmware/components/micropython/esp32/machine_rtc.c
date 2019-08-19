@@ -646,7 +646,10 @@ STATIC const mp_map_elem_t mach_rtc_locals_dict_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR_write_string),	(mp_obj_t)&esp_rtcmem_write_string_obj},
     { MP_OBJ_NEW_QSTR(MP_QSTR_read_string),		(mp_obj_t)&esp_rtcmem_read_string_obj},
     
-    { MP_OBJ_NEW_QSTR(MP_QSTR_timezone),    (mp_obj_t)&mach_rtc_timezone_obj},
+    { MP_OBJ_NEW_QSTR(MP_QSTR_timezone),    	(mp_obj_t)&mach_rtc_timezone_obj},
+    
+    //Backwards compatibilty for SHA2017 badges
+    { MP_OBJ_NEW_QSTR(MP_QSTR_datetime),		(mp_obj_t)&mach_rtc_now_obj },
 
 	// Constants
 	{ MP_ROM_QSTR(MP_QSTR_EXT1_ANYHIGH),		MP_ROM_INT(ESP_EXT1_WAKEUP_ANY_HIGH) },

@@ -10,7 +10,7 @@ charWidth = display.getTextWidth("X", keyFont)
 charHeight = display.getTextHeight("X", keyFont)
 charOffsetX = int((20 - charWidth))
 charOffsetXDouble = int((20 - charWidth * 1.5))
-charOffsetY = int((20 - charHeight)) + 3
+charOffsetY = 5
 
 charMap = []
 charMap.append(["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"])

@@ -64,13 +64,15 @@ def _inputAttach(button, realCallback,thisList=None):
 LUT_NORMAL = display.FLAG_LUT_NORMAL
 LUT_FASTER = display.FLAG_LUT_FAST
 LUT_FASTEST = display.FLAG_LUT_FASTEST
-LUT_FULL   = display.FLAG_FULL
+LUT_FULL   = display.FLAG_LUT_GREYSCALE #display.FLAG_FULL
 GREYSCALE = display.FLAG_LUT_GREYSCALE
 
 BLACK = 0x000000
 WHITE = 0xFFFFFF
 
 def string(x,y,text,font,color):
+	if font == "Roboto_pixelade13":
+		font = "pixelade13"
 	if not color:
 		color = 0
 	if font:
@@ -104,8 +106,14 @@ def line(x0, y0, x1, y1, color):
 
 def flush(arg=None):
 	global display_flags
+	
+	if arg == 0xff:
+		arg = display.FLAG_LUT_GREYSCALE
+
 	if arg == None and display_flags == 0:
 		display.flush(display.FLAG_LUT_FAST)
+	elif arg:
+		display.flush(arg)
 	else:
 		display.flush(display_flags)
 	
