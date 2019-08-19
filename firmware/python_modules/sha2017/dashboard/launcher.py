@@ -145,6 +145,11 @@ def input_a(pressed):
 	
 def input_b(pressed):
 	pm.feed()
+	#if pressed:
+	#	system.home()
+
+def input_start(pressed):
+	pm.feed()
 	if pressed:
 		system.home()
 
@@ -227,7 +232,7 @@ def start():
 	ugfx.input_attach(ugfx.JOY_DOWN, input_other)
 	ugfx.input_attach(ugfx.JOY_LEFT, input_other)
 	ugfx.input_attach(ugfx.JOY_RIGHT, input_other)
-	ugfx.input_attach(ugfx.BTN_START, input_other)
+	ugfx.input_attach(ugfx.BTN_START, input_start)
 
 	populate_apps()
 	populate_category()

@@ -3,7 +3,7 @@
 ### Description: Some basic UGFX powered dialogs
 ### License: MIT
 
-import machine, display, utime as time, mpr121, ugfx, keyboard
+import machine, display, utime as time, buttons, ugfx, keyboard
 
 wait_for_interrupt = True
 button_pushed = ''
@@ -19,6 +19,14 @@ def notice(text, title="Notice", close_text="Close", width = None, height = None
 def _button(x, y, text, color, font):
 	display.drawText(x, y, text, color, font)
 	
+__cb = None
+def __asyncSuccess(evt):
+	if evt and __cb:
+		__cb(True)
+
+def __asyncCancel(evt):
+	if evt and __cb:
+		__cb(False)
 
 def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width = None, height = None, font="Roboto_Regular12", cb=None):
 	"""A simple one and two-options dialog
@@ -30,7 +38,9 @@ def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width
 
 	The caller is responsible for flushing the display after processing the response.
 	"""
-	global wait_for_interrupt, button_pushed
+	global wait_for_interrupt, button_pushed, __cb
+	
+	__cb = cb
 
 	if width == None:
 		width = display.width()
@@ -51,14 +61,6 @@ def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width
 	if false_text:
 		false_text = "B: " + false_text
 	true_text = "A: " + true_text
-
-	def asyncSuccess(evt):
-		if evt and cb:
-			cb(True)
-	
-	def asyncCancel(evt):
-		if evt and cb:
-			cb(False)
 	
 	display.drawText(0, 36, ugfx.wordWrap(text, None, font), 0x000000, font)
 	
@@ -71,25 +73,24 @@ def prompt_boolean(text, title="Notice", true_text="Yes", false_text="No", width
 	display.flush()
 
 	if cb:
-		mpr121.attach(1, asyncCancel)
-		mpr121.attach(0, asyncSuccess)
-		
+		ugfx.input_attach(ugfx.BTN_A, __asyncSuccess)
+		ugfx.input_attach(ugfx.BTN_B, __asyncCancel)
 		#Done :-)
 	else:
-		mpr121.attach(1, None)
-		mpr121.attach(0, None)
+		ugfx.input_attach(buttons.BTN_A, None)
+		ugfx.input_attach(buttons.BTN_B, None)
 		
 		while True:
-			if mpr121.get(0):
+			if buttons.value(buttons.BTN_A):
 				display.drawFill(0xFFFFFF)
 				display.flush()
-				while mpr121.get(0) or mpr121.get(1):
+				while buttons.value(buttons.BTN_A) or buttons.value(buttons.BTN_B):
 					time.sleep(0.1)
 				return True
-			if mpr121.get(1):
+			if buttons.value(buttons.BTN_B):
 				display.drawFill(0xFFFFFF)
 				display.flush()
-				while mpr121.get(0) or mpr121.get(1):
+				while buttons.value(buttons.BTN_A) or buttons.value(buttons.BTN_B):
 					time.sleep(0.1)
 				return False
 

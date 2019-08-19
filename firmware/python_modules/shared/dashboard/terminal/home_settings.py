@@ -21,13 +21,17 @@ def load():
 	if cfg_nickname == None:
 		cfg_nickname = True # If not set we want to show the nickname
 
+	cfg_greyscale = machine.nvs_get_u8('splash', 'greyscale') # Use greyscale mode
+	if cfg_greyscale == None:
+		cfg_greyscale = False # Disabled by default
+
 	cfg_led_animation = machine.nvs_getstr('splash', 'ledApp') # Application which shows a LED animation while the splash screen is visible
 	
-	return cfg_term_menu, cfg_wifi, cfg_services, cfg_logo, cfg_nickname, cfg_led_animation
+	return cfg_term_menu, cfg_wifi, cfg_services, cfg_logo, cfg_nickname, cfg_greyscale, cfg_led_animation
 
 option = 0
 while True:
-	cfg_term_menu, cfg_wifi, cfg_services, cfg_logo, cfg_nickname, cfg_led_animation = load()
+	cfg_term_menu, cfg_wifi, cfg_services, cfg_logo, cfg_nickname, cfg_greyscale, cfg_led_animation = load()
 	items = []
 	if cfg_term_menu:
 		items.append("MENU         : Enabled")
@@ -45,6 +49,10 @@ while True:
 		items.append("NICKNAME:    : Shown")
 	else:
 		items.append("NICKNAME     : Hidden")
+	if cfg_greyscale:
+		items.append("RENDERING    : Greyscale (slow)")
+	else:
+		items.append("RENDERING    : Black & white (quick)")
 	if cfg_logo:
 		items.append("LOGO         : "+cfg_logo)
 	else:
@@ -64,6 +72,8 @@ while True:
 	elif option == 3:
 		machine.nvs_set_u8('splash', 'nickname', not cfg_nickname)
 	elif option == 4:
+		machine.nvs_set_u8('splash', 'greyscale', not cfg_greyscale)
+	elif option == 5:
 		term.header(True, "Logo path")
 		if not cfg_logo:
 			cfg_logo = ""
@@ -75,7 +85,7 @@ while True:
 				pass
 		else:
 			machine.nvs_setstr('splash', 'logo', cfg_logo)
-	elif option == 5:
+	elif option == 6:
 		term.header(True, "LED animation app")
 		if not cfg_led_animation:
 			cfg_led_animation = ""

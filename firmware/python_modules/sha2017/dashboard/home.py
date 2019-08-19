@@ -22,6 +22,10 @@ cfg_nickname = machine.nvs_get_u8('splash', 'nickname') # Show the nickname of t
 if cfg_nickname == None:
 	cfg_nickname = True # If not set we want to show the nickname
 
+cfg_greyscale = machine.nvs_get_u8('splash', 'greyscale') # Use greyscale mode
+if cfg_greyscale == None:
+	cfg_greyscale = False # Disabled by default
+
 cfg_led_animation = machine.nvs_getstr('splash', 'ledApp') # Application which shows a LED animation while the splash screen is visible
 
 # Button callbacks
@@ -244,6 +248,8 @@ def drawTask(onSleep=False):
 				currHeight += 4
 			app_height = display.height()-16-currHeight
 			logoHeight = drawLogo(currHeight, app_height, True)
+			if logoHeight > 0:
+				noLine = True
 			if logoHeight < 1 and cfg_logo:
 				title = "BADGE.TEAM"
 				subtitle = "PLATFORM"
@@ -278,7 +284,10 @@ def drawTask(onSleep=False):
 		easydraw.disp_string_right_bottom(0, info)
 		if len(gui_apps) > 0:
 			drawPageIndicator(len(gui_apps), gui_app_current)
-		display.flush(display.FLAG_LUT_NORMAL)
+		if cfg_greyscale:
+			display.flush(display.FLAG_LUT_GREYSCALE)
+		else:
+			display.flush(display.FLAG_LUT_NORMAL)
 	return 1000
 
 virtualtimers.new(0, drawTask, True)
