@@ -14,7 +14,7 @@ BTN_B      = 5
 # --- INTERNAL MAPPING TABLES ---
 
 __num = 6
-_gpioMap = [26, 27. 32, 33, 36, 39]
+_gpioMap = [26, 27, 32, 33, 36, 39]
 
 # --- CALLBACKS ---
 __cb = []

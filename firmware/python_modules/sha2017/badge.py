@@ -84,6 +84,7 @@ def battery_volt_sense():
 
 def eink_busy_wait():
 	eink.busy_wait()
+	time.sleep(0.25)
 
 def eink_busy():
 	return eink.busy()

@@ -99,7 +99,7 @@ def circle(x, y, r, color):
 	display.drawCircle(x, y, r, 0, 359, False, color)
 
 def clear(arg=None):
-	if arg:
+	if arg != None:
 		display.drawFill(arg)
 	else:
 		display.drawFill()
@@ -115,7 +115,7 @@ def flush(arg=None):
 
 	if arg == None and display_flags == 0:
 		display.flush(display.FLAG_LUT_FAST)
-	elif arg:
+	elif arg != None:
 		display.flush(arg)
 	else:
 		display.flush(display_flags)
