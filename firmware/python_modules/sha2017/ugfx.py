@@ -1,4 +1,4 @@
-import display, mpr121, gc, _mpr121mapping
+import display, gc, buttons
 
 display_flags = 0
 
@@ -12,14 +12,14 @@ activeList = None
 listUpCallback = None
 listDownCallback = None
 
-BTN_A      = _mpr121mapping.buttons[0]
-BTN_B      = _mpr121mapping.buttons[1]
-BTN_START  = _mpr121mapping.buttons[2]
-BTN_SELECT = _mpr121mapping.buttons[3]
-JOY_DOWN   = _mpr121mapping.buttons[4]
-JOY_RIGHT  = _mpr121mapping.buttons[5]
-JOY_UP     = _mpr121mapping.buttons[6]
-JOY_LEFT   = _mpr121mapping.buttons[7]
+BTN_A      = buttons.BTN_A
+BTN_B      = buttons.BTN_B
+BTN_START  = buttons.BTN_START
+BTN_SELECT = buttons.BTN_SELECT
+JOY_DOWN   = buttons.BTN_DOWN
+JOY_RIGHT  = buttons.BTN_RIGHT
+JOY_UP     = buttons.BTN_UP
+JOY_LEFT   = buttons.BTN_LEFT
 
 def input_attach(button, callback=None):
 	global activeList, listUpCallback, listDownCallback
@@ -35,7 +35,7 @@ def input_attach(button, callback=None):
 		if activeList:
 			doAttach = False
 	if doAttach:
-		mpr121.attach(button, callback)
+		buttons.attach(button, callback)
 
 
 _internalListUpCallback = None
@@ -56,10 +56,10 @@ def _inputAttach(button, realCallback,thisList=None):
 	activeList = thisList
 	if button == JOY_UP:
 		_internalListUpCallback = realCallback
-		mpr121.attach(JOY_UP, _internalGlobalUpCallback)
+		buttons.attach(JOY_UP, _internalGlobalUpCallback)
 	if button == JOY_DOWN:
 		_internalListDownCallback = realCallback
-		mpr121.attach(JOY_DOWN, _internalGlobalDownCallback)
+		buttons.attach(JOY_DOWN, _internalGlobalDownCallback)
 
 LUT_NORMAL = display.FLAG_LUT_NORMAL
 LUT_FASTER = display.FLAG_LUT_FAST
@@ -85,6 +85,9 @@ def width():
 
 def height():
 	return display.height()
+
+def pixel(x,y,color):
+	display.drawPixel(x,y,color)
 
 def display_image(x,y,data):
 	display.drawPng(x,y,data)

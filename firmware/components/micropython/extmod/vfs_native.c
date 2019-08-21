@@ -114,7 +114,9 @@ STATIC const byte fresult_to_errno_table[20] = {
 STATIC const char *TAG = "vfs_native";
 
 bool native_vfs_mounted[2] = {false, false};
+#ifdef CONFIG_DRIVER_SDCARD_ENABLE
 STATIC sdmmc_card_t *sdmmc_card;
+#endif
 
 
 // esp-idf doesn't seem to have a cwd; create one.
@@ -708,9 +710,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(native_vfs_statvfs_obj, native_vfs_statvfs);
 
 static void _sdcard_mount()
 {
+#ifdef CONFIG_DRIVER_SDCARD_ENABLE
 	esp_err_t res = driver_sdcard_mount(VFS_NATIVE_SDCARD_MOUNT_POINT, false);
 	if (res != ESP_OK) return;
 	native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD] = true;
+#else
+	printf("This badge does not have SD card support.\n");
+#endif
 }
 
 //------------------------------------------------------------------------------------
@@ -731,7 +737,6 @@ STATIC mp_obj_t native_vfs_mount(mp_obj_t self_in, mp_obj_t readonly, mp_obj_t m
 
 	if (self->device == VFS_NATIVE_TYPE_SPIFLASH) {
 		// spiflash device
-		esp_err_t ret;
 		#if CONFIG_MICROPY_FILESYSTEM_TYPE == 0
 	    fs_partition = (esp_partition_t *)esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, VFS_NATIVE_INTERNAL_PART_LABEL);
 	    if (fs_partition == NULL) {
@@ -744,7 +749,7 @@ STATIC mp_obj_t native_vfs_mount(mp_obj_t self_in, mp_obj_t readonly, mp_obj_t m
 	      .max_files = CONFIG_MICROPY_FATFS_MAX_OPEN_FILES,
 	      .format_if_mount_failed = true
 	    };
-	    ret = esp_vfs_spiffs_register(&conf);
+		esp_err_t ret = esp_vfs_spiffs_register(&conf);
 	   	//if (spiffs_is_mounted == 0) {
 	    if ((ret != ESP_OK) || (!esp_spiffs_mounted(VFS_NATIVE_INTERNAL_PART_LABEL))) {
 			ESP_LOGE(TAG, "Failed to mount Flash partition as SPIFFS.");
@@ -765,7 +770,7 @@ STATIC mp_obj_t native_vfs_mount(mp_obj_t self_in, mp_obj_t readonly, mp_obj_t m
 	        .auto_format = true,
 	        .lookahead = 32
 	    };
-	    ret = littleFlash_init(&little_cfg);
+	    esp_err_t ret = littleFlash_init(&little_cfg);
 	    if (ret != ESP_OK) {
 			ESP_LOGE(TAG, "Failed to mount Flash partition as LittleFS.");
 			return mp_const_false;
@@ -851,11 +856,15 @@ STATIC mp_obj_t native_vfs_umount(mp_obj_t self_in) {
 	fs_user_mount_t *self = MP_OBJ_TO_PTR(self_in);
 
 	if ((self->device == VFS_NATIVE_TYPE_SDCARD) && (native_vfs_mounted[self->device])) {
-		esp_err_t res = driver_sdcard_unmount();
-		if (res != ESP_OK) {
-			ESP_LOGE(TAG, "Error while unmounting the SD card!");
-			mp_raise_OSError(MP_EIO);
-		}
+		#ifdef CONFIG_DRIVER_SDCARD_ENABLE
+			esp_err_t res = driver_sdcard_unmount();
+			if (res != ESP_OK) {
+				ESP_LOGE(TAG, "Error while unmounting the SD card!");
+				mp_raise_OSError(MP_EIO);
+			}
+		#else
+			printf("This badge does not have SD card support.\n");
+		#endif
 		native_vfs_mounted[self->device] = false;
 	}
 	else if (self->device == VFS_NATIVE_TYPE_SPIFLASH) {
@@ -890,7 +899,11 @@ int internalUmount()
 void externalUmount()
 {
 	if (native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD]) {
-		if (driver_sdcard_unmount() != ESP_OK) return;
+		#ifdef CONFIG_DRIVER_SDCARD_ENABLE
+			if (driver_sdcard_unmount() != ESP_OK) return;
+		#else
+			printf("This badge does not have SD card support.\n");
+		#endif
 		native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD] = false;
 	}
 }

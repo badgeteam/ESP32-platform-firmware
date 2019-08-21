@@ -216,10 +216,10 @@ static void sndmixer_task(void *arg) {
 //Run on core 1 if enabled, core 0 if not.
 #define MY_CORE (portNUM_PROCESSORS-1)
 
-int sndmixer_init(int p_no_channels, int p_samplerate) {
+int sndmixer_init(int p_no_channels) {
 	no_channels=p_no_channels;
-	samplerate=p_samplerate;
-	kchal_sound_start(samplerate, 1024);
+	samplerate=CONFIG_DRIVER_SNDMIXER_SAMPLE_RATE;
+	kchal_sound_start();
 	channel=calloc(sizeof(sndmixer_channel_t), no_channels);
 	if (!channel) return 0;
 	curr_id=0;

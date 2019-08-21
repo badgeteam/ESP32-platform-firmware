@@ -27,9 +27,8 @@ typedef struct {
  *       if you use this function to initialize the sound mixer.
  *
  * @param no_channels Amount if sounds to be able to be played simultaneously.
- * @param samplerate Sample rate to mix all sources to
  */
-int sndmixer_init(int no_channels, int samplerate);
+int sndmixer_init(int no_channels);
 
 /**
  * @brief Queue the data of a .wav file to be played

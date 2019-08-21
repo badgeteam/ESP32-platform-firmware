@@ -211,7 +211,7 @@ def drawLogo(offset = 0, max_height = display.height(), center = True):
 	x = int((display.width() - width) / 2)
 	if center:
 		if max_height - height < 0:
-			print("Not enough space for logo",max_height,height)
+			#print("Not enough space for logo",max_height,height)
 			#return 0
 			y = 0
 		else:

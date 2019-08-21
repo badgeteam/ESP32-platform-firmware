@@ -19,6 +19,9 @@ BTN_FLASH  = 8
 __num = 9
 __mprMap = _mpr121mapping.buttons
 
+# --- INTERNAL VARIABLES ---
+__orientation = 0
+
 # --- CALLBACKS ---
 __cb = []
 
@@ -46,20 +49,48 @@ def __cb_btn_select(arg):
 		__cb[-1][BTN_SELECT](arg)
 
 def __cb_btn_down(arg):
-	if __cb[-1][BTN_DOWN]:
-		__cb[-1][BTN_DOWN](arg)
+	btn = BTN_DOWN
+	if __orientation == 90:
+		btn = BTN_LEFT
+	elif __orientation == 180:
+		btn = BTN_UP
+	elif __orientation == 270:
+		btn = BTN_RIGHT
+	if __cb[-1][btn]:
+		__cb[-1][btn](arg)
 
 def __cb_btn_right(arg):
-	if __cb[-1][BTN_RIGHT]:
-		__cb[-1][BTN_RIGHT](arg)
+	btn = BTN_RIGHT
+	if __orientation == 90:
+		btn = BTN_DOWN
+	elif __orientation == 180:
+		btn = BTN_LEFT
+	elif __orientation == 270:
+		btn = BTN_UP
+	if __cb[-1][btn]:
+		__cb[-1][btn](arg)
 
 def __cb_btn_up(arg):
-	if __cb[-1][BTN_UP]:
-		__cb[-1][BTN_UP](arg)
+	btn = BTN_UP
+	if __orientation == 90:
+		btn = BTN_RIGHT
+	elif __orientation == 180:
+		btn = BTN_DOWN
+	elif __orientation == 270:
+		btn = BTN_LEFT
+	if __cb[-1][btn]:
+		__cb[-1][btn](arg)
 
 def __cb_btn_left(arg):
-	if __cb[-1][BTN_LEFT]:
-		__cb[-1][BTN_LEFT](arg)
+	btn = BTN_LEFT
+	if __orientation == 90:
+		btn = BTN_UP
+	elif __orientation == 180:
+		btn = BTN_RIGHT
+	elif __orientation == 270:
+		btn = BTN_DOWN
+	if __cb[-1][btn]:
+		__cb[-1][btn](arg)
 
 def __cb_btn_flash(arg):
 	if __cb[-1][BTN_FLASH]:
@@ -123,6 +154,10 @@ def popMapping():
 		__cb = __cb[:-1]
 	if len(__cb) < 1:
 		pushMapping()
-	
+
+def rotate(value):
+	global __orientation
+	__orientation = value
+
 # ---
 __init()

@@ -1,7 +1,5 @@
 import display, badge, version, time, orientation, machine
 
-NUM_LINES = ((display.height() - 16)//display.getTextHeight(" ", version.font_default)) - 2
-
 lastTitle = ""
 
 # Functions
@@ -10,7 +8,9 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 
 	title can be optionaly set when resetting or first call
 	"""
-	global NUM_LINES, messageHistory, lastTitle
+	global messageHistory, lastTitle
+	
+	num_lines = ((display.height() - 16)//display.getTextHeight(" ", version.font_default)) - 2
 	
 	if reset:
 		lastTitle = title
@@ -26,7 +26,7 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 		
 	lineHeight = int(display.getTextHeight(" ", version.font_default) / 2)+5
 
-	if len(messageHistory)<NUM_LINES:
+	if len(messageHistory)<num_lines:
 		display.drawText(0, 16 + (len(messageHistory) * lineHeight), message, 0x000000, version.font_default)
 		messageHistory.append(message)
 	else:
@@ -43,10 +43,10 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 
 	display.flush(display.FLAG_LUT_FASTEST)
 	
-	return len(messageHistory)>=NUM_LINES-1
+	return len(messageHistory)>=num_lines-1
 	
 def msg(message, title = "Loading...", reset = False, wait = 0):
-	global NUM_LINES
+	num_lines = ((display.height() - 16)//display.getTextHeight(" ", version.font_default)) - 2
 	scroll = False
 	try:
 		lines = lineSplit(str(message))

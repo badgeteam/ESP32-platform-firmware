@@ -14,7 +14,7 @@
 #include "driver/dac.h"
 #include "soc/rtc_cntl_reg.h"
 
-void kchal_sound_start(int rate, int buffsize);
+void kchal_sound_start();
 void kchal_sound_push(uint8_t *buf, int len);
 void kchal_sound_stop();
 void kchal_sound_mute(int doMute);

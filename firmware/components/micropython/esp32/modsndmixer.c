@@ -11,7 +11,7 @@
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 
 static mp_obj_t modsndmixer_start() {
-	sndmixer_init(2, 22050);
+	sndmixer_init(2);
 	return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(modsndmixer_start_obj, modsndmixer_start);
@@ -29,6 +29,14 @@ static mp_obj_t modsndmixer_wav(mp_obj_t _data) {
 	return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_wav_obj, modsndmixer_wav);
+
+static mp_obj_t modsndmixer_volume(mp_obj_t _id, mp_obj_t _volume) {
+	int id = mp_obj_get_int(_id);
+	int volume = mp_obj_get_int(_volume);
+	sndmixer_set_volume(id, volume);
+	return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_volume_obj, modsndmixer_volume);
 
 static mp_obj_t modsndmixer_mod(mp_obj_t _data) {
 	mp_uint_t len;
@@ -48,6 +56,7 @@ static const mp_rom_map_elem_t sndmixer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_start), MP_ROM_PTR(&modsndmixer_start_obj)},
 	{MP_ROM_QSTR(MP_QSTR_wav), MP_ROM_PTR(&modsndmixer_wav_obj)},
 	{MP_ROM_QSTR(MP_QSTR_mod), MP_ROM_PTR(&modsndmixer_mod_obj)},
+	{MP_ROM_QSTR(MP_QSTR_volume), MP_ROM_PTR(&modsndmixer_volume_obj)},
 };
 
 static MP_DEFINE_CONST_DICT(sndmixer_module_globals, sndmixer_module_globals_table);

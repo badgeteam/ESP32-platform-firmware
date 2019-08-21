@@ -127,16 +127,28 @@ bool driver_framebuffer_orientation_apply(Window* window, int16_t* x, int16_t* y
 	int16_t width, height;
 	_getSizeContext(window, &width, &height);
 	
+	int16_t oldx = *x;
+	int16_t oldy = *y;
+	
 	if (*orientation == portrait || *orientation == reverse_portrait) { //90 degrees
 		int16_t t = *y;
 		*y = *x;
 		*x = (width-1)-t;
 	}
 	
-	if (*orientation == reverse_landscape || *orientation == reverse_portrait) { //180 degrees
+	if (*orientation == reverse_landscape || *orientation == portrait) { //180 degrees
 		*y = (height-1)-*y;
 		*x = (width-1)-*x;
 	}
+	
+	char* orientationString = "unknown";
+	if (*orientation == portrait) orientationString = "portrait";
+	if (*orientation == reverse_portrait) orientationString = "reverse_portrait";
+	if (*orientation == landscape) orientationString = "landscape";
+	if (*orientation == reverse_landscape) orientationString = "reverse_landscape";
+	
+	if (window) printf("Orientation: %s = %s  %d=>%d  %d=>%d\n", window ? window->name : "global", orientationString, oldx, *x, oldy, *y);
+	
 	return (*x >= 0) && (*x < width) && (*y >= 0) && (*y < height);
 }
 
@@ -148,7 +160,7 @@ void driver_framebuffer_orientation_revert(Window* window, int16_t* x, int16_t* 
 
 	printf("Orientation revert %u, %u\n", *x, *y);
 
-	if (*orientation == reverse_landscape || *orientation == reverse_portrait) { //90 degrees
+	if (*orientation == reverse_landscape || *orientation == portrait) { //90 degrees
 		int16_t t = *x;
 		*x = *y;
 		*y = (width-1)-t;
@@ -166,17 +178,17 @@ void driver_framebuffer_orientation_revert_square(Window* window, int16_t* x0, i
 	int16_t width, height;
 	_getSizeContext(window, &width, &height);
 
-	if (*orientation == reverse_landscape || *orientation == reverse_portrait) { //90 degrees
+	if (*orientation == reverse_landscape || *orientation == portrait) { //90 degrees
 		int16_t tx0 = *x0;
 		int16_t ty0 = *y0;
 		*x0 = width-*x1-1;
-		printf("x0 = %d - %d - 1\n", width, *x1);
+		//printf("x0 = %d - %d - 1\n", width, *x1);
 		*y0 = height-*y1-1;
-		printf("y0 = %d - %d - 1\n", height, *y1);
+		//printf("y0 = %d - %d - 1\n", height, *y1);
 		*x1 = width-tx0-1;
-		printf("x1 = %d - %d - 1\n", width, tx0);
+		//printf("x1 = %d - %d - 1\n", width, tx0);
 		*y1 = height-ty0-1;
-		printf("y1 = %d - %d - 1\n", height, ty0);
+		//printf("y1 = %d - %d - 1\n", height, ty0);
 	}
 
 	if (*orientation == portrait || *orientation == reverse_portrait) { //180 degrees

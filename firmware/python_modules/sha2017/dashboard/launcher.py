@@ -205,7 +205,7 @@ def start():
 		display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
 		
 		display.drawText(x0+5, display.height()-pixHeight*6, "A: Run\n", 0x000000, "pixelade9")
-		display.drawText(x0+5, display.height()-pixHeight*5, "B: Return to home\n", 0x000000, "pixelade9")
+		display.drawText(x0+5, display.height()-pixHeight*5, "START: Return to home\n", 0x000000, "pixelade9")
 		display.drawText(x0+5, display.height()-pixHeight*4, "SELECT: Uninstall app\n", 0x000000, "pixelade9")
 		
 		lineY = display.height()-pixHeight*2-pixHeight//2
@@ -213,12 +213,16 @@ def start():
 		display.drawText(x0+5, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "pixelade9")
 		display.drawText(x0+5, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "pixelade9")
 	else:
+		pixHeight = display.getTextHeight(" ", "pixelade9")
 		display.drawLine(0, display.height()-18*4, display.width(), display.height()-18*4, ugfx.BLACK)
-		ugfx.string_box(0,ugfx.height()-18*4,ugfx.width(),18, " A: Run", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
-		ugfx.string_box(0,ugfx.height()-18*3,ugfx.width(),18, " B: Return to home", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
-		ugfx.string_box(0,ugfx.height()-18*2,ugfx.width(),18, " SELECT: Uninstall", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
-		display.drawLine(0, display.height()-18*1, display.width(), display.height()-18*1, ugfx.BLACK)
-		ugfx.string_box(0,ugfx.height()-18*1,ugfx.width(),18, " " + consts.INFO_FIRMWARE_NAME, "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
+		display.drawText(0, display.height()-pixHeight*6, "A: Run\n", 0x000000, "pixelade9")
+		display.drawText(0, display.height()-pixHeight*5, "START: Home\n", 0x000000, "pixelade9")
+		display.drawText(0, display.height()-pixHeight*4, "SELECT: Uninstall\n", 0x000000, "pixelade9")
+		
+		lineY = display.height()-pixHeight*2-pixHeight//2
+		display.drawLine(0, lineY, display.width()-1, lineY, 0x000000)
+		display.drawText(0, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "pixelade9")
+		display.drawText(0, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "pixelade9")
 
 	global options
 	global install_path
