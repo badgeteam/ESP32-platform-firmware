@@ -1,7 +1,7 @@
 # CampZone2019 badge specific input wrapper
 # Versions for other badges must expose the same API
 
-import _buttons
+import _buttons, system
 
 # --- BUTTON CONSTANTS  ---
 BTN_UP     = 0

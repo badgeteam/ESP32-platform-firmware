@@ -1,1 +1,1 @@
-../../generic/tasks/otacheck.py
+../../shared/tasks/otacheck.py

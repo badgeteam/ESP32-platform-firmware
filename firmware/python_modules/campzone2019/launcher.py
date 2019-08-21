@@ -204,16 +204,6 @@ def start():
     populate_apps()
     render_current_app()
 
-# First time boot sequence
-if not machine.nvs_getint("system", 'intro_shown'):
-    import nyan
-    time.sleep(3)
-    rgb.clear()
-    time.sleep(1)
-    import sponsors
-    machine.nvs_setint("system", 'intro_shown', 1)
-    system.reboot()
-
 start()
 init_power_management()
 

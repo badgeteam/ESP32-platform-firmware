@@ -19,7 +19,7 @@ def sleep(duration=0, status=False):
 			term.header(True, "Sleeping until touchbutton is pressed...")
 		else:
 			term.header(True, "Sleeping for "+str(duration)+"ms...")
-	time.sleep(0.05)
+	time.sleep(0.1)
 	machine.deepsleep(duration)
 
 def isColdBoot():
