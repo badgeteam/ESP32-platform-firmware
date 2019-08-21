@@ -1,7 +1,6 @@
 import machine, term, time, defines, rgb, buttons
 
-pin_index = buttons._gpios.index(defines.BTN_A)
-pin = buttons._pins[pin_index]
+pin = buttons._gpioMap[buttons.BTN_A]
 rtc = machine.RTC()
 rtc.wake_on_ext0(pin=pin, level=0)
 

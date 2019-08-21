@@ -1,50 +1,34 @@
-import esp, machine, sys, system, os, consts
-import rgb, virtualtimers, deepsleep
+import machine, sys, system, buttons, time
 
-# Clear OTA boot magic
-esp.rtcmem_write(0,0)
-esp.rtcmem_write(1,0)
-
-# Set LED brightness
-brightness = machine.nvs_getint('system', 'brightness')
-if not brightness:
-    brightness = (rgb.MAX_BRIGHTNESS - 2)
-rgb.setbrightness(brightness)
+rtc = machine.RTC()
+rtc.write(0,0)
+rtc.write(1,0)
 
 #Application starting
-app = esp.rtcmem_read_string()
-if app:
-    esp.rtcmem_write_string("")
+if machine.wake_reason() == (7, 0) and buttons.value(buttons.BTN_RIGHT): #RIGHT button is being held down after reset
+	app = "dashboard.home"
 else:
-    if not machine.nvs_getint("system", 'factory_checked'):
-        app = "factory_checks"
-    else:
-        app = machine.nvs_getstr("system", 'default_app')
-        if not app:
-            app = 'dashboard.home'
-
-## Check voltage
-virtualtimers.activate(1000) # low resolution needed
-def _vcc_callback():
-    try:
-        vcc = system.get_vcc_bat()
-        if vcc != None:
-            if vcc < 3300:
-                deepsleep.vcc_low()
-    finally:
-        # Return 10000 to start again in 10 seconds
-        return 10000
-
-virtualtimers.new(10000,_vcc_callback)
-
+	app = rtc.read_string()
+	if not app:
+		if not machine.nvs_getint("system", 'factory_checked'):
+			app = "factory_checks"
+		else:
+			app = machine.nvs_getstr("system", 'default_app')
+			if not app:
+				app = 'dashboard.home'
 
 if app and not app == "shell":
-    try:
-        print("Starting app '%s'..." % app)
-        system.__current_app__ = app
-        if app:
-            import buttons  # Initialise buttons so by default apps exit on B press
-            __import__(app)
-    except BaseException as e:
-        print("Fatal exception in the running app!")
-        sys.print_exception(e)
+	try:
+		print("Starting app '%s'..." % app)
+		system.__current_app__ = app
+		if app:
+			__import__(app)
+	except BaseException as e:
+		print("Fatal exception in the running app!")
+		#system.crashedWarning()
+		sys.print_exception(e)
+		time.sleep(3)
+		system.launcher()
+
+if app and app == "shell":
+	print("Welcome to the python shell of your badge!\nCheck out https://wiki.badge.team/MicroPython for instructions.")

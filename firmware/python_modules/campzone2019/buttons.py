@@ -52,12 +52,12 @@ def __cb_btn_right(arg):
 
 def __init():
 	global mappings
-	_buttons.register( _gpioMap(BTN_A),     __cb_btn_a     )
-	_buttons.register( _gpioMap(BTN_B),     __cb_btn_b     )
-	_buttons.register( _gpioMap(BTN_UP),    __cb_btn_up    )
-	_buttons.register( _gpioMap(BTN_DOWN),  __cb_btn_down  )
-	_buttons.register( _gpioMap(BTN_LEFT),  __cb_btn_left  )
-	_buttons.register( _gpioMap(BTN_RIGHT), __cb_btn_right )
+	_buttons.register( _gpioMap[BTN_A],     __cb_btn_a     )
+	_buttons.register( _gpioMap[BTN_B],     __cb_btn_b     )
+	_buttons.register( _gpioMap[BTN_UP],    __cb_btn_up    )
+	_buttons.register( _gpioMap[BTN_DOWN],  __cb_btn_down  )
+	_buttons.register( _gpioMap[BTN_LEFT],  __cb_btn_left  )
+	_buttons.register( _gpioMap[BTN_RIGHT], __cb_btn_right )
 	pushMapping() #Add the initial / default mapping
 	
 # --- PUBLIC API ---
@@ -81,10 +81,7 @@ def value(button):
 	global _buttons, __mprMap, __num
 	if button < 0 or button >= __num:
 		raise ValueError("Invalid button!")
-	if button == BTN_FLASH:
-		return not _buttons.pin(0).value() # This input has is active LOW
-	else:
-		return mpr121.get(__mprMap[button])
+	return not _buttons.pin(_gpioMap[button]).value()
 
 def getCallback(button):
 	# Returns the currently attached callback function
