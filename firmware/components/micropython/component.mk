@@ -115,9 +115,6 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/particle_simulation/include
-
-
 ifdef CONFIG_MICROPY_USE_BLUETOOTH
 MP_EXTRA_INC += -I$(ESPCOMP)/bt/include
 MP_EXTRA_INC += -I$(ESPCOMP)/bt/bluedroid/api/include
@@ -207,10 +204,6 @@ endif
 
 ifdef CONFIG_DRIVER_HUB75_ENABLE
 SRC_C += esp32/modhub75.c
-endif
-
-ifdef CONFIG_PARTICLE_SIMULATION_ENABLE
-SRC_C += esp32/modpsim.c
 endif
 
 ifdef CONFIG_MICROPY_USE_DISPLAY

@@ -297,10 +297,6 @@ extern const struct _mp_obj_module_t sndmixer_module;
 extern const struct _mp_obj_module_t hub75_module;
 #endif
 
-#ifdef CONFIG_PARTICLE_SIMULATION_ENABLE
-extern const struct _mp_obj_module_t psim_module;
-#endif
-
 #ifdef CONFIG_DRIVER_I2C_ENABLE
 extern const struct _mp_obj_module_t i2c_module;
 #endif
@@ -429,12 +425,6 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_HUB75
 #endif
 
-#ifdef CONFIG_PARTICLE_SIMULATION_ENABLE
-#define BUILTIN_MODULE_PSIM { MP_OBJ_NEW_QSTR(MP_QSTR_psim), (mp_obj_t)&psim_module },
-#else
-#define BUILTIN_MODULE_PSIM
-#endif
-
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 #define BUILTIN_MODULE_SNDMIXER { MP_OBJ_NEW_QSTR(MP_QSTR_sndmixer), (mp_obj_t)&sndmixer_module },
 #else
@@ -469,7 +459,6 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 	BUILTIN_MODULE_FRAMEBUFFER \
 	BUILTIN_MODULE_NEOPIXEL \
 	BUILTIN_MODULE_HUB75 \
-	BUILTIN_MODULE_PSIM \
 	BUILTIN_MODULE_EINK \
 	BUILTIN_MODULE_DISOBEY_SAMD \
 	BUILTIN_MODULE_MPU6050 \

@@ -22,10 +22,6 @@
 
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 
-#ifdef CONFIG_PARTICLE_SIMULATION_ENABLE
-#include "../particle_simulation/include/particle_simulation.h"
-#endif
-
 #define TAG "hub75"
 
 //My display has each row swapped with its neighbour (so the rows are 2-1-4-3-6-5-8-7-...). If your display
@@ -118,9 +114,6 @@ void displayTask(void *pvParameter)
 	while(driver_hub75_active) {
 		vTaskDelayUntil( &xLastWakeTime, 100/framerate );
 		if(compositor_status()) composite();
-		#ifdef CONFIG_PARTICLE_SIMULATION_ENABLE
-		else if(particle_status()) particle_disp();
-		#endif
 		render16();
 	}
 	vTaskDelete( NULL );

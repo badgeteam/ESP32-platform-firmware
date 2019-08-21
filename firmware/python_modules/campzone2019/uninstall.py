@@ -4,9 +4,12 @@ import uinterface, woezel, rgb
 app = machine.nvs_getstr('launcher', 'uninstall_name')
 app_file = machine.nvs_getstr('launcher', 'uninstall_file')
 
+if (not app) or not (app_file):
+	system.home()
+
 agreed = uinterface.confirmation_dialog('Uninstall \'%s\'?' % app)
 if not agreed:
-    system.reboot()
+    system.home()
 
 uinterface.loading_text("Removing " + app + "...")
 install_path = woezel.get_install_path()
@@ -22,4 +25,4 @@ machine.nvs_setstr('launcher', 'uninstall_file', '')
 
 rgb.clear()
 uinterface.skippabletext("Uninstall completed!")
-system.reboot()
+system.home()

@@ -6,8 +6,11 @@ def clear_boot_magic():
 	rtc.write(0,0)
 	rtc.write(1,0)
 
-def reboot():
-	machine.deepsleep(2)
+def reboot(goHome=True):
+	if goHome:
+		home()
+	else:
+		machine.deepsleep(2)
 
 def sleep(duration=0, status=False):
 	machine.RTC().wake_on_ext0(pin = machine.Pin(25), level = 0)
@@ -47,7 +50,7 @@ def start(app, status=True):
 		else:
 			term.header(True, "Loading application "+app+"...")
 	machine.RTC().write_string(app)
-	reboot()
+	machine.deepsleep(2)
 
 def home(status=False):
 	start("", status)
@@ -66,7 +69,7 @@ def ota(status=False):
 	rtc = machine.RTC()
 	rtc.write(0,1)
 	rtc.write(1,254)
-	reboot()
+	machine.deepsleep(2)
 
 def serialWarning():
 	pass
