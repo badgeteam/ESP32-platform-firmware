@@ -112,7 +112,7 @@ def start():
 	ugfx.set_lut(ugfx.LUT_FASTER)
 	ugfx.clear(ugfx.WHITE)
 	x0 = int(display.width()/2)
-	display.drawText(x0+10, 0, "Recovery mode!", 0x000000, "pixelade9")
+	display.drawText(x0+10, 0, "Recovery mode!", 0x000000, "roboto_regular12")
 
 	global options
 	global install_path

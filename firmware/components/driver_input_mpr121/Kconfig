@@ -227,4 +227,64 @@ menu "Driver: MPR121 touch input"
 	config MPR121_ELE11_OUTPUT_HIGH_ONLY
 		bool "Digital output that only sources"
 	endchoice
+	
+	config MPR121_BASELINE_0
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 0"
+		default 0
+	
+	config MPR121_BASELINE_1
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 1"
+		default 0
+	
+	config MPR121_BASELINE_2
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 2"
+		default 0
+	
+	config MPR121_BASELINE_3
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 3"
+		default 0
+	
+	config MPR121_BASELINE_4
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 4"
+		default 0
+	
+	config MPR121_BASELINE_5
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 5"
+		default 0
+	
+	config MPR121_BASELINE_6
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 6"
+		default 0
+	
+	config MPR121_BASELINE_7
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 7"
+		default 0
+	
+	config MPR121_BASELINE_8
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 8"
+		default 0
+	
+	config MPR121_BASELINE_9
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 9"
+		default 0
+	
+	config MPR121_BASELINE_10
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 10"
+		default 0
+	
+	config MPR121_BASELINE_11
+		depends on DRIVER_MPR121_ENABLE
+		int "Baseline value for electrode 11"
+		default 0
 endmenu

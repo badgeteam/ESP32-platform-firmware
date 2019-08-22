@@ -522,12 +522,13 @@ STATIC mp_obj_t framebuffer_draw_text(mp_uint_t n_args, const mp_obj_t *args) {
 
 	int x = mp_obj_get_int(args[argOffset++]);
 	int y = mp_obj_get_int(args[argOffset++]);
-	const char *text = mp_obj_str_get_str(args[argOffset++]);
+	
+	int textArg = argOffset++;
 	
 	uint32_t color = COLOR_TEXT_DEFAULT;
 	if (n_args>argOffset) color = mp_obj_get_int64(args[argOffset++]);
 	
-	const GFXfont *font = &freesans6pt7b;
+	const GFXfont *font = &roboto12pt7b;
 	if (n_args>argOffset) font = driver_framebuffer_findFontByName(mp_obj_str_get_str(args[argOffset++]));
 	
 	if (!font) {
@@ -539,13 +540,23 @@ STATIC mp_obj_t framebuffer_draw_text(mp_uint_t n_args, const mp_obj_t *args) {
 	if (n_args>argOffset) xScale = mp_obj_get_int(args[argOffset++]);
 	if (n_args>argOffset) yScale = mp_obj_get_int(args[argOffset++]);
 	
-	driver_framebuffer_print(window ? window->frame : NULL, text, x, y, xScale, yScale, color, font);
+	if (MP_OBJ_IS_STR(args[textArg])) {
+		const char *text = mp_obj_str_get_str(args[textArg]);
+		driver_framebuffer_print(window ? window->frame : NULL, text, x, y, xScale, yScale, color, font);
+	} else {
+		int chr = mp_obj_get_int(args[textArg]);
+		char *text = malloc(2);
+		text[0] = chr;
+		text[1] = 0;
+		driver_framebuffer_print(window ? window->frame : NULL, text, x, y, xScale, yScale, color, font);
+		free(text);
+	}
 	return mp_const_none;
 }
 
 static mp_obj_t framebuffer_get_text_width(mp_uint_t n_args, const mp_obj_t *args) {
 	const char *text = mp_obj_str_get_str(args[0]);
-	const GFXfont *font = &freesans6pt7b;
+	const GFXfont *font = &roboto12pt7b;
 	if (n_args>1) font = driver_framebuffer_findFontByName(mp_obj_str_get_str(args[1]));
 	if (!font) {
 		mp_raise_ValueError("Font not found");
@@ -557,7 +568,7 @@ static mp_obj_t framebuffer_get_text_width(mp_uint_t n_args, const mp_obj_t *arg
 
 static mp_obj_t framebuffer_get_text_height(mp_uint_t n_args, const mp_obj_t *args) {
 	const char *text = mp_obj_str_get_str(args[0]);
-	const GFXfont *font = &freesans6pt7b;
+	const GFXfont *font = &roboto12pt7b;
 	if (n_args>1) font = driver_framebuffer_findFontByName(mp_obj_str_get_str(args[1]));
 	if (!font) {
 		mp_raise_ValueError("Font not found");

@@ -1,7 +1,7 @@
 # SHA2017 badge specific input wrapper
 # Versions for other badges must expose the same API
 
-import mpr121, _buttons, _mpr121mapping
+import mpr121, _buttons, _mpr121mapping, system
 
 # --- BUTTON CONSTANTS  ---
 BTN_A      = 0
@@ -28,7 +28,7 @@ __cb = []
 # --- DEFAULT ACTION ---
 def __cbReboot(pressed):
 	if pressed:
-		system.reboot()
+		system.launcher()
 
 # --- INTERNAL CALLBACK WRAPPERS ---
 

@@ -51,7 +51,7 @@ def update():
 			gc.collect()
 			slug = category["slug"]
 			_showProgress("Downloading '"+category["name"]+"'...")
-			f = urequests.get("https://badge.team/basket/hackerhotel2019/category/%s/json" % slug, timeout=30)
+			f = urequests.get("https://badge.team/basket/sha2017/category/%s/json" % slug, timeout=30)
 			f_file = open(path+'/'+slug+'.json', 'w')
 			f_file.write(f.text)
 			f_file.close()

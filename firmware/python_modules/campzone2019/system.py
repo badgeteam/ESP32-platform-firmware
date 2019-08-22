@@ -89,4 +89,6 @@ def get_vcc_bat():
 		vcc_bat.deinit()
 	finally:
 		return voltage_bat
-	
+
+def crashedWarning():
+	pass

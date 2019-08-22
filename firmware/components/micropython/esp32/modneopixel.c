@@ -13,12 +13,10 @@
 static mp_obj_t neopixels_enable() {
 	return mp_obj_new_int(driver_neopixel_enable());
 }
-static MP_DEFINE_CONST_FUN_OBJ_0(neopixels_enable_obj, neopixels_enable);
 
 static mp_obj_t neopixels_disable() {
 	return mp_obj_new_int(driver_neopixel_disable());
 }
-static MP_DEFINE_CONST_FUN_OBJ_0(neopixels_disable_obj, neopixels_disable);
 
 static mp_obj_t neopixels_send(mp_uint_t n_args, const mp_obj_t *args) {
 	bool is_bytes = MP_OBJ_IS_TYPE(args[0], &mp_type_bytes);
@@ -38,7 +36,10 @@ static mp_obj_t neopixels_send(mp_uint_t n_args, const mp_obj_t *args) {
 	}
 	return mp_obj_new_int(driver_neopixel_send_data(leds, len));
 }
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(neopixels_send_obj, 1,2 ,neopixels_send);
+
+static MP_DEFINE_CONST_FUN_OBJ_0          (neopixels_enable_obj,        neopixels_enable  );
+static MP_DEFINE_CONST_FUN_OBJ_0          (neopixels_disable_obj,       neopixels_disable );
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(neopixels_send_obj,    1, 2, neopixels_send    );
 
 static const mp_rom_map_elem_t neopixel_module_globals_table[] = {
 	{MP_OBJ_NEW_QSTR(MP_QSTR_enable), (mp_obj_t)&neopixels_enable_obj},

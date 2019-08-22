@@ -193,36 +193,36 @@ def start():
 		x0 = int(display.width()/2)
 		currentY = 20
 		
-		display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("BADGE.TEAM", "fairlight8")/2), currentY, "BADGE.TEAM\n", 0x000000, "fairlight8")
-		currentY += display.getTextHeight("BADGE.TEAM", "fairlight8")
+		display.drawText(x0+((display.width()-x0)//2)-(display.getTextWidth("BADGE.TEAM", "fairlight12")//2), currentY, "BADGE.TEAM\n", 0x000000, "fairlight12")
+		currentY += display.getTextHeight("BADGE.TEAM", "fairlight12")
 		
-		display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("ESP32 platform", "pixelade9")/2), currentY, "ESP32 platform\n", 0x000000, "pixelade9")
+		display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("ESP32 platform", "roboto_regular12")/2), currentY, "ESP32 platform\n", 0x000000, "roboto_regular12")
 		display.drawLine(x0,0,x0,display.height()-1,0x000000)
-		pixHeight = display.getTextHeight(" ", "pixelade9")
+		pixHeight = display.getTextHeight(" ", "roboto_regular12")
 		currentY = pixHeight*5
 		
 		lineY = display.height()-pixHeight*6-pixHeight//2
 		display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
 		
-		display.drawText(x0+5, display.height()-pixHeight*6, "A: Run\n", 0x000000, "pixelade9")
-		display.drawText(x0+5, display.height()-pixHeight*5, "START: Return to home\n", 0x000000, "pixelade9")
-		display.drawText(x0+5, display.height()-pixHeight*4, "SELECT: Uninstall app\n", 0x000000, "pixelade9")
+		display.drawText(x0+5, display.height()-pixHeight*6, "A: Run\n", 0x000000, "roboto_regular12")
+		display.drawText(x0+5, display.height()-pixHeight*5, "START: Return to home\n", 0x000000, "roboto_regular12")
+		display.drawText(x0+5, display.height()-pixHeight*4, "SELECT: Uninstall app\n", 0x000000, "roboto_regular12")
 		
 		lineY = display.height()-pixHeight*2-pixHeight//2
 		display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
-		display.drawText(x0+5, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "pixelade9")
-		display.drawText(x0+5, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "pixelade9")
+		display.drawText(x0+5, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "roboto_regular12")
+		display.drawText(x0+5, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "roboto_regular12")
 	else:
-		pixHeight = display.getTextHeight(" ", "pixelade9")
+		pixHeight = display.getTextHeight(" ", "roboto_regular12")
 		display.drawLine(0, display.height()-18*4, display.width(), display.height()-18*4, ugfx.BLACK)
-		display.drawText(0, display.height()-pixHeight*6, "A: Run\n", 0x000000, "pixelade9")
-		display.drawText(0, display.height()-pixHeight*5, "START: Home\n", 0x000000, "pixelade9")
-		display.drawText(0, display.height()-pixHeight*4, "SELECT: Uninstall\n", 0x000000, "pixelade9")
+		display.drawText(0, display.height()-pixHeight*6, "A: Run\n", 0x000000, "roboto_regular12")
+		display.drawText(0, display.height()-pixHeight*5, "START: Home\n", 0x000000, "roboto_regular12")
+		display.drawText(0, display.height()-pixHeight*4, "SELECT: Uninstall\n", 0x000000, "roboto_regular12")
 		
 		lineY = display.height()-pixHeight*2-pixHeight//2
 		display.drawLine(0, lineY, display.width()-1, lineY, 0x000000)
-		display.drawText(0, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "pixelade9")
-		display.drawText(0, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "pixelade9")
+		display.drawText(0, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "roboto_regular12")
+		display.drawText(0, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "roboto_regular12")
 
 	global options
 	global install_path

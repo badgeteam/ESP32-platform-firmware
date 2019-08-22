@@ -6,19 +6,19 @@ menu "Driver: I2C bus"
 	config PIN_NUM_I2C_DATA
 		depends on DRIVER_I2C_ENABLE
 		int "GPIO to use as data pin"
-		
-	config PIN_PULL_I2C_DATA
-		depends on DRIVER_I2C_ENABLE
-		bool "Enable the built-in pull-up for the data pin"
-		default n
 	
 	config PIN_NUM_I2C_CLK
 		depends on DRIVER_I2C_ENABLE
 		int "GPIO to use as clock pin"
-		
+	
+	config PIN_PULL_I2C_DATA
+		depends on DRIVER_I2C_ENABLE
+		bool "Enable the built-in pull-up for the data pin (WARNING: If possible use real a real pull-up!)"
+		default n
+	
 	config PIN_PULL_I2C_CLK
 		depends on DRIVER_I2C_ENABLE
-		bool "Enable the built-in pull-up for the clock pin"
+		bool "Enable the built-in pull-up for the clock pin (WARNING: If possible use real a real pull-up!)"
 		default n
 	
 	config I2C_MASTER_FREQ_HZ

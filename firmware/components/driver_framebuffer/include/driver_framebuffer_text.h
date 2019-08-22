@@ -8,15 +8,6 @@
 
 extern const GFXfont fairlight8pt7b;
 extern const GFXfont fairlight12pt7b;
-extern const GFXfont freesans6pt7b;
-extern const GFXfont freesans8pt7b;
-extern const GFXfont freesans9pt7b;
-extern const GFXfont freesans12pt7b;
-extern const GFXfont freesansbold9pt7b;
-extern const GFXfont freesansbold12pt7b;
-extern const GFXfont freesansmono8pt7b;
-extern const GFXfont freesansmono9pt7b;
-extern const GFXfont freesansmono12pt7b;
 extern const GFXfont org_018pt7b;
 extern const GFXfont dejavusans20pt7b;
 extern const GFXfont permanentmarker22pt7b;
@@ -26,8 +17,6 @@ extern const GFXfont robotoblackitalic24pt7b;
 extern const GFXfont roboto12pt7b;
 extern const GFXfont roboto18pt7b;
 extern const GFXfont roboto22pt7b;
-extern const GFXfont pixelade9pt7b;
-extern const GFXfont pixelade13pt7b;
 extern const GFXfont weather42pt8b;
 extern const GFXfont ipane7x5;
 

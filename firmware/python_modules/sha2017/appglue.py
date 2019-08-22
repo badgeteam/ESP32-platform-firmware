@@ -7,7 +7,3 @@ def start_app(app, display = True):
 def home():
 	import system
 	system.home(True)
-
-def start_ota():
-	import system
-	system.ota(True)

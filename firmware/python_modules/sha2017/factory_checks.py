@@ -48,7 +48,7 @@ else:
 	display.drawText(0,12,"Now calibrating the touch buttons...", 0x000000, "7x5")
 	display.flush()
 	time.sleep(2)
-	import calibtouch
+	import _mpr121calib
 
 # Install icons to the filesystem if needed
 try:

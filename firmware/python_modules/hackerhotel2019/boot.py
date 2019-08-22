@@ -1,1 +1,1 @@
-../sha2017/boot.py
+../shared/boot.py

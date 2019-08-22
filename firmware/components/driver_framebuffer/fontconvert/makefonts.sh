@@ -18,9 +18,11 @@ convert=../fontconvert
 header=../fontheader
 inpath=
 outpath=../../font_
-fonts=(freesans org_01 fairlight pixelade dejavusans permanentmarker roboto)
+fonts=(org_01 fairlight dejavusans permanentmarker roboto)
 styles=("" mono bold italic black italic blackitalic)
 sizes=(6 8 9 12 13 16 18 20 22 24 36 42)
+
+dpi=80
 
 for f in ${fonts[*]}
 do
@@ -33,10 +35,10 @@ do
 			#echo $infile
 			if [ -f $infile ] # Does source combination exist?
 			  then
-				$convert $infile $si 105 > $outpath$f$st$si"pt7b.c"
+				$convert $infile $si $dpi > $outpath$f$st$si"pt7b.c"
 			fi
 		done
 	done
 done
 
-$convert weather.ttf 42 105 59905 59923 -59905 > ../../font_weather42pt8b.c
+$convert weather.ttf 42 $dpi 61440 61635 -61439 > ../../font_weather42pt8b.c

@@ -4,11 +4,13 @@ display.drawFill()
 easydraw.msg("Do not press any buttons!", "Touch calibration", True)
 time.sleep(0.5)
 
-# These values were measured on a known-good badge and are used as the starting point for the calibration procedure
-baseline_def = [ 0x0138, 0x0144, 0x0170, 0x0174, 0x00f0, 0x0103, 0x00ff, 0x00ed, 0,0,0,0 ] #SHA2017
-#baseline_def = [ 350, 361, 343, 252, 267, 258, 232, 352, 0, 0, 0] #HackerHotel2019
+def setDefault():
+	baseline_def = []
+	for i in range(12):
+		baseline_def.append(mpr121.getDefaultBaseline(i))
+	mpr121.configure(baseline_def, False)
 
-mpr121.configure(baseline_def, False)
+setDefault()
 
 baseLine = [0]*12
 isPressed = [False]*12
@@ -33,9 +35,9 @@ for i in range(avAmount):
 			baseLine[i] += info[i]['data']
 			tooLow = False
 			tooHigh = False
-			if baseLine[i]//baseLineCount * 100 < baseline_def[i] * 85:
+			if baseLine[i]//baseLineCount * 100 < mpr121.getDefaultBaseline(i) * 85:
 				tooLow = True
-			if baseLine[i]//baseLineCount * 95 > baseline_def[i] * 100:
+			if baseLine[i]//baseLineCount * 95 > mpr121.getDefaultBaseline(i) * 100:
 				tooHigh = True
 			isTooLow[i] = tooLow
 			isTooHigh[i] = tooHigh
@@ -70,11 +72,11 @@ for i in range(12):
 		waitRelease(i)
 
 for i in range(12):
-	if baseline_def[i] > 0:
-		print(i,baseline_def[i], baseLine[i], "=", baseLine[i]-baseline_def[i])
+	if mpr121.getDefaultBaseline(i) > 0:
+		print(i,mpr121.getDefaultBaseline(i), baseLine[i], "=", baseLine[i]-mpr121.getDefaultBaseline(i))
 
 for i in range(12):
-	if baseline_def[i] > 0 and mpr121.get(i):
+	if mpr121.getDefaultBaseline(i) > 0 and mpr121.get(i):
 		waitRelease(i)
 
 easydraw.msg("Check passed.")

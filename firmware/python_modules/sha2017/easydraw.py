@@ -131,7 +131,7 @@ def messageCentered(message, firstLineTitle=True, png=None):
 	except BaseException as e:
 		print("Error in messageCentered!",e)
 
-def nickname(y = 5, font = "freesansbold12", color = 0x000000, unusedParameter=None):
+def nickname(y = 5, font = "Roboto_Regular18", color = 0x000000, unusedParameter=None):
 	nick = machine.nvs_getstr("owner", "name")
 	if not nick:
 		return y
@@ -149,7 +149,7 @@ def nickname(y = 5, font = "freesansbold12", color = 0x000000, unusedParameter=N
 def battery(on_usb, vBatt, charging):
 	pass
 
-def disp_string_right_bottom(y, s, font="freesans9"):
+def disp_string_right_bottom(y, s, font="Roboto_Regular12"):
 	l = display.getTextWidth(s, font)
 	display.drawText(display.width()-l, display.height()-(y+1)*14, s, 0x000000, font)
 

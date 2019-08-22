@@ -47,28 +47,38 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /* Fonts */
 
-#define FONTS_AMOUNT 20
+#define FONTS_AMOUNT 14
 
 const char* fontNames[] = {
-	"freesans6", "freesans9", "freesansmono9", "freesansbold9", "freesansbold12",
 	"org18",
-	"fairlight8", "fairlight12",
-	"dejavusans20",
-	"permanentmarker22", "permanentmarker36",
-	"roboto_black22", "roboto_blackitalic24", "roboto_regular12", "roboto_regular18", "roboto_regular22",
-	"pixelade9", "pixelade13",
-	"weather42",
-	"7x5"
+	"fairlight8",
+	"fairlight12",
+	"dejavusans20",           //SHA2017
+	"permanentmarker22",      //SHA2017
+	"permanentmarker36",      //SHA2017
+	"roboto_black22",         //SHA2017
+	"roboto_blackitalic24",   //SHA2017
+	"roboto_regular12",       //SHA2017
+	"roboto_regular18",       //SHA2017 
+	"roboto_regular22",       //SHA2017
+	"weather42",              //SHA2017
+	"pixelade13",             //SHA2017
+	"7x5"                     //CAMPZONE2019
 };
 const GFXfont* fontPointers[] = {
-	&freesans6pt7b, &freesans9pt7b, &freesansmono9pt7b, &freesansbold9pt7b, &freesansbold12pt7b,
 	&org_018pt7b,
-	&fairlight8pt7b, &fairlight12pt7b,
+	&fairlight8pt7b,
+	&fairlight12pt7b,
 	&dejavusans20pt7b,
-	&permanentmarker22pt7b, &permanentmarker36pt7b,
-	&robotoblack22pt7b, &robotoblackitalic24pt7b, &roboto12pt7b, &roboto18pt7b, &roboto22pt7b,
-	&pixelade9pt7b, &pixelade13pt7b,
+	&permanentmarker22pt7b,
+	&permanentmarker36pt7b,
+	&robotoblack22pt7b,
+	&robotoblackitalic24pt7b,
+	&roboto12pt7b,
+	&roboto18pt7b,
+	&roboto22pt7b,
 	&weather42pt8b,
+	&roboto12pt7b, //Replaced pixelade13 with something that actually looks nice.
 	&ipane7x5
 };
 

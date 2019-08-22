@@ -66,7 +66,7 @@ class UartMenu():
 		system.start("dashboard.tools.update_firmware", True)
 	
 	def opt_about(self):
-		system.start("about", True)
+		system.start("dashboard.other.about", True)
 		
 	def opt_downloader(self):
 		system.start("dashboard.terminal.downloader", True)

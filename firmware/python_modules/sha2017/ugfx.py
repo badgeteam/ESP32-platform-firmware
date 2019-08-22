@@ -72,7 +72,7 @@ WHITE = 0xFFFFFF
 
 def string(x,y,text,font,color):
 	if font == "Roboto_pixelade13":
-		font = "pixelade13"
+		font = "roboto_regular12"
 	if not color:
 		color = 0
 	if font:
@@ -192,7 +192,7 @@ class List():
 		self.selected = 0
 		global activeList
 		activeList = self
-		self.lines = self.h // (display.getTextHeight(" ", "freesans9")+6)
+		self.lines = self.h // (display.getTextHeight(" ", "roboto_regular12")+6)
 		self.offset = 0
 		self.visible(True)
 		self.enabled(True)
@@ -206,9 +206,9 @@ class List():
 			for i in range(len(self.items)-self.offset):
 				cursor = (self.x+1,cursor[1])
 				item = self.items[self.offset+i]
-				lineHeight = display.getTextHeight(item, "freesans9")
+				lineHeight = display.getTextHeight(item, "roboto_regular12")
 				
-				while display.getTextWidth(item, "freesans9") > self.w:
+				while display.getTextWidth(item, "roboto_regular12") > self.w:
 					item = item[:-1]
 				
 				totalHeight += lineHeight+6
@@ -219,8 +219,8 @@ class List():
 					display.drawRect(self.x, cursor[1], self.w, lineHeight+6, True, 0x000000)
 					color = 0xFFFFFF
 				cursor = (self.x,cursor[1]+3)
-				display.drawText(cursor[0]+2, cursor[1], item+"\n", color, "freesans9")
-				cursor = (self.x,cursor[1]+3+display.getTextHeight(item+"\n", "freesans9"))
+				display.drawText(cursor[0]+2, cursor[1], item+"\n", color, "roboto_regular12")
+				cursor = (self.x,cursor[1]+3+display.getTextHeight(item+"\n", "roboto_regular12"))
 	
 	def add_item(self, caption):
 		if type(caption) == type(""):
