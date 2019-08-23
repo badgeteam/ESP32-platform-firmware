@@ -73,6 +73,8 @@ WHITE = 0xFFFFFF
 def string(x,y,text,font,color):
 	if font == "Roboto_pixelade13":
 		font = "roboto_regular12"
+	if font == "fixed_10x20":
+		font = "roboto_regular18"
 	if not color:
 		color = 0
 	if font:
@@ -343,3 +345,5 @@ def wordWrap(message, width=None, font="7x5"):
 		lines.append(line)
 	return "\n".join(lines)
 
+def box(x,y,width,height,color):
+	display.drawRect(x,y,width,height,False,color)
