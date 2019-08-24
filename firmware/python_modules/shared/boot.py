@@ -1,16 +1,24 @@
-import machine, sys, system, buttons, time
+import machine, sys, system, time
 
 rtc = machine.RTC()
 rtc.write(0,0)
 rtc.write(1,0)
 
+try:
+	import buttons
+except:
+	pass
+
 def __chk_recovery():
 	try:
-		recovery_button = buttons.BTN_START
+		try:
+			recovery_button = buttons.BTN_START
+		except:
+			# This badge does not have a START button, use the B button instead
+			recovery_button = buttons.BTN_B
+		return machine.wake_reason() == (7, 0) and buttons.value(recovery_button)
 	except:
-		# This badge does not have a START button, use the B button instead
-		recovery_button = buttons.BTN_B
-	return machine.wake_reason() == (7, 0) and buttons.value(recovery_button)
+		return False
 
 #Application starting
 if __chk_recovery():
@@ -18,7 +26,7 @@ if __chk_recovery():
 else:
 	app = rtc.read_string()
 	if not app:
-		if not machine.nvs_getint("system", 'factory_checked'):
+		if not machine.nvs_getint("system", 'factory_checked') == 2:
 			app = "factory_checks"
 		else:
 			app = machine.nvs_getstr("system", 'default_app')

@@ -51,6 +51,7 @@ void platform_init()
 	INIT_DRIVER(erc12864     , "ERC12864"   ) //128x64 LCD screen as found on the Disobey 2019 badge
 	INIT_DRIVER(ssd1306      , "SSD1306"    ) //128x64 OLED screen as found on the Disobey 2020 badge
 	INIT_DRIVER(eink         , "E-INK"      ) //296x128 e-ink display as found on the SHA2017 and HackerHotel 2019 badges
+	INIT_DRIVER(gxgde0213b1  , "GXGDE0213B1") //E-ink on OHS badge
 	INIT_DRIVER(ili9341      , "ILI9341"    ) //LCD display on wrover kit
 	INIT_DRIVER(framebuffer  , "FRAMEBUFFER") //Framebuffer driver with basic drawing routines
 	fbReady = true;                           //Notify the error handler that framebuffer support is now available

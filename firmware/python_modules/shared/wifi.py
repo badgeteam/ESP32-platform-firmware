@@ -11,11 +11,15 @@ if not defaultSsid:
 	defaultPassword = consts.WIFI_PASSWORD
 
 def connect(ssid=defaultSsid, password=defaultPassword):
-	sta_if.active(True)
-	if ssid and password:
-		sta_if.connect(ssid, password)
-	elif ssid:
-		sta_if.connect(ssid)
+	try:
+		sta_if.active(True)
+		if ssid and password:
+			sta_if.connect(ssid, password)
+		elif ssid:
+			sta_if.connect(ssid)
+	except BaseException as e:
+		print("Error while connecting to WiFi!")
+		print(e)
 
 def disconnect():
 	sta_if.disconnect()

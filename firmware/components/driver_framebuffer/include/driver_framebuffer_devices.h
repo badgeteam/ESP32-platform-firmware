@@ -11,6 +11,7 @@
 #include "driver_eink.h"
 #include "driver_ili9341.h"
 #include "driver_hub75.h"
+#include "driver_gxgde0213b1.h"
 
 /* E-INK display as used on the SHA2017 and HackerHotel 2019 badges */
 #if defined(CONFIG_DRIVER_EINK_ENABLE)
@@ -30,6 +31,18 @@
 	//#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_eink_display_part(buffer,eink_flags,x0,x1); //Doesn't work.
 	#define COLOR_FILL_DEFAULT 0xFFFFFF
 	#define COLOR_TEXT_DEFAULT 0x000000
+
+/* E-INK display as used on the OHS badge */
+#elif defined(CONFIG_DRIVER_GXGDE0213B1_ENABLE)
+	#define FB_SIZE GXGDE0213B1_BUFFER_SIZE
+	#define FB_WIDTH GXGDE0213B1_WIDTH
+	#define FB_HEIGHT GXGDE0213B1_HEIGHT
+	#define FB_TYPE_1BPP
+	#define FB_1BPP_OHS
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_gxgde0213b1_write(buffer);
+	#define COLOR_FILL_DEFAULT 0xFFFFFF
+	#define COLOR_TEXT_DEFAULT 0x000000
+
 	
 /* OLED display as used on the Disobey 2020 badge */
 #elif defined(CONFIG_DRIVER_SSD1306_ENABLE)

@@ -105,6 +105,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_input_mpr121/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_erc12864/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ssd1306/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ili9341/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_gxgde0213b1/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include

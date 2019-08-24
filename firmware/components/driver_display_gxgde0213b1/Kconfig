@@ -1,0 +1,22 @@
+menu "Driver: gxgde0213b1 E-ink display"
+	config DRIVER_GXGDE0213B1_ENABLE
+		depends on DRIVER_VSPI_ENABLE
+		bool "Enable the GXGDE0213B1 E-ink display driver"
+		default n
+	
+	config PIN_NUM_GXGDE0213B1_RESET
+		depends on DRIVER_GXGDE0213B1_ENABLE
+		int "GPIO pin used for RESET"
+		
+	config PIN_NUM_GXGDE0213B1_BUSY
+		depends on DRIVER_GXGDE0213B1_ENABLE
+		int "GPIO pin used for BUSY"
+	
+	config PIN_NUM_GXGDE0213B1_CS
+		depends on DRIVER_GXGDE0213B1_ENABLE
+		int "GPIO pin used for CS"
+	
+	config PIN_NUM_GXGDE0213B1_DCX
+		depends on DRIVER_GXGDE0213B1_ENABLE
+		int "GPIO pin used for D/C"
+endmenu

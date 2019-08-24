@@ -59,9 +59,9 @@ static esp_err_t driver_ili9341_claim_spi(void)
 	driver_vspi_release_and_claim(driver_ili9341_release_spi);
 
 	static const spi_bus_config_t buscfg = {
-		.mosi_io_num     = CONFIG_PIN_NUM_ILI9341_MOSI,
-		.miso_io_num     = CONFIG_PIN_NUM_ILI9341_MISO,
-		.sclk_io_num     = CONFIG_PIN_NUM_ILI9341_CLK,
+		.mosi_io_num     = CONFIG_PIN_NUM_VSPI_MOSI,
+		.miso_io_num     = CONFIG_PIN_NUM_VSPI_MISO,
+		.sclk_io_num     = CONFIG_PIN_NUM_VSPI_CLK,
 		.quadwp_io_num   = -1,
 		.quadhd_io_num   = -1,
 		.max_transfer_sz = ILI9341_MAX_TRANSFERSIZE,

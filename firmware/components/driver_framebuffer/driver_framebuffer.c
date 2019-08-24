@@ -162,18 +162,27 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 	#if defined(FB_TYPE_1BPP)
 		value = greyToBw(rgbToGrey(value));
 		#ifndef FB_1BPP_VERT
+#if defined(FB_1BPP_OHS)
+#warning "USING OHS!!"
+			uint32_t position = ((width-x-1) + y * width) / 8;
+			uint8_t  bit      = x % 8;
+#else
+#warning "USING HORI!"
 			uint32_t position = (y * (width/8)) + (x / 8);
 			uint8_t  bit      = x % 8;
+#endif
 		#else
+#warning "USING VERT!"
 			uint32_t position = ( (y / 8) * width) + x;
 			uint8_t  bit      = y % 8;
 		#endif
-			
+
 		if (value) {
 			buffer[position] |= 1UL << bit;
 		} else {
 			buffer[position] &= ~(1UL << bit);
 		}
+		
 	#elif defined(FB_TYPE_8BPP)
 		value = rgbToGrey(value);
 		uint32_t position = (y * width) + x;

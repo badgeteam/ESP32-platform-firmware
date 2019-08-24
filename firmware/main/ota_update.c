@@ -63,7 +63,7 @@ uint8_t lastShownPercentage = 0;
 void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bool force)
 {
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-			#if defined(CONFIG_DRIVER_EINK_ENABLE) || defined(CONFIG_DRIVER_ILI9341_ENABLE)
+			#if defined(CONFIG_DRIVER_EINK_ENABLE) || defined(CONFIG_DRIVER_ILI9341_ENABLE) || defined(CONFIG_DRIVER_GXGDE0213B1_ENABLE)
 				if (force || percentage == 0 || (percentage>=lastShownPercentage+10)) {
 					if (showPercentage) lastShownPercentage = percentage;
 					driver_framebuffer_fill(NULL, COLOR_WHITE);
