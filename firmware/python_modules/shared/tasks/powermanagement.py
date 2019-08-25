@@ -1,87 +1,85 @@
-import virtualtimers, system, sys, machine
+import virtualtimers, sys, machine, deepsleep
 
 requestedStandbyTime = 0
 onSleepCallback = None
 
-timeout = machine.nvs_get_u16('system', 'sleep')
-if not timeout:
-	timeout = 10000
+timeout = machine.nvs_get_u16('system', 'sleep') or 10000
 
 disabled = False
 enabled = False
 
 def disable():
-	global disabled, enabled
-	disabled = True
-	enabled = False
-	kill()
-	
+    global disabled, enabled
+    disabled = True
+    enabled = False
+    kill()
+
 def enable():
-	global disabled, enabled, timeout
-	if timeout < 1: #Disabled by setting
-		return
-	disabled = False
-	enabled = True
-	feed()
+    global disabled, enabled, timeout
+    if timeout < 1: #Disabled by setting
+        return
+    disabled = False
+    enabled = True
+    feed()
 
 def resume():
-	global disabled, enabled
-	if disabled and enabled:
-		enable()
+    global disabled, enabled
+    if disabled and enabled:
+        enable()
 
 def state():
-	if disabled:
-		return -1
-	return timeout
+    if disabled:
+        return -1
+    return timeout
 
 def usb_attached():
-	try:
-		import badge
-		return badge.usb_volt_sense() > 4500
-	except:
-		return False
+    try:
+        import badge
+        return badge.usb_volt_sense() > 4500
+    except:
+        return False
 
 def pm_task():
-	''' The power management task [internal function] '''
-	global requestedStandbyTime
-	global timeout
-	global disabled
-	
-	if disabled:
-		return timeout
-	
-	idleTime = virtualtimers.idle_time()
-	
-	usbStayAwake = False
-	try:
-		import badge
-		usbStayAwake = badge.usb_attached() and machine.nvs_get_u8('system', 'usb_stay_awake')
-	except:
-		pass
-	
-	if idleTime > 30000 and (not usbStayAwake):
-		global onSleepCallback
-		if not onSleepCallback==None:
-			print("[Power management] Running onSleepCallback...")
-			try:
-				onSleepCallback(idleTime)
-			except BaseException as e:
-				print("[ERROR] An error occured in the on sleep callback.")
-				sys.print_exception(e)
-		system.sleep(idleTime, False)
-	
-	return timeout
+    ''' The power management task [internal function] '''
+    global requestedStandbyTime
+    global timeout
+    global disabled
+
+    if disabled:
+        return timeout
+
+    idleTime = virtualtimers.idle_time()
+
+    usbStayAwake = False
+    try:
+        import badge
+        usbStayAwake = badge.usb_attached() and machine.nvs_get_u8('system', 'usb_stay_awake')
+    except:
+        pass
+
+    if idleTime > 30000 and (not usbStayAwake):
+        global onSleepCallback
+        if not onSleepCallback==None:
+            print("[Power management] Running onSleepCallback...")
+            try:
+                onSleepCallback(idleTime)
+            except BaseException as e:
+                print("[ERROR] An error occured in the on sleep callback.")
+                sys.print_exception(e)
+        system.sleep(idleTime, False)
+
+    return timeout
 
 def feed(start=True):
     ''' Resets the timer '''
     global timeout, enabled
     if start:
-		enabled = True
+        enabled = True
     if enabled:
-		if timeout < 1: #Disabled by setting
-			return
-		if not virtualtimers.update(timeout, pm_task):
-			virtualtimers.new(timeout, pm_task, True)
+        if timeout < 1: #Disabled by setting
+            return
+        if not virtualtimers.update(timeout, pm_task):
+            virtualtimers.new(timeout, pm_task, True)
 
 def kill():
     ''' Kills the power management task '''
@@ -99,3 +97,17 @@ def set_timeout(t):
     ''' Set timeout '''
     global timeout
     timeout = t
+
+## Make badge sleep in undervoltage conditions
+virtualtimers.activate(1000) # low resolution needed
+def _vcc_callback():
+    try:
+        vcc = system.get_vcc_bat()
+        if vcc != None:
+            if vcc < 3300:
+                deepsleep.vcc_low()
+    finally:
+        # Return 10000 to start again in 10 seconds
+        return 10000
+
+virtualtimers.new(10000,_vcc_callback)

@@ -48,4 +48,4 @@ if app and not app == "shell":
 			system.launcher()
 
 if app and app == "shell":
-	print("Welcome to the python shell of your badge!\nCheck out https://wiki.badge.team/ for instructions.")
+	print("\nWelcome to the python shell of your badge!\nCheck out https://wiki.badge.team/ for instructions.")
