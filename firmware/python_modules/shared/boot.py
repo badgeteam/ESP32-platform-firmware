@@ -33,6 +33,13 @@ else:
 			if not app:
 				app = 'dashboard.home'
 
+
+# If present, include the service for undervoltage detection
+try:
+	__import__('tasks/undervoltagemon')
+except:
+	pass
+
 if app and not app == "shell":
 	try:
 		print("Starting app '%s'..." % app)
@@ -48,4 +55,4 @@ if app and not app == "shell":
 			system.launcher()
 
 if app and app == "shell":
-	print("Welcome to the python shell of your badge!\nCheck out https://wiki.badge.team/ for instructions.")
+	print("\nWelcome to the python shell of your badge!\nCheck out https://wiki.badge.team/ for instructions.")

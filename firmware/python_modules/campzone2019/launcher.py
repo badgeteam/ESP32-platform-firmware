@@ -1,4 +1,4 @@
-import sys, uos as os, time, ujson, gc, deepsleep
+import sys, uos as os, time, ujson, gc, term, deepsleep
 import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, woezel
 import rgb, uinterface
 from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, icon_activities, icon_nickname, \
@@ -175,15 +175,15 @@ def input_other(pressed):
 
 
 # Power management
-def cbSleep(idleTime=None):
-	if idleTime == None:
-		idleTime = virtualtimers.idle_time()
-	system.sleep(idleTime, True)
+def cbSleep(_):
+    rgb.clear()
+    term.header(True, "Going to sleep...")
+    uinterface.skippabletext('ZzZz')
 
 def init_power_management():
     virtualtimers.activate(1000)  # Start scheduler with 1 second ticks
     pm.set_timeout(5 * 60 * 1000)  # Set timeout to 5 minutes
-    pm.callback(cbSleep)  # Go to splash instead of sleep
+    pm.callback(cbSleep)  # Show sleep message
     pm.feed()  # Feed the power management task, starts the countdown...
 
 

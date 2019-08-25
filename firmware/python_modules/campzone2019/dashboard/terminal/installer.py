@@ -70,6 +70,8 @@ def install_app(i,fromcat):
 			show_category(fromcat)
 	showMessage("Installing "+slug+"...")
 	try:
+		del category
+		gc.collect()
 		woezel.install(slug)
 		time.sleep(2)
 	except woezel.LatestInstalledError:
