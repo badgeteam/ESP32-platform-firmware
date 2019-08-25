@@ -59,8 +59,6 @@ if len(active_categories) == 0:
     system.start("appstore")
 
 while True:
-    current_category = 0
-
     chosen_index = uinterface.menu([app['name'] for app in active_categories])
     if chosen_index is None:
         system.reboot()
@@ -76,10 +74,14 @@ while True:
     if not uinterface.connect_wifi():
         rgb.clear()
         uinterface.skippabletext('No WiFi')
-    elif woezel.install(app['slug']):
-        rgb.clear()
-        uinterface.skippabletext('Successfully installed')
     else:
-        rgb.clear()
-        uinterface.skippabletext('Error installing')
+        del icon_no_wifi, animation_connecting_wifi
+        del apps, category, active_categories, categories
+        gc.collect()
+        if woezel.install(app['slug']):
+            rgb.clear()
+            uinterface.skippabletext('Successfully installed')
+        else:
+            rgb.clear()
+            uinterface.skippabletext('Error installing')
     system.reboot()
