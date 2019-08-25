@@ -83,6 +83,5 @@ def setfont(font_index):
     current_font = font_index
     hub75.setfont(font_index)
 
-
 # Restore previously set brightness
 setbrightness(getbrightness() or (MAX_BRIGHTNESS - 2))

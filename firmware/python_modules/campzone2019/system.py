@@ -1,5 +1,4 @@
 import machine, time, term
-# Power management
 
 def clear_boot_magic():
 	rtc = machine.RTC()
