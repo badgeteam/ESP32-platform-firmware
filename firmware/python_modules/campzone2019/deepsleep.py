@@ -1,6 +1,5 @@
-import machine, term, time, rgb, uinterface
-
 def start_sleeping(sleepTime=0):
+    import term, rgb, time, machine
     term.header(True, "Going to sleep...")
 
     rgb.clear()
@@ -18,6 +17,7 @@ def start_sleeping(sleepTime=0):
 
 
 def vcc_low(sleepTime=0):
+    import term, rgb, machine
     term.header(True, "Going to sleep...")
     rgb.enablecomp()
     rgb.background((0,0,0))
@@ -29,4 +29,5 @@ def vcc_low(sleepTime=0):
 
 
 def reboot():
+    import machine
     machine.deepsleep(1)
