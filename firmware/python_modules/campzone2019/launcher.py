@@ -53,12 +53,13 @@ def populate_apps():
     apps = []
     try:
         userApps = os.listdir('apps')
+        userApps.reverse()
     except OSError:
         userApps = []
     for app in userApps:
         add_app(app, read_metadata(app))
     add_app("snake", {"name": "Snake", "category": "system", "icon": icon_snake})
-    add_app("activities", {"name": "Activities", "category": "system", "icon": icon_activities})
+    # add_app("activities", {"name": "Activities", "category": "system", "icon": icon_activities})
     add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
     add_app("nickname", {"name": "Nickname", "category": "system", "icon": icon_nickname})
     add_app("appstore", {"name": "App store", "category": "system", "icon": icon_appstore})
@@ -207,6 +208,21 @@ def start():
 
 start()
 init_power_management()
+
+# Install CZ countdown app to replace activities app
+if not machine.nvs_getint('system', 'czcount_inst'):
+    import uinterface
+    if uinterface.connect_wifi():
+        import woezel
+        uinterface.loading_text('Installing CZ20 countdown')
+        if woezel.is_installed('campzone_2020_countdown') or woezel.install('campzone_2020_countdown'):
+            machine.nvs_setint('system', 'czcount_inst', 1)
+            system.reboot()
+        else:
+            rgb.clear()
+            uinterface.skippabletext('Installation failed')
+
+    render_current_app()
 
 menu = term_menu.UartMenu(deepsleep.start_sleeping, pm)
 menu.main()

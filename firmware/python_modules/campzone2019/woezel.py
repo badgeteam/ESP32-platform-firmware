@@ -282,21 +282,31 @@ def search_pkg_list(query):
         f.close()
         del f
 
-def install_pkg(pkg_spec, install_path, force_reinstall):
-    data = get_pkg_metadata(pkg_spec)
+def is_installed(app_name, path=None):
+    if path == None:
+        path = install_path
+    if path[-1] != '/':
+        path += '/'
     already_installed = False
+    print(app_name, path)
     try:
-        os.stat("%s%s/" % (install_path, pkg_spec))
+        os.stat("%s%s/" % (path, app_name))
     except OSError as e:
         if e.args[0] == errno.EINVAL:
-            print("Package %s already installed" % (pkg_spec))
+            print("Package %s already installed" % (app_name))
             already_installed = True
         else:
-            print("Package %s not yet installed" % (pkg_spec))
+            print("Package %s not yet installed" % (app_name))
     else:
         # fallback for unix version
-        print("Package %s already installed" % (pkg_spec))
+        print("Package %s already installed" % (app_name))
         already_installed = True
+
+    return already_installed
+
+def install_pkg(pkg_spec, install_path, force_reinstall):
+    data = get_pkg_metadata(pkg_spec)
+    already_installed = is_installed(pkg_spec, install_path)
     latest_ver = data["info"]["version"]
     verf = "%s%s/version" % (install_path, pkg_spec)
     if already_installed:
