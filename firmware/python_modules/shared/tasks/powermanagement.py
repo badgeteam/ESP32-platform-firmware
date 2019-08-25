@@ -1,4 +1,4 @@
-import virtualtimers, sys, machine, deepsleep
+import virtualtimers, sys, machine, system, deepsleep
 
 requestedStandbyTime = 0
 onSleepCallback = None
@@ -64,7 +64,7 @@ def pm_task():
             try:
                 onSleepCallback(idleTime)
             except BaseException as e:
-                print("[ERROR] An error occured in the on sleep callback.")
+                print("[ERROR] An error occurred in the on sleep callback.")
                 sys.print_exception(e)
         system.sleep(idleTime, False)
 
@@ -87,12 +87,12 @@ def kill():
     global disabled, enabled
     disabled = True
     enabled = False
-    
+
 def callback(cb):
     ''' Set a callback which is run before sleeping '''
     global onSleepCallback
     onSleepCallback = cb
-    
+
 def set_timeout(t):
     ''' Set timeout '''
     global timeout
