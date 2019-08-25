@@ -1,8 +1,4 @@
-import machine, term, time, defines, rgb, buttons
-
-pin = buttons._gpioMap[buttons.BTN_A]
-rtc = machine.RTC()
-rtc.wake_on_ext0(pin=pin, level=0)
+import machine, term, time, rgb, uinterface
 
 def start_sleeping(sleepTime=0):
     term.header(True, "Going to sleep...")
@@ -20,13 +16,13 @@ def start_sleeping(sleepTime=0):
     time.sleep(0.1)
     machine.deepsleep(sleepTime)
 
+
 def vcc_low(sleepTime=0):
     term.header(True, "Going to sleep...")
     rgb.enablecomp()
     rgb.background((0,0,0))
     rgb.clear()
-    rgb.scrolltext('BATT LOW!')
-    time.sleep(4)
+    uinterface.skippabletext('BATT LOW!')
 
     time.sleep(0.1)
     machine.deepsleep(sleepTime)

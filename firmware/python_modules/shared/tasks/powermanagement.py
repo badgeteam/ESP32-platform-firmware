@@ -98,16 +98,8 @@ def set_timeout(t):
     global timeout
     timeout = t
 
-## Make badge sleep in undervoltage conditions
-virtualtimers.activate(1000) # low resolution needed
-def _vcc_callback():
-    try:
-        vcc = system.get_vcc_bat()
-        if vcc != None:
-            if vcc < 3300:
-                deepsleep.vcc_low()
-    finally:
-        # Return 10000 to start again in 10 seconds
-        return 10000
-
-virtualtimers.new(10000,_vcc_callback)
+try:
+    # If present, include the service for undervoltage detection
+    __import__('tasks/undervoltagemon')
+except:
+    pass

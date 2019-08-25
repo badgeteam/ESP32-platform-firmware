@@ -33,6 +33,13 @@ else:
 			if not app:
 				app = 'dashboard.home'
 
+
+# If present, include the service for undervoltage detection
+try:
+	__import__('tasks/undervoltagemon')
+except:
+	pass
+
 if app and not app == "shell":
 	try:
 		print("Starting app '%s'..." % app)
