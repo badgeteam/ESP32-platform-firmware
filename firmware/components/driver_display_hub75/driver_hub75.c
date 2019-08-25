@@ -19,19 +19,15 @@
 
 #include "esp_log.h"
 
-
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 
 #define TAG "hub75"
 
-//My display has each row swapped with its neighbour (so the rows are 2-1-4-3-6-5-8-7-...). If your display
-//is more sane, uncomment this to get a good image.
-#define DISPLAY_ROWS_SWAPPED 1
-
 //This is the bit depth, per RGB subpixel, of the data that is sent to the display.
 //The effective bit depth (in computer pixel terms) is less because of the PWM correction. With
 //a bitplane count of 7, you should be able to reproduce an 16-bit image more or less faithfully, though.
-#define BITPLANE_CNT 7
+//Currently set to 6 to improve scrolling text.
+#define BITPLANE_CNT 6
 
 //64*32 RGB leds, 2 pixels per 16-bit value...
 #define BITPLANE_SZ (8*32)
@@ -55,10 +51,7 @@ Color *hub75_framebuffer = NULL;
 bool driver_hub75_active;
 i2s_parallel_buffer_desc_t bufdesc[2][1<<BITPLANE_CNT];
 uint8_t *bitplane[2][BITPLANE_CNT];
-int apos=0; //which frame in the animation we're on
 int backbuf_id=0; //which buffer is the backbuffer, as in, which one is not active so we can write to it
-//Get a pixel from the image at pix, assuming the image is a 64x32 8R8G8B image
-//Returns it as an uint32 with the lower 24 bits containing the RGB values.
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 #ifndef NULL
@@ -67,21 +60,21 @@ int backbuf_id=0; //which buffer is the backbuffer, as in, which one is not acti
 
 void render16()
 {
-	//Fill bitplanes with the data for the current image
-	for (int pl=0; pl<BITPLANE_CNT; pl++) {
-		int mask=(1<<(8-BITPLANE_CNT+pl));         //bitmask for pixel data in input for this bitplane
-		uint8_t *p=bitplane[backbuf_id][pl];         //bitplane location to write to
 		for (unsigned int y=0; y<8; y++) {
 			int lbits=0;         //Precalculate line bits of the *previous* line, which is the one we're displaying now
 			if ((y-1)&1) lbits|=BIT_A;
 			if ((y-1)&2) lbits|=BIT_B;
 			if ((y-1)&4) lbits|=BIT_C;
+            //Fill bitplanes with the data for the current image
+            for (int plane=0; plane<BITPLANE_CNT; plane++) {
+                int mask=(1<<(8-BITPLANE_CNT+plane));         //bitmask for pixel data in input for this bitplane
+                uint8_t *p=bitplane[backbuf_id][plane] + y * 32;         //bitplane location to write to
 			for (int fx=0; fx<32; fx++) {
 				int x = fx^2;   //Apply correction. this fixes dma byte stream order
 				int v = lbits;
 				//Do not show image while the line bits are changing
 				//Don't display for the first cycle to remove line bleed
-				if (x<2 || x>=brightness) v|= BIT_OE;
+				if (x<1 || x>=brightness) v|= BIT_OE;
 				if (x==31) v|= BIT_LAT;         //latch on last bit...
 				Color c1;
 				int yreal = y;
@@ -91,11 +84,11 @@ void render16()
 				} else {
 					c1.value = 0; //If no framebuffer available display is off.
 				}
-					
+
 				if (valToPwm(c1.RGB[3]) & mask) v|= BIT_R1;
 				if (valToPwm(c1.RGB[2]) & mask) v|= BIT_G1;
-				if (valToPwm(c1.RGB[1]) & mask) v|= BIT_B1;                               
-				
+				if (valToPwm(c1.RGB[1]) & mask) v|= BIT_B1;
+
 				//Save the calculated value to the bitplane memory
 				*p++=v;
 			}
@@ -112,7 +105,7 @@ void displayTask(void *pvParameter)
 {
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(driver_hub75_active) {
-		vTaskDelayUntil( &xLastWakeTime, 100/framerate );
+		vTaskDelayUntil( &xLastWakeTime, 1.0 / framerate * 1000 / portTICK_PERIOD_MS );
 		if(compositor_status()) composite();
 		render16();
 	}
