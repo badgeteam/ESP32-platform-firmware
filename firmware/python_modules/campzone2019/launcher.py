@@ -183,7 +183,7 @@ def cbSleep(_):
 def init_power_management():
     virtualtimers.activate(1000)  # Start scheduler with 1 second ticks
     pm.set_timeout(5 * 60 * 1000)  # Set timeout to 5 minutes
-    pm.callback(cbSleep)  # Go to splash instead of sleep
+    pm.callback(cbSleep)  # Show sleep message
     pm.feed()  # Feed the power management task, starts the countdown...
 
 

@@ -13,4 +13,4 @@ def _vcc_callback():
         return 10000
 
 print('Starting undervoltage monitor')
-virtualtimers.new(10000,_vcc_callback)
+virtualtimers.new(10000, _vcc_callback, hfpm=True)
