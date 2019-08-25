@@ -13,7 +13,7 @@
 #include <driver/gpio.h>
 
 #include <driver_vspi.h>
-#include <driver_mpr121.h>
+#include "driver_mpr121.h"
 
 #ifdef CONFIG_DRIVER_NEOPIXEL_ENABLE
 
@@ -81,12 +81,11 @@ static bool driver_neopixel_active = false;
 esp_err_t driver_neopixel_enable(void)
 {
 	// return if we are already enabled and initialized
-	if (driver_neopixel_active)
-		return ESP_OK;
+	if (driver_neopixel_active) return ESP_OK;
 
-	/*esp_err_t res = badge_power_leds_enable();
-	if (res != ESP_OK)
-		return res;*/
+	#ifdef CONFIG_DRIVER_NEOPIXEL_MPR121_PIN
+		driver_mpr121_set_gpio_level(CONFIG_DRIVER_NEOPIXEL_MPR121_PIN, true); //Enable power
+	#endif
 
 	esp_err_t res = driver_neopixel_claim_spi();
 	if (res != ESP_OK)
@@ -161,22 +160,6 @@ esp_err_t driver_neopixel_send_data(uint8_t *data, int len)
 	for (i=0; i<len; i++)
 	{
 		int v = data[i];
-
-#ifdef CONFIG_NEOPIXEL_TYPE_RGB
-		// the WS2812 doesn't have a white led; evenly distribute over other leds.
-		if (i < 6*4) // only do conversion for the internal leds
-		{
-			if ((i|3) >= len)
-				break; // not enough data; skip led
-			if ((i & 3) == 3)
-				continue; // skip the white pixel
-			int w = data[i|3];
-			v += (w >> 1);
-			if (v > 255)
-				v = 255;
-		}
-#endif // CONFIG_NEOPIXEL_TYPE_RGB
-
 		driver_neopixel_buf[pos++] = conv[(v>>6)&3];
 		driver_neopixel_buf[pos++] = conv[(v>>4)&3];
 		driver_neopixel_buf[pos++] = conv[(v>>2)&3];

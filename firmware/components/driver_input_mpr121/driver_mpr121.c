@@ -168,23 +168,24 @@ esp_err_t driver_mpr121_configure(const uint32_t *baseline, bool strict)
 	}
 
 	// set thresholds
-	for (int i=0; i<8; i++) {
-		if (baseline != NULL) {
-			res = driver_mpr121_write_reg(MPR121_BASELINE_0 + i, baseline[i] >> 2); // baseline
-			if (res != ESP_OK)
-				return res;
-		}
+	for (int i=0; i<12; i++) {
+		if (driver_mpr121_is_touch_input(i)) {
+			if (baseline != NULL) {
+				res = driver_mpr121_write_reg(MPR121_BASELINE_0 + i, baseline[i] >> 2); // baseline
+				if (res != ESP_OK) return res;
+			}
 
-		if (strict) {
-			res = driver_mpr121_write_reg(MPR121_TOUCHTH_0   + 2*i, 24); // touch
-			if (res != ESP_OK) return res;
-			res = driver_mpr121_write_reg(MPR121_RELEASETH_0 + 2*i, 12); // release
-			if (res != ESP_OK) return res;
-		} else {
-			res = driver_mpr121_write_reg(MPR121_TOUCHTH_0   + 2*i, 48); // touch
-			if (res != ESP_OK) return res;
-			res = driver_mpr121_write_reg(MPR121_RELEASETH_0 + 2*i, 24); // release
-			if (res != ESP_OK) return res;
+			if (strict) {
+				res = driver_mpr121_write_reg(MPR121_TOUCHTH_0   + 2*i, 24); // touch
+				if (res != ESP_OK) return res;
+				res = driver_mpr121_write_reg(MPR121_RELEASETH_0 + 2*i, 12); // release
+				if (res != ESP_OK) return res;
+			} else {
+				res = driver_mpr121_write_reg(MPR121_TOUCHTH_0   + 2*i, 48); // touch
+				if (res != ESP_OK) return res;
+				res = driver_mpr121_write_reg(MPR121_RELEASETH_0 + 2*i, 24); // release
+				if (res != ESP_OK) return res;
+			}
 		}
 	}
 
@@ -203,7 +204,7 @@ esp_err_t driver_mpr121_configure(const uint32_t *baseline, bool strict)
 
 static esp_err_t nvs_baseline_helper(uint8_t idx, uint32_t *value)
 {
-	if (idx > 7) {
+	if (idx > 11) {
 		ESP_LOGE(TAG, "NVS baseline index out of range: %d", idx);
 		return -1;
 	}
@@ -397,22 +398,26 @@ esp_err_t driver_mpr121_init(void)
 	xSemaphoreGive(driver_mpr121_intr_trigger);
 	
 	/* Hardcoded baseline values */
-	uint32_t mpr121_baseline[8] = {
-		0x0138,
-		0x0144,
-		0x0170,
-		0x0174,
-		0x00f0,
-		0x0103,
-		0x00ff,
-		0x00ed,
+	uint32_t mpr121_baseline[12] = { //Default values, will be overwritten by the calibration in NVS
+		CONFIG_MPR121_BASELINE_0,
+		CONFIG_MPR121_BASELINE_1,
+		CONFIG_MPR121_BASELINE_2,
+		CONFIG_MPR121_BASELINE_3,
+		CONFIG_MPR121_BASELINE_4,
+		CONFIG_MPR121_BASELINE_5,
+		CONFIG_MPR121_BASELINE_6,
+		CONFIG_MPR121_BASELINE_7,
+		CONFIG_MPR121_BASELINE_8,
+		CONFIG_MPR121_BASELINE_9,
+		CONFIG_MPR121_BASELINE_10,
+		CONFIG_MPR121_BASELINE_11
 	};
+	
 	int i;
 	bool mpr121_strict = true;
-	for (i=0; i<8; i++) {
+	for (i=0; i<12; i++) {
 		esp_err_t err = nvs_baseline_helper(i, &mpr121_baseline[i]);
-		if (err != ESP_OK)
-			mpr121_strict = false;
+		if (err != ESP_OK) mpr121_strict = false;
 	}
 	esp_err_t err = driver_mpr121_configure(mpr121_baseline, mpr121_strict);
 	if (err != ESP_OK) {
@@ -466,19 +471,19 @@ esp_err_t driver_mpr121_get_touch_info(struct driver_mpr121_touch_info *info)
 	if (value == -1) return ESP_FAIL; // need more-specific error?
 	info->touch_state = value;
 
-	uint16_t data[8];
-	esp_err_t res = driver_mpr121_read_regs(0x04, (uint8_t *) &data, 16);
+	uint16_t data[24];
+	esp_err_t res = driver_mpr121_read_regs(0x04, (uint8_t *) &data, 24);
 	if (res != ESP_OK) return res;
 
-	uint8_t baseline[8];
-	res = driver_mpr121_read_regs(0x1e, baseline, 8);
+	uint8_t baseline[12];
+	res = driver_mpr121_read_regs(0x1e, baseline, 16);
 	if (res != ESP_OK) return res;
 
-	uint8_t touch_release[16];
+	uint8_t touch_release[24];
 	res = driver_mpr121_read_regs(0x41, touch_release, 16);
 	if (res != ESP_OK) return res;
 
-	for (int i=0; i<8; i++) {
+	for (int i=0; i<12; i++) {
 		info->data[i] = data[i];
 		info->baseline[i] = baseline[i];
 		info->touch[i] = touch_release[i*2+0];

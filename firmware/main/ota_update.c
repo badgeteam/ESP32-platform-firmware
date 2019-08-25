@@ -35,7 +35,6 @@
 #include "letsencrypt.h"
 
 #include "include/ota_update.h"
-
 #include "driver_framebuffer.h"
 #include "driver_framebuffer_devices.h"
 
@@ -43,8 +42,8 @@
 
 #define TAG "ota-update"
 
-static uint8_t buffer[1024];
-static int buffer_len = 0;
+#define XSTR(x) #x
+#define STR(s) XSTR(s)
 
 static const char *REQUEST = "GET " CONFIG_OTA_WEB_PATH " HTTP/1.0\r\n"
                              "Host: " CONFIG_OTA_WEB_SERVER "\r\n"
@@ -64,99 +63,44 @@ uint8_t lastShownPercentage = 0;
 void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bool force)
 {
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-			#ifdef CONFIG_DRIVER_EINK_ENABLE
+			#if defined(CONFIG_DRIVER_EINK_ENABLE) || defined(CONFIG_DRIVER_ILI9341_ENABLE) || defined(CONFIG_DRIVER_GXGDE0213B1_ENABLE)
 				if (force || percentage == 0 || (percentage>=lastShownPercentage+10)) {
 					if (showPercentage) lastShownPercentage = percentage;
-					driver_framebuffer_fill(COLOR_WHITE);
-					driver_framebuffer_setTextColor(COLOR_BLACK);
-					driver_framebuffer_setFont(&freesansbold12pt7b);
-					driver_framebuffer_setCursor(0,0);
-					driver_framebuffer_setTextScale(1,1);
-					driver_framebuffer_print("Firmware update\n");
-					driver_framebuffer_setFont(&freesansmono9pt7b);
-					driver_framebuffer_print(text);
-					driver_framebuffer_write('\n');
+					driver_framebuffer_fill(NULL, COLOR_WHITE);
+					uint16_t y = driver_framebuffer_print(NULL, "Firmware update\n", 0, 4, 1, 1, COLOR_BLACK, &roboto12pt7b);
+					driver_framebuffer_print(NULL, text, 0, y, 1, 1, COLOR_BLACK, &roboto12pt7b);
 					if (showPercentage) {
-						driver_framebuffer_setCursor(driver_framebuffer_getWidth()-100,driver_framebuffer_getHeight()-50);
-						driver_framebuffer_setFont(&freesansmono9pt7b);
-						driver_framebuffer_setTextScale(2,2);
 						char buffer[16];
 						snprintf(buffer, 16, "%*u%%", 3, percentage);
-						driver_framebuffer_print(buffer);
+						driver_framebuffer_print(NULL, buffer, driver_framebuffer_getWidth(NULL)-100, driver_framebuffer_getHeight(NULL)-50, 2, 2, COLOR_BLACK, &roboto12pt7b);
 					}
-					driver_framebuffer_setFont(&fairlight8pt7b);
-					driver_framebuffer_setCursor(0,driver_framebuffer_getHeight()-15);
-					driver_framebuffer_setTextScale(1,1);
-					driver_framebuffer_print("BADGE.TEAM\n");
-					if (force) {
-						//driver_framebuffer_setFlags(DISPLAY_FLAG_8BITPIXEL);
-					} else {
-						//driver_framebuffer_setFlags(DISPLAY_FLAG_8BITPIXEL + DISPLAY_FLAG_LUT(DRIVER_EINK_LUT_FASTEST));
-					}
-					driver_framebuffer_flush();
+					driver_framebuffer_print(NULL, "BADGE.TEAM", 0, driver_framebuffer_getHeight(NULL)-15, 1, 1, COLOR_BLACK, &fairlight8pt7b);
+					driver_framebuffer_flush(force ? FB_FLAG_FORCE+FB_FLAG_FULL+FB_FLAG_LUT_NORMAL : FB_FLAG_LUT_FAST);
 				}
-			#endif
-			#ifdef CONFIG_DRIVER_ILI9341_ENABLE
-				if (showPercentage) lastShownPercentage = percentage;
-				driver_framebuffer_fill(COLOR_WHITE);
-				driver_framebuffer_setTextColor(COLOR_BLACK);
-				driver_framebuffer_setFont(&freesansbold12pt7b);
-				driver_framebuffer_setCursor(0,0);
-				driver_framebuffer_setTextScale(1,1);
-				driver_framebuffer_print("Firmware update\n");
-				driver_framebuffer_setFont(&freesansmono9pt7b);
-				driver_framebuffer_print(text);
-				driver_framebuffer_write('\n');
-				if (showPercentage) {
-					driver_framebuffer_setCursor(driver_framebuffer_getWidth()-100,driver_framebuffer_getHeight()-50);
-					driver_framebuffer_setFont(&freesansmono9pt7b);
-					driver_framebuffer_setTextScale(2,2);
-					char buffer[16];
-					snprintf(buffer, 16, "%*u%%", 3, percentage);
-					driver_framebuffer_print(buffer);
-				}
-				driver_framebuffer_setFont(&fairlight8pt7b);
-				driver_framebuffer_setCursor(0,driver_framebuffer_getHeight()-15);
-				driver_framebuffer_setTextScale(1,1);
-				driver_framebuffer_print("BADGE.TEAM\n");
-				driver_framebuffer_flush();
 			#endif
 			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12864_ENABLE)
-				driver_framebuffer_fill(COLOR_BLACK);
-				driver_framebuffer_setTextColor(COLOR_WHITE);
-				driver_framebuffer_setCursor(0,0);
-				driver_framebuffer_setTextScale(1,1);
-				driver_framebuffer_setFont(&freesansbold9pt7b);
-				driver_framebuffer_print("FW UPDATE\n");
-				driver_framebuffer_setFont(&org_018pt7b);
-				driver_framebuffer_print(text);
-				driver_framebuffer_write('\n');
+				driver_framebuffer_fill(NULL, COLOR_BLACK);
+				driver_framebuffer_print(NULL, "UPDATE\n", 0, 0, 1, 1, COLOR_WHITE, &roboto12pt7b);
 				char buffer[16];
 				snprintf(buffer, 16, "%*u%%", 3, percentage);
-				if (showPercentage) driver_framebuffer_print(buffer);
-				driver_framebuffer_flush();
+				driver_framebuffer_print(NULL, buffer, 0, FB_HEIGHT-8, 1, 1, COLOR_BLACK, &org_018pt7b);
+				driver_framebuffer_flush(0);
 			#endif
 			#ifdef CONFIG_DRIVER_HUB75_ENABLE
 				compositor_disable(); //Don't use the compositor if we have the framebuffer driver
-				driver_framebuffer_fill(COLOR_BLACK);
-				driver_framebuffer_setCursor(0,0);
+				driver_framebuffer_fill(NULL, COLOR_BLACK);
 				uint16_t progressPosition = (percentage*FB_WIDTH)/100;
 				for (uint8_t i = 0; i < FB_WIDTH; i++) {
-					if (i < progressPosition) {
-						driver_framebuffer_line(i,0,i,FB_HEIGHT-1,0x008800);
-					} else {
-						driver_framebuffer_line(i,0,i,FB_HEIGHT-1,0x880000);
-					}
+					driver_framebuffer_line(NULL, i, FB_HEIGHT-1, i, FB_HEIGHT-1, (i < progressPosition) ? 0x008800 : 0x880000);
 				}
-				driver_framebuffer_setFont(&freesans6pt7b);
-				char buff[4];
 				if (!showPercentage) {
-					driver_framebuffer_print(text);
+					driver_framebuffer_print(NULL, text, 0, 0, 1, 1, COLOR_WHITE, &ipane7x5);
 				} else {
+					char buff[4];
 					sprintf(buff, "%d%%", percentage);
-					driver_framebuffer_print(buff);
+					driver_framebuffer_print(NULL, buff, 0, 0, 1, 1, COLOR_WHITE, &ipane7x5);
 				}
-				driver_framebuffer_flush();
+				driver_framebuffer_flush(0);
 			#endif
 		#else
 			#ifdef CONFIG_DRIVER_HUB75_ENABLE
@@ -338,6 +282,8 @@ static void
 badge_ota_task(void *pvParameter)
 {
 	esp_err_t err;
+	uint8_t buffer[1024];
+	int buffer_len = 0;
 
 	ESP_LOGW(TAG, "Starting OTA update ...");
 
@@ -436,10 +382,12 @@ badge_ota_task(void *pvParameter)
 
 	graphics_show("Get...", 0, false, true);
 
-	ESP_LOGW(TAG, "Connecting to %s:%s...", CONFIG_OTA_WEB_SERVER,
+	ESP_LOGW(TAG, "Connecting to %s:%u...", CONFIG_OTA_WEB_SERVER,
 			CONFIG_OTA_WEB_PORT);
 
-	ret = mbedtls_net_connect(&server_fd, CONFIG_OTA_WEB_SERVER, CONFIG_OTA_WEB_PORT, MBEDTLS_NET_PROTO_TCP);
+	printf("CONNECTING %s, %s\n", CONFIG_OTA_WEB_SERVER, STR(CONFIG_OTA_WEB_PORT));
+	
+	ret = mbedtls_net_connect(&server_fd, CONFIG_OTA_WEB_SERVER, STR(CONFIG_OTA_WEB_PORT), MBEDTLS_NET_PROTO_TCP);
 	if (ret != 0) {
 		ESP_LOGE(TAG, "mbedtls_net_connect returned -%x", -ret);
 		task_fatal_error();

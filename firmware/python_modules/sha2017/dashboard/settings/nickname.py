@@ -1,4 +1,4 @@
-import system, badge, dialogs
+import system, badge, keyboard
 
 def callback(value):
     if value:
@@ -6,4 +6,4 @@ def callback(value):
     system.home()
 
 nickname = badge.nvs_get_str("owner", "name", "")
-dialogs.prompt_text("Nickname", nickname, cb=callback)
+keyboard.show("Nickname", nickname, callback)

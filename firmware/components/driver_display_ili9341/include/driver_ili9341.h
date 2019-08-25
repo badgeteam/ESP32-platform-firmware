@@ -5,8 +5,16 @@
 #include <stdint.h>
 #include <esp_err.h>
 
-#define ILI9341_WIDTH  320
-#define ILI9341_HEIGHT 240
+#if defined(CONFIG_DRIVER_ILI9341_TYPE_ILI9341)
+	#define ILI9341_WIDTH  320
+	#define ILI9341_HEIGHT 240
+#elif defined(CONFIG_DRIVER_ILI9341_TYPE_ST7789)
+	#define ILI9341_WIDTH  240
+	#define ILI9341_HEIGHT 240
+#elif defined(CONFIG_DRIVER_ILI9341_TYPE_ST7735)
+	#define ILI9341_WIDTH  160
+	#define ILI9341_HEIGHT 80
+#endif
 
 #define ILI9341_BUFFER_SIZE ILI9341_WIDTH * ILI9341_HEIGHT * 2
 
@@ -68,7 +76,7 @@
 #define ILI9341_RDID2       0xDB // Read ID2
 #define ILI9341_RDID3       0xDC // Read ID3
 #define ILI9341_PVGAMCTRL   0xE0 // Positive Voltage Gamma control
-#define ILI9341_NVGAMCTRL 0xE1 // Negative Voltage Gamma control
+#define ILI9341_NVGAMCTRL   0xE1 // Negative Voltage Gamma control
 
 __BEGIN_DECLS
 

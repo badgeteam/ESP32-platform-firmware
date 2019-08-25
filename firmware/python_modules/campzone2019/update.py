@@ -59,4 +59,4 @@ def _initialize_display():
     rgb.framerate(_MAIN_FRAMERATE)
 
 main()
-system.reboot()
+system.home()

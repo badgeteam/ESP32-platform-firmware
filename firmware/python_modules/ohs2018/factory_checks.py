@@ -1,0 +1,1 @@
+print("STUB: FACTORY CHECK")

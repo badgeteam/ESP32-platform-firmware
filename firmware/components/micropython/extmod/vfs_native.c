@@ -63,6 +63,8 @@
 #include "lib/timeutils/timeutils.h"
 #include "sdkconfig.h"
 
+#include "driver_sdcard.h"
+
 #if CONFIG_MICROPY_FILESYSTEM_TYPE == 2
 #include "libs/littleflash.h"
 #endif
@@ -111,33 +113,10 @@ STATIC const byte fresult_to_errno_table[20] = {
 
 STATIC const char *TAG = "vfs_native";
 
-sdcard_config_t sdcard_config = {
-#if CONFIG_SDCARD_MODE == 1
-        SDMMC_FREQ_DEFAULT,
-#else
-        SDMMC_FREQ_HIGHSPEED,
-#endif
-		CONFIG_SDCARD_MODE,
-#if CONFIG_SDCARD_MODE == 1
-		CONFIG_SDCARD_CLK,
-		CONFIG_SDCARD_MOSI,
-		CONFIG_SDCARD_MISO,
-		CONFIG_SDCARD_CS,
-#else
-		-1,
-		-1,
-		-1,
-		-1,
-#endif
-#if CONFIG_SDCARD_SPI_BUS == 1
-		HSPI_HOST
-#else
-		VSPI_HOST
-#endif
-};
-
 bool native_vfs_mounted[2] = {false, false};
+#ifdef CONFIG_DRIVER_SDCARD_ENABLE
 STATIC sdmmc_card_t *sdmmc_card;
+#endif
 
 
 // esp-idf doesn't seem to have a cwd; create one.
@@ -728,151 +707,16 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(native_vfs_statvfs_obj, native_vfs_statvfs);
     }
 }*/
 
-//---------------------------------------------------------------
-STATIC void sdcard_print_info(const sdmmc_card_t* card, int mode)
-{
-    #if MICROPY_SDMMC_SHOW_INFO
-	printf("---------------------\n");
-	if (mode == 1) {
-        printf(" Mode: SPI\n");
-    }
-	else if (mode == 2) {
-        printf(" Mode:  SD (1bit)\n");
-    }
-	else if (mode == 3) {
-        printf(" Mode:  SD (4bit)\n");
-    }
-	else if (mode == 3) {
-        printf(" Mode:  Unknown\n");
-    }
-    printf("     Name: %s\n", card->cid.name);
-    printf("     Type: %s\n", (card->ocr & SD_OCR_SDHC_CAP)?"SDHC/SDXC":"SDSC");
-    printf("    Speed: %s (%d MHz)\n", (card->csd.tr_speed > 25000000)?"high speed":"default speed", card->csd.tr_speed/1000000);
-    if (mode == 1) printf("SPI speed: %d MHz\n", card->host.max_freq_khz / 1000);
-    printf("     Size: %u MB\n", (uint32_t)(((uint64_t) card->csd.capacity) * card->csd.sector_size / (1024 * 1024)));
-    printf("      CSD: ver=%d, sector_size=%d, capacity=%d read_bl_len=%d\n",
-            card->csd.csd_ver,
-            card->csd.sector_size, card->csd.capacity, card->csd.read_block_len);
-    printf("      SCR: sd_spec=%d, bus_width=%d\n\n", card->scr.sd_spec, card->scr.bus_width);
-    #endif
-}
 
-//--------------------------------------------------------------------------------------------
-static void _setPins(int8_t miso, int8_t mosi, int8_t clk, int8_t cs, int8_t dat1, int8_t dat2)
-{
-    if (miso >= 0) { // miso/dat0/dO
-		gpio_pad_select_gpio(miso);
-		gpio_set_direction(miso, GPIO_MODE_INPUT_OUTPUT_OD);
-		gpio_set_pull_mode(miso, GPIO_PULLUP_ONLY);
-        gpio_set_level(miso, 1);
-    }
-    if (mosi >= 0) { // mosi/cmd/dI
-		gpio_pad_select_gpio(mosi);
-		gpio_set_direction(mosi, GPIO_MODE_INPUT_OUTPUT_OD);
-		gpio_set_pull_mode(mosi, GPIO_PULLUP_ONLY);
-        gpio_set_level(mosi, 1);
-    }
-    if (clk >= 0) { // clk/sck
-		gpio_pad_select_gpio(clk);
-		gpio_set_direction(clk, GPIO_MODE_INPUT_OUTPUT_OD);
-        gpio_set_pull_mode(clk, GPIO_PULLUP_ONLY);
-		gpio_set_level(clk, 1);
-    }
-    if (cs >= 0) { // cs/dat3
-        gpio_pad_select_gpio(cs);
-        gpio_set_direction(cs, GPIO_MODE_INPUT_OUTPUT);
-        gpio_set_pull_mode(cs, GPIO_PULLUP_ONLY);
-        gpio_set_level(cs, 1);
-    }
-    if (dat1 >= 0) { // dat1
-        gpio_pad_select_gpio(dat1);
-        gpio_set_direction(dat1, GPIO_MODE_INPUT_OUTPUT_OD);
-        gpio_set_pull_mode(dat1, GPIO_PULLUP_ONLY);
-        gpio_set_level(dat1, 1);
-    }
-    if (dat2 >= 0) { // dat2
-        gpio_pad_select_gpio(dat2);
-        gpio_set_direction(dat2, GPIO_MODE_INPUT_OUTPUT_OD);
-        gpio_set_pull_mode(dat2, GPIO_PULLUP_ONLY);
-        gpio_set_level(dat2, 1);
-    }
-}
-
-//-------------------------
 static void _sdcard_mount()
 {
-    esp_err_t ret;
-
-	esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = false,
-        .max_files = CONFIG_MICROPY_FATFS_MAX_OPEN_FILES,
-        .allocation_unit_size = 0
-    };
-
-	// Configure sdmmc interface
-	if (sdcard_config.mode == 1) {
-    	// Use SPI mode
-		sdmmc_host_t host = SDSPI_HOST_DEFAULT();
-		sdspi_slot_config_t slot_config = SDSPI_SLOT_CONFIG_DEFAULT();
-		host.slot = sdcard_config.host;
-		host.max_freq_khz = sdcard_config.max_speed;
-#ifdef CONFIG_SDCARD_DMA_CHANNEL
-		slot_config.dma_channel = CONFIG_SDCARD_DMA_CHANNEL;
-#else
-		slot_config.dma_channel = 2;
-#endif
-		_setPins(sdcard_config.miso, sdcard_config.mosi, sdcard_config.clk, sdcard_config.cs, -1, -1);
-
-	    slot_config.gpio_miso = sdcard_config.miso;
-	    slot_config.gpio_mosi = sdcard_config.mosi;
-	    slot_config.gpio_sck  = sdcard_config.clk;
-	    slot_config.gpio_cs   = sdcard_config.cs;
-	    ret = esp_vfs_fat_sdmmc_mount(VFS_NATIVE_SDCARD_MOUNT_POINT, &host, &slot_config, &mount_config, &sdmmc_card);
-	}
-	else {
-		sdmmc_host_t host = SDMMC_HOST_DEFAULT();
-		sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-        host.max_freq_khz = sdcard_config.max_speed; //(sdcard_config.max_speed > SDMMC_FREQ_DEFAULT) ? SDMMC_FREQ_HIGHSPEED : SDMMC_FREQ_DEFAULT;
-		if (sdcard_config.mode == 2) {
-	        // Use 1-line SD mode
-		    // miso,mosi,clk,cs,dat1,dat2
-		    _setPins(2, 15, 14, 13, -1, -1);
-	        host.flags = SDMMC_HOST_FLAG_1BIT;
-	        slot_config.width = 1;
-		}
-		else {
-	        // Use 4-line SD mode
-            // miso,mosi,clk,cs,dat1,dat2
-		    _setPins(2, 15, 14, 13, 4, 12);
-            host.flags = SDMMC_HOST_FLAG_4BIT;
-            slot_config.width = 4;
-		}
-	    ret = esp_vfs_fat_sdmmc_mount(VFS_NATIVE_SDCARD_MOUNT_POINT, &host, &slot_config, &mount_config, &sdmmc_card);
-	}
-
-    if (ret != ESP_OK) {
-        if (ret == ESP_FAIL) {
-            ESP_LOGE(TAG, "Failed to mount filesystem on SDcard.");
-        }
-        else if (ret == ESP_ERR_NO_MEM) {
-            ESP_LOGE(TAG, "Failed to initialize SDcard: not enough memory).");
-        }
-        else if (ret == ESP_ERR_INVALID_RESPONSE) {
-            ESP_LOGE(TAG, "Failed to initialize SDcard: invalid response).");
-        }
-        else if (ret == ESP_ERR_INVALID_STATE) {
-            ESP_LOGE(TAG, "Failed to initialize SDcard: invalid state).");
-        }
-        else {
-            ESP_LOGE(TAG, "Failed to initialize SDcard (%d).", ret);
-        }
-    	if (sdcard_config.mode == 1) sdspi_host_deinit();
-
-    	mp_raise_OSError(MP_EIO);
-    }
-	ESP_LOGV(TAG, "SDCard FATFS mounted.");
-    sdcard_print_info(sdmmc_card, sdcard_config.mode);
+#ifdef CONFIG_DRIVER_SDCARD_ENABLE
+	esp_err_t res = driver_sdcard_mount(VFS_NATIVE_SDCARD_MOUNT_POINT, false);
+	if (res != ESP_OK) return;
 	native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD] = true;
+#else
+	printf("This badge does not have SD card support.\n");
+#endif
 }
 
 //------------------------------------------------------------------------------------
@@ -893,7 +737,6 @@ STATIC mp_obj_t native_vfs_mount(mp_obj_t self_in, mp_obj_t readonly, mp_obj_t m
 
 	if (self->device == VFS_NATIVE_TYPE_SPIFLASH) {
 		// spiflash device
-		esp_err_t ret;
 		#if CONFIG_MICROPY_FILESYSTEM_TYPE == 0
 	    fs_partition = (esp_partition_t *)esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, VFS_NATIVE_INTERNAL_PART_LABEL);
 	    if (fs_partition == NULL) {
@@ -906,7 +749,7 @@ STATIC mp_obj_t native_vfs_mount(mp_obj_t self_in, mp_obj_t readonly, mp_obj_t m
 	      .max_files = CONFIG_MICROPY_FATFS_MAX_OPEN_FILES,
 	      .format_if_mount_failed = true
 	    };
-	    ret = esp_vfs_spiffs_register(&conf);
+		esp_err_t ret = esp_vfs_spiffs_register(&conf);
 	   	//if (spiffs_is_mounted == 0) {
 	    if ((ret != ESP_OK) || (!esp_spiffs_mounted(VFS_NATIVE_INTERNAL_PART_LABEL))) {
 			ESP_LOGE(TAG, "Failed to mount Flash partition as SPIFFS.");
@@ -927,7 +770,7 @@ STATIC mp_obj_t native_vfs_mount(mp_obj_t self_in, mp_obj_t readonly, mp_obj_t m
 	        .auto_format = true,
 	        .lookahead = 32
 	    };
-	    ret = littleFlash_init(&little_cfg);
+	    esp_err_t ret = littleFlash_init(&little_cfg);
 	    if (ret != ESP_OK) {
 			ESP_LOGE(TAG, "Failed to mount Flash partition as LittleFS.");
 			return mp_const_false;
@@ -1013,13 +856,15 @@ STATIC mp_obj_t native_vfs_umount(mp_obj_t self_in) {
 	fs_user_mount_t *self = MP_OBJ_TO_PTR(self_in);
 
 	if ((self->device == VFS_NATIVE_TYPE_SDCARD) && (native_vfs_mounted[self->device])) {
-		esp_err_t ret = esp_vfs_fat_sdmmc_unmount();
-		if (sdcard_config.mode == 1) sdspi_host_deinit();
-	    if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to unmount filesystem on SDcard (%d).", ret);
-			mp_raise_OSError(MP_EIO);
-	    }
-        ESP_LOGV(TAG, "Filesystem on SDcard unmounted.");
+		#ifdef CONFIG_DRIVER_SDCARD_ENABLE
+			esp_err_t res = driver_sdcard_unmount();
+			if (res != ESP_OK) {
+				ESP_LOGE(TAG, "Error while unmounting the SD card!");
+				mp_raise_OSError(MP_EIO);
+			}
+		#else
+			printf("This badge does not have SD card support.\n");
+		#endif
 		native_vfs_mounted[self->device] = false;
 	}
 	else if (self->device == VFS_NATIVE_TYPE_SPIFLASH) {
@@ -1053,20 +898,14 @@ int internalUmount()
 //-------------------
 void externalUmount()
 {
-    if (native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD]) {
-    	esp_vfs_fat_sdmmc_unmount();
-    	if (sdcard_config.mode == 1) sdspi_host_deinit();
+	if (native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD]) {
+		#ifdef CONFIG_DRIVER_SDCARD_ENABLE
+			if (driver_sdcard_unmount() != ESP_OK) return;
+		#else
+			printf("This badge does not have SD card support.\n");
+		#endif
 		native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD] = false;
-    }
-}
-
-//-------------------------------------
-bool file_noton_spi_sdcard(char *fname)
-{
-	if (sdcard_config.mode == 1) {
-		if (strstr(fname, VFS_NATIVE_SDCARD_MOUNT_POINT)) return false;
 	}
-    return true;
 }
 
 //-------------------------------------

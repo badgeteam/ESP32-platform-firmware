@@ -1,4 +1,4 @@
-import sys, consts
+import sys, consts, machine, time
 
 def goto(x,y):
 	sys.stdout.write("\033["+str(y)+";"+str(x)+"H")
@@ -20,6 +20,8 @@ def header(cls = False, text = ""):
 		home()
 	if text:
 		text = consts.INFO_HARDWARE_NAME+" - "+text
+	else:
+		text = consts.INFO_HARDWARE_NAME
 	color(37, 44, 1)
 	# print(badge.deviceType.replace("_"," ")+" "+text+u"\r\n")
 	print(" "+text+u"\r\n")
@@ -73,32 +75,43 @@ def menu(title, items, selected = 0, text="", width=32):
 		else:
 			draw_menu_partial(title, items, selected, text, width, lastSelected)
 		lastSelected = selected
-		key = sys.stdin.read(1)
+		key = None
+		while not key:
+			key = machine.stdin_get(1,1)#sys.stdin.read(1)
 		feedPm()
-		if (ord(key)==0x1b):
-			key = sys.stdin.read(1)
-			if (key=="["):
+		try:
+			if key == "\x03" or key == "\x04": # CTRL+C or CTRL+D
+				import shell
+			if (ord(key)==0x1b):
 				key = sys.stdin.read(1)
-				if (key=="A"):
-					if (selected>0):
-						selected -= 1
-						needFullDraw = False
-				if (key=="B"):
-					if (selected<len(items)-1):
-						selected += 1
-						needFullDraw = False
-		elif (ord(key)==0x01):
-			import tasks.powermanagement as pm#, badge
-			pm.disable()
-			draw_menu(title, items, selected, text)
-			pm.resume()
-			
-		elif (ord(key)==0xa):
-			return selected
-		
-		else:
+				if (key=="["):
+					key = sys.stdin.read(1)
+					if (key=="A"):
+						if (selected>0):
+							selected -= 1
+							needFullDraw = False
+					if (key=="B"):
+						if (selected<len(items)-1):
+							selected += 1
+							needFullDraw = False
+			elif (ord(key)==0x01):
+				import tasks.powermanagement as pm#, badge
+				pm.disable()
+				draw_menu(title, items, selected, text)
+				pm.resume()
+				
+			elif (key == "\n" or key == "\r"):
+				junk = machine.stdin_get(10000, 10) #Read all remaining characters and throw them away
+				return selected
+			else:
+				clear()
+				needFullDraw = True #Refresh on any other key
+		except BaseException as e: # Input parser crashed for some reason
 			clear()
-			needFullDraw = True #Refresh on any other key
+			needFullDraw = True
+			sys.print_exception(e)
+			time.sleep(2)
+			junk = machine.stdin_get(10000, 10) #Read all remaining characters and throw them away
 
 def prompt(prompt, x, y, buff = ""):
 	running = True
@@ -133,4 +146,4 @@ def setPowerManagement(pm):
 def feedPm():
 	if powerManagement != None:
 		powerManagement.set_timeout(300000) #Set timeout to 5 minutes
-		powerManagement.feed()
+		powerManagement.feed(False)

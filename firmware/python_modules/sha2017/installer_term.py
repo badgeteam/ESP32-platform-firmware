@@ -55,7 +55,7 @@ def list_apps(slug):
 	print("Downloading list of eggs...")
 	packages=None
 	try:
-		f = urequests.get(version.hatcheryurl+"/basket/hackerhotel2019/category/%s/json" % slug, timeout=30)
+		f = urequests.get(version.hatcheryurl+"/basket/sha2017/category/%s/json" % slug, timeout=30)
 		try:
 			packages = f.json()
 		finally:

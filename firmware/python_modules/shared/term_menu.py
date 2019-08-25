@@ -11,7 +11,8 @@ class UartMenu():
 		self.power_off_label = pol
 	
 	def main(self):
-		term.setPowerManagement(self.pm)
+		if self.pm:
+			term.setPowerManagement(self.pm)
 		while self.menu:
 			self.menu()
 		
@@ -21,9 +22,12 @@ class UartMenu():
 		import shell
 	
 	def menu_main(self):
-		items = ["Python shell", "Apps", "Installer", "Settings", "Tools", "About", "Check for updates", self.power_off_label]
+		items = ["Python shell", "Apps", "Installer", "Settings", "Tools", "About", "Check for updates"]
+		if self.gts:
+			items.append(self.power_off_label)
 		callbacks = [self.drop_to_shell, self.opt_launcher, self.opt_installer, self.menu_settings, self.menu_tools, self.opt_about, self.opt_ota_check, self.go_to_sleep]
-		message = "Welcome!\nYour badge is running firmware version "+consts.INFO_FIRMWARE_BUILD+": "+consts.INFO_FIRMWARE_NAME+"\n"
+		#message = "Welcome!\nYour badge is running firmware version "+str(consts.INFO_FIRMWARE_BUILD)+": "+consts.INFO_FIRMWARE_NAME+"\n"
+		message = ""
 		cb = term.menu("Main menu", items, 0, message)
 		self.menu = callbacks[cb]
 		return
@@ -51,22 +55,25 @@ class UartMenu():
 	
 	def opt_configure_services(self):
 		system.start("dashboard.terminal.services", True)
+	
+	def opt_configure_homescreen(self):
+		system.start("dashboard.terminal.home_settings", True)
 		
 	def opt_ota(self):
 		system.ota(True)
 		
 	def opt_ota_check(self):
-		system.start("checkforupdates", True)
+		system.start("dashboard.tools.update_firmware", True)
 	
 	def opt_about(self):
-		system.start("about", True)
+		system.start("dashboard.other.about", True)
 		
 	def opt_downloader(self):
 		system.start("dashboard.terminal.downloader", True)
 		
 	def menu_settings(self):
-		items = ["Change nickname", "Change picture", "WiFi configuration", "Change display orientation", "Services", "Update firmware", "< Return to main menu"]
-		callbacks = [self.opt_change_nickname, self.opt_configure_picture, self.opt_configure_wifi, self.opt_configure_orientation, self.opt_configure_services, self.opt_ota, self.menu_main, self.menu_main]
+		items = ["Change nickname", "Change picture", "WiFi configuration", "Change display orientation", "Homescreen configuration", "Services", "Update firmware", "< Return to main menu"]
+		callbacks = [self.opt_change_nickname, self.opt_configure_picture, self.opt_configure_wifi, self.opt_configure_orientation, self.opt_configure_homescreen, self.opt_configure_services, self.opt_ota, self.menu_main, self.menu_main]
 		cb = term.menu("Settings", items)
 		self.menu = callbacks[cb]
 	

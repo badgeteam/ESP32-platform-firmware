@@ -105,14 +105,16 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_input_mpr121/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_erc12864/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ssd1306/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ili9341/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_gxgde0213b1/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_disobey_samd/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sndmixer
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_mpu6050/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
-
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/particle_simulation/include
-
 
 ifdef CONFIG_MICROPY_USE_BLUETOOTH
 MP_EXTRA_INC += -I$(ESPCOMP)/bt/include
@@ -184,7 +186,6 @@ SRC_C =  $(addprefix esp32/,\
 	machine_ulp.c \
 	machine_ow.c \
 	modesp.c \
-	esprtcmem.c \
 	modconsts.c \
 	modmpr121.c \
 	moderc12864.c \
@@ -194,6 +195,8 @@ SRC_C =  $(addprefix esp32/,\
 	modespnow.c \
 	moddisobeysamd.c \
 	modframebuffer.c \
+	modsndmixer.c \
+	modmpu6050.c \
 	)
 
 ifdef CONFIG_DRIVER_I2C_ENABLE
@@ -202,10 +205,6 @@ endif
 
 ifdef CONFIG_DRIVER_HUB75_ENABLE
 SRC_C += esp32/modhub75.c
-endif
-
-ifdef CONFIG_PARTICLE_SIMULATION_ENABLE
-SRC_C += esp32/modpsim.c
 endif
 
 ifdef CONFIG_MICROPY_USE_DISPLAY

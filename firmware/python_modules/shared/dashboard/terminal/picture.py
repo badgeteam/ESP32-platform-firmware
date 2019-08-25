@@ -39,11 +39,12 @@ while True:
 	if selected == len(pictures):
 		current = None
 		try:
-			badge.nvs_erase_key('splash', 'logo')
+			machine.nvs_erase("splash", "logo")
 		except:
 			pass
 		term.header(True, "Picture")
 		print("Default picture selected")
+		
 		time.sleep(1)
 	else:
 		current = pictures[selected]

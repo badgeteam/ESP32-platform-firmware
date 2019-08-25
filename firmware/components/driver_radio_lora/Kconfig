@@ -1,0 +1,7 @@
+menu "Driver: LoRa radio"
+	config DRIVER_LORA_ENABLE
+		depends on DRIVER_VSPI_ENABLE
+		bool "Enable the LoRa driver"
+		default n
+	
+endmenu

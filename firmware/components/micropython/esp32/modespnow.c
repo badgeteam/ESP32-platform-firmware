@@ -176,6 +176,14 @@ STATIC mp_obj_t espnow_send_all(mp_obj_t msg) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(espnow_send_all_obj, espnow_send_all);
 
+STATIC mp_obj_t espnow_get_version() {
+	uint32_t version;
+	esp_now_get_version(&version);
+    return mp_obj_new_int(version);
+}
+MP_DEFINE_CONST_FUN_OBJ_0(espnow_get_version_obj, espnow_get_version);
+
+
 STATIC const mp_rom_map_elem_t espnow_globals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&espnow_init_obj) },
     { MP_ROM_QSTR(MP_QSTR_deinit), MP_ROM_PTR(&espnow_deinit_obj) },
@@ -185,6 +193,7 @@ STATIC const mp_rom_map_elem_t espnow_globals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_send_all), MP_ROM_PTR(&espnow_send_all_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_send_cb), MP_ROM_PTR(&espnow_set_send_cb_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_recv_cb), MP_ROM_PTR(&espnow_set_recv_cb_obj) },
+    { MP_ROM_QSTR(MP_QSTR_version), MP_ROM_PTR(&espnow_get_version_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(espnow_globals_dict, espnow_globals_dict_table);
 

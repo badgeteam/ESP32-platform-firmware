@@ -20,34 +20,24 @@ bool fbReady = false;
 
 void fatal_error(const char* message)
 {
-	printf("A fatal error occcured while initializing the driver for '%s'.\n", message);
+	printf("A fatal error occurred while initializing the driver for '%s'.\n", message);
 	if (fbReady) {
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-		#ifdef CONFIG_DRIVER_EINK_ENABLE
-			driver_framebuffer_fill(COLOR_WHITE);
-			driver_framebuffer_setTextColor(COLOR_BLACK);
-			driver_framebuffer_setFont(&freesansbold12pt7b);
-			driver_framebuffer_setCursor(0,0);
-			driver_framebuffer_setTextScale(1,1);
-			driver_framebuffer_print("Fatal error\n");
-			driver_framebuffer_setFont(&freesans8pt7b);
-			driver_framebuffer_print("Failure while starting driver.\n");
-			driver_framebuffer_print(message);
-			driver_framebuffer_print("\n\nRestart in 10 seconds...\n");
-			driver_framebuffer_flush();
+			#if defined(CONFIG_DRIVER_EINK_ENABLE) || defined(CONFIG_DRIVER_ILI9341_ENABLE)
+				driver_framebuffer_fill(NULL, COLOR_WHITE);
+				uint16_t y = driver_framebuffer_print(NULL, "Fatal error\n",                     0, 0, 1, 1, COLOR_BLACK, &roboto12pt7b);
+				y          = driver_framebuffer_print(NULL, "Failure while starting driver.\n",  y, 0, 1, 1, COLOR_BLACK, &roboto12pt7b);
+				y          = driver_framebuffer_print(NULL, message,                             y, 0, 1, 1, COLOR_BLACK, &roboto12pt7b);
+				y          = driver_framebuffer_print(NULL, "\n\nRestarting in 10 seconds...\n", y, 0, 1, 1, COLOR_BLACK, &roboto12pt7b);
+				driver_framebuffer_flush(0);
+			#endif
+			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12846_ENABLE)
+				driver_framebuffer_fill(NULL, COLOR_BLACK);
+				uint16_t y = driver_framebuffer_print(NULL, "Fatal error\n", 0, 0, 1, 1, COLOR_WHITE, &ipane7x5);
+				driver_framebuffer_print(NULL, message, y, 0, 1, 1, COLOR_BLACK, &ipane7x5);
+				driver_framebuffer_flush(0);
+			#endif
 		#endif
-		#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12846_ENABLE)
-			driver_framebuffer_fill(COLOR_BLACK);
-			driver_framebuffer_setTextColor(COLOR_WHITE);
-			driver_framebuffer_setCursor(0,0);
-			driver_framebuffer_setTextScale(1,1);
-			driver_framebuffer_setFont(&freesan8pt7b);
-			driver_framebuffer_print("Fatal error\n");
-			driver_framebuffer_print("Driver failed:\n");
-			driver_framebuffer_print(message);
-			driver_framebuffer_flush();
-	#endif
-	#endif
 	}
 	restart();
 }
@@ -61,12 +51,16 @@ void platform_init()
 	INIT_DRIVER(erc12864     , "ERC12864"   ) //128x64 LCD screen as found on the Disobey 2019 badge
 	INIT_DRIVER(ssd1306      , "SSD1306"    ) //128x64 OLED screen as found on the Disobey 2020 badge
 	INIT_DRIVER(eink         , "E-INK"      ) //296x128 e-ink display as found on the SHA2017 and HackerHotel 2019 badges
+	INIT_DRIVER(gxgde0213b1  , "GXGDE0213B1") //E-ink on OHS badge
 	INIT_DRIVER(ili9341      , "ILI9341"    ) //LCD display on wrover kit
 	INIT_DRIVER(framebuffer  , "FRAMEBUFFER") //Framebuffer driver with basic drawing routines
 	fbReady = true;                           //Notify the error handler that framebuffer support is now available
 	INIT_DRIVER(mpr121       , "MPR121"     ) //I/O expander with touch inputs as found on the SHA2017 and HackerHotel 2019 badges
 	INIT_DRIVER(disobey_samd , "SAMD"       ) //I/O via the SAMD co-processor on the Disobey 2019 badge
 	INIT_DRIVER(neopixel     , "NEOPIXEL"   ) //Addressable LEDs as found on the SHA2017 and HackerHotel 2019 badges
+	INIT_DRIVER(microphone   , "MICROPHONE" ) //Microphone driver
+	INIT_DRIVER(mpu6050      , "MPU6050"    ) //Accelerometer driver
+	INIT_DRIVER(sdcard       , "SDCARD"     ) //SD card driver
 	fflush(stdout);
 	vTaskDelay(100 / portTICK_PERIOD_MS); //Give things time to settle.
 }

@@ -2,4 +2,18 @@ menu "Driver: VSPI bus"
 	config DRIVER_VSPI_ENABLE
 		bool "Enable the VSPI bus driver"
 		default n
+	
+	config PIN_NUM_VSPI_CLK
+		depends on DRIVER_VSPI_ENABLE
+		int "GPIO pin used for CLK"
+	
+	config PIN_NUM_VSPI_MOSI
+		depends on DRIVER_VSPI_ENABLE
+		int "GPIO pin used for MOSI"
+		default 23
+	
+	config PIN_NUM_VSPI_MISO
+		depends on DRIVER_VSPI_ENABLE
+		int "GPIO pin used for MISO"
+		default 25
 endmenu

@@ -111,11 +111,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(os_dupterm_notify_obj, os_dupterm_notify);
 
 
 //------------------------------------------------------------------
+#ifdef CONFIG_DRIVER_SDCARD_ENABLE
 STATIC mp_obj_t os_mount_sdcard(size_t n_args, const mp_obj_t *args)
 {
-#ifdef CONFIG_SDMMC_MPR121_PIN
-	driver_mpr121_set_gpio_level(CONFIG_SDMMC_MPR121_PIN, true);
-#endif
 	if (n_args > 0) {
 		int chd = mp_obj_get_int(args[0]);
 		if (chd) {
@@ -127,7 +125,6 @@ STATIC mp_obj_t os_mount_sdcard(size_t n_args, const mp_obj_t *args)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(os_mount_sdcard_obj, 0, 1, os_mount_sdcard);
 
-//------------------------------------
 STATIC mp_obj_t os_umount_sdcard(void)
 {
     // umount external (sdcard) file system
@@ -141,62 +138,7 @@ STATIC mp_obj_t os_umount_sdcard(void)
 	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(os_umount_sdcard_obj, os_umount_sdcard);
-
-//------------------------------------------------------------------------------------------
-STATIC mp_obj_t os_sdcard_config(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args)
-{
-    const mp_arg_t allowed_args[] = {
-        { MP_QSTR_mode, MP_ARG_REQUIRED | MP_ARG_INT,  { .u_int = 0 } },
-        { MP_QSTR_clk,                    MP_ARG_OBJ,  { .u_obj = mp_const_none } },
-        { MP_QSTR_mosi,                   MP_ARG_OBJ,  { .u_obj = mp_const_none } },
-        { MP_QSTR_miso,                   MP_ARG_OBJ,  { .u_obj = mp_const_none } },
-        { MP_QSTR_cs,                     MP_ARG_OBJ,  { .u_obj = mp_const_none } },
-        { MP_QSTR_maxspeed,               MP_ARG_INT,  { .u_int = -1 } },
-        { MP_QSTR_spihost,                MP_ARG_INT,  { .u_int = VSPI_HOST } },
-    };
-
-    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
-    mp_arg_parse_all(n_args, pos_args, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
-
-    int mode = args[0].u_int;
-    if ((mode < 1) || (mode > 3)) {
-        mp_raise_ValueError("Unsupported sdcard mode");
-    }
-    if (mode == 1) {
-    	int clk = machine_pin_get_gpio(args[1].u_obj);
-    	int mosi = machine_pin_get_gpio(args[2].u_obj);
-    	int miso = machine_pin_get_gpio(args[3].u_obj);
-    	int cs = machine_pin_get_gpio(args[4].u_obj);
-
-        if (native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD]) os_umount_sdcard();
-    	sdcard_config.clk = clk;
-    	sdcard_config.mosi = mosi;
-    	sdcard_config.miso = miso;
-    	sdcard_config.cs = cs;
-    	sdcard_config.mode = mode;
-        if ((args[6].u_int != HSPI_HOST) && (args[6].u_int != VSPI_HOST)) {
-            mp_raise_ValueError("Unsupported SPI hots (1 (HSPI) or 2 (VSPI) allowed)");
-        }
-        sdcard_config.host = args[6].u_int;
-    }
-    else {
-        if (native_vfs_mounted[VFS_NATIVE_TYPE_SDCARD]) os_umount_sdcard();
-    	sdcard_config.mode = mode;
-        sdcard_config.host = 1;
-    }
-    if (args[5].u_int >= 0) {
-        if ((args[5].u_int == 400) || ((args[5].u_int >= 8) && (args[5].u_int <= 40))) {
-            if (args[5].u_int == 400) sdcard_config.max_speed = 400;
-            else sdcard_config.max_speed = args[5].u_int * 1000;
-        }
-        else {
-            mp_raise_ValueError("Unsupported max speed (8 - 40 MHz allowed)");
-        }
-    }
-
-	return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_KW(os_sdcard_config_obj, 0, os_sdcard_config);
+#endif
 
 #if CONFIG_MICROPY_FILESYSTEM_TYPE == 2
 //----------------------------------------------------------
@@ -241,16 +183,15 @@ STATIC const mp_rom_map_elem_t os_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_statvfs),			MP_ROM_PTR(&mp_vfs_statvfs_obj) },
     //{ MP_ROM_QSTR(MP_QSTR_mount),			MP_ROM_PTR(&mp_vfs_mount_obj) },
     //{ MP_ROM_QSTR(MP_QSTR_umount),		MP_ROM_PTR(&mp_vfs_umount_obj) },
+    
+    #ifdef CONFIG_DRIVER_SDCARD_ENABLE
     { MP_ROM_QSTR(MP_QSTR_mountsd),			MP_ROM_PTR(&os_mount_sdcard_obj) },
     { MP_ROM_QSTR(MP_QSTR_umountsd),		MP_ROM_PTR(&os_umount_sdcard_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_sdconfig),		MP_ROM_PTR(&os_sdcard_config_obj) },
+	#endif
+    
 	#if CONFIG_MICROPY_FILESYSTEM_TYPE == 2
 	{ MP_ROM_QSTR(MP_QSTR_trim),			MP_ROM_PTR(&os_trim_obj) },
 	#endif
-	// Constants
-	{ MP_ROM_QSTR(MP_QSTR_SDMODE_SPI),		MP_ROM_INT(1) },
-	{ MP_ROM_QSTR(MP_QSTR_SDMODE_1LINE),	MP_ROM_INT(2) },
-	{ MP_ROM_QSTR(MP_QSTR_SDMODE_4LINE),	MP_ROM_INT(3) },
     #endif
 };
 

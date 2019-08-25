@@ -1,5 +1,3 @@
-#!/usr/local/bin/python
-
 import sys, threading, time
 from os import system
 from os.path import exists

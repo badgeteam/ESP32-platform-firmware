@@ -1,6 +1,8 @@
-import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display
+import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display, eink, machine, term, term_menu
 
 orientation.default()
+
+term.header(True, "Loading...")
 
 # Application list
 
@@ -65,12 +67,12 @@ def read_metadata(app):
 	try:
 		install_path = get_install_path()
 		info_file = "%s/%s/metadata.json" % (install_path, app)
-		print("Reading "+info_file+"...")
+		#print("Reading "+info_file+"...")
 		with open(info_file) as f:
 			information = f.read()
 		return ujson.loads(information)
 	except BaseException as e:
-		print("[ERROR] Can not read metadata for app "+app)
+		#print("[ERROR] Can not read metadata for app "+app)
 		sys.print_exception(e)
 		information = {"name":app,"description":"","category":"", "author":"","revision":0}
 		return [app,""]
@@ -86,9 +88,11 @@ def uninstall():
 	global currentListTargets
 		
 	if currentListTargets[selected]["category"] == "system":
-		#dialogs.notice("System apps can not be removed!","Can not uninstall '"+currentListTitles[selected]+"'")
-		easydraw.msg("System apps can not be removed!","Error",True)
-		time.sleep(2)
+		#print("System apps can not be removed.")
+		dialogs.notice("Can not uninstall '"+currentListTitles[selected]+"'!\nSystem apps can not be removed!","UNINSTALL APPLICATION")
+		#easydraw.msg("System apps can not be removed!","Error",True)
+		#time.sleep(2)
+		#print("Returning to menu.")
 		start()
 		return
 	
@@ -105,7 +109,7 @@ def uninstall():
 			easydraw.msg("Uninstall completed!")
 		start()
 
-	uninstall = dialogs.prompt_boolean('Are you sure you want to remove %s?' % currentListTitles[selected], cb=perform_uninstall)
+	uninstall = dialogs.prompt_boolean('Are you sure you want to remove %s?' % currentListTitles[selected], cb=perform_uninstall, title="UNINSTALL APPLICATION")
 
 # Run app
 		
@@ -141,6 +145,11 @@ def input_a(pressed):
 	
 def input_b(pressed):
 	pm.feed()
+	#if pressed:
+	#	system.home()
+
+def input_start(pressed):
+	pm.feed()
 	if pressed:
 		system.home()
 
@@ -148,21 +157,30 @@ def input_select(pressed):
 	pm.feed()
 	if pressed:
 		uninstall()
-	
+
 def input_other(pressed):
 	pm.feed()
 	if pressed:
-		ugfx.flush()
+		global einkNeedsUpdate
+		einkNeedsUpdate = True
+		#display.flush(display.FLAG_LUT_FASTEST)
 
 # Power management
 def pm_cb(dummy):
 	system.home()
 
+einkNeedsUpdate = False
+def updateEink():
+	global einkNeedsUpdate
+	if einkNeedsUpdate:
+		einkNeedsUpdate = False
+		display.flush(display.FLAG_LUT_FASTEST)
+	return 100
+
 def init_power_management():
-	virtualtimers.activate(1000) # Start scheduler with 1 second ticks
 	pm.set_timeout(5*60*1000) # Set timeout to 5 minutes
 	pm.callback(pm_cb) # Go to splash instead of sleep
-	pm.feed() # Feed the power management task, starts the countdown...
+	pm.feed(True)
 
 # Main application
 def start():
@@ -173,34 +191,38 @@ def start():
 	# Instructions
 	if orientation.isLandscape():
 		x0 = int(display.width()/2)
-		display.font("fairlight8")
 		currentY = 20
-		display.cursor(x0+int((display.width()-x0)/2)-int(display.get_string_width("BADGE.TEAM")/2),currentY)
-		display.print("BADGE.TEAM\n")
-		display.font("pixelade9")
-		(_, currentY) = display.cursor()
-		display.cursor(x0+int((display.width()-x0)/2)-int(display.get_string_width("ESP32 platform")/2),currentY)
-		display.print("ESP32 platform\n")
-		display.line(x0,0,x0,display.height()-1,0x000000)
-		display.textColor(0x000000)
-		display.font("pixelade9")
-		currentY = display.get_string_height(" ")*5-5
-		display.line(x0,currentY,display.width()-1,currentY,0x000000)
-		display.cursor(x0+5,currentY+5)
-		display.print("A: Run\n")
-		display.print("B: Return to home\n")
-		display.print("SELECT: Uninstall app\n")
-		(_, currentY) = display.cursor()
-		display.line(x0,currentY,display.width()-1,currentY,0x000000)
-		_ = display.cursor(x0+5,currentY+5)
-		display.print(consts.INFO_FIRMWARE_NAME)
+		
+		display.drawText(x0+((display.width()-x0)//2)-(display.getTextWidth("BADGE.TEAM", "fairlight12")//2), currentY, "BADGE.TEAM\n", 0x000000, "fairlight12")
+		currentY += display.getTextHeight("BADGE.TEAM", "fairlight12")
+		
+		display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("ESP32 platform", "roboto_regular12")/2), currentY, "ESP32 platform\n", 0x000000, "roboto_regular12")
+		display.drawLine(x0,0,x0,display.height()-1,0x000000)
+		pixHeight = display.getTextHeight(" ", "roboto_regular12")
+		currentY = pixHeight*5
+		
+		lineY = display.height()-pixHeight*6-pixHeight//2
+		display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
+		
+		display.drawText(x0+5, display.height()-pixHeight*6, "A: Run\n", 0x000000, "roboto_regular12")
+		display.drawText(x0+5, display.height()-pixHeight*5, "START: Return to home\n", 0x000000, "roboto_regular12")
+		display.drawText(x0+5, display.height()-pixHeight*4, "SELECT: Uninstall app\n", 0x000000, "roboto_regular12")
+		
+		lineY = display.height()-pixHeight*2-pixHeight//2
+		display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
+		display.drawText(x0+5, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "roboto_regular12")
+		display.drawText(x0+5, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "roboto_regular12")
 	else:
-		ugfx.line(0, ugfx.height()-18*4, ugfx.width(), ugfx.height()-18*4, ugfx.BLACK)
-		ugfx.string_box(0,ugfx.height()-18*4,ugfx.width(),18, " A: Run", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
-		ugfx.string_box(0,ugfx.height()-18*3,ugfx.width(),18, " B: Return to home", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
-		ugfx.string_box(0,ugfx.height()-18*2,ugfx.width(),18, " SELECT: Uninstall", "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
-		ugfx.line(0, ugfx.height()-18*1, ugfx.width(), ugfx.height()-18*1, ugfx.BLACK)
-		ugfx.string_box(0,ugfx.height()-18*1,ugfx.width(),18, " " + consts.INFO_FIRMWARE_NAME, "Roboto_Regular12", ugfx.BLACK, ugfx.justifyLeft)
+		pixHeight = display.getTextHeight(" ", "roboto_regular12")
+		display.drawLine(0, display.height()-18*4, display.width(), display.height()-18*4, ugfx.BLACK)
+		display.drawText(0, display.height()-pixHeight*6, "A: Run\n", 0x000000, "roboto_regular12")
+		display.drawText(0, display.height()-pixHeight*5, "START: Home\n", 0x000000, "roboto_regular12")
+		display.drawText(0, display.height()-pixHeight*4, "SELECT: Uninstall\n", 0x000000, "roboto_regular12")
+		
+		lineY = display.height()-pixHeight*2-pixHeight//2
+		display.drawLine(0, lineY, display.width()-1, lineY, 0x000000)
+		display.drawText(0, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "roboto_regular12")
+		display.drawText(0, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "roboto_regular12")
 
 	global options
 	global install_path
@@ -214,7 +236,7 @@ def start():
 	ugfx.input_attach(ugfx.JOY_DOWN, input_other)
 	ugfx.input_attach(ugfx.JOY_LEFT, input_other)
 	ugfx.input_attach(ugfx.JOY_RIGHT, input_other)
-	ugfx.input_attach(ugfx.BTN_START, input_other)
+	ugfx.input_attach(ugfx.BTN_START, input_start)
 
 	populate_apps()
 	populate_category()
@@ -224,11 +246,26 @@ def start():
 	ugfx.flush(ugfx.GREYSCALE)
 
 start()
-init_power_management()
 
 def goToSleep(unused_variable=None):
 	system.home()
 
-import term_menu
-umenu = term_menu.UartMenu(goToSleep, pm, badge.safe_mode(), "< Back")
-umenu.main()
+# Read configuration from NVS or apply default values
+cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
+if cfg_term_menu == None:
+	cfg_term_menu = True # If not set the menu is shown
+
+# Scheduler
+virtualtimers.activate(100) # Start scheduler with 100ms ticks
+virtualtimers.new(100, updateEink)
+
+# Terminal menu
+if cfg_term_menu:
+	init_power_management()
+	umenu = term_menu.UartMenu(system.home, pm, False, "< Back")
+	umenu.main()
+
+#(Note: power management is disabled when the menu is disabled, to keep the python prompt clean and usefull)
+
+term.header(True, "Python shell")
+print("Type \"import menu\" to access the menu.")

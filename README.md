@@ -34,7 +34,19 @@ First, make sure you pull the submodules in the project:
 git submodule update --init --recursive
 ```
 
-Next, copy the xtensa build toolchain for your OS (currently supporting Linux and Mac OS) from /toolchains/, and unpack and save it as /xtensa-esp32-elf/ in the project root folder.
+Next, copy the xtensa build toolchain for your OS (currently supporting Linux and Mac OS) from /toolchains/, and unpack and save it as /xtensa-esp32-elf/ in the project root folder:
+
+```
+unzip -p toolchain/xtensa-esp32-elf-linux64.zip xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar | tar xvf -
+```
+
+# Building for a specific existing badge
+Copy the relevant config file from `/firmware/configs/<badge>_defconfig` to `/firmware/sdkconfig`:
+
+```
+cp firmware/configs/sha2017_defconfig firmware/sdkconfig
+```
+
 # Build instructions
 To build and flash the basic generic firmware:
 ```
@@ -47,14 +59,15 @@ Make sure you have downloaded the appropriate driver for the USB UART chip on yo
 * SHA2017 / HackerHotel 2019: [CP2102 driver](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
 * CampZone 2019: [CH340C driver](https://learn.sparkfun.com/tutorials/sparkfun-serial-basic-ch340c-hookup-guide/drivers-if-you-need-them)
 
+If you have this issue with flashing:
+`serial.serialutil.SerialException: [Errno 2] could not open port : [Errno 2] No such file or directory: ''`
+Then you need to copy the `python2` command that `./build.sh` suggests, and make sure the `--port ` argument has the right value.
+
 # Interacting via serial
 By default, the badge.team firmware activates a simple python shell or serial menu after booting. You can interact with it by running:
 ```
 ./monitor.sh
 ```
-
-# Building for a specific existing badge
-Copy the relevant config file from `/firmware/configs/` to `/firmware/sdkconfig`, build, flash, and enjoy!
 
 # Creating new hardware
 You can use badge.team firmware for your own-designed badge or device. The workflow for this is described below.

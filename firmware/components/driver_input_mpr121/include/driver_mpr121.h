@@ -29,11 +29,11 @@ __BEGIN_DECLS
 typedef void (*driver_mpr121_intr_t)(void*, bool); // Interrupt handler type
 
 struct driver_mpr121_touch_info {
-	uint32_t touch_state; // Bitmapped touch state
-	uint32_t data[8];     // The electrode data for touch inputs 0..7 (10 bits)
-	uint32_t baseline[8]; // The baseline for touch inputs 0..7 (8 bits)
-	uint32_t touch[8];    // The touch threshold for touch inputs 0..7 (8 bits)
-	uint32_t release[8];  // The release threshold for touch inputs 0..7 (8 bits)
+	uint32_t touch_state;  // Bitmapped touch state
+	uint32_t data[12];     // The electrode data    (10 bits)
+	uint32_t baseline[12]; // The baseline          (8 bits)
+	uint32_t touch[12];    // The touch threshold   (8 bits)
+	uint32_t release[12];  // The release threshold (8 bits)
 };
 
 /**

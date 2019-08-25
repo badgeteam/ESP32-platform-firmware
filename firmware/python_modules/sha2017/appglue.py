@@ -1,4 +1,4 @@
-#Deprecated API, will be removed in the future
+print("The 'appglue' API has been deprecated. Please use the 'system' API instead!")
 
 def start_app(app, display = True):
 	import system
@@ -7,7 +7,3 @@ def start_app(app, display = True):
 def home():
 	import system
 	system.home(True)
-
-def start_ota():
-	import system
-	system.ota(True)

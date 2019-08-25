@@ -175,14 +175,15 @@ def input_other(pressed):
 
 
 # Power management
-def pm_cb(dummy):
-    appglue.home()
-
+def cbSleep(idleTime=None):
+	if idleTime == None:
+		idleTime = virtualtimers.idle_time()
+	system.sleep(idleTime, True)
 
 def init_power_management():
     virtualtimers.activate(1000)  # Start scheduler with 1 second ticks
     pm.set_timeout(5 * 60 * 1000)  # Set timeout to 5 minutes
-    pm.callback(pm_cb)  # Go to splash instead of sleep
+    pm.callback(cbSleep)  # Go to splash instead of sleep
     pm.feed()  # Feed the power management task, starts the countdown...
 
 
@@ -203,16 +204,6 @@ def start():
 
     populate_apps()
     render_current_app()
-
-# First time boot sequence
-if not machine.nvs_getint("system", 'intro_shown'):
-    import nyan
-    time.sleep(3)
-    rgb.clear()
-    time.sleep(1)
-    import sponsors
-    machine.nvs_setint("system", 'intro_shown', 1)
-    system.reboot()
 
 start()
 init_power_management()

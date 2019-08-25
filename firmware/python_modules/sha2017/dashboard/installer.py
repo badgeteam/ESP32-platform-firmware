@@ -1,4 +1,4 @@
-import orientation, dashboard.resources.woezel_repo as woezel_repo, term, easydraw, system, time, gc, ugfx, wifi, uos, json, sys, woezel
+import orientation, dashboard.resources.woezel_repo as woezel_repo, term, easydraw, system, time, gc, ugfx, wifi, uos, json, sys, woezel, display, errno
 
 repo = woezel_repo
 
@@ -16,9 +16,12 @@ def showMessage(msg, error=False, icon_wifi=False, icon_ok=False):
 	else:
 		easydraw.messageCentered("PLEASE WAIT\n\n"+msg, True, "/media/busy.png")
 
+# Listbox element
+myList = ugfx.List(0,0,ugfx.width(),ugfx.height()-48)
+
 # Generic actions
 def btn_unhandled(pressed):
-	ugfx.flush()
+	display.flush(display.FLAG_LUT_FASTEST)
 
 def btn_exit(pressed):
 	if pressed:
@@ -27,22 +30,25 @@ def btn_exit(pressed):
 def btn_update(pressed):
 	if pressed:
 		repo.update()
-		system.start("installer", True)
+		system.start("dashboard.installer", True)
 
 # Categories list
 
-categories_list = ugfx.List(0,0,ugfx.width(),ugfx.height()-48)
-
-def show_categories(pressed=True):
+def show_categories(pressed = True, fromAppInstall = False):
 	if not pressed:
 		return
+	ugfx.input_attach(ugfx.JOY_UP, btn_unhandled)
+	ugfx.input_attach(ugfx.JOY_DOWN, btn_unhandled)
+	ugfx.input_attach(ugfx.JOY_LEFT, btn_unhandled)
+	ugfx.input_attach(ugfx.JOY_RIGHT, btn_unhandled)
+	ugfx.input_attach(ugfx.BTN_A, btn_unhandled)
+	ugfx.input_attach(ugfx.BTN_B, btn_unhandled)
 	ugfx.clear(ugfx.WHITE)
-	#Hide category list
-	category_list.visible(False)
-	category_list.enabled(False)
-	#Show categories list
-	categories_list.visible(True)
-	categories_list.enabled(True)
+	myList.clear()
+	for category in repo.categories:
+		myList.add_item("%s (%d) >" % (category["name"], category["eggs"]))
+	myList.enabled(True)
+	myList.visible(True)
 	#Input handling
 	ugfx.input_attach(ugfx.BTN_START, btn_exit)
 	ugfx.input_attach(ugfx.BTN_SELECT, btn_update)
@@ -57,37 +63,45 @@ def show_categories(pressed=True):
 	easydraw.disp_string_right_bottom(1, "A: Open category")
 	easydraw.disp_string_right_bottom(2, "SELECT: Update repo")
 	#Flush screen
-	ugfx.flush()
+	display.flush(display.FLAG_LUT_NORMAL)
 
 # Category browsing
 
-category_list   = ugfx.List(0,0,ugfx.width(),ugfx.height()-48)
+lastCategory = 0
 
-def show_category(pressed=True):
+def show_category(pressed=True, fromAppInstall = False):
+	global lastCategory
 	if not pressed:
 		return
+	ugfx.input_attach(ugfx.JOY_UP, btn_unhandled)
+	ugfx.input_attach(ugfx.JOY_DOWN, btn_unhandled)
+	ugfx.input_attach(ugfx.JOY_LEFT, btn_unhandled)
+	ugfx.input_attach(ugfx.JOY_RIGHT, btn_unhandled)
+	ugfx.input_attach(ugfx.BTN_A, btn_unhandled)
+	ugfx.input_attach(ugfx.BTN_B, btn_unhandled)
 	ugfx.clear(ugfx.WHITE)
 	global category
-	categories_list.visible(False)
-	categories_list.enabled(False)
-	slug = repo.categories[categories_list.selected_index()]["slug"]
+	if not fromAppInstall:
+		lastCategory = myList.selected_index()
+	slug = repo.categories[lastCategory]["slug"]
 	showMessage("Loading "+slug+"...")
-	#Clean up list
-	while category_list.count() > 0:
-		category_list.remove_item(0)
+	display.drawFill()
+	myList.clear()
 	try:
 		try:
 			category = repo.getCategory(slug)
-		except:
+		except BaseException as e:
 			showMessage("Failed to open category "+slug+"!", True)
+			display.drawFill()
+			print("CAT OPEN ERR", e)
 			time.sleep(1)
 			show_categories()
+			return
 		gc.collect()
 		for package in category:
-			category_list.add_item("%s rev. %s" % (package["name"], package["revision"]))
-		category_list.selected_index(0)
-		category_list.visible(True)
-		category_list.enabled(True)
+			myList.add_item("%s rev. %s" % (package["name"], package["revision"]))
+		myList.visible(True)
+		myList.enabled(True)
 		#Input handling
 		ugfx.input_attach(ugfx.BTN_START, btn_exit)
 		ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
@@ -102,24 +116,23 @@ def show_category(pressed=True):
 		easydraw.disp_string_right_bottom(1, "A: Install app")
 		easydraw.disp_string_right_bottom(2, "B: Back")
 		#Flush screen
-		ugfx.flush()
+		display.flush(display.FLAG_LUT_NORMAL)
 	except BaseException as e:
 		sys.print_exception(e)
-		showMessage(e, True)
+		print("ERROR", e)
+		showMessage("Internal error", True)
+		display.drawFill()
 		time.sleep(1)
 		show_categories()
 
 # Install application
 
 def install_app(pressed=True):
-	global category	
+	global category
 	if pressed:
-		slug = category[category_list.selected_index()]["slug"]
-		gc.collect()
-		category_list.visible(False)
-		category_list.enabled(False)
+		slug = category[myList.selected_index()]["slug"]
 		#Input handling
-		ugfx.input_attach(ugfx.BTN_START, btn_unhandled)
+		ugfx.input_attach(ugfx.BTN_START, btn_exit)
 		ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
 		ugfx.input_attach(ugfx.BTN_A, btn_unhandled)
 		ugfx.input_attach(ugfx.BTN_B, btn_unhandled)
@@ -127,38 +140,22 @@ def install_app(pressed=True):
 		ugfx.input_attach(ugfx.JOY_DOWN, btn_unhandled)
 		ugfx.input_attach(ugfx.JOY_LEFT, btn_unhandled)
 		ugfx.input_attach(ugfx.JOY_RIGHT, btn_unhandled)
-		if not wifi.status():
-			wifi.connect()
-			wifi.wait()
-			if not wifi.status():
-				showMessage("Unable to connect to WiFi.")
-				time.sleep(2)
-				show_category()
+		category = []
+		myList.clear()
 		showMessage("Installing "+slug+"...")
-		try:
-			woezel.install(slug)
-		except woezel.LatestInstalledError:
-			showMessage("NOTICE\n\nLatest version is already installed.", False, False, True)
-			time.sleep(2)
-			show_category()
-		except:
-			showMessage("Failed to install "+slug+"!", True)
-			time.sleep(2)
-			show_category()
-		showMessage("OK\n\n"+slug+" has been installed!", False, False, True)
-		time.sleep(2)
-		show_category()
+		with open("/cache/installList", "w") as f:
+			f.write(slug)
+		system.start("dashboard._installer_exec")
 
 #Main application
 
 showMessage("Loading categories...")
+display.drawFill()
 if not repo.load():
 	if not repo.update():
 		if repo.lastUpdate==0:
 			showMessage("Failed to load repository. Returning to launcher...")
+			display.drawFill()
 			system.launcher()
-
-for category in repo.categories:
-	categories_list.add_item("%s (%d) >" % (category["name"], category["eggs"]))
 
 show_categories()

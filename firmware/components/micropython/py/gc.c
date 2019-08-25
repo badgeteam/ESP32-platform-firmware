@@ -36,7 +36,7 @@
 
 #if MICROPY_DEBUG_VERBOSE // print debugging info
 #define DEBUG_PRINT (1)
-#define DEBUG_printf DEBUG_printf
+#define DEBUG_printf(...) printf(__VA_ARGS__)
 #else // don't print debugging info
 #define DEBUG_PRINT (0)
 #define DEBUG_printf(...) (void)0

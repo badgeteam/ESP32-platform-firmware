@@ -51,6 +51,7 @@
 #include "freertos/task.h"
 #include "esp_task_wdt.h"
 
+#include "driver_rtcmem.h"
 
 STATIC mp_obj_t badge_raminfo_() {
     size_t free_8           = heap_caps_get_free_size(MALLOC_CAP_8BIT  | MALLOC_CAP_INTERNAL);
@@ -243,58 +244,6 @@ STATIC IRAM_ATTR mp_obj_t esp_flash_user_start(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(esp_flash_user_start_obj, esp_flash_user_start);
 
-STATIC mp_obj_t esp_rtcmem_write_(mp_obj_t _pos, mp_obj_t _val) {
-	int pos = mp_obj_get_int(_pos);
-	int val = mp_obj_get_int(_val);
-
-	if (val < 0 || val > 255) {
-		mp_raise_msg(&mp_type_IndexError, "Value out of range");
-	}
-	int res = esp_rtcmem_write(pos, val);
-	if (res < 0) {
-		mp_raise_msg(&mp_type_IndexError, "Offset out of range");
-	}
-	return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(esp_rtcmem_write_obj, esp_rtcmem_write_);
-
-STATIC mp_obj_t esp_rtcmem_read_(mp_obj_t _pos) {
-	int pos = mp_obj_get_int(_pos);
-
-	int val = esp_rtcmem_read(pos);
-	if (val < 0) {
-		mp_raise_msg(&mp_type_IndexError, "Offset out of range");
-	}
-	return mp_obj_new_int(val);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(esp_rtcmem_read_obj, esp_rtcmem_read_);
-
-
-STATIC mp_obj_t esp_rtcmem_read_string_(mp_uint_t n_args, const mp_obj_t *args) {
-	int pos = (n_args == 0) ? 2 : mp_obj_get_int(args[0]);
-
-	char str[256];
-	size_t str_len = sizeof(str);
-	int res = esp_rtcmem_read_string(pos, str, &str_len);
-	if (res < 0) {
-		mp_raise_msg(&mp_type_IndexError, "Offset out of range");
-	}
-	return mp_obj_new_str(str, str_len-1);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(esp_rtcmem_read_string_obj, 0, 1, esp_rtcmem_read_string_);
-
-STATIC mp_obj_t esp_rtcmem_write_string_(mp_uint_t n_args, const mp_obj_t *args) {
-	const char *str = mp_obj_str_get_str(args[0]);
-	int pos = (n_args == 1) ? 2 : mp_obj_get_int(args[1]);
-
-	int res = esp_rtcmem_write_string(pos, str);
-	if (res < 0) {
-		mp_raise_msg(&mp_type_IndexError, "Offset out of range");
-	}
-	return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(esp_rtcmem_write_string_obj, 1, 2, esp_rtcmem_write_string_);
-
 STATIC mp_obj_t dump_mem_allocs(mp_obj_t cap) {
 	uint32_t cap_id = mp_obj_get_int(cap);
 	heap_caps_print_heap_info( cap_id );
@@ -483,7 +432,7 @@ STATIC const mp_rom_map_elem_t esp_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_esp)},
     
 	{MP_ROM_QSTR(MP_QSTR_raminfo), MP_ROM_PTR(&badge_raminfo_obj)},
-	{MP_ROM_QSTR(MP_QSTR_ramdump), MP_ROM_PTR(&badge_ramdump_obj)},
+	//{MP_ROM_QSTR(MP_QSTR_ramdump), MP_ROM_PTR(&badge_ramdump_obj)},
 
     { MP_ROM_QSTR(MP_QSTR_temperature_sens_read), MP_ROM_PTR(&esp_temperature_sens_read_obj) },
     { MP_ROM_QSTR(MP_QSTR_hall_sens_read), MP_ROM_PTR(&esp_hall_sens_read_obj) },
@@ -492,23 +441,19 @@ STATIC const mp_rom_map_elem_t esp_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_wdt_stop), MP_ROM_PTR(&esp_wdt_stop_obj) },
     { MP_ROM_QSTR(MP_QSTR_wdt_reset), MP_ROM_PTR(&esp_wdt_reset_obj) },
 
-    { MP_ROM_QSTR(MP_QSTR_flash_read), MP_ROM_PTR(&esp_flash_read_obj) },
+    /*{ MP_ROM_QSTR(MP_QSTR_flash_read), MP_ROM_PTR(&esp_flash_read_obj) },
     { MP_ROM_QSTR(MP_QSTR_flash_write), MP_ROM_PTR(&esp_flash_write_obj) },
     { MP_ROM_QSTR(MP_QSTR_flash_erase), MP_ROM_PTR(&esp_flash_erase_obj) },
     { MP_ROM_QSTR(MP_QSTR_flash_size), MP_ROM_PTR(&esp_flash_size_obj) },
     { MP_ROM_QSTR(MP_QSTR_flash_user_start), MP_ROM_PTR(&esp_flash_user_start_obj) },
-    { MP_ROM_QSTR(MP_QSTR_flash_sec_size), MP_ROM_PTR(&esp_flash_sec_size_obj) },
+    { MP_ROM_QSTR(MP_QSTR_flash_sec_size), MP_ROM_PTR(&esp_flash_sec_size_obj) },*/
 
 	{ MP_ROM_QSTR(MP_QSTR_dump_mem_allocs), MP_ROM_PTR(&dump_mem_allocs_obj) },
 
-    {MP_ROM_QSTR(MP_QSTR_rtcmem_write), MP_ROM_PTR(&esp_rtcmem_write_obj)},
-    {MP_ROM_QSTR(MP_QSTR_rtcmem_read), MP_ROM_PTR(&esp_rtcmem_read_obj)},
-    {MP_ROM_QSTR(MP_QSTR_rtcmem_write_string), MP_ROM_PTR(&esp_rtcmem_write_string_obj)},
-    {MP_ROM_QSTR(MP_QSTR_rtcmem_read_string), MP_ROM_PTR(&esp_rtcmem_read_string_obj)},
     {MP_ROM_QSTR(MP_QSTR_rtc_get_reset_reason),
      MP_ROM_PTR(&esp_rtc_get_reset_reason_obj)},
 
-    #if MICROPY_SDMMC_USE_DRIVER
+    /*#if MICROPY_SDMMC_USE_DRIVER
     { MP_ROM_QSTR(MP_QSTR_sdcard_read), MP_ROM_PTR(&esp_sdcard_read_obj) },
     { MP_ROM_QSTR(MP_QSTR_sdcard_write), MP_ROM_PTR(&esp_sdcard_write_obj) },
     { MP_ROM_QSTR(MP_QSTR_sdcard_init), MP_ROM_PTR(&esp_sdcard_init_obj) },
@@ -517,7 +462,7 @@ STATIC const mp_rom_map_elem_t esp_module_globals_table[] = {
     // // class constants
     // { MP_ROM_QSTR(MP_QSTR_SD_1LINE), MP_ROM_INT(1) },
     // { MP_ROM_QSTR(MP_QSTR_SD_4LINE), MP_ROM_INT(4) },
-    #endif
+    #endif*/
 
 };
 

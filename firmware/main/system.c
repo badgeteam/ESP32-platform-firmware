@@ -1,5 +1,7 @@
 #include "include/system.h"
 
+#include "driver_rtcmem.h"
+
 extern int esp_rtcmem_read(uint32_t location);
 
 void restart()
@@ -41,10 +43,10 @@ void logo()
 
 int get_magic()
 {
-	uint8_t magic = esp_rtcmem_read(0);
-	uint8_t inv_magic = esp_rtcmem_read(1);
-	if (magic == (uint8_t)~inv_magic) {
-		return magic;
-	}
+	int magic, inv_magic;
+	if (driver_rtcmem_int_read(0, &magic)     != ESP_OK) return 0;
+	if (driver_rtcmem_int_read(1, &inv_magic) != ESP_OK) return 0;
+	
+	if (magic == (uint8_t)~inv_magic) return magic;
 	return 0;
 }

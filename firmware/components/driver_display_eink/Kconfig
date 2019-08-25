@@ -50,4 +50,9 @@ menu "Driver: E-ink display"
 		depends on DRIVER_EINK_ENABLE
 		int "GPIO pin used for e-ink DATA"
 		default 21
+		
+	config DRIVER_EINK_FORCE_1BPP
+		depends on DRIVER_EINK_ENABLE
+		bool "Force 1 bit-per-pixel mode for the framebuffer"
+		default n
 endmenu

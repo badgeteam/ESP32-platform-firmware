@@ -57,18 +57,7 @@ typedef struct _fs_user_mount_t {
     mp_int_t device;
 } fs_user_mount_t;
 
-typedef struct _sdcard_config_t {
-    int32_t  max_speed;
-	uint8_t	mode;
-    int8_t	clk;
-    int8_t	mosi;
-    int8_t	miso;
-    int8_t	cs;
-    uint8_t host;
-} sdcard_config_t;
-
 extern const mp_obj_type_t mp_native_vfs_type;
-extern sdcard_config_t sdcard_config;
 
 bool native_vfs_mounted[2];
 
@@ -86,7 +75,5 @@ MP_DECLARE_CONST_FUN_OBJ_0(native_vfs_getdrive_obj);
 
 int internalUmount();
 void externalUmount();
-
-bool file_noton_spi_sdcard(char *fname);
 
 mp_obj_t native_vfs_ilistdir2(struct _fs_user_mount_t *vfs, const char *path, bool is_str_type);
