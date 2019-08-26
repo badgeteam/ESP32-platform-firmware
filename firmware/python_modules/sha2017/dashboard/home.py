@@ -10,7 +10,7 @@ if cfg_term_menu == None:
 
 cfg_wifi = machine.nvs_get_u8('splash', 'wifi') # Allow the use of WiFi on the splash screen
 if cfg_wifi == None:
-	cfg_wifi = True # If not set the use of WiFi is allowed
+	cfg_wifi = False # If not set the use of WiFi is not allowed
 
 cfg_services = machine.nvs_get_u8('splash', 'services') # Enable splash screen services (fun but dangerous)
 if cfg_services == None:

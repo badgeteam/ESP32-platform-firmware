@@ -59,6 +59,12 @@ class UartMenu():
 	def opt_configure_homescreen(self):
 		system.start("dashboard.terminal.home_settings", True)
 		
+	def opt_configure_eink(self):
+		system.start("dashboard.terminal.eink", True)
+		
+	def opt_configure_calibrate(self):
+		system.start("dashboard.terminal.calibrate", True)
+		
 	def opt_ota(self):
 		system.ota(True)
 		
@@ -72,8 +78,8 @@ class UartMenu():
 		system.start("dashboard.terminal.downloader", True)
 		
 	def menu_settings(self):
-		items = ["Change nickname", "Change picture", "WiFi configuration", "Change display orientation", "Homescreen configuration", "Services", "Update firmware", "< Return to main menu"]
-		callbacks = [self.opt_change_nickname, self.opt_configure_picture, self.opt_configure_wifi, self.opt_configure_orientation, self.opt_configure_homescreen, self.opt_configure_services, self.opt_ota, self.menu_main, self.menu_main]
+		items = ["Change nickname", "Change picture", "WiFi configuration", "Change display orientation", "Homescreen configuration", "E-ink configuration", "Calibrate touch buttons", "Services", "Update firmware", "< Return to main menu"]
+		callbacks = [self.opt_change_nickname, self.opt_configure_picture, self.opt_configure_wifi, self.opt_configure_orientation, self.opt_configure_homescreen, self.opt_configure_eink, self.opt_configure_calibrate, self.opt_configure_services, self.opt_ota, self.menu_main, self.menu_main]
 		cb = term.menu("Settings", items)
 		self.menu = callbacks[cb]
 	
