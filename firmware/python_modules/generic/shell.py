@@ -1,2 +1,1 @@
-import system
-system.shell(True)
+../shared/shell.py

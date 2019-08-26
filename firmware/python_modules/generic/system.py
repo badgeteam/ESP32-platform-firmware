@@ -1,11 +1,10 @@
-# Power management
+import machine
 
 def reboot():
-	import machine
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):
-	import machine, time
+	import time, os, badge
 	if (duration >= 86400000): #One day
 		duration = 0
 	if status:
@@ -17,14 +16,55 @@ def sleep(duration=0, status=False):
 	time.sleep(0.05)
 	machine.deepsleep(duration)
 
+def start(app, status=False):
+	if status:
+		import term#, easydraw
+		if app == "" or app == "launcher":
+			term.header(True, "Loading menu...")
+			#easydraw.messageCentered("PLEASE WAIT\nStarting the menu...", True, "/media/busy.png")
+		else:
+			term.header(True, "Loading application "+app+"...")
+			#easydraw.messageCentered("PLEASE WAIT\nStarting '"+app+"'...", True, "/media/busy.png")
+	machine.RTC().write_string(app)
+	reboot()
+
+def home(status=False):
+	start("", status)
+
+def launcher(status=False):
+	start("dashboard.launcher", status)
+
+def shell(status=False):
+	start("shell", status)
+
+# Over-the-air updating
+
+def ota(status=False):
+	if status:
+		import term#, easydraw
+		term.header(True, "Starting update...")
+		#easydraw.messageCentered("PLEASE WAIT\nStarting update...", True, "/media/busy.png")
+	rtc = machine.RTC()
+	rtc.write(0,1)
+	rtc.write(1,254)
+	reboot()
+
+def serialWarning():
+	#import easydraw
+	#easydraw.messageCentered("NOTICE\n\nThis app can only be controlled using the USB-serial connection.", True, "/media/crown.png")
+	pass
+	
+def crashedWarning():
+	#import easydraw
+	#easydraw.messageCentered("An error occured!\n\nThe running app has crashed.", True, "/media/alert.png")
+	pass
+
 def isColdBoot():
-	import machine
 	if machine.wake_reason() == (7, 0):
 		return True
 	return False
 
 def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
-	import machine
 	if fromButton and machine.wake_reason() == (3, 1):
 		return True
 	if fromIr     and machine.wake_reason() == (3, 2):
@@ -34,42 +74,6 @@ def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
 	if fromUlp    and machine.wake_reason() == (3, 5):
 		return True
 	return False
-
-# Application launching
-
-def start(app, status=False):
-	import esp
-	if status:
-		import term
-		if app == "" or app == "launcher":
-			term.header(True, "Loading menu...")
-		else:
-			term.header(True, "Loading application "+app+"...")
-	esp.rtcmem_write_string(app)
-	reboot()
-
-def home(status=False):
-	start("", status)
-
-def launcher(status=False):
-	start("launcher", status)
-
-def shell(status=False):
-	start("shell", status)
-
-# Over-the-air updating
-
-def ota(status=False):
-	import esp
-	if status:
-		import term
-		term.header(True, "Starting update...")
-	esp.rtcmem_write(0,1)
-	esp.rtcmem_write(1,254)
-	reboot()
-
-def serialWarning():
-	pass
 
 __current_app__ = None
 
