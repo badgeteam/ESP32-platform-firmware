@@ -4,13 +4,14 @@ def reboot():
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):
-	import time, os, badge
+	import time, os
+	
 	if (duration >= 86400000): #One day
 		duration = 0
 	if status:
 		import term
 		if duration < 1:
-			term.header(True, "Sleeping until touchbutton is pressed...")
+			term.header(True, "Sleeping forever...")
 		else:
 			term.header(True, "Sleeping for "+str(duration)+"ms...")
 	time.sleep(0.05)
@@ -18,13 +19,11 @@ def sleep(duration=0, status=False):
 
 def start(app, status=False):
 	if status:
-		import term#, easydraw
+		import term
 		if app == "" or app == "launcher":
 			term.header(True, "Loading menu...")
-			#easydraw.messageCentered("PLEASE WAIT\nStarting the menu...", True, "/media/busy.png")
 		else:
 			term.header(True, "Loading application "+app+"...")
-			#easydraw.messageCentered("PLEASE WAIT\nStarting '"+app+"'...", True, "/media/busy.png")
 	machine.RTC().write_string(app)
 	reboot()
 
@@ -32,7 +31,7 @@ def home(status=False):
 	start("", status)
 
 def launcher(status=False):
-	start("dashboard.launcher", status)
+	start("launcher", status)
 
 def shell(status=False):
 	start("shell", status)
@@ -41,22 +40,17 @@ def shell(status=False):
 
 def ota(status=False):
 	if status:
-		import term#, easydraw
+		import term
 		term.header(True, "Starting update...")
-		#easydraw.messageCentered("PLEASE WAIT\nStarting update...", True, "/media/busy.png")
 	rtc = machine.RTC()
 	rtc.write(0,1)
 	rtc.write(1,254)
 	reboot()
 
 def serialWarning():
-	#import easydraw
-	#easydraw.messageCentered("NOTICE\n\nThis app can only be controlled using the USB-serial connection.", True, "/media/crown.png")
 	pass
 	
 def crashedWarning():
-	#import easydraw
-	#easydraw.messageCentered("An error occured!\n\nThe running app has crashed.", True, "/media/alert.png")
 	pass
 
 def isColdBoot():
