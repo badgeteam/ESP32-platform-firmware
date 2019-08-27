@@ -1,7 +1,7 @@
 ---
 title: "API reference"
 nodateline: true
-weight: 2
+weight: 5
 ---
 
 Welcome to the API reference for the BADGE.TEAM platform firmware.
