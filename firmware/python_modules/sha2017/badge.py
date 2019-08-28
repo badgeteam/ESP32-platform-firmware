@@ -16,6 +16,9 @@ def eink_init():
 def eink_png(x,y,img):
 	display.drawPng(x,y,img)
 
+def nvs_erase_key(space, item):
+	return machine.nvs_erase(space, item)
+
 def nvs_get_u8(space, item, default=None):
 	if space == "badge":
 		space = "system"

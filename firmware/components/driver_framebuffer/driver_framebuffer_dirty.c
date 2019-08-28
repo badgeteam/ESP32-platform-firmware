@@ -17,7 +17,7 @@ int16_t dirty_x1 = FB_WIDTH-1, dirty_y1 = FB_HEIGHT-1; // Bottom-right corner of
 /* Public functions */
 bool driver_framebuffer_is_dirty()
 {
-	return (dirty_x1 > dirty_x0) || (dirty_y1 > dirty_y0);
+	return (dirty_x1 >= dirty_x0) || (dirty_y1 >= dirty_y0);
 }
 
 void driver_framebuffer_set_dirty_area(int16_t x0, int16_t y0, int16_t x1, int16_t y1, bool force)
