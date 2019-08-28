@@ -1,5 +1,5 @@
 import system, time, gc
-import woezel, rgb, uinterface, wifi
+import woezel, rgb, uinterface, wifi, uinstaller
 from default_icons import icon_no_wifi, animation_connecting_wifi, animation_loading
 
 def woezel_callback(text, error):
@@ -18,23 +18,12 @@ def woezel_callback(text, error):
         rgb.gif(data, (12, 0), (8, 8), frames)
         time.sleep(3)
         system.reboot()
-    elif 'Downloading categories...' in text:
-        data, size, frames = animation_loading
-        rgb.gif(data, (1, 1), size, frames)
-        rgb.scrolltext('Loading', pos=(8,0), width=(rgb.PANEL_WIDTH - 8))
-    elif 'Installing' in text:
+    elif 'Done!' in text or 'Failed!' in text:
+        return
+    else:
         data, size, frames = animation_loading
         rgb.gif(data, (1, 1), size, frames)
         rgb.scrolltext(text, pos=(8,0), width=(rgb.PANEL_WIDTH - 8))
-    elif "Downloading '" in text:
-        cur, total = text.split('(')[1].split(')')[0].split('/')  # Definitely not proud of this
-        progress = '(%s/%s)' % (cur, total)
-        data, size, frames = animation_loading
-        rgb.gif(data, (1, 1), size, frames)
-        rgb.setfont(rgb.FONT_6x3)
-        rgb.text(progress, pos=(8,1))
-    elif 'Done!' in text or 'Failed!' in text:
-        pass
 
 woezel.set_progress_callback(woezel_callback)
 # make sure we have an updated cache:
@@ -70,18 +59,4 @@ while True:
         continue
     app = apps[chosen_index]
 
-    # WiFi could have been disconnected by now
-    if not uinterface.connect_wifi():
-        rgb.clear()
-        uinterface.skippabletext('No WiFi')
-    else:
-        del icon_no_wifi, animation_connecting_wifi
-        del apps, category, active_categories, categories
-        gc.collect()
-        if woezel.install(app['slug']):
-            rgb.clear()
-            uinterface.skippabletext('Successfully installed')
-        else:
-            rgb.clear()
-            uinterface.skippabletext('Error installing')
-    system.reboot()
+    uinstaller.install(app['slug'])

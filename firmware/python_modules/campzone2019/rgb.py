@@ -72,7 +72,7 @@ def setbrightness(brightness=(MAX_BRIGHTNESS - 2)):
     hub75.brightness(brightness)
 
     # Allow non-visible brightness, but don't make it persistent across reboot
-    if brightness >= 3:
+    if brightness >= 1:
         machine.nvs_setint('system', 'brightness', brightness)
 
 def setfont(font_index):

@@ -1,6 +1,6 @@
 import sys, uos as os, time, ujson, gc, term, deepsleep
 import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, woezel
-import rgb, uinterface
+import rgb, uinterface, uinstaller
 from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, icon_activities, icon_nickname, \
                             icon_unknown
 
@@ -8,6 +8,7 @@ from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, 
 
 apps = []
 current_index = 0
+current_icon = None
 
 
 def show_text(text):
@@ -34,22 +35,20 @@ def add_app(app, information):
     except:
         category = ""
     try:
-        icon = information["icon"] if category == "system" else __import__('%s/%s/icon' % (install_path, app)).icon
-
-        data, num_frames = icon
-        if len(data) != 8 * 8 * num_frames:
-            print('App icon for app "%s" is not 8*8 or has more/less frames than it says' % title)
-            icon = icon_unknown
+        if category == "system":
+            icon = {'data': information["icon"]}
+        else:
+            icon = {'path': '%s/%s/icon' % (install_path, app)}
 
     except:
-        icon = icon_unknown
+        icon = {'data': icon_unknown}
 
     info = {"file": app, "title": title, "category": category, "icon": icon}
     apps.append(info)
 
 
 def populate_apps():
-    global apps
+    global apps, current_index
     apps = []
     try:
         userApps = os.listdir('apps')
@@ -67,11 +66,43 @@ def populate_apps():
     add_app("update", {"name": "Firmware update", "category": "system", "icon": icon_settings})
     add_app("updateapps", {"name": "App updates", "category": "system", "icon": icon_settings})
 
+    current_index = machine.nvs_getint('launcher', 'index') or 0
+    if current_index >= len(apps):
+        current_index = 0
+
+
+def get_icon(app):
+    try:
+        if 'data' in app['icon']:
+            return(app['icon']['data'])
+        else:
+            icon = __import__(app['icon']['path']).icon
+
+            if len(icon) != 2:
+                print('App icon for app "%s" isn\'t a tuple with a pixel array and the number of frames' % app['name'])
+                return icon_unknown
+
+            data, num_frames = icon
+            if len(data) != 8 * 8 * num_frames:
+                print('App icon for app "%s" is not 8*8 or has more/less frames than it says' % app['name'])
+                return icon_unknown
+
+            return icon
+    except:
+        return icon_unknown
+
+
 
 def render_current_app():
+    global current_icon
     clear()
     app = apps[current_index]
-    data, num_frames = app["icon"]
+
+    current_icon = None
+    gc.collect()
+    current_icon = get_icon(app)
+
+    data, num_frames = current_icon
 
     rgb.gif(data, (0, 0), (8, 8), num_frames)
     show_app_name(app["title"])
@@ -143,6 +174,7 @@ def input_up(pressed):
     pm.feed()
     if pressed:
         current_index = (current_index - 1) % len(apps)
+        machine.nvs_setint('launcher', 'index', current_index)
         render_current_app()
 
 
@@ -152,6 +184,7 @@ def input_down(pressed):
     pm.feed()
     if pressed:
         current_index = (current_index + 1) % len(apps)
+        machine.nvs_setint('launcher', 'index', current_index)
         render_current_app()
 
 
@@ -211,16 +244,11 @@ init_power_management()
 
 # Install CZ countdown app to replace activities app
 if not machine.nvs_getint('system', 'czcount_inst'):
-    import uinterface
-    if uinterface.connect_wifi():
-        import woezel
-        uinterface.loading_text('Installing CZ20 countdown')
-        if woezel.is_installed('campzone_2020_countdown') or woezel.install('campzone_2020_countdown'):
-            machine.nvs_setint('system', 'czcount_inst', 1)
-            system.reboot()
-        else:
-            rgb.clear()
-            uinterface.skippabletext('Installation failed')
+    if woezel.is_installed('campzone_2020_countdown'):
+        machine.nvs_setint('system', 'czcount_inst', 1)
+    else:
+        if uinterface.connect_wifi():
+            uinstaller.install('campzone_2020_countdown')
 
     render_current_app()
 

@@ -173,6 +173,13 @@ def _set_last_updated():
     except:
         pass
 
+def _slug_to_name(slug):
+    if len(slug) < 2:
+        return slug.upper()
+
+    slug = slug.replace('_', ' ')
+    return slug[0].upper() + slug[1:]
+
 def update_cache():
     # Check if RTC has been synced over NTP
     if not rtc.isSet():
@@ -198,39 +205,26 @@ def update_cache():
 
     print('Updating woezel cache..')
 
-    _show_progress("Downloading categories...")
-    try:
-        request = urequests.get("https://%s/eggs/categories/json" % woezel_domain, timeout=30)
-        _show_progress("Saving categories...")
+    _show_progress("Downloading package list...")
+    packages = get_pkg_list()
+    categories = set(item['category'] for item in packages)
 
-        with open(cache_path + '/categories.json', 'w') as categories_file:
-            categories_file.write(request.text)
+    with open(cache_path + '/categories.json', 'w') as categories_file:
+        categories_file.write(json.dumps([{'name': _slug_to_name(cat), 'slug': cat} for cat in categories]))
 
-        _show_progress("Parsing categories...")
-        categories = request.json()
-        request.close()
-        del request
-        for index, category in enumerate(categories):
-            gc.collect()
-            cat_slug = category["slug"]
-            _show_progress("Downloading '" + category["name"] + "' (%d/%d)..." % (index, len(categories)))
-            f = urequests.get("https://%s/basket/%s/category/%s/json" % (woezel_domain, device_name, cat_slug), timeout=30)
-
-            with open(cache_path + '/' + cat_slug + '.json', 'w') as f_file:
-                f_file.write(f.text)
-            f.close()
-            del f
-            gc.collect()
-        _set_last_updated()
-
-        _show_progress("Done!")
+    _show_progress("Saving lists...")
+    for cat in categories:
         gc.collect()
-        return True
-    except BaseException as e:
-        sys.print_exception(e)
-        _show_progress("Failed!", True)
-        gc.collect()
-    return False
+        with open(cache_path + '/' + cat + '.json', 'w') as category_file:
+            category_file.write(json.dumps([app for app in packages if app['category'] == cat]))
+
+    gc.collect()
+    _set_last_updated()
+
+    _show_progress("Done!")
+    gc.collect()
+    return True
+
 
 def get_categories():
     if not update_cache():
@@ -250,6 +244,7 @@ def get_categories():
                 active_categories.append(category)
     gc.collect()
     return active_categories
+
 
 def get_category(category_name):
     if not update_cache():
@@ -284,7 +279,7 @@ def search_pkg_list(query):
 
 def is_installed(app_name, path=None):
     if path == None:
-        path = install_path
+        path = get_install_path()
     if path[-1] != '/':
         path += '/'
     already_installed = False

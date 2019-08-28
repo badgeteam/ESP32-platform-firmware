@@ -1,4 +1,4 @@
-import term, system, time, wifi, uos, json, sys, gc, woezel
+import term, system, time, wifi, uos, json, sys, gc, woezel, uinstaller
 
 system.serialWarning()
 
@@ -69,21 +69,7 @@ def install_app(i,fromcat):
 			time.sleep(2)
 			show_category(fromcat)
 	showMessage("Installing "+slug+"...")
-	try:
-		del category
-		gc.collect()
-		woezel.install(slug)
-		time.sleep(2)
-	except woezel.LatestInstalledError:
-		showMessage("Latest version is already installed.")
-		time.sleep(2)
-		show_category(fromcat)
-	except:
-		showMessage("Failed to install "+slug+"!")
-		time.sleep(2)
-		show_category(fromcat)
-	showMessage(slug+" has been installed!")
-	show_category(fromcat)
+	uinstaller.install(slug)
 
 #Main application
 
