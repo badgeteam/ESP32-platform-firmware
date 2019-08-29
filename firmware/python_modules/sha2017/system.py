@@ -1,6 +1,7 @@
-import machine
+import machine, eink
 
 def reboot():
+	eink.busy_wait()
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):

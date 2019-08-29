@@ -12,6 +12,7 @@
 #include "driver_ili9341.h"
 #include "driver_hub75.h"
 #include "driver_gxgde0213b1.h"
+#include "driver_fri3d.h"
 
 /* E-INK display as used on the SHA2017 and HackerHotel 2019 badges */
 #if defined(CONFIG_DRIVER_EINK_ENABLE)
@@ -42,7 +43,6 @@
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_gxgde0213b1_write(buffer);
 	#define COLOR_FILL_DEFAULT 0xFFFFFF
 	#define COLOR_TEXT_DEFAULT 0x000000
-
 	
 /* OLED display as used on the Disobey 2020 badge */
 #elif defined(CONFIG_DRIVER_SSD1306_ENABLE)
@@ -85,6 +85,16 @@
 	#define FB_TYPE_32BPP
 	#define FB_ALPHA_ENABLED
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_hub75_switch_buffer(buffer)
+	#define COLOR_FILL_DEFAULT 0x000000
+	#define COLOR_TEXT_DEFAULT 0xFFFFFF
+
+/* FRI3D 2018 led matrix */
+#elif CONFIG_DRIVER_FRI3D_ENABLE
+	#define FB_SIZE FRI3D_BUFFER_SIZE
+	#define FB_WIDTH FRI3D_WIDTH
+	#define FB_HEIGHT FRI3D_HEIGHT
+	#define FB_TYPE_8BPP
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_fri3d_write(buffer);
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 #else

@@ -1,0 +1,22 @@
+menu "Driver: Fri3d camp 2018 badge display"
+	config DRIVER_FRI3D_ENABLE
+		bool "Enable the FRI3D camp 2018 display driver"
+		default n
+	
+	config PIN_NUM_FRI3D_DAT
+		depends on DRIVER_FRI3D_ENABLE
+		int "GPIO to use as data pin"
+
+	config PIN_NUM_FRI3D_CLK
+		depends on DRIVER_FRI3D_ENABLE
+		int "GPIO to use as clock pin"
+
+	config PIN_NUM_FRI3D_LAT
+		depends on DRIVER_FRI3D_ENABLE
+		int "GPIO to use as latch pin"
+
+	config PIN_NUM_FRI3D_OE
+		depends on DRIVER_FRI3D_ENABLE
+		int "GPIO to use as output enable pin"
+	
+endmenu

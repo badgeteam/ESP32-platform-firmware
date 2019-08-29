@@ -1,79 +1,61 @@
-import dialogs, ugfx, network, badge, system
+import easydraw, network, machine, system, keyboard, ugfx
 
-def clearGhosting():
-	ugfx.clear(ugfx.WHITE)
-	ugfx.flush()
-	badge.eink_busy_wait()
-	ugfx.clear(ugfx.BLACK)
-	ugfx.flush()
-	badge.eink_busy_wait()
-
-clearGhosting()
-ugfx.clear(ugfx.WHITE)
-ugfx.string(100,50,'Scanning...','Roboto_Regular18',ugfx.BLACK)
-ugfx.flush()
-
+easydraw.messageCentered("Scanning...", True, "/media/wifi.png")
 sta_if = network.WLAN(network.STA_IF); sta_if.active(True)
 scanResults = sta_if.scan()
 
 ssidList = []
 for AP in scanResults:
-    ssidList.append(AP[0])
+	ssidList.append(AP[0])
 ssidSet = set(ssidList)
 
-clearGhosting()
-ugfx.clear(ugfx.WHITE)
-ugfx.string(25,20,'Found','Roboto_Regular18',ugfx.BLACK)
-ugfx.string(40,40,str(len(ssidSet)),'Roboto_Regular18',ugfx.BLACK)
-ugfx.string(10,60,'Networks','Roboto_Regular18',ugfx.BLACK)
-options = ugfx.List(ugfx.width()-int(ugfx.width()/1.5),0,int(ugfx.width()/1.5),ugfx.height())
+options = ugfx.List(0,0,ugfx.width(),ugfx.height())
 
 for ssid in ssidSet:
-    options.add_item(ssid)
+	try:
+		ssidStr = ssid.decode("ascii")
+		options.add_item(ssidStr)
+	except:
+		pass
 
+chosenSsid = ""
 def connectClick(pushed):
-    if pushed:
-        selected = options.selected_text().encode()
-        print('selected')
-        options.destroy()
-
-        ssidType = scanResults[ssidList.index(selected)][4]
-        print(ssidType)
-        print(ssidList.index(selected))
-        ugfx.clear(ugfx.WHITE)
-        ugfx.string(100,50,selected,'Roboto_Regular18',ugfx.BLACK)
-        ugfx.flush()
-        if ssidType == 5:
-            clearGhosting()
-            ugfx.clear(ugfx.WHITE)
-            ugfx.string(20,50,'WPA Enterprise unsupported...','Roboto_Regular18',ugfx.BLACK)
-            ugfx.set_lut(ugfx.LUT_FULL)
-            ugfx.flush()
-            badge.eink_busy_wait()
-            system.reboot()
-
-        badge.nvs_set_str("system", "wifi.ssid", selected)
-
-        if ssidType == 0:
-			badge.nvs_set_str("system", "wifi.password", '')
+	global chosenSsid
+	if pushed:
+		selected = options.selected_text().encode()
+		
+		ssidType = scanResults[ssidList.index(selected)][4]
+		if ssidType == 5:
+			easydraw.messageCentered("WPA Enterprise is not supported yet.", True, "/media/alert.png")
 			system.reboot()
-        else:
-        	clearGhosting()
-        	dialogs.prompt_text("WiFi password", cb = passInputDone)
+		
+		chosenSsid = selected
+		if ssidType == 0:
+			passInputDone(None)
+		else:
+			keyboard.show("Password","",passInputDone)
 
+def passInputDone(password):
+	global chosenSsid
+	machine.nvs_setstr("system", "wifi.ssid", chosenSsid)
+	if password:
+		machine.nvs_setstr("system", "wifi.password", password)
+	else:
+		try:
+			machine.nvs_erase("system", "wifi.password")
+		except:
+			pass
+	easydraw.messageCentered("Settings stored!", True, "/media/ok.png")
+	system.launcher()
 
-def passInputDone(passIn):
-    badge.nvs_set_str("system", "wifi.password", passIn)
-    ugfx.clear(ugfx.WHITE)
-    ugfx.string(100,50,'Restarting!','Roboto_Regular18',ugfx.BLACK)
-    ugfx.flush()
-    badge.eink_busy_wait()
-    system.reboot()
+def exitApp(pressed):
+	if pressed:
+		system.launcher()
 
 ugfx.input_attach(ugfx.BTN_A, connectClick)
+ugfx.input_attach(ugfx.BTN_B, exitApp)
+ugfx.input_attach(ugfx.BTN_START, exitApp)
 ugfx.input_attach(ugfx.JOY_UP, lambda pushed: ugfx.flush() if pushed else 0)
 ugfx.input_attach(ugfx.JOY_DOWN, lambda pushed: ugfx.flush() if pushed else 0)
-
-ugfx.set_lut(ugfx.LUT_FULL)
-ugfx.flush()
 ugfx.set_lut(ugfx.LUT_FASTER)
+ugfx.flush()

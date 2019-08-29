@@ -40,6 +40,8 @@
 
 static const char *TAG = "driver_eink_dev";
 
+static bool eink_is_broken = false;
+
 enum driver_eink_dev_t driver_eink_dev_type = DRIVER_EINK_DEFAULT;
 
 static spi_device_handle_t spi_bus = NULL;
@@ -53,6 +55,8 @@ driver_eink_dev_claim_spi(void)
 {
 	// already claimed?
 	if (spi_bus != NULL) return ESP_OK;
+	
+	if (driver_eink_dev_type == DRIVER_EINK_NONE) return ESP_OK;
 
 	ESP_LOGI(TAG, "claiming VSPI bus");
 	driver_vspi_release_and_claim(driver_eink_dev_release_spi);
@@ -85,8 +89,7 @@ driver_eink_dev_claim_spi(void)
 	return res;
 }
 
-static esp_err_t
-driver_eink_dev_release_spi(void)
+static esp_err_t driver_eink_dev_release_spi(void)
 {
 	ESP_LOGI(TAG, "releasing VSPI bus");
 	esp_err_t res = spi_bus_remove_device(spi_bus);
@@ -102,8 +105,9 @@ driver_eink_dev_release_spi(void)
 	return ESP_OK;
 }
 
-esp_err_t
-driver_eink_dev_reset(void) {
+esp_err_t driver_eink_dev_reset(void) {
+	if (driver_eink_dev_type == DRIVER_EINK_NONE) return ESP_OK;
+	
 	esp_err_t res = gpio_set_level(CONFIG_PIN_NUM_EPD_RESET, LOW);
 	if (res != ESP_OK)
 		return res;
@@ -119,8 +123,7 @@ driver_eink_dev_reset(void) {
 	return ESP_OK;
 }
 
-bool
-driver_eink_dev_is_busy(void)
+bool driver_eink_dev_is_busy(void)
 {
 	return gpio_get_level(CONFIG_PIN_NUM_EPD_BUSY);
 }
@@ -128,9 +131,10 @@ driver_eink_dev_is_busy(void)
 // semaphore to trigger on gde-busy signal
 xSemaphoreHandle driver_eink_dev_intr_trigger = NULL;
 
-void
-driver_eink_dev_busy_wait(void)
+void driver_eink_dev_busy_wait(void)
 {
+	if (driver_eink_dev_type == DRIVER_EINK_NONE) return;
+	if (eink_is_broken) return;
 	uint16_t timeout = 50;
 	while (driver_eink_dev_is_busy() && (timeout > 0))
 	{
@@ -140,12 +144,13 @@ driver_eink_dev_busy_wait(void)
 	}
 	
 	if (timeout < 1) {
-		ESP_LOGE(TAG, "HARDWARE ERROR: EINK BUSY WAIT TIMEOUT!");
+		ESP_LOGE(TAG, "E-INK DISPLAY HARDWARE ERROR!");
+		ESP_LOGE(TAG, "Timeout while waiting for busy flag to clear.");
+		eink_is_broken = true;
 	}
 }
 
-void
-driver_eink_dev_intr_handler(void *arg)
+void driver_eink_dev_intr_handler(void *arg)
 { /* in interrupt handler */
 #ifdef CONFIG_DRIVER_EINK_DEBUG
 	static int gpio_last_state = -1;
@@ -180,6 +185,8 @@ driver_spi_send(const uint8_t *data, int len, const uint8_t dc_level)
 	if (len == 0) {
 		return;
 	}
+	
+	if (driver_eink_dev_type == DRIVER_EINK_NONE) return ESP_OK;
 
 	esp_err_t ret = driver_eink_dev_claim_spi();
 	assert(ret == ESP_OK);
@@ -242,6 +249,8 @@ driver_eink_dev_write_command_stream_u32(uint8_t command, const uint32_t *data,
 										 unsigned int datalen)
 {
 	assert(SPI_TRANSFER_SIZE % 4 == 0);
+	
+	if (driver_eink_dev_type == DRIVER_EINK_NONE) return ESP_OK;
 
 	uint8_t* data_tmpbuf = heap_caps_malloc(SPI_TRANSFER_SIZE, MALLOC_CAP_8BIT);
 	ESP_LOGI(TAG, "Sending SPI stream of %d dwords...", datalen);
@@ -278,6 +287,11 @@ esp_err_t driver_eink_dev_init(enum driver_eink_dev_t dev_type)
 	driver_vspi_init();
 
 	driver_eink_dev_type = dev_type;
+	
+	if (driver_eink_dev_type == DRIVER_EINK_NONE) {
+		driver_eink_dev_init_done = true;
+		return ESP_OK;
+	}
 	
 	driver_eink_dev_intr_trigger = xSemaphoreCreateBinary();
 	if (driver_eink_dev_intr_trigger == NULL)
