@@ -13,7 +13,7 @@ def reboot(goHome=True):
     if goHome:
         home()
     else:
-        machine.deepsleep(2)
+        machine.deepsleep(1)
 
 def sleep(duration=0, status=False):
     if (duration >= 86400000): #One day
@@ -51,7 +51,7 @@ def start(app, status=True):
         else:
             term.header(True, "Loading application "+app+"...")
     machine.RTC().write_string(app)
-    machine.deepsleep(2)
+    machine.deepsleep(1)
 
 def home(status=False):
     start("", status)

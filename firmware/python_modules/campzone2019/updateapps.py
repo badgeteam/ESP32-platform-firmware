@@ -1,6 +1,5 @@
-import system, time, uos as os
+import system, time, uos as os, gc
 import woezel, rgb, uinterface
-from default_icons import icon_no_wifi, animation_connecting_wifi, animation_loading
 
 if not uinterface.connect_wifi():
     print("Error connecting to wifi")
@@ -18,6 +17,7 @@ time.sleep(4)
 for app in apps:
     rgb.clear()
     uinterface.loading_text(app)
+    gc.collect()
     woezel.install(app)
 
 rgb.clear()

@@ -12,7 +12,7 @@ names = [
     "Teemu Hakala", "Kliment", "Windytan",
     "Purkkaviritys", "Otto Raila", "Jaga",
     "EMF Badge Team", "MicroPython", "Loboris",
-    "BADGE.TEAM", "CTF{w3lc0metoothehackZONECeeTieEf}"]
+    "BADGE.TEAM",]
 
 def action_exit(pushed):
     if (pushed):
