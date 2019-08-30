@@ -128,7 +128,7 @@ esp_err_t driver_ssd1306_init(void)
 	if (res != ESP_OK) return res;
 	i2c_command(0x20); // SSD1306_MEMORYMODE
 	if (res != ESP_OK) return res;
-	i2c_command(0x00); // 0x0 act like ks0108
+	i2c_command(0x01); // 0x0 act like ks0108 / 0x01 vertical addressing mode
 	if (res != ESP_OK) return res;
 	i2c_command(0xa1); // SSD1306_SEGREMAP | 1
 	if (res != ESP_OK) return res;
@@ -173,6 +173,30 @@ esp_err_t driver_ssd1306_init(void)
 	return ESP_OK;
 }
 
+esp_err_t driver_ssd1306_write_part(const uint8_t *buffer, int16_t x0, int16_t y0, int16_t x1, int16_t y1)
+{
+	uint16_t addr0 = x0*(SSD1306_HEIGHT/8);
+	uint16_t addr1 = x1*(SSD1306_HEIGHT/8) + (SSD1306_HEIGHT/8);
+	uint16_t length = addr1-addr0;
+	
+	esp_err_t res;
+	res = i2c_command(0x21); //Column address
+	if (res != ESP_OK) return res;
+	res = i2c_command(x0); //Column start
+	if (res != ESP_OK) return res;
+	res = i2c_command(x1);//SSD1306_WIDTH-1); //Column end
+	if (res != ESP_OK) return res;
+	res = i2c_command(0x22); //Page address
+	if (res != ESP_OK) return res;
+	res = i2c_command(0); //Page start
+	if (res != ESP_OK) return res;
+	res = i2c_command(7);   //Page end
+	if (res != ESP_OK) return res;
+	res = i2c_data(buffer+addr0, length);
+	if ( res != ESP_OK) return res;
+	return res;
+}
+
 esp_err_t driver_ssd1306_write(const uint8_t *buffer)
 {
 	esp_err_t res;
@@ -180,14 +204,14 @@ esp_err_t driver_ssd1306_write(const uint8_t *buffer)
 	if (res != ESP_OK) return res;
 	res = i2c_command(   0); //Column start
 	if (res != ESP_OK) return res;
-	res = i2c_command( 127); //Column end
+	res = i2c_command( SSD1306_WIDTH-1); //Column end
 	if (res != ESP_OK) return res;
 	
 	res = i2c_command(0x22); //Page address
 	if (res != ESP_OK) return res;
-	res = i2c_command(   0); //Page start
+	res = i2c_command(0); //Page start
 	if (res != ESP_OK) return res;
-	res = i2c_command(   7); //Page end
+	res = i2c_command(7);   //Page end
 	if (res != ESP_OK) return res;
 	
 	res = i2c_data(buffer, SSD1306_BUFFER_SIZE);

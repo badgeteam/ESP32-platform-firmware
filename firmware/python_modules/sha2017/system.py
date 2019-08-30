@@ -43,7 +43,7 @@ def home(status=False):
 	start("", status)
 
 def launcher(status=False):
-	start("launcher", status)
+	start("dashboard.launcher", status)
 
 def shell(status=False):
 	start("shell", status)

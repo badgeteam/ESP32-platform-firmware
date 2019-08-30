@@ -49,9 +49,9 @@ esp_err_t driver_i2c_init(void)
 #endif
 		.scl_io_num       = CONFIG_PIN_NUM_I2C_CLK,
 #ifdef CONFIG_PIN_PULL_I2C_CLK
-		.scl_pullup_en    =  GPIO_PULLUP_ENABLE,
+		.scl_pullup_en    = GPIO_PULLUP_ENABLE,
 #else
-		.scl_pullup_en    =  GPIO_PULLUP_DISABLE,
+		.scl_pullup_en    = GPIO_PULLUP_DISABLE,
 #endif
 		.master.clk_speed = CONFIG_I2C_MASTER_FREQ_HZ,
 	};

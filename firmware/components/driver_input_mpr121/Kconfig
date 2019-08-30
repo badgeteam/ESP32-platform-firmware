@@ -11,6 +11,17 @@ menu "Driver: MPR121 touch input"
 	config PIN_NUM_MPR121_INT
 		depends on DRIVER_MPR121_ENABLE
 		int "GPIO pin used for MPR121 interrupt"
+
+	config DRIVER_MPR121_THRESHOLD_PRESS
+		depends on DRIVER_MPR121_ENABLE
+		int "Press threshold"
+		default 12
+	
+	config DRIVER_MPR121_THRESHOLD_RELEASE
+		depends on DRIVER_MPR121_ENABLE
+		int "Release threshold"
+		default 6
+	
 		
 	choice
 		prompt "Electrode 0"
@@ -227,64 +238,36 @@ menu "Driver: MPR121 touch input"
 	config MPR121_ELE11_OUTPUT_HIGH_ONLY
 		bool "Digital output that only sources"
 	endchoice
+
+	config MPR121_OUTPUT_DEFAULT_ON_4
+		depends on DRIVER_MPR121_ENABLE && (MPR121_ELE4_OUTPUT || MPR121_ELE4_OUTPUT_LOW_ONLY || MPR121_ELE4_OUTPUT_HIGH_ONLY)
+		bool "Digital output default to high for electrode electrode 4"
 	
-	config MPR121_BASELINE_0
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 0"
-		default 0
+	config MPR121_OUTPUT_DEFAULT_ON_5
+		depends on DRIVER_MPR121_ENABLE && (MPR121_ELE5_OUTPUT || MPR121_ELE5_OUTPUT_LOW_ONLY || MPR121_ELE5_OUTPUT_HIGH_ONLY)
+		bool "Digital output default to high for electrode electrode 5"
 	
-	config MPR121_BASELINE_1
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 1"
-		default 0
+	config MPR121_OUTPUT_DEFAULT_ON_6
+		depends on DRIVER_MPR121_ENABLE && (MPR121_ELE6_OUTPUT || MPR121_ELE6_OUTPUT_LOW_ONLY || MPR121_ELE6_OUTPUT_HIGH_ONLY)
+		bool "Digital output default to high for electrode electrode 6"
 	
-	config MPR121_BASELINE_2
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 2"
-		default 0
+	config MPR121_OUTPUT_DEFAULT_ON_7
+		depends on DRIVER_MPR121_ENABLE && (MPR121_ELE7_OUTPUT || MPR121_ELE7_OUTPUT_LOW_ONLY || MPR121_ELE7_OUTPUT_HIGH_ONLY)
+		bool "Digital output default to high for electrode electrode 7"
 	
-	config MPR121_BASELINE_3
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 3"
-		default 0
+	config MPR121_OUTPUT_DEFAULT_ON_8
+		depends on DRIVER_MPR121_ENABLE && (MPR121_ELE8_OUTPUT || MPR121_ELE8_OUTPUT_LOW_ONLY || MPR121_ELE8_OUTPUT_HIGH_ONLY)
+		bool "Digital output default to high for electrode electrode 8"
 	
-	config MPR121_BASELINE_4
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 4"
-		default 0
+	config MPR121_OUTPUT_DEFAULT_ON_9
+		depends on DRIVER_MPR121_ENABLE && (MPR121_ELE9_OUTPUT || MPR121_ELE9_OUTPUT_LOW_ONLY || MPR121_ELE9_OUTPUT_HIGH_ONLY)
+		bool "Digital output default to high for electrode electrode 9"
 	
-	config MPR121_BASELINE_5
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 5"
-		default 0
+	config MPR121_OUTPUT_DEFAULT_ON_10
+		depends on DRIVER_MPR121_ENABLE && (MPR121_ELE10_OUTPUT || MPR121_ELE10_OUTPUT_LOW_ONLY || MPR121_ELE10_OUTPUT_HIGH_ONLY)
+		bool "Digital output default to high for electrode electrode 10"
 	
-	config MPR121_BASELINE_6
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 6"
-		default 0
-	
-	config MPR121_BASELINE_7
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 7"
-		default 0
-	
-	config MPR121_BASELINE_8
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 8"
-		default 0
-	
-	config MPR121_BASELINE_9
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 9"
-		default 0
-	
-	config MPR121_BASELINE_10
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 10"
-		default 0
-	
-	config MPR121_BASELINE_11
-		depends on DRIVER_MPR121_ENABLE
-		int "Baseline value for electrode 11"
-		default 0
+	config MPR121_OUTPUT_DEFAULT_ON_11
+		depends on DRIVER_MPR121_ENABLE && (MPR121_ELE11_OUTPUT || MPR121_ELE11_OUTPUT_LOW_ONLY || MPR121_ELE11_OUTPUT_HIGH_ONLY)
+		bool "Digital output default to high for electrode electrode 11"
 endmenu

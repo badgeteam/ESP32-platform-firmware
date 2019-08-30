@@ -75,11 +75,12 @@ def lineCentered(pos_y, line, font, color):
 
 def messageCentered(message, firstLineTitle=True, png=None):
 	try:
+		display.drawFill(0xFFFFFF)
 		color = 0x000000
 		font1 = "Roboto_Regular18"
 		font2 = "Roboto_Regular12"
-		font1Height = 22#display.getTextHeight(" ", font1)
-		font2Height = 16#display.getTextHeight(" ", font2)
+		font1Height = display.getTextHeight(" ", font1)
+		font2Height = display.getTextHeight(" ", font2)
 		
 		message = message.split("\n")
 		lines = []
@@ -97,9 +98,10 @@ def messageCentered(message, firstLineTitle=True, png=None):
 		if png != None:
 			try:
 				pngSize = badge.png_info(png)
-				pngSize = [pngSize[0], pngSize[1]+8] #Little bit of extra offset
+				pngSize = [pngSize[0], pngSize[1]+2] #Little bit of extra offset
 			except BaseException as e:
-				print("Error in PNG height",e)
+				#print("Error in PNG height",e)
+				pass
 		
 		textHeight = len(lines)*font2Height
 		
@@ -108,9 +110,6 @@ def messageCentered(message, firstLineTitle=True, png=None):
 			textHeight += font1Height
 		
 		offset_y = (display.height()-pngSize[1]-textHeight)//2
-		
-		display.drawFill()
-		#display.drawLine(0,display.height()//2,display.width()-1,display.height()//2,0)
 		
 		if png != None:
 			try:

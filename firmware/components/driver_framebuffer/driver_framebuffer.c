@@ -157,41 +157,47 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 	uint8_t* buffer; int16_t width, height;
 	if (!_getFrameContext(frame, &buffer, &width, &height)) return;
 	if (!driver_framebuffer_orientation_apply(frame ? frame->window : NULL, &x, &y)) return;
-	if (!frame) driver_framebuffer_set_dirty_area(x,y,x,y,false);
-	
+	bool changed = false;
 	#if defined(FB_TYPE_1BPP)
 		value = greyToBw(rgbToGrey(value));
 		#ifndef FB_1BPP_VERT
-#if defined(FB_1BPP_OHS)
-#warning "USING OHS!!"
-			uint32_t position = ((width-x-1) + y * width) / 8;
-			uint8_t  bit      = x % 8;
-#else
-#warning "USING HORI!"
-			uint32_t position = (y * (width/8)) + (x / 8);
-			uint8_t  bit      = x % 8;
-#endif
+			#if defined(FB_1BPP_OHS)
+			#warning "USING OHS!!"
+				uint32_t position = ((width-x-1) + y * width) / 8;
+				uint8_t  bit      = x % 8;
+			#elif defined(FB_1BPP_VERT2)
+				#warning "USING VERT2!"
+				uint32_t position = (y/8) + (x*height/8);
+				uint8_t  bit      = y % 8;
+			#else
+			#warning "USING HORI!"
+				uint32_t position = (y * (width/8)) + (x / 8);
+				uint8_t  bit      = x % 8;
+			#endif
 		#else
-#warning "USING VERT!"
+			#warning "USING VERT!"
 			uint32_t position = ( (y / 8) * width) + x;
 			uint8_t  bit      = y % 8;
 		#endif
 
+		uint8_t oldVal = buffer[position];
 		if (value) {
 			buffer[position] |= 1UL << bit;
 		} else {
 			buffer[position] &= ~(1UL << bit);
 		}
-		
+		if (oldVal != buffer[position]) changed = true;
 	#elif defined(FB_TYPE_8BPP)
 		value = rgbToGrey(value);
 		uint32_t position = (y * width) + x;
+		if (buffer[position] != value) changed = true;
 		buffer[position] = value;
 	#elif defined(FB_TYPE_16BPP)
 		value = rgbTo565(value);
 		uint8_t c0 = (value>>8)&0xFF;
 		uint8_t c1 = value&0xFF;
 		uint32_t position = (y * width * 2) + (x * 2);
+		if (buffer[position + 0] != c0 || buffer[position + 1] != c1) changed = true;
 		buffer[position + 0] = c0;
 		buffer[position + 1] = c1;
 	#elif defined(FB_TYPE_24BPP)
@@ -199,6 +205,7 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 		uint8_t g = (value>>8)&0xFF;
 		uint8_t b = value&0xFF;
 		uint32_t position = (y * width * 3) + (x * 3);
+		if (buffer[position + 0] != r || buffer[position + 1] != g || buffer[position + 2] != b) changed = true;
 		buffer[position + 0] = r;
 		buffer[position + 1] = g;
 		buffer[position + 2] = b;
@@ -208,6 +215,7 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 		uint8_t g = (value>>8)&0xFF;
 		uint8_t b = value&0xFF;
 		uint32_t position = (y * width * 4) + (x * 4);
+		if (buffer[position + 0] != a || buffer[position + 1] != b || buffer[position + 2] != g || buffer[position + 3] != r) changed = true;
 		buffer[position + 0] = a;
 		buffer[position + 1] = b;
 		buffer[position + 2] = g;
@@ -215,6 +223,8 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 	#else
 		#error "No framebuffer type configured."
 	#endif
+	
+	if ((!frame) && changed) driver_framebuffer_set_dirty_area(x,y,x,y,false);
 }
 
 uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y)
@@ -225,9 +235,21 @@ uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y)
 
 	#if defined(FB_TYPE_1BPP)
 		#ifndef FB_1BPP_VERT
-			uint32_t position = (y * (width/8)) + (x / 8);
-			uint8_t  bit      = x % 8;
+			#if defined(FB_1BPP_OHS)
+			#warning "USING OHS!!"
+				uint32_t position = ((width-x-1) + y * width) / 8;
+				uint8_t  bit      = x % 8;
+			#elif defined(FB_1BPP_VERT2)
+				#warning "USING VERT2!"
+				uint32_t position = (y/8) + (x*height/8);
+				uint8_t  bit      = y % 8;
+			#else
+			#warning "USING HORI!"
+				uint32_t position = (y * (width/8)) + (x / 8);
+				uint8_t  bit      = x % 8;
+			#endif
 		#else
+			#warning "USING VERT!"
 			uint32_t position = ( (y / 8) * width) + x;
 			uint8_t  bit      = y % 8;
 		#endif
@@ -298,7 +320,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 	}
 	
 	#ifdef CONFIG_DRIVER_HUB75_ENABLE
-	//compositor_disable();
+	compositor_disable();
 	#endif
 	
 	#if defined(FB_TYPE_8BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
@@ -331,6 +353,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 	#endif
 		int16_t dirty_x0, dirty_y0, dirty_x1, dirty_y1;
 		driver_framebuffer_get_dirty_area(&dirty_x0, &dirty_y0, &dirty_x1, &dirty_y1);
+		//printf("Dirty area: (%d, %d) to (%d, %d)\n", dirty_x0, dirty_y0, dirty_x1, dirty_y1);
 		FB_FLUSH(framebuffer,eink_flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
 	#ifdef FB_FLUSH_GS
 	}
@@ -374,7 +397,7 @@ esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_
 	//int bit_depth = pr->ihdr.bit_depth;
 	//int color_type = pr->ihdr.color_type;
 	
-	driver_framebuffer_set_dirty_area(x, y, x + width - 1, y + height - 1, false);
+	//driver_framebuffer_set_dirty_area(x, y, x + width - 1, y + height - 1, false);
 	
 	uint32_t dst_min_x = x < 0 ? -x : 0;
 	uint32_t dst_min_y = y < 0 ? -y : 0;

@@ -147,7 +147,7 @@ bool driver_framebuffer_orientation_apply(Window* window, int16_t* x, int16_t* y
 	if (*orientation == landscape) orientationString = "landscape";
 	if (*orientation == reverse_landscape) orientationString = "reverse_landscape";
 	
-	if (window) printf("Orientation: %s = %s  %d=>%d  %d=>%d\n", window ? window->name : "global", orientationString, oldx, *x, oldy, *y);
+	//if (window) printf("Orientation: %s = %s  %d=>%d  %d=>%d\n", window ? window->name : "global", orientationString, oldx, *x, oldy, *y);
 	
 	return (*x >= 0) && (*x < width) && (*y >= 0) && (*y < height);
 }
@@ -158,7 +158,7 @@ void driver_framebuffer_orientation_revert(Window* window, int16_t* x, int16_t* 
 	int16_t width, height;
 	_getSizeContext(window, &width, &height);
 
-	printf("Orientation revert %u, %u\n", *x, *y);
+	//printf("Orientation revert %u, %u\n", *x, *y);
 
 	if (*orientation == reverse_landscape || *orientation == portrait) { //90 degrees
 		int16_t t = *x;

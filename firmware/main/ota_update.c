@@ -80,10 +80,17 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 			#endif
 			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12864_ENABLE)
 				driver_framebuffer_fill(NULL, COLOR_BLACK);
-				driver_framebuffer_print(NULL, "UPDATE\n", 0, 0, 1, 1, COLOR_WHITE, &roboto12pt7b);
+				driver_framebuffer_print(NULL, "OTA update", 0, 0, 1, 1, COLOR_WHITE, &roboto12pt7b);
+				driver_framebuffer_print(NULL, text, 0, 15, 1, 1, COLOR_WHITE, &roboto12pt7b);
 				char buffer[16];
 				snprintf(buffer, 16, "%*u%%", 3, percentage);
-				driver_framebuffer_print(NULL, buffer, 0, FB_HEIGHT-8, 1, 1, COLOR_BLACK, &org_018pt7b);
+				driver_framebuffer_print(NULL, buffer, 0,30, 1, 1, COLOR_BLACK, &roboto12pt7b);
+				
+				uint16_t progressPosition = (percentage*(FB_WIDTH-17))/100;
+				
+				driver_framebuffer_rect(NULL, 5, FB_HEIGHT-15, FB_WIDTH-10, 10, false, 0xFFFFFF); //Outline of progress bar
+				
+				driver_framebuffer_rect(NULL, 6, FB_HEIGHT-14, progressPosition, 8, true, 0xFFFFFF); //Progress bar
 				driver_framebuffer_flush(0);
 			#endif
 			#ifdef CONFIG_DRIVER_HUB75_ENABLE

@@ -18,7 +18,8 @@
 __BEGIN_DECLS
 
 extern esp_err_t driver_ssd1306_init(void);
-extern esp_err_t driver_ssd1306_write(const uint8_t *data);
+extern esp_err_t driver_ssd1306_write_part(const uint8_t *buffer, int16_t x0, int16_t y0, int16_t x1, int16_t y1);
+extern esp_err_t driver_ssd1306_write(const uint8_t *buffer);
 
 __END_DECLS
 

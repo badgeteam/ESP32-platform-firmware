@@ -1,20 +1,15 @@
 import machine, display, time, system
 
+# SHA2017 "factory" tool
+# Does function as factory tool but also implements an upgrade path from our old firmware
+
 currentState = machine.nvs_getint('system', 'factory_checked')
 
-
-if currentState == 1:
-	display.drawFill(0xFFFFFF)
-	display.drawText(0,0,"Welcome to the BADGE.TEAM platform firmware!", 0x000000, "7x5")
-	display.drawText(0,6,"Please wait while we're setting things up...", 0x000000, "7x5")
-	display.flush()
-	time.sleep(2)
-else:
-	display.drawFill(0xFFFFFF)
-	display.drawText(0,0,"Welcome to the BADGE.TEAM platform firmware!", 0x000000, "7x5")
-	display.drawText(0,6,"Please wait while we're setting things up...", 0x000000, "7x5")
-	display.flush()
-	time.sleep(2)
+display.drawFill(0xFFFFFF)
+display.drawText(0,0,"Welcome to the BADGE.TEAM platform firmware!", 0x000000, "7x5")
+display.drawText(0,6,"Please wait while we're setting things up...", 0x000000, "7x5")
+display.flush()
+time.sleep(2)
 
 # Check if we have upgraded from a legacy firmware
 legacy_mpr0 = machine.nvs_get_u16("badge", "mpr121.base.0")
@@ -30,12 +25,15 @@ if legacy_mpr0:
 	legacy_eink_type = machine.nvs_getstr("badge", "eink.dev.type")
 	
 	if currentState != 1:
+		print("Badge was upgraded from 2017 firmware. Move WiFi settings...")
 		if legacy_wifi_ssid:
 			machine.nvs_setstr("system", "wifi.ssid", legacy_wifi_ssid)
 		if legacy_wifi_password:
 			machine.nvs_setstr("system", "wifi.password", legacy_wifi_password)
 		if legacy_eink_type:
 			machine.nvs_setstr("system", "eink.dev.type", legacy_eink_type)
+	else:
+		print("Badge was upgraded from a very early version of the platform firmware.")
 
 	try:
 		legacy_mpr1 = machine.nvs_get_u16("badge", "mpr121.base.1")
@@ -54,20 +52,10 @@ if legacy_mpr0:
 		machine.nvs_set_u16("system", "mpr121.base.6", legacy_mpr6)
 		machine.nvs_set_u16("system", "mpr121.base.7", legacy_mpr7)
 	except:
-		display.drawFill(0xFFFFFF)
-		display.drawText(0,0,"Welcome to the BADGE.TEAM platform firmware!", 0x000000, "7x5")
-		display.drawText(0,6,"(Note to Renze: fc err in mpr121 nvs)", 0x000000, "7x5")
-		display.drawText(0,12,"Now calibrating the touch buttons...", 0x000000, "7x5")
-		display.flush()
-		time.sleep(2)
+		print("Unable to move MPR121 calibration!")
 		import _mpr121calib
 else:
-	display.drawFill(0xFFFFFF)
-	display.drawText(0,0,"Welcome to the BADGE.TEAM platform firmware!", 0x000000, "7x5")
-	display.drawText(0,6,"This is a fresh install of the firmware", 0x000000, "7x5")
-	display.drawText(0,12,"Now calibrating the touch buttons...", 0x000000, "7x5")
-	display.flush()
-	time.sleep(2)
+	print("Badge has been freshly installed!")
 	import _mpr121calib
 
 # Install icons to the filesystem if needed
@@ -80,14 +68,12 @@ try:
 except:
 	import dashboard.resources.png_icons
 	
+try:
+	# Remove old settings from NVS
+	machine.nvs_erase_all("badge")
+except:
+	pass
+	
 # We have completed the factory script
 machine.nvs_setint('system', 'factory_checked', 2)
-
-display.drawFill(0xFFFFFF)
-display.drawText(0,0,"Welcome to the BADGE.TEAM platform firmware!", 0x000000, "7x5")
-display.drawText(0,6,"Setup completed!", 0x000000, "7x5")
-display.drawText(0,12,"Restarting...", 0x000000, "7x5")
-
-time.sleep(5)
-
 system.home()

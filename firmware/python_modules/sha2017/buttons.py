@@ -1,7 +1,7 @@
 # SHA2017 badge specific input wrapper
 # Versions for other badges must expose the same API
 
-import mpr121, _buttons, _mpr121mapping, system
+import mpr121, _buttons, _mpr121mapping, system, machine
 
 # --- BUTTON CONSTANTS  ---
 BTN_A      = 0
@@ -145,7 +145,9 @@ def getCallback(button):
 def pushMapping(newMapping=None):
 	global __cb
 	if newMapping == None:
-		newMapping = { BTN_UP: None, BTN_DOWN: None, BTN_LEFT: None, BTN_RIGHT: None, BTN_A: None, BTN_B: None, BTN_SELECT: None, BTN_START: __cbReboot }
+		newMapping = { BTN_UP: None, BTN_DOWN: None, BTN_LEFT: None, BTN_RIGHT: None, BTN_A: None, BTN_B: None, BTN_SELECT: None, BTN_START: None }
+		if machine.nvs_getint("system", 'factory_checked'):
+			newMapping[BTN_START] = __cbReboot
 	__cb.append(newMapping)
 
 def popMapping():
