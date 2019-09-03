@@ -116,6 +116,12 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_mpu6050/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
+MP_EXTRA_INC += -I$(IDF_PATH)/components/esp_ringbuf/include
+MP_EXTRA_INC += -I$(IDF_PATH)/components/esp_event/include
+MP_EXTRA_INC += -I$(IDF_PATH)/components/lwip/lwip/src/include
+MP_EXTRA_INC += -I$(IDF_PATH)/components/lwip/include/apps
+MP_EXTRA_INC += -I$(IDF_PATH)/components/lwip/port/esp32/include
+MP_EXTRA_INC += -I$(IDF_PATH)/components/lwip/include_compat
 
 ifdef CONFIG_MICROPY_USE_BLUETOOTH
 MP_EXTRA_INC += -I$(ESPCOMP)/bt/include
