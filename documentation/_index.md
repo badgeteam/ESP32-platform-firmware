@@ -14,5 +14,5 @@ We're currently in the process of finalizing our APIs and the platform firmware 
 
 If you find a bug, documentation mistake or want to contribute please create a github issue describing what you want.
 
-![mistakes](docs.jpg)
+![mascot](mascot.png)
 
