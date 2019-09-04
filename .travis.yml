@@ -1,4 +1,4 @@
-dist: trusty
+dist: bionic
 sudo: false
 language: bash
 os:
@@ -15,17 +15,14 @@ addons:
       - gcc-4.8-plugin-dev
 
 before_install:
-  # Save path to the git respository
   - PROJECT_PATH=$(pwd)
 
 script:
   - pip install pyserial
-  # Update configuration so that kconfig doesn't start interactive mode
   - make --version
   - du -hs
   - source set_env.sh
   - unzip -p toolchain/xtensa-esp32-elf-linux64.zip xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar | tar xvf -
-  # Build project from the git repository
   - ./build.sh
   - du -hs
 
