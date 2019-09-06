@@ -40,12 +40,14 @@ Sebastian: our team lead and twitter god.
 
 He does both marketing and the leadership required to turn a bunch of volunteers into a functional development team.
 
-## Anne Jan Brouwer
-
 ## Bas van Sisseren
 Jack of all trades, master of e-inks.
 
 This awesome software engineer did most of the low level firmware for the SHA2017 badge. He reverse engineered the meaning behind the values sent to the e-ink display in the LUT, enabling us to greatly improve update rates and even do greyscale!
+
+## Anne Jan Brouwer
+
+Hatcher of the hatchery. Manager of OTAs. Without this guy the hatchery wouldn't have existed.
 
 ## Renze Nicolai
 
