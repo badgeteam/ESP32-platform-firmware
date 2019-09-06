@@ -9,12 +9,15 @@ This API encapsulates the drivers for different button types.
 
 # Badge support
 This API is currently supported on the following badges:
+
  - SHA2017
  - Hackerhotel 2019
  - Disobey 2019
  - CampZone 2019
  - Disobey 2020
  - Fri3dcamp 2018
+
+Support for GPIO buttons and touch-buttons via the MPR121 touch controller IC are supported. Touch buttons using the touch button features of the ESP32 can not be used (yet).
 
 # Reference
 
