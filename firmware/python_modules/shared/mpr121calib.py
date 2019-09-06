@@ -13,6 +13,11 @@ try:
 except:
 	pass
 
+try:
+	correction_factor = _mpr121mapping.correction_factor
+except:
+	correction_factor = 1
+
 easydraw.messageCentered("CALIBRATION\nDo not press any buttons!")
 time.sleep(1)
 
@@ -69,7 +74,6 @@ for i in range(12):
 	print(i,"\t",verification[i],"\t\t",baseLine[i], "\t\t", isTooLow[i], "\t", isTooHigh[i],"\t", baseLine[i] - verification[i])
 print("")
 
-correction_factor = 1.5 # This makes the keys *much* more responsive. ~magic~
 for i in range(12):
 	baseLine[i] = int(baseLine[i]*correction_factor)
 
