@@ -148,6 +148,20 @@ gc.collect()
 #
 # virtualtimers.new(10, ledAnimationTask)
 
-print('[BOOT] Launching UART menu')
-umenu = term_menu.UartMenu(goToSleep, pm, badge.safe_mode())
-umenu.main()
+cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu')
+if cfg_term_menu == None:
+        cfg_term_menu = True
+
+if cfg_term_menu:
+	print('[BOOT] Launching UART menu')
+	umenu = term_menu.UartMenu(goToSleep, pm, badge.safe_mode())
+	umenu.main()
+else:
+	print("Welcome!")
+        print("Press CTRL+C to reboot directly to a Python prompt.")
+        wait = True
+        while wait:
+                c = machine.stdin_get(1,1)
+                if c == "\x03" or c == "\x04": # CTRL+C or CTRL+D
+                        wait = False
+        import shell
