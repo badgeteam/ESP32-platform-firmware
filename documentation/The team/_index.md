@@ -59,3 +59,7 @@ He's both good at fixing and introducing bugs, but is always ready to answer you
 ## Nikolett
 Nikolett designed our mascots: Badge.r and the exited small snake. You can find more art and information on her [website](https://ankhaneko.wixsite.com/portfolio) and [twitter](https://twitter.com/Nekolett).
 
+## Tom Clement
+He did the CampZone 2019 badge.
+
+(He's our very own one man army.)
