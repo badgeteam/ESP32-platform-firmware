@@ -57,5 +57,5 @@ Responsible for making a platform out of our SHA2017 firmware, while also doing 
 He's both good at fixing and introducing bugs, but is always ready to answer your questions and issues on Github.
 
 ## Nikolett
-Nikolett designed our mascots: Badge.r and the exited small snake. You can find more art and on her [website](https://ankhaneko.wixsite.com/portfolio) and [twitter](https://twitter.com/Nekolett).
+Nikolett designed our mascots: Badge.r and the exited small snake. You can find more art and information on her [website](https://ankhaneko.wixsite.com/portfolio) and [twitter](https://twitter.com/Nekolett).
 
