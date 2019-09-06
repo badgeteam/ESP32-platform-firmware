@@ -38,7 +38,7 @@ Some special credit has to be given to some people from this ever growing list o
 ## Sebastian Oort
 Sebastian: our team lead and twitter god.
 
-He does both marketing and the leadership required to turn a bunch of volunteers into a functional development team.
+He provides us with excelent marketing, finds sponsors and has the leadership skills required to turn a bunch of volunteers into a functional development team.
 
 ## Bas van Sisseren
 Jack of all trades, master of e-inks.
