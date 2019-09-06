@@ -15,7 +15,9 @@ Since then we've worked on multiple other badges, which all in their own way try
 # Team members
 The team consists of a lot of extremely awesome people who put their heart and soul into the project.
 
-Thank you!
+Thank you all for your awesome work!
+
+(Can't find yourself in the list? Feel free to ask or do a PR!)
 
  - Sebastian Oort
  - Anne Jan Brouwer
