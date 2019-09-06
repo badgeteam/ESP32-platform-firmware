@@ -252,5 +252,19 @@ if not machine.nvs_getint('system', 'czcount_inst'):
 
     render_current_app()
 
-menu = term_menu.UartMenu(deepsleep.start_sleeping, pm)
-menu.main()
+cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu')
+if cfg_term_menu == None:
+        cfg_term_menu = True
+
+if cfg_term_menu:
+	menu = term_menu.UartMenu(deepsleep.start_sleeping, pm)
+	menu.main()
+else:
+        print("Welcome!")
+        print("Press CTRL+C to reboot directly to a Python prompt.")
+        wait = True
+        while wait:
+                c = machine.stdin_get(1,1)
+                if c == "\x03" or c == "\x04": # CTRL+C or CTRL+D
+                        wait = False
+        import shell
