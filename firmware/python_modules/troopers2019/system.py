@@ -6,22 +6,22 @@ def reboot():
 
 def sleep(duration=0, status=False):
 	import time, os, badge
-	#---SHA2017 specific---
+	#---BADGE specific---
 	try:
 		os.umountsd()
 	except:
 		pass
 	badge.setPower(False)
+	machine.RTC().wake_on_ext0(pin = machine.Pin(39), level = 0) #Navigation buttons
+	machine.RTC().wake_on_ext1([machine.Pin(34, machine.Pin.IN),machine.Pin(35, machine.Pin.IN)], 0) #Keyboard
 	badge.eink_busy_wait()
-	machine.RTC().wake_on_ext0(pin = machine.Pin(25), level = 0)
-	machine.RTC().wake_on_ext1([machine.Pin(12, machine.Pin.IN, machine.Pin.PULL_UP)], 0)
 	#---
 	if (duration >= 86400000): #One day
 		duration = 0
 	if status:
 		import term
 		if duration < 1:
-			term.header(True, "Sleeping until touchbutton is pressed...")
+			term.header(True, "Sleeping until button is pressed...")
 		else:
 			term.header(True, "Sleeping for "+str(duration)+"ms...")
 	time.sleep(0.05)
@@ -73,10 +73,10 @@ def isColdBoot():
 		return True
 	return False
 
-def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
+def isWakeup(fromTimer=True,fromButton=True, fromIr=False, fromUlp=True, fromKeyboard=True):
 	if fromButton and machine.wake_reason() == (3, 1):
 		return True
-	if fromIr     and machine.wake_reason() == (3, 2):
+	if fromKeyboard and machine.wake_reason() == (3, 2):
 		return True
 	if fromTimer  and machine.wake_reason() == (3, 4):
 		return True

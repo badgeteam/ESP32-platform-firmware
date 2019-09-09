@@ -2,10 +2,10 @@ import machine, display, eink, consts, time, neopixel
 
 deviceType = consts.INFO_HARDWARE_NAME
 
-_vbat = machine.ADC(35)
-_vbat.atten(machine.ADC.ATTN_11DB)
-_vusb = machine.ADC(34)
-_vusb.atten(machine.ADC.ATTN_11DB)
+#_vbat = machine.ADC(35)
+#_vbat.atten(machine.ADC.ATTN_11DB)
+#_vusb = machine.ADC(34)
+#_vusb.atten(machine.ADC.ATTN_11DB)
 
 def init():
 	pass
@@ -80,14 +80,14 @@ def setPower(state):
 	pass
 
 def usb_volt_sense():
-	return int(_vusb.read()*3.1436) # Determined by measuring the relevant voltage using a shitty multimeter :-)
+	return 0#int(_vusb.read()*3.1436) # Determined by measuring the relevant voltage using a shitty multimeter :-)
 
 def battery_volt_sense():
-	return int(_vbat.read()*3.1603) # Determined by measuring the relevant voltage using a shitty multimeter :-)
+	return 0#int(_vbat.read()*3.1603) # Determined by measuring the relevant voltage using a shitty multimeter :-)
 
 def eink_busy_wait():
 	eink.busy_wait()
-	time.sleep(0.25)
+	#time.sleep(0.25)
 
 def eink_busy():
 	return eink.busy()

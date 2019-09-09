@@ -28,6 +28,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+# Changed a little bit to fit the BADGE.TEAM firmware!
+
 import time
 import machine
 
@@ -41,8 +43,8 @@ class PCA95XX:
     UP = '1'
     DOWN = '0'
 
-    def __init__(self, input, i2c, address, mapping=[], interrupt=None, handler=None, wakeup=False):
-        self.input = input
+    def __init__(self, i2c, address, mapping=[], interrupt=None, handler=None, wakeup=False, inverted=False):
+        self.inverted = inverted
         self.i2c = i2c
         self.address = address
         self.mapping = mapping
@@ -73,10 +75,10 @@ class PCA95XX:
                 if self.state[i] != state[i]:
                     if state[i] == PCA95XX.UP:
                         # Button just went up
-                        changes.append((self.input.UP, self.mapping[i]))
+                        changes.append((self.mapping[i], not self.inverted))
                     elif state[i] == PCA95XX.DOWN:
                         # Button just went down
-                        changes.append((self.input.DOWN, self.mapping[i]))
+                        changes.append((self.mapping[i], self.inverted))
             except IndexError:
                 # If there is no mapping just ignore the key ¯\_(ツ)_/¯
                 pass

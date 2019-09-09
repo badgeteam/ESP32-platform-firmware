@@ -31,19 +31,22 @@
 import time
 from machine import Pin
 
-from troopers.pca95XX import PCA95XX
+from pca95XX import PCA95XX
 
 
-class PCA9539A(PCA95XX):
+class PCA9555(PCA95XX):
 
+    ACTIVE = '0'
+    INACTIVE = '1'
 
     def read_port(self, port=0x00):
         # Select the port
         if type(port) is not bytearray:
             port = bytearray(port)
         self.i2c.writeto(self.address, port)
-        return self.i2c.readfrom(self.address, 1)[0]
+        return self.i2c.readfrom(self.address, 2)
 
     def read_state(self):
         # P0_7 ... P0_0 ... P1_7 ... P0_0
-        return ('0' * 8 + bin(self.read_port(0x00))[2:])[-8:] + ('0' * 8 + bin(self.read_port(0x01))[2:])[-8:]
+        b = self.read_port(0x01)
+        return ('0' * 8 + bin(b[0])[2:])[-8:] + ('0' * 8 + bin(b[1])[2:])[-8:]
