@@ -107,7 +107,7 @@ static esp_err_t driver_eink_dev_release_spi(void)
 
 esp_err_t driver_eink_dev_reset(void) {
 	if (driver_eink_dev_type == DRIVER_EINK_NONE) return ESP_OK;
-	
+#if CONFIG_PIN_NUM_EPD_RESET > -1
 	esp_err_t res = gpio_set_level(CONFIG_PIN_NUM_EPD_RESET, LOW);
 	if (res != ESP_OK)
 		return res;
@@ -119,6 +119,7 @@ esp_err_t driver_eink_dev_reset(void) {
 		return res;
 
 	ets_delay_us(200000);
+#endif
 
 	return ESP_OK;
 }
@@ -319,10 +320,11 @@ esp_err_t driver_eink_dev_init(enum driver_eink_dev_t dev_type)
 	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_DATA, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK)
 		return res;
-
+#if CONFIG_PIN_NUM_EPD_RESET > -1
 	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_RESET, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK)
 		return res;
+#endif
 
 	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_BUSY, GPIO_MODE_INPUT);
 	if (res != ESP_OK)

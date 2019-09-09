@@ -86,7 +86,7 @@ menu "Driver: SD card"
 		int "MPR121 pin number"
 	
 	config DRIVER_SDCARD_FATFS_MAX_FILES
-		depends on DRIVER_SDCARD_ENABLE && DRIVER_MPR121_ENABLE && DRIVER_SDCARD_USE_MPR121_PIN
+		depends on DRIVER_SDCARD_ENABLE
 		int "Maximum number of opened files"
 		default 2
 endmenu
