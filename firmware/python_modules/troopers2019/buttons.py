@@ -146,7 +146,7 @@ def value(button):
 	if button == BTN_FLASH:
 		return not _buttons.pin(0).value() # This input has is active LOW
 	else:
-		return 0
+		return 0 # Not yet implemented
 
 def getCallback(button):
 	# Returns the currently attached callback function
@@ -177,7 +177,7 @@ def rotate(value):
 # ---
 
 __i2c = I2C(scl=Pin(5), sda=Pin(4), freq=400000)
-__ioConsole = PCA9539A(__i2c, 0x77, [-1, -1, -1, -1, -1, -1, -1, -1, BTN_START, BTN_B, BTN_A, BTN_SELECT, BTN_UP, BTN_RIGHT, BTN_LEFT, BTN_DOWN], Pin(39), __cb_nav, wakeup=True, inverted=True)
+__ioConsole = PCA9539A(__i2c, 0x77, [-1, -1, -1, -1, -1, -1, -1, -1, BTN_START, BTN_B, BTN_A, BTN_SELECT, BTN_UP, BTN_RIGHT, BTN_LEFT, BTN_DOWN], Pin(39), __cb_nav, wakeup=True, inverted=False)
 __ioConsole.init()
 
 __ioKeyboard0 = PCA9555(__i2c, 0x25, [KEY_G, KEY_B, KEY_H, KEY_RETURN, KEY_M, KEY_N, KEY_SHIFT, KEY_BACKSPACE, KEY_J, KEY_K, KEY_L, KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P], Pin(35), __cb_kb, inverted=True)

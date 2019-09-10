@@ -1,23 +1,19 @@
-# SHA2017 badge specific input wrapper
+# DISOBEY2019 badge specific input wrapper
 # Versions for other badges must expose the same API
 
-import mpr121, _buttons, _mpr121mapping, system, machine
+import mpr121, _buttons, system, machine
 
 # --- BUTTON CONSTANTS  ---
 BTN_A      = 0
 BTN_B      = 1
-BTN_START  = 2
-BTN_SELECT = 3
-BTN_DOWN   = 4
-BTN_RIGHT  = 5
-BTN_UP     = 6
-BTN_LEFT   = 7
-BTN_FLASH  = 8
+BTN_DOWN   = 2
+BTN_RIGHT  = 3
+BTN_UP     = 4
+BTN_LEFT   = 5
 
 # --- INTERNAL MAPPING TABLES ---
 
-__num = 9
-__mprMap = _mpr121mapping.buttons
+__num = 6
 
 # --- INTERNAL VARIABLES ---
 __orientation = 0

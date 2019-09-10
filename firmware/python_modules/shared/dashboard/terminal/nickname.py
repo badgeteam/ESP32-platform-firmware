@@ -1,9 +1,11 @@
-import term, system, badge, easydraw
+import term, system, machine
 
 system.serialWarning()
 
 term.header(True, "Configure nickname")
-nickname = badge.nvs_get_str("owner", "name", "")
+nickname = machine.nvs_getstr("owner", "name")
+if not nickname:
+	nickname = ""
 nickname = term.prompt("Nickname", 1, 3, nickname)
-badge.nvs_set_str("owner", "name", nickname)
+machine.nvs_setstr("owner", "name", nickname)
 system.home()
