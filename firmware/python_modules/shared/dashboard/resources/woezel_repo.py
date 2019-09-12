@@ -1,4 +1,4 @@
-import time, machine, gc, easydraw, term, uos, json, urequests, gc, sys, wifi
+import time, machine, gc, easydraw, term, uos, json, urequests, gc, sys, wifi, consts
 
 path = "/woezel_packages"
 categories = []
@@ -23,12 +23,12 @@ def _showProgress(msg, error=False, icon_wifi=False):
 	term.header(True, "Installer")
 	print(msg)
 	if error:
-		easydraw.messageCentered("ERROR\n\n"+msg, True, "/media/alert.png")
+		easydraw.messageCentered("ERROR\n"+msg, True, "/media/alert.png")
 	else:
 		if icon_wifi:
-			easydraw.messageCentered("PLEASE WAIT\n\n"+msg, True, "/media/wifi.png")
+			easydraw.messageCentered("PLEASE WAIT\n"+msg, True, "/media/wifi.png")
 		else:
-			easydraw.messageCentered("PLEASE WAIT\n\n"+msg, True, "/media/busy.png")
+			easydraw.messageCentered("PLEASE WAIT\n"+msg, True, "/media/busy.png")
 
 def update():
 	global path, categories, lastUpdate
@@ -51,7 +51,7 @@ def update():
 			gc.collect()
 			slug = category["slug"]
 			_showProgress("Downloading '"+category["name"]+"'...")
-			f = urequests.get("https://badge.team/basket/sha2017/category/%s/json" % slug, timeout=30)
+			f = urequests.get("https://badge.team/basket/"+consts.INFO_HARDWARE_WOEZEL_NAME+"/category/%s/json" % slug, timeout=30)
 			f_file = open(path+'/'+slug+'.json', 'w')
 			f_file.write(f.text)
 			f_file.close()

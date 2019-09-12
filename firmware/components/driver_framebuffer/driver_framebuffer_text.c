@@ -174,7 +174,16 @@ uint16_t driver_framebuffer_print_len(Frame* frame, const char* str, int16_t len
 uint16_t driver_framebuffer_get_string_width(const char* str, const GFXfont *font)
 {
 	uint16_t width = 0;
-	for (uint16_t i = 0; i < strlen(str); i++) width += _char_width(str[i], font);
+	uint16_t maxWidth = 0;
+	for (uint16_t i = 0; i < strlen(str); i++) {
+		if (str[i] == '\n') {
+			if (maxWidth < width) maxWidth = width;
+			width = 0;
+		} else {
+			width += _char_width(str[i], font);
+		}
+	}
+	if (maxWidth > width) width = maxWidth;
 	return width;
 }
 

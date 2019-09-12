@@ -25,7 +25,11 @@ def populate_apps():
 	global apps
 	apps = []
 	try:
-		userApps = os.listdir('lib')
+		userApps = os.listdir('apps')
+	except OSError:
+		userApps = []
+	try:
+		userApps.extend(os.listdir('lib'))
 	except OSError:
 		userApps = []
 	for app in userApps:
@@ -148,8 +152,8 @@ def input_a(pressed):
 	
 def input_b(pressed):
 	pm.feed()
-	#if pressed:
-	#	system.home()
+	if pressed:
+		system.home()
 
 def input_start(pressed):
 	pm.feed()
@@ -233,14 +237,12 @@ def start():
 	options = None
 	install_path = None
 
-	ugfx.input_attach(ugfx.BTN_A, input_a)
-	ugfx.input_attach(ugfx.BTN_B, input_b)
-	ugfx.input_attach(ugfx.BTN_SELECT, input_select)
-	ugfx.input_attach(ugfx.JOY_UP, input_other)
-	ugfx.input_attach(ugfx.JOY_DOWN, input_other)
-	ugfx.input_attach(ugfx.JOY_LEFT, input_other)
-	ugfx.input_attach(ugfx.JOY_RIGHT, input_other)
-	ugfx.input_attach(ugfx.BTN_START, input_start)
+	ugfx.input_attach(ugfx.BTN_OK,    input_a)
+	ugfx.input_attach(ugfx.BTN_BACK,  input_b)
+	ugfx.input_attach(ugfx.JOY_UP,    input_other)
+	ugfx.input_attach(ugfx.JOY_DOWN,  input_other)
+	ugfx.input_attach(ugfx.JOY_LEFT,  input_other)
+	ugfx.input_attach(ugfx.JOY_RIGHT, input_select)
 
 	populate_apps()
 	populate_category()

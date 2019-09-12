@@ -1,5 +1,5 @@
 # Homescreen application
-import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, term_menu, orientation, display, buttons, neopixel
+import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, term_menu, orientation, display, buttons, samd, consts
 import tasks.powermanagement as pm, tasks.otacheck as otacheck
 import easydraw, rtc
 
@@ -34,40 +34,15 @@ def cbStartLauncher(pressed):
 		system.launcher(True)
 
 def cbFeedPowerManagement(pressed):
-	#pm.feed()
-	pass
+	pm.feed()
+	#pass
 
-# Flashlight
-flashlightStatus = False
-def cbFlashlight(pressed):
-	global led_app, flashlightStatus
-	if pressed:
-		if flashlightStatus:
-			#pm.enable()
-			neopixel.send(bytes([0x00]*24))
-		else:
-			#pm.disable()
-			neopixel.send(bytes([0xFF]*24))
-
-		if led_app:
-			try:
-				if flashlightStatus:
-					led_app.resume()
-				else:
-					led_app.pause()
-			except:
-				pass
-		flashlightStatus = not flashlightStatus
-
-buttons.attach(buttons.BTN_A,      cbFeedPowerManagement)
-buttons.attach(buttons.BTN_B,      cbFeedPowerManagement)
-buttons.attach(buttons.BTN_START,  cbStartLauncher      )
-buttons.attach(buttons.BTN_SELECT, cbFeedPowerManagement)
+buttons.attach(buttons.BTN_OK,     cbStartLauncher)
+buttons.attach(buttons.BTN_BACK,   cbFeedPowerManagement)
 buttons.attach(buttons.BTN_DOWN,   cbFeedPowerManagement)
 buttons.attach(buttons.BTN_RIGHT,  cbFeedPowerManagement)
 buttons.attach(buttons.BTN_UP,     cbFeedPowerManagement)
 buttons.attach(buttons.BTN_LEFT,   cbFeedPowerManagement)
-buttons.attach(buttons.BTN_FLASH,  cbFlashlight         )
 
 # Scheduler
 virtualtimers.activate(25)
@@ -78,11 +53,12 @@ def cbSleep(idleTime=None):
 		idleTime = virtualtimers.idle_time()
 	gui_redraw = True
 	drawTask(True)
+	samd.backlight(0)
 	system.sleep(idleTime, True)
 
-#pm.callback(cbSleep)
-#pm.enable()
-#pm.feed()
+pm.callback(cbSleep)
+pm.enable()
+pm.feed()
 
 # WiFi
 wifi_status_prev = False
@@ -242,8 +218,8 @@ def drawTask(onSleep=False):
 		currHeight = 0
 		noLine = False
 		if gui_app_current < 0:
+			nick = machine.nvs_getstr("owner", "name")
 			if cfg_logo and cfg_nickname:
-				nick = machine.nvs_getstr("owner", "name")
 				display.drawText((display.width()-display.getTextWidth(nick, "roboto_regular12"))//2, currHeight, nick, 0x000000, "roboto_regular12")
 				currHeight += display.getTextHeight(nick, "roboto_regular12")#easydraw.nickname()
 				currHeight += 4
@@ -253,21 +229,18 @@ def drawTask(onSleep=False):
 			logoHeight = drawLogo(currHeight, app_height, True)
 			if logoHeight > 0:
 				noLine = True
-			if logoHeight < 1 and cfg_logo:
-				title = "BADGE.TEAM"
-				subtitle = "PLATFORM"
-				logoHeight = display.getTextHeight(title, "permanentmarker22")+display.getTextHeight(subtitle, "fairlight12")
-				display.drawText((display.width()-display.getTextWidth(title, "permanentmarker22"))//2, currHeight + (app_height - logoHeight)//2,title, 0x000000, "permanentmarker22")
-				currHeight += display.getTextHeight(title, "permanentmarker22")
-				display.drawText((display.width()-display.getTextWidth(subtitle, "fairlight12"))//2, currHeight + (app_height - logoHeight)//2,subtitle, 0x000000, "fairlight12")
-				currHeight += display.getTextHeight(subtitle, "fairlight12")
-			if (not cfg_logo) and cfg_nickname:
+			if (not cfg_logo) and cfg_nickname and nick:
 				noLine = True
-				nick = machine.nvs_getstr("owner", "name")
-				if nick == None:
-					nick = "BADGE.TEAM"
 				display.drawText((display.width()-display.getTextWidth(nick, "roboto_regular12"))//2, currHeight, nick, 0x000000, "roboto_regular12")
 				currHeight += display.getTextHeight(nick, "roboto_regular12")
+			else:
+				title = "BADGE.TEAM"
+				subtitle = consts.INFO_FIRMWARE_NAME 
+				logoHeight = display.getTextHeight(title, "fairlight12")+display.getTextHeight(subtitle, "roboto_regular12")
+				display.drawText((display.width()-display.getTextWidth(title, "fairlight12"))//2, currHeight + (app_height - logoHeight)//2,title, 0x000000, "fairlight12")
+				currHeight += display.getTextHeight(title, "fairlight12")
+				display.drawText((display.width()-display.getTextWidth(subtitle, "roboto_regular12"))//2, currHeight + (app_height - logoHeight)//2,subtitle, 0x000000, "roboto_regular12")
+				currHeight += display.getTextHeight(subtitle, "roboto_regular12")
 		else:
 			display_app(currHeight)
 
@@ -280,7 +253,7 @@ def drawTask(onSleep=False):
 		#elif wifi_status_curr:
 		#	info = "WiFi connected"
 		else:
-			info = ""#'Press START'
+			info = 'Press OK'
 		if not noLine:
 			display.drawLine(0, display.height()-16, display.width(), display.height()-16, 0x000000)
 		easydraw.disp_string_right_bottom(0, info)

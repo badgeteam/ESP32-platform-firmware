@@ -24,7 +24,7 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 		messageHistory = []
 		lastTitle = title
 		
-	lineHeight = int(display.getTextHeight(" ", version.font_default) / 2)+5
+	lineHeight = display.getTextHeight(" ", version.font_default)
 
 	if len(messageHistory)<num_lines:
 		display.drawText(0, 16 + (len(messageHistory) * lineHeight), message, 0x000000, version.font_default)

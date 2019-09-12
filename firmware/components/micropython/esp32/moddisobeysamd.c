@@ -48,20 +48,33 @@ static mp_obj_t samd_read_state() {
 
 /* Input handling */
 
+bool handlerFuncAttached = false;
+
 static mp_obj_t button_callbacks[6] = {
 	mp_const_none, mp_const_none, mp_const_none,
 	mp_const_none, mp_const_none, mp_const_none
 };
 
-static void samd_event_handler(void *b, bool state)
+static void samd_event_handler(int pressed, int released)
 {
-	int pin = (uint32_t) b;
-	if ((pin < 0) || (pin > 5)) return;
-	if(button_callbacks[pin] != mp_const_none){
-		if ((!MP_OBJ_IS_FUN(button_callbacks[pin])) && (!MP_OBJ_IS_METH(button_callbacks[pin]))) {
-			printf("SAMD ERROR: CALLBACK IS NOT FUN OR METH?!?! (pin %u)\n", pin);
-		} else {
-			mp_sched_schedule(button_callbacks[pin], mp_obj_new_bool(state), NULL);
+	for (uint8_t btn = 0; btn<6; btn++) {
+		if ((pressed >> btn)&0x01) {
+			if(button_callbacks[btn] != mp_const_none){
+				if ((!MP_OBJ_IS_FUN(button_callbacks[btn])) && (!MP_OBJ_IS_METH(button_callbacks[btn]))) {
+					printf("SAMD ERROR: CALLBACK IS NOT FUN OR METH?!?! (btn %u)\n", btn);
+				} else {
+					mp_sched_schedule(button_callbacks[btn], mp_obj_new_bool(1), NULL);
+				}
+			}
+		}
+		if ((released >> btn)&0x01) {
+			if(button_callbacks[btn] != mp_const_none){
+				if ((!MP_OBJ_IS_FUN(button_callbacks[btn])) && (!MP_OBJ_IS_METH(button_callbacks[btn]))) {
+					printf("SAMD ERROR: CALLBACK IS NOT FUN OR METH?!?! (btn %u)\n", btn);
+				} else {
+					mp_sched_schedule(button_callbacks[btn], mp_obj_new_bool(0), NULL);
+				}
+			}
 		}
 	}
 }

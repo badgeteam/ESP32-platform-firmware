@@ -13,6 +13,7 @@ __BEGIN_DECLS
 
 extern esp_err_t driver_erc12864_init(void);
 extern esp_err_t driver_erc12864_write(const uint8_t *data);
+extern esp_err_t driver_erc12864_write_part(const uint8_t *data, int16_t x0, int16_t y0, int16_t x1, int16_t y1);
 extern void driver_erc12864_set_rotation(bool newFlip);
 
 __END_DECLS

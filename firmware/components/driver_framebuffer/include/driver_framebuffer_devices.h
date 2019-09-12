@@ -62,9 +62,9 @@
 	#define FB_HEIGHT ERC12864_HEIGHT
 	#define FB_TYPE_1BPP
 	#define FB_1BPP_VERT
-	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_erc12864_write(buffer);
-	#define COLOR_FILL_DEFAULT 0x000000
-	#define COLOR_TEXT_DEFAULT 0xFFFFFF
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_erc12864_write_part(buffer,x0,y0,x1,y1);
+	#define COLOR_FILL_DEFAULT 0xFFFFFF
+	#define COLOR_TEXT_DEFAULT 0x000000
 
 /* LCD display as used on the Espressif Wrover kit */
 #elif defined(CONFIG_DRIVER_ILI9341_ENABLE)

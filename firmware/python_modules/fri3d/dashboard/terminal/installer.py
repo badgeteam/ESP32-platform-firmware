@@ -1,1 +1,0 @@
-../../../shared/dashboard/terminal/installer.py

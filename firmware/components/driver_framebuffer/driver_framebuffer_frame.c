@@ -25,6 +25,7 @@ Frame* driver_framebuffer_frame_create(Window* window)
 		free(frame);
 		return NULL;
 	}
+	driver_framebuffer_fill(frame, COLOR_FILL_DEFAULT);
 	return frame;
 }
 

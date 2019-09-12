@@ -1,6 +1,7 @@
 /*
  * BADGE.TEAM framebuffer driver
  * Uses parts of the Adafruit GFX Arduino libray
+ * Renze Nicolai 2019
  */
 
 #include "sdkconfig.h"
@@ -77,8 +78,8 @@ esp_err_t driver_framebuffer_init()
 	#endif
 	
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //1st framebuffer
-	driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
-	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
+	//driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
+	//driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
 	driver_framebuffer_set_orientation_angle(NULL, 0); //Apply global orientation (needed for flip)
 	driver_framebuffer_init_done = true;
 	ESP_LOGD(TAG, "init done");
@@ -159,6 +160,8 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 	if (!driver_framebuffer_orientation_apply(frame ? frame->window : NULL, &x, &y)) return;
 	bool changed = false;
 	#if defined(FB_TYPE_1BPP)
+		//The 1-bit-per-pixel displays all seem to have their own pixel format...
+		//To-do: clean this up
 		value = greyToBw(rgbToGrey(value));
 		#ifndef FB_1BPP_VERT
 			#if defined(FB_1BPP_OHS)
@@ -348,12 +351,13 @@ bool driver_framebuffer_flush(uint32_t flags)
 		
 	#ifdef FB_FLUSH_GS
 	if (flags & FB_FLAG_LUT_GREYSCALE) {
+		//printf("[FB] flushing greyscale image.\n");
 		FB_FLUSH_GS(framebuffer, eink_flags);
 	} else {
 	#endif
 		int16_t dirty_x0, dirty_y0, dirty_x1, dirty_y1;
 		driver_framebuffer_get_dirty_area(&dirty_x0, &dirty_y0, &dirty_x1, &dirty_y1);
-		//printf("Dirty area: (%d, %d) to (%d, %d)\n", dirty_x0, dirty_y0, dirty_x1, dirty_y1);
+		//printf("[FB] flushing (%d, %d) to (%d, %d).\n", dirty_x0, dirty_y0, dirty_x1, dirty_y1);
 		FB_FLUSH(framebuffer,eink_flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
 	#ifdef FB_FLUSH_GS
 	}

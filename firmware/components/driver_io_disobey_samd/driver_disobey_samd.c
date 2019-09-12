@@ -23,9 +23,7 @@ xSemaphoreHandle driver_disobey_samd_mux = NULL;
 // semaphore to trigger disobey_samd interrupt handling
 xSemaphoreHandle driver_disobey_samd_intr_trigger = NULL;
 
-// handlers per disobey_samd port.
 driver_disobey_samd_intr_t driver_disobey_samd_handler = NULL;
-void* driver_disobey_samd_arg[12] = { NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 
 int driver_disobey_samd_read_state()
 {
@@ -210,7 +208,7 @@ esp_err_t driver_disobey_samd_init(void)
 void driver_disobey_samd_set_interrupt_handler(driver_disobey_samd_intr_t handler)
 {
 	if (driver_disobey_samd_mux == NULL)
-	{ // allow setting handlers when driver_disobey_samd is not initialized yet.
+	{ // allow setting handler when driver_disobey_samd is not initialized yet.
 		driver_disobey_samd_handler = handler;
 	} else {
 		xSemaphoreTake(driver_disobey_samd_mux, portMAX_DELAY);
