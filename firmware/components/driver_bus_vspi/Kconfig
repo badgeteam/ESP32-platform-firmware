@@ -10,10 +10,8 @@ menu "Driver: VSPI bus"
 	config PIN_NUM_VSPI_MOSI
 		depends on DRIVER_VSPI_ENABLE
 		int "GPIO pin used for MOSI"
-		default 23
 	
 	config PIN_NUM_VSPI_MISO
 		depends on DRIVER_VSPI_ENABLE
 		int "GPIO pin used for MISO"
-		default 25
 endmenu

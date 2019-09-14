@@ -25,7 +25,7 @@ menu "Firmware & device configuration"
 
 	config OTA_WEB_SERVER
 		string "Hostname of server for OTA updates"
-		default "www.sensorcloud.nl"
+		default "badge.team"
 
 	config OTA_WEB_USE_HTTPS
 		bool "Use HTTPS for OTA updates"
@@ -37,19 +37,19 @@ menu "Firmware & device configuration"
 
 	config OTA_WEB_PATH
 		string "Path on the server for OTA updates"
-		default "/firmware.bin"
+		default "/firmware/unknown.bin"
 
 	config OTA_WEB_VERSION_PATH
 		string "Path on the server for OTA update version"
-		default "/version.txt"
+		default "/firmware/version/unknown.txt"
 
 	config WOEZEL_WEB_SERVER
 		string "Hostname of server for app hatchery that contains user apps"
-		default "www.sensorcloud.nl"
+		default "badge.team"
 
 	config WIFI_SSID
 		string "Default WiFi ssid"
-		default ""
+		default "badge"
 
 	config WIFI_PASSWORD
 		string "Default WiFi password, leave empty for unsecure network"
