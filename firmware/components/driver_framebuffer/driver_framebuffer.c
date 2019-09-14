@@ -76,8 +76,13 @@ esp_err_t driver_framebuffer_init()
 			return ESP_FAIL;
 		}
 	#endif
-	
+		
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //1st framebuffer
+	
+	#ifdef CONFIG_DRIVER_HUB75_ENABLE
+		driver_hub75_switch_buffer(framebuffer); //Needed to make the legacy compositor work.
+	#endif
+	
 	//driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
 	//driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
 	driver_framebuffer_set_orientation_angle(NULL, 0); //Apply global orientation (needed for flip)
