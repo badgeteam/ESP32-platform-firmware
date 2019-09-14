@@ -23,12 +23,12 @@ def _showProgress(msg, error=False, icon_wifi=False):
 	term.header(True, "Installer")
 	print(msg)
 	if error:
-		easydraw.messageCentered("ERROR\n"+msg, True, "/media/alert.png")
+		easydraw.messageCentered(msg, False, "/media/alert.png")
 	else:
 		if icon_wifi:
-			easydraw.messageCentered("PLEASE WAIT\n"+msg, True, "/media/wifi.png")
+			easydraw.messageCentered(msg, False, "/media/wifi.png")
 		else:
-			easydraw.messageCentered("PLEASE WAIT\n"+msg, True, "/media/busy.png")
+			easydraw.messageCentered(msg, False, "/media/busy.png")
 
 def update():
 	global path, categories, lastUpdate

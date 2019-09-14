@@ -53,14 +53,8 @@ def nvs_set_str(space, item, value):
 		space = "system"
 	return machine.nvs_setstr(space, item, value)
 
-def leds_init():
-	pass
-
-def leds_enable():
-	pass
-
-def leds_send_data(data, length=0):
-	pass
+def led(l, r, g, b):
+	samd.led(l, r, g, b)
 
 def safe_mode():
 	return False # We still have a recovery mode, just not this "safe" mode anymore

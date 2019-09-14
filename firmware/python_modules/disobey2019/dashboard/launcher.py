@@ -1,4 +1,8 @@
-import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display, machine, term, term_menu
+# Application launcher
+# Disobey 2019 version
+# Last updated on 14-09-2019
+
+import ugfx, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, ujson, sys, orientation, display, machine, term, term_menu, time
 
 orientation.default()
 
@@ -31,7 +35,8 @@ def populate_apps():
 	try:
 		userApps.extend(os.listdir('lib'))
 	except OSError:
-		userApps = []
+		pass
+	
 	for app in userApps:
 		add_app(app,read_metadata(app))
 	add_app("dashboard.installer",{"name":"Installer", "category":"system"})
@@ -95,11 +100,8 @@ def uninstall():
 	global currentListTargets
 		
 	if currentListTargets[selected]["category"] == "system":
-		#print("System apps can not be removed.")
-		dialogs.notice("Can not uninstall '"+currentListTitles[selected]+"'!\nSystem apps can not be removed!","UNINSTALL")
-		#easydraw.msg("System apps can not be removed!","Error",True)
-		#time.sleep(2)
-		#print("Returning to menu.")
+		easydraw.messageCentered("Can not uninstall.\nSystem apps can not be removed!",False)
+		time.sleep(2)
 		start()
 		return
 	
@@ -116,7 +118,7 @@ def uninstall():
 			easydraw.msg("Uninstall completed!")
 		start()
 
-	uninstall = dialogs.prompt_boolean('Are you sure you want to remove %s?' % currentListTitles[selected], cb=perform_uninstall, title="UNINSTALL")
+	dialogs.prompt_boolean('Are you sure you want to remove %s?' % currentListTitles[selected], cb=perform_uninstall, title="UNINSTALL")
 
 # Run app
 		
@@ -241,8 +243,8 @@ def start():
 	ugfx.input_attach(ugfx.BTN_BACK,  input_b)
 	ugfx.input_attach(ugfx.JOY_UP,    input_other)
 	ugfx.input_attach(ugfx.JOY_DOWN,  input_other)
-	ugfx.input_attach(ugfx.JOY_LEFT,  input_other)
-	ugfx.input_attach(ugfx.JOY_RIGHT, input_select)
+	ugfx.input_attach(ugfx.JOY_RIGHT, input_a)
+	ugfx.input_attach(ugfx.JOY_LEFT, input_select)
 
 	populate_apps()
 	populate_category()
