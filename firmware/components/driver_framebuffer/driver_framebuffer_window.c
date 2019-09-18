@@ -1,6 +1,6 @@
 /*
  * The functions in this file allow for managing windows
- * windows are collections of frames that can be rendered
+ * windows are framebuffers that can be moved and rendered
  * to the primary framebuffer
  */
 
@@ -63,7 +63,11 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 	window->name = strdup(name);
 	window->width = width;
 	window->height = height;
-	window->frame = driver_framebuffer_window_add_frame(window); //Create first frame
+	#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
+		window->buffer = heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+	#else
+		window->buffer = heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_8BIT);
+	#endif
 	window->_prevWindow = driver_framebuffer_window_last();
 	window->_nextWindow = NULL;
 	window->transparentColor = 0xFF00FF;
@@ -73,7 +77,7 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 
 void driver_framebuffer_window_remove(Window* window)
 {
-	driver_framebuffer_window_remove_all_frames(window);
+	if (window->buffer) free(window->buffer);
 	_remove_window_from_linked_list(window);
 	free(window);
 }
@@ -125,92 +129,6 @@ void driver_framebuffer_window_getSize(Window* window, int16_t* width, int16_t* 
 		//Window provided, use window context
 		*width  = window->width;
 		*height = window->height;
-	}
-}
-
-Frame* driver_framebuffer_window_add_frame(Window* window)
-{
-	if (!window) return NULL;
-	Frame* newFrame = driver_framebuffer_frame_create(window);
-	if (!newFrame) return NULL;
-	
-	newFrame->_prevFrame = window->_lastFrame; //Add pointer to previous last frame
-	if (window->_lastFrame) {
-		//Add ourselves as next frame if there already is a frame
-		window->_lastFrame->_nextFrame = newFrame;
-	} else {
-		//We are the first frame added to the window, add ourselves as the first frame and the last frame
-		window->_lastFrame = newFrame;
-		window->_firstFrame = newFrame;
-	}
-	return newFrame;
-}
-
-void driver_framebuffer_window_set_frame(Window* window, Frame* frame)
-{
-	if ((!window) || (!frame)) return;
-	window->frame = frame;
-}
-
-Frame* driver_framebuffer_window_next_frame(Window* window)
-{
-	if (!window) return NULL;
-	if (window->frame->_nextFrame) {
-		//There is a frame after the current frame
-		return window->frame->_nextFrame;
-	} else {
-		//At the last frame...
-		if (window->loopFrames) {
-			//Loop back to the first frame
-			return window->_firstFrame;
-		} else {
-			//Last frame already reached
-			return NULL;
-		}
-	}
-}
-
-Frame* driver_framebuffer_window_prev_frame(Window* window)
-{
-	if (!window) return NULL;
-	if (window->frame->_prevFrame) {
-		//There is a frame before the current frame
-		return window->frame->_prevFrame;
-	} else {
-		//At the first frame...
-		if (window->loopFrames) {
-			//Loop back to the last frame
-			return window->_lastFrame;
-		} else {
-			//First frame already reached
-			return NULL;
-		}
-	}
-	return true;
-}
-
-Frame* driver_framebuffer_window_seek_frame(Window* window, uint16_t nr)
-{
-	if (!window) return NULL;
-	Frame* targetFrame = window->_firstFrame;
-	for (uint16_t i = 0; i < nr; i++) {
-		if (!targetFrame->_nextFrame) return NULL;
-		targetFrame = targetFrame->_nextFrame;
-	}
-	return targetFrame;
-}
-
-void driver_framebuffer_window_remove_all_frames(Window* window)
-{
-	if (!window) return;
-	Frame* frame = window->frame;
-	window->frame = NULL;
-	
-	while (frame) {
-		Frame* nextFrame = frame->_nextFrame;
-		if (frame->buffer) free(frame->buffer);
-		free(frame);
-		frame = nextFrame;
 	}
 }
 

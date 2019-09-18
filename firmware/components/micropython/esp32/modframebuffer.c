@@ -10,6 +10,7 @@
 #include "extmod/vfs_native.h"
 
 #include <driver_framebuffer.h>
+#include <driver_framebuffer_compositor.h>
 #include <driver_framebuffer_devices.h>
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
@@ -137,7 +138,7 @@ static mp_obj_t framebuffer_draw_raw(mp_uint_t n_args, const mp_obj_t *args)
 	
 	for (int16_t px = 0; px < w; px++) {
 		for (int16_t py = 0; py < h; py++) {
-			driver_framebuffer_setPixel(window ? window->frame : NULL, x+px, y+py, data[(x+px) + (y+py)*w]);
+			driver_framebuffer_setPixel(window, x+px, y+py, data[(x+px) + (y+py)*w]);
 		}
 	}
 	
@@ -233,6 +234,13 @@ static mp_obj_t framebuffer_window_focus(mp_uint_t n_args, const mp_obj_t *args)
 static mp_obj_t framebuffer_window_resize(mp_uint_t n_args, const mp_obj_t *args)
 {
 	printf("FIXME\n");
+	/*
+	 * Approach:
+	 *  - Create new window
+	 *  - Copy old window to new window
+	 *  - Delete old window
+	 *  - Rename new window to match old window
+	 */
 	return mp_const_none;
 }
 
@@ -242,21 +250,7 @@ static mp_obj_t framebuffer_window_list(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
-static mp_obj_t framebuffer_window_loop(mp_uint_t n_args, const mp_obj_t *args)
-{
-	const char* name = mp_obj_str_get_str(args[0]);
-	Window* window = driver_framebuffer_window_find(name);
-	if (!window) {
-		mp_raise_ValueError("Window not found");
-		return mp_const_none;
-	}
-	if (n_args > 1) {
-		window->loopFrames = mp_obj_get_int(args[1]);
-		return mp_const_none;
-	}
-	return mp_obj_new_int(window->loopFrames);
-}
-
+//Fixme: add window rename function
 
 static mp_obj_t framebuffer_window_transparency(mp_uint_t n_args, const mp_obj_t *args)
 {
@@ -273,94 +267,7 @@ static mp_obj_t framebuffer_window_transparency(mp_uint_t n_args, const mp_obj_t
 		}
 		return mp_const_none;
 	}
-	return mp_obj_new_int(window->loopFrames);
-}
-
-static mp_obj_t framebuffer_frame_add(mp_uint_t n_args, const mp_obj_t *args)
-{
-	const char* name = mp_obj_str_get_str(args[0]);
-	Window* window = driver_framebuffer_window_find(name);
-	if (!window) {
-		mp_raise_ValueError("Window not found");
-		return mp_const_none;
-	}
-	/*Frame* frame;
-	if (n_args == 1) {
-		//Add a new frame to the end of the list of frames
-		frame = mp_obj_new_int(driver_framebuffer_add_frame_to_window(window));
-	} else {
-		//Add a new frame after a specific frame
-		mp_obj_get_int(args[1]);
-		frame = driver_framebuffer_add_frame_to_window_after(window, );
-	}*/
-	printf("FIXME\n");
-	return mp_const_none;
-}
-
-static mp_obj_t framebuffer_frame_remove(mp_uint_t n_args, const mp_obj_t *args)
-{
-	const char* name = mp_obj_str_get_str(args[0]);
-	Window* window = driver_framebuffer_window_find(name);
-	if (!window) {
-		mp_raise_ValueError("Window not found");
-		return mp_const_none;
-	}
-	printf("FIXME\n");
-	return mp_const_none;
-}
-
-static mp_obj_t framebuffer_frame_step(mp_uint_t n_args, const mp_obj_t *args)
-{
-	const char* name = mp_obj_str_get_str(args[0]);
-	Window* window = driver_framebuffer_window_find(name);
-	if (!window) {
-		mp_raise_ValueError("Window not found");
-		return mp_const_none;
-	}
-	printf("FIXME\n");
-	return mp_const_none;
-}
-
-static mp_obj_t framebuffer_frame_seek(mp_uint_t n_args, const mp_obj_t *args)
-{
-	const char* name = mp_obj_str_get_str(args[0]);
-	Window* window = driver_framebuffer_window_find(name);
-	if (!window) {
-		mp_raise_ValueError("Window not found");
-		return mp_const_none;
-	}
-	
-	Frame *frame = driver_framebuffer_window_seek_frame(window, mp_obj_get_int(args[1]));
-	if (!frame) {
-		mp_raise_ValueError("Frame does not exist");
-		return mp_const_none;
-	}
-	driver_framebuffer_window_set_frame(window, frame);
-	return mp_const_none;
-}
-
-static mp_obj_t framebuffer_frame_current(mp_uint_t n_args, const mp_obj_t *args)
-{
-	const char* name = mp_obj_str_get_str(args[0]);
-	Window* window = driver_framebuffer_window_find(name);
-	if (!window) {
-		mp_raise_ValueError("Window not found");
-		return mp_const_none;
-	}
-	printf("FIXME\n");
-	return mp_const_none;
-}
-
-static mp_obj_t framebuffer_frame_count(mp_uint_t n_args, const mp_obj_t *args)
-{
-	const char* name = mp_obj_str_get_str(args[0]);
-	Window* window = driver_framebuffer_window_find(name);
-	if (!window) {
-		mp_raise_ValueError("Window not found");
-		return mp_const_none;
-	}
-	printf("FIXME\n");
-	return mp_const_none;
+	return mp_obj_new_int(window->transparentColor); //Fixme!
 }
 
 static mp_obj_t framebuffer_get_pixel(mp_uint_t n_args, const mp_obj_t *args) {
@@ -377,7 +284,7 @@ static mp_obj_t framebuffer_get_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	int x = mp_obj_get_int(args[n_args-2]);
 	int y = mp_obj_get_int(args[n_args-1]);
 	
-	return mp_obj_new_int(driver_framebuffer_getPixel(window ? window->frame : NULL, x, y));
+	return mp_obj_new_int(driver_framebuffer_getPixel(window, x, y));
 }
 
 static mp_obj_t framebuffer_draw_pixel(mp_uint_t n_args, const mp_obj_t *args) {
@@ -395,7 +302,7 @@ static mp_obj_t framebuffer_draw_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	int y = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int64(args[n_args-1]);
 	
-	driver_framebuffer_setPixel(window ? window->frame : NULL, x, y, color);
+	driver_framebuffer_setPixel(window, x, y, color);
 	return mp_const_none;
 }
 
@@ -429,7 +336,7 @@ static mp_obj_t framebuffer_draw_fill(mp_uint_t n_args, const mp_obj_t *args)
 		color = mp_obj_get_int64(args[n_args-1]);
 	}
 	
-	driver_framebuffer_fill(window ? window->frame : NULL, color);
+	driver_framebuffer_fill(window, color);
 	return mp_const_none;
 }
 
@@ -452,7 +359,7 @@ static mp_obj_t framebuffer_draw_line(mp_uint_t n_args, const mp_obj_t *args)
 	int x1 = mp_obj_get_int(args[n_args-3]);
 	int y1 = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int64(args[n_args-1]);
-	driver_framebuffer_line(window ? window->frame : NULL, x0, y0, x1, y1, color);
+	driver_framebuffer_line(window, x0, y0, x1, y1, color);
 	return mp_const_none;
 }
 
@@ -476,7 +383,7 @@ static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 	int h = mp_obj_get_int(args[n_args-3]);
 	int fill = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int64(args[n_args-1]);
-	driver_framebuffer_rect(window ? window->frame : NULL, x, y, w, h, fill, color);
+	driver_framebuffer_rect(window, x, y, w, h, fill, color);
 	return mp_const_none;
 }
 
@@ -501,7 +408,7 @@ static mp_obj_t framebuffer_draw_circle(mp_uint_t n_args, const mp_obj_t *args)
 	int a1    = mp_obj_get_int(args[n_args-3]);
 	int fill  = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int64(args[n_args-1]);
-	driver_framebuffer_circle(window ? window->frame : NULL, x, y, r, a0, a1, fill, color);
+	driver_framebuffer_circle(window, x, y, r, a0, a1, fill, color);
 	return mp_const_none;
 }
 
@@ -542,13 +449,13 @@ STATIC mp_obj_t framebuffer_draw_text(mp_uint_t n_args, const mp_obj_t *args) {
 	
 	if (MP_OBJ_IS_STR(args[textArg])) {
 		const char *text = mp_obj_str_get_str(args[textArg]);
-		driver_framebuffer_print(window ? window->frame : NULL, text, x, y, xScale, yScale, color, font);
+		driver_framebuffer_print(window, text, x, y, xScale, yScale, color, font);
 	} else {
 		int chr = mp_obj_get_int(args[textArg]);
 		char *text = malloc(2);
 		text[0] = chr;
 		text[1] = 0;
-		driver_framebuffer_print(window ? window->frame : NULL, text, x, y, xScale, yScale, color, font);
+		driver_framebuffer_print(window, text, x, y, xScale, yScale, color, font);
 		free(text);
 	}
 	return mp_const_none;
@@ -699,7 +606,7 @@ static mp_obj_t framebuffer_draw_png(mp_uint_t n_args, const mp_obj_t *args)
 			return mp_const_none;
 		}
 		reader = (lib_reader_read_t) &lib_file_read;
-		renderRes = driver_framebuffer_png(window ? window->frame : NULL, x, y, reader, fr);
+		renderRes = driver_framebuffer_png(window, x, y, reader, fr);
 		lib_file_destroy(fr);
 	}
 	
@@ -755,29 +662,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_resize_obj,      
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_list_obj,          0, 0, framebuffer_window_list);
 /* Query a list of all window names */
 
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_loop_obj,          1, 2, framebuffer_window_loop);
-/* Query, enable or disable frame looping for a window. Arguments: window, setting (optional) */
-
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_transparency_obj,  1, 3, framebuffer_window_transparency);
 /* Query or configure transparency for a window. Arguments: window, enable (optional), color (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_frame_add_obj,            1, 2, framebuffer_frame_add);
-/* Add a frame to a window, returns the frame number. Arguments: window, position (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_frame_remove_obj,         1, 2, framebuffer_frame_remove);
-/* Remove a frame to a window. Arguments: window, position (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_frame_step_obj,           1, 2, framebuffer_frame_step);
-/* Step to a different frame of a window, returns the frame number. Arguments: window, step (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_frame_seek_obj,           2, 2, framebuffer_frame_seek);
-/* Seek to a specific frame of a window, returns the frame number. Arguments: window, framenumber */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_frame_current_obj,        1, 1, framebuffer_frame_current);
-/* Returns the frame number of a window. Arguments: window */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_frame_count_obj,          1, 1, framebuffer_frame_count);
-/* Returns the amount of frames in a window. Arguments: window */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_get_pixel_obj,            2, 3, framebuffer_get_pixel);
 /* Get the color of a pixel in the framebuffer or in a window. Arguments: window (optional), x, y */
@@ -810,7 +696,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_info_obj,            
 /* Get information about a PNG image. Arguments: buffer with PNG data or filename of PNG image */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_draw_png_obj,              3, 4, framebuffer_draw_png);
-/* Draw a PNG image to a frame. Arguments: x, y, buffer with PNG data or filename of PNG image */
+/* Draw a PNG image. Arguments: x, y, buffer with PNG data or filename of PNG image */
 
 static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	/* Constants */
@@ -845,15 +731,6 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_windowFocus                   ), MP_ROM_PTR( &framebuffer_window_focus_obj         )}, //Bring a window to the front
 	{MP_ROM_QSTR( MP_QSTR_windowResize                  ), MP_ROM_PTR( &framebuffer_window_resize_obj        )}, //Resize a window
 	{MP_ROM_QSTR( MP_QSTR_windowList                    ), MP_ROM_PTR( &framebuffer_window_list_obj          )}, //List all windows
-	{MP_ROM_QSTR( MP_QSTR_windowLoop                    ), MP_ROM_PTR( &framebuffer_window_loop_obj          )}, //Enable or disable frame looping
-	
-	/* Functions: compositor frames */
-	{MP_ROM_QSTR( MP_QSTR_frameAdd                      ), MP_ROM_PTR( &framebuffer_frame_add_obj            )}, //Add a frame to a window
-	{MP_ROM_QSTR( MP_QSTR_frameRemove                   ), MP_ROM_PTR( &framebuffer_frame_remove_obj         )}, //Remove a frame from a window
-	{MP_ROM_QSTR( MP_QSTR_frameStep                     ), MP_ROM_PTR( &framebuffer_frame_step_obj           )}, //Step one or more frame(s) forward or backward
-	{MP_ROM_QSTR( MP_QSTR_frameSeek                     ), MP_ROM_PTR( &framebuffer_frame_seek_obj           )}, //Seek to a specific frame
-	{MP_ROM_QSTR( MP_QSTR_frameCurrent                  ), MP_ROM_PTR( &framebuffer_frame_current_obj        )}, //Current frame number
-	{MP_ROM_QSTR( MP_QSTR_frameCount                    ), MP_ROM_PTR( &framebuffer_frame_count_obj          )}, //Total amount of frames
 	
 	/* Functions: drawing */
 	{MP_ROM_QSTR( MP_QSTR_getPixel                      ), MP_ROM_PTR( &framebuffer_get_pixel_obj            )}, //Get the color of a pixel

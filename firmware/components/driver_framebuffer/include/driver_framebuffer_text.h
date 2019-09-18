@@ -23,8 +23,8 @@ extern const GFXfont ipane7x5;
 /* Functions */
 
 const GFXfont* driver_framebuffer_findFontByName(const char* fontName);
-uint16_t driver_framebuffer_print(Frame* frame, const char* str, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font);
-uint16_t driver_framebuffer_print_len(Frame* frame, const char* str, int16_t len, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font);
+uint16_t driver_framebuffer_print(Window* window, const char* str, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font);
+uint16_t driver_framebuffer_print_len(Window* window, const char* str, int16_t len, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font);
 uint16_t driver_framebuffer_get_string_width(const char* str, const GFXfont *font);
 uint16_t driver_framebuffer_get_string_height(const char* str, const GFXfont *font);
 

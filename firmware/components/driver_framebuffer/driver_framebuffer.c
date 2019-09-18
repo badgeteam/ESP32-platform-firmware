@@ -91,10 +91,10 @@ esp_err_t driver_framebuffer_init()
 	return ESP_OK;
 }
 
-bool _getFrameContext(Frame* frame, uint8_t** buffer, int16_t* width, int16_t* height)
+bool _getFrameContext(Window* window, uint8_t** buffer, int16_t* width, int16_t* height)
 {
-	if (frame == NULL) {
-		//No frame provided, use global context
+	if (window == NULL) {
+		//No window provided, use global context
 		*width = FB_WIDTH;
 		*height = FB_HEIGHT;
 		*buffer = framebuffer;
@@ -103,23 +103,19 @@ bool _getFrameContext(Frame* frame, uint8_t** buffer, int16_t* width, int16_t* h
 			return false;
 		}
 	} else {
-		if (frame->window == NULL) {
-			ESP_LOGE(TAG, "Window is NULL!");
-			return false;
-		}
-		*width  = frame->window->width;
-		*height = frame->window->height;
-		*buffer = frame->buffer;
+		*width  = window->width;
+		*height = window->height;
+		*buffer = window->buffer;
 	}
 	return true;
 }
 
-void driver_framebuffer_fill(Frame* frame, uint32_t value)
+void driver_framebuffer_fill(Window* window, uint32_t value)
 {
 	uint8_t* buffer;
 	int16_t width, height;
-	if (!_getFrameContext(frame, &buffer, &width, &height)) return;
-	if (!frame) driver_framebuffer_set_dirty_area(0,0,width-1,height-1, true);
+	if (!_getFrameContext(window, &buffer, &width, &height)) return;
+	if (!window) driver_framebuffer_set_dirty_area(0,0,width-1,height-1, true);
 	
 	#if   defined(FB_TYPE_1BPP)
 		memset(buffer, greyToBw(rgbToGrey(value)) ? 0xFF : 0x00, (width*height)/8);
@@ -158,11 +154,11 @@ void driver_framebuffer_fill(Frame* frame, uint32_t value)
 	#endif
 }
 
-void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t value)
+void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t value)
 {
 	uint8_t* buffer; int16_t width, height;
-	if (!_getFrameContext(frame, &buffer, &width, &height)) return;
-	if (!driver_framebuffer_orientation_apply(frame ? frame->window : NULL, &x, &y)) return;
+	if (!_getFrameContext(window, &buffer, &width, &height)) return;
+	if (!driver_framebuffer_orientation_apply(window, &x, &y)) return;
 	bool changed = false;
 	#if defined(FB_TYPE_1BPP)
 		//The 1-bit-per-pixel displays all seem to have their own pixel format...
@@ -232,14 +228,14 @@ void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t va
 		#error "No framebuffer type configured."
 	#endif
 	
-	if ((!frame) && changed) driver_framebuffer_set_dirty_area(x,y,x,y,false);
+	if ((!window) && changed) driver_framebuffer_set_dirty_area(x,y,x,y,false);
 }
 
-uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y)
+uint32_t driver_framebuffer_getPixel(Window* window, int16_t x, int16_t y)
 {
 	uint8_t* buffer; int16_t width, height;
-	if (!_getFrameContext(frame, &buffer, &width, &height)) return 0;
-	if (!driver_framebuffer_orientation_apply(frame ? frame->window : NULL, &x, &y)) return 0;
+	if (!_getFrameContext(window, &buffer, &width, &height)) return 0;
+	if (!driver_framebuffer_orientation_apply(window, &x, &y)) return 0;
 
 	#if defined(FB_TYPE_1BPP)
 		#ifndef FB_1BPP_VERT
@@ -297,7 +293,6 @@ bool driver_framebuffer_flush(uint32_t flags)
 	Window* currentWindow = driver_framebuffer_window_first();
 	while (currentWindow != NULL) {
 		if (currentWindow->visible) {
-			Frame* currentFrame = currentWindow->frame;
 			for (uint16_t wy = 0; wy < currentWindow->height; wy++) {
 				for (uint16_t wx = 0; wx < currentWindow->width; wx++) {
 					driver_framebuffer_setPixel(
@@ -305,7 +300,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 						currentWindow->x + wx,
 						currentWindow->y + wy,
 						driver_framebuffer_getPixel(
-							currentFrame,
+							currentWindow,
 							wx,
 							wy
 						)
@@ -382,7 +377,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 	return true;
 }
 
-esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p)
+esp_err_t driver_framebuffer_png(Window* window, int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p)
 {
 	if (!framebuffer) {
 		ESP_LOGE(TAG, "png without alloc!");
@@ -413,13 +408,10 @@ esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_
 	
 	int16_t screenWidth;
 	int16_t screenHeight;
-	
-	Window* window = NULL;
-	if (frame) window = frame->window;
-	
+		
 	driver_framebuffer_get_orientation_size(window, &screenWidth, &screenHeight);
 	
-	res = lib_png_load_image(frame, pr, x, y, dst_min_x, dst_min_y, screenWidth - x, screenHeight - y, screenWidth);
+	res = lib_png_load_image(window, pr, x, y, dst_min_x, dst_min_y, screenWidth - x, screenHeight - y, screenWidth);
 
 	lib_png_destroy(pr);
 

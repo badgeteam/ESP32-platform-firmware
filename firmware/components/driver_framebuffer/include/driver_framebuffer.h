@@ -42,13 +42,13 @@ esp_err_t driver_framebuffer_init();
 bool driver_framebuffer_flush(uint32_t flags);
 /* Flush the framebuffer to the display */
 
-void driver_framebuffer_fill(Frame* frame, uint32_t value);
+void driver_framebuffer_fill(Window* window, uint32_t value);
 /* Fill the framebuffer or the provided frame with a single color */
 
-void driver_framebuffer_setPixel(Frame* frame, int16_t x, int16_t y, uint32_t value);
+void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t value);
 /* Set a pixel in the framebuffer or the provided frame to a color */
 
-uint32_t driver_framebuffer_getPixel(Frame* frame, int16_t x, int16_t y);
+uint32_t driver_framebuffer_getPixel(Window* window, int16_t x, int16_t y);
 /* Get the color of a pixel in the framebuffer or the provided frame */
 
 uint16_t driver_framebuffer_getWidth(Window* window);
@@ -57,6 +57,6 @@ uint16_t driver_framebuffer_getWidth(Window* window);
 uint16_t driver_framebuffer_getHeight(Window* window);
 /* Get the height of the framebuffer or the provided window */
 
-esp_err_t driver_framebuffer_png(Frame* frame, int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p);
+esp_err_t driver_framebuffer_png(Window* window, int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p);
 
 #endif //_DRIVER_FRAMEBUFFER_H_
