@@ -283,6 +283,34 @@ uint32_t driver_framebuffer_getPixel(Window* window, int16_t x, int16_t y)
 	#endif
 }
 
+void driver_framebuffer_blit(Window* source, Window* target)
+{
+	if (source->vOffset >= source->height) return; //The vertical offset is larger than the height of the window
+	if (source->hOffset >= source->width)  return; //The horizontal offset is larger than the width of the window
+	for (uint16_t wy = source->vOffset; wy < source->drawHeight; wy++) {
+		for (uint16_t wx = source->hOffset; wx < source->drawWidth; wx++) {
+			if (wy >= source->height) continue; //Out-of-bounds
+			if (wx >= source->width) continue;  //Out-of-bounds
+			uint32_t color = driver_framebuffer_getPixel(source, wx, wy); //Read the pixel from the window framebuffer
+			if (source->enableTransparentColor && source->transparentColor == color) continue; //Transparent
+			driver_framebuffer_setPixel(target, source->x + wx, source->y + wy, color); //Write the pixel to the global framebuffer
+		}
+	}
+}
+
+void _render_windows()
+{
+	//Step through the linked list of windows and blit each of the visible windows to the main framebuffer
+	Window* currentWindow = driver_framebuffer_window_first();
+	while (currentWindow != NULL) {
+		if (currentWindow->visible) {
+			printf("Rendering %s...\n", currentWindow->name);
+			driver_framebuffer_blit(currentWindow, NULL);
+		}
+		currentWindow = currentWindow->_nextWindow;
+	}
+}
+
 bool driver_framebuffer_flush(uint32_t flags)
 {
 	if (!framebuffer) {
@@ -290,26 +318,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 		return false;
 	}
 	
-	Window* currentWindow = driver_framebuffer_window_first();
-	while (currentWindow != NULL) {
-		if (currentWindow->visible) {
-			for (uint16_t wy = 0; wy < currentWindow->height; wy++) {
-				for (uint16_t wx = 0; wx < currentWindow->width; wx++) {
-					driver_framebuffer_setPixel(
-						NULL,
-						currentWindow->x + wx,
-						currentWindow->y + wy,
-						driver_framebuffer_getPixel(
-							currentWindow,
-							wx,
-							wy
-						)
-					);
-				}
-			}
-		}
-		currentWindow = currentWindow->_nextWindow;
-	}
+	_render_windows();
 
 	uint32_t eink_flags = 0;
 	
