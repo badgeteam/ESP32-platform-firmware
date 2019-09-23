@@ -1,5 +1,4 @@
 #!/bin/bash
-source set_env.sh
 git submodule update --init --recursive || exit 1
 cd firmware
 bash mpy_cross.sh || exit 1
