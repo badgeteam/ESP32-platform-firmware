@@ -1,8 +1,7 @@
 #!/bin/bash
-source set_env.sh
-git submodule update --init --recursive
+git submodule update --init --recursive || exit 1
 cd firmware
-bash mpy_cross.sh
+bash mpy_cross.sh || exit 1
 rm build -rf
 make clean
 make -j8
