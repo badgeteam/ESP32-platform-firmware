@@ -18,6 +18,7 @@ badge.team firmware has been used by many event badges, such as:
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a61bf7ca8c6040e78382af2741a67d04)](https://www.codacy.com/app/Badgeteam/ESP32-Firmware?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=badgeteam/ESP32-Firmware&amp;utm_campaign=Badge.team)
 [![Build Status](https://travis-ci.org/badgeteam/ESP32-Firmware.svg?branch=master)](https://travis-ci.org/badgeteam/ESP32-Firmware)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fbadgeteam%2FESP32-platform-firmware.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fbadgeteam%2FESP32-platform-firmware?ref=badge_shield)
 -->
 
 ## Debian prerequisites
@@ -106,3 +107,7 @@ Copyright (C) 2017-2019 Badge team.
 Using [Espressif Audio Development Framework](https://github.com/espressif/esp-adf) Copyright (C) 2018 Espressif Systems.
 Based on template application for [Espressif IoT Development Framework (ESP-IDF)](https://github.com/espressif/esp-idf).
 Copyright (C) 2016 Espressif Systems, licensed under the Apache License 2.0 as described in the file LICENSE.
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fbadgeteam%2FESP32-platform-firmware.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fbadgeteam%2FESP32-platform-firmware?ref=badge_large)
