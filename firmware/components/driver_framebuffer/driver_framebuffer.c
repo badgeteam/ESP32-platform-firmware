@@ -283,6 +283,33 @@ uint32_t driver_framebuffer_getPixel(Window* window, int16_t x, int16_t y)
 	#endif
 }
 
+void driver_framebuffer_blit(Window* source, Window* target)
+{
+	if (source->vOffset >= source->height) return; //The vertical offset is larger than the height of the window
+	if (source->hOffset >= source->width)  return; //The horizontal offset is larger than the width of the window
+	for (uint16_t wy = source->vOffset; wy < source->drawHeight; wy++) {
+		for (uint16_t wx = source->hOffset; wx < source->drawWidth; wx++) {
+			if (wy >= source->height) continue; //Out-of-bounds
+			if (wx >= source->width) continue;  //Out-of-bounds
+			uint32_t color = driver_framebuffer_getPixel(source, wx, wy); //Read the pixel from the window framebuffer
+			if (source->enableTransparentColor && source->transparentColor == color) continue; //Transparent
+			driver_framebuffer_setPixel(target, source->x + wx, source->y + wy, color); //Write the pixel to the global framebuffer
+		}
+	}
+}
+
+void _render_windows()
+{
+	//Step through the linked list of windows and blit each of the visible windows to the main framebuffer
+	Window* currentWindow = driver_framebuffer_window_first();
+	while (currentWindow != NULL) {
+		if (currentWindow->visible) {
+			driver_framebuffer_blit(currentWindow, NULL);
+		}
+		currentWindow = currentWindow->_nextWindow;
+	}
+}
+
 bool driver_framebuffer_flush(uint32_t flags)
 {
 	if (!framebuffer) {
@@ -290,26 +317,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 		return false;
 	}
 	
-	Window* currentWindow = driver_framebuffer_window_first();
-	while (currentWindow != NULL) {
-		if (currentWindow->visible) {
-			for (uint16_t wy = 0; wy < currentWindow->height; wy++) {
-				for (uint16_t wx = 0; wx < currentWindow->width; wx++) {
-					driver_framebuffer_setPixel(
-						NULL,
-						currentWindow->x + wx,
-						currentWindow->y + wy,
-						driver_framebuffer_getPixel(
-							currentWindow,
-							wx,
-							wy
-						)
-					);
-				}
-			}
-		}
-		currentWindow = currentWindow->_nextWindow;
-	}
+	_render_windows();
 
 	uint32_t eink_flags = 0;
 	
@@ -333,31 +341,24 @@ bool driver_framebuffer_flush(uint32_t flags)
 	#ifdef DISPLAY_FLAG_LUT_BIT
 		if (flags & FB_FLAG_LUT_NORMAL) {
 			eink_flags |= DRIVER_EINK_LUT_NORMAL << DISPLAY_FLAG_LUT_BIT;
-			//printf("NORMAL %u << %u\n", DRIVER_EINK_LUT_NORMAL, DISPLAY_FLAG_LUT_BIT);
 		}
 		if (flags & FB_FLAG_LUT_FAST) {
 			eink_flags |= DRIVER_EINK_LUT_FASTER << DISPLAY_FLAG_LUT_BIT;
-			//printf("FAST %u << %u\n", DRIVER_EINK_LUT_FASTER, DISPLAY_FLAG_LUT_BIT);
 		}
 		if (flags & FB_FLAG_LUT_FASTEST) {
 			eink_flags |= DRIVER_EINK_LUT_FASTEST << DISPLAY_FLAG_LUT_BIT;
-			//printf("FASTEST %u << %u\n", DRIVER_EINK_LUT_FASTEST, DISPLAY_FLAG_LUT_BIT);
 		}
 #else
 #error "NO LUT BIT"
 	#endif
-
-	//printf("EINK FLAGS %u\n", eink_flags);
 		
 	#ifdef FB_FLUSH_GS
 	if (flags & FB_FLAG_LUT_GREYSCALE) {
-		//printf("[FB] flushing greyscale image.\n");
 		FB_FLUSH_GS(framebuffer, eink_flags);
 	} else {
 	#endif
 		int16_t dirty_x0, dirty_y0, dirty_x1, dirty_y1;
 		driver_framebuffer_get_dirty_area(&dirty_x0, &dirty_y0, &dirty_x1, &dirty_y1);
-		//printf("[FB] flushing (%d, %d) to (%d, %d).\n", dirty_x0, dirty_y0, dirty_x1, dirty_y1);
 		FB_FLUSH(framebuffer,eink_flags,dirty_x0,dirty_y0,dirty_x1,dirty_y1);
 	#ifdef FB_FLUSH_GS
 	}

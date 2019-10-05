@@ -154,7 +154,6 @@ const GFXfont* driver_framebuffer_findFontByName(const char* fontName)
 
 uint16_t driver_framebuffer_print(Window* window, const char* str, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
-	//printf("\nPrint text %s with color %u\n", str, color);
 	int16_t x = x0, y = y0;
 	for (uint16_t i = 0; i < strlen(str); i++) {
 		_write(window, str[i], x0, &x, &y, xScale, yScale, color, font);

@@ -14,17 +14,19 @@ typedef struct Window_t {
 	
 	/* Properties */
 	char* name;                     //The name of the window
-	int16_t x, y;                   // Position (x,y)
-	uint16_t width, height;         // Size
-	bool visible;                   // Visible or hidden
+	int16_t x, y;                   // Position (x, y)
+	uint16_t width, height;         // Buffer size (width, height)
 	enum Orientation orientation;   // Current orientation
+	bool enableTransparentColor;    // Enable transparency
+	uint32_t transparentColor;      // Which color is made transparent
+	
+	/* Automatic rendering settings */
+	bool visible;                   // Visible or hidden
+	int16_t hOffset, vOffset;       // Drawing offset (x, y)
+	uint16_t drawWidth, drawHeight; // Drawing size (width, height)
 	
 	/* Buffer */
 	uint8_t* buffer;
-	
-	/* Transparency and alpha bending */
-	bool enableTransparentColor;    // Enable transparency
-	uint32_t transparentColor;      // Which color is made transparent
 } Window;
 
 Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint16_t height);

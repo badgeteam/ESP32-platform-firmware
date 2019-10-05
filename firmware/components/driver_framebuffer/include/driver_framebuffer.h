@@ -58,5 +58,9 @@ uint16_t driver_framebuffer_getHeight(Window* window);
 /* Get the height of the framebuffer or the provided window */
 
 esp_err_t driver_framebuffer_png(Window* window, int16_t x, int16_t y, lib_reader_read_t reader, void* reader_p);
+/* Draw a PNG image to the framebuffer of the provided window */
+
+void driver_framebuffer_blit(Window* source, Window* target);
+/* Blit a window to the framebuffer of another window or the main framebuffer */
 
 #endif //_DRIVER_FRAMEBUFFER_H_
