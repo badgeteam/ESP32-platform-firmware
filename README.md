@@ -23,7 +23,7 @@ badge.team firmware has been used by many event badges, such as:
 ## Debian prerequisites
 
 ```
-sudo apt-get install libncurses5-dev flex bison gperf python-serial libffi-dev libsdl2-dev libmbedtls-dev perl
+sudo apt-get install libncurses5-dev flex bison gperf python-serial libffi-dev libsdl2-dev libmbedtls-dev perl unzip
 ```
 
 ## Preparing your setup
@@ -48,12 +48,17 @@ cp firmware/configs/sha2017_defconfig firmware/sdkconfig
 ```
 
 # Build instructions
+Set the path to esp32-toolchain (you have to repeat that on every new terminal):
+```
+export PATH="$PATH:/.../ESP32-platform-firmware/xtensa-esp32-elf/bin"
+```
+
 To build and flash the basic generic firmware:
 ```
 ./build.sh
 ./flash.sh
- ```
- 
+```
+
 Make sure you have downloaded the appropriate driver for the USB UART chip on your device. Below are some from popular badges.
 
 * SHA2017 / HackerHotel 2019: [CP2102 driver](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
