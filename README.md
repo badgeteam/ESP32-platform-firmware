@@ -48,9 +48,9 @@ cp firmware/configs/sha2017_defconfig firmware/sdkconfig
 ```
 
 # Build instructions
-Set the path to esp32-toolchain (you have to repeat that on every new terminal):
+Set the path to esp32-toolchain (you have to repeat that on every new terminal) (usually it is located in your ESP32-platform-firmware directory):
 ```
-export PATH="$PATH:/.../ESP32-platform-firmware/xtensa-esp32-elf/bin"
+export PATH="$PATH:/path/to/my/toolchain/xtensa-esp32-elf/bin"
 ```
 
 To build and flash the basic generic firmware:
