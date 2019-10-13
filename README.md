@@ -23,7 +23,7 @@ badge.team firmware has been used by many event badges, such as:
 ## Debian prerequisites
 
 ```
-sudo apt-get install libncurses5-dev flex bison gperf python-serial libffi-dev libsdl2-dev libmbedtls-dev perl unzip
+sudo apt-get install make unzip git libncurses5-dev flex bison gperf python-serial libffi-dev libsdl2-dev libmbedtls-dev perl
 ```
 
 ## Preparing your setup
@@ -37,7 +37,7 @@ git submodule update --init --recursive
 Next, copy the xtensa build toolchain for your OS (currently supporting Linux and Mac OS) from /toolchains/, and unpack and save it as /xtensa-esp32-elf/ in the project root folder:
 
 ```
-unzip -p toolchain/xtensa-esp32-elf-linux64.zip xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar | tar xvf -
+unzip -p toolchain/xtensa-esp32-elf-linux64.zip xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar | tar xv
 ```
 
 # Building for a specific existing badge
@@ -82,32 +82,11 @@ You can use badge.team firmware for your own-designed badge or device. The workf
  * Create a directory with the folder name you configured in the first step in `/firmware/python_modules`, and copy `/firmware/python_modules/generic/*` into it.
  * In this directory, you can write Python code that will be built into the firmware image. The files `_boot.py` and `boot.py` are executed after each other on boot, and from there you can launch your own things.
  * Build and flash, and you're done!
- 
-<!--
 
-# MicroPython
+# License and information
 
-```
-import badge
-badge.eink_init()
-badge.display_picture(0,-1)
-import ugfx
-ugfx.init()
-ugfx.demo("HACKING")
-ugfx.clear(ugfx.BLACK)
-ugfx.thickline(1,1,100,100,ugfx.WHITE,10,5)
-ugfx.box(30,30,50,50,ugfx.WHITE)
-ugfx.string(150,25,"STILL","Roboto_BlackItalic24",ugfx.WHITE)
-ugfx.string(130,50,"Hacking","PermanentMarker22",ugfx.WHITE)
-len = ugfx.get_string_width("Hacking","PermanentMarker22")
-ugfx.line(130, 72, 144 + len, 72, ugfx.WHITE)
-ugfx.line(140 + len, 52, 140 + len, 70, ugfx.WHITE)
-ugfx.string(140,75,"Anyway","Roboto_BlackItalic24",ugfx.WHITE)
-ugfx.flush()
-```
-More info on the [MicroPython badge features](https://wiki.badge.team/MicroPython) -->
+Copyright (C) 2017-2019 BADGE.TEAM
 
-Copyright (C) 2017-2019 Badge team.
-Using [Espressif Audio Development Framework](https://github.com/espressif/esp-adf) Copyright (C) 2018 Espressif Systems.
-Based on template application for [Espressif IoT Development Framework (ESP-IDF)](https://github.com/espressif/esp-idf).
-Copyright (C) 2016 Espressif Systems, licensed under the Apache License 2.0 as described in the file LICENSE.
+Uses the [Micropython port for ESP32 by Loboris](https://github.com/loboris/MicroPython_ESP32_psRAM_LoBo)
+
+Uses ESP-IDF by Espressif
