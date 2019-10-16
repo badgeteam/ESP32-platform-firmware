@@ -60,17 +60,32 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 {
 	if (driver_framebuffer_window_find(name)) return NULL; //If the window already exists do nothing and return.
 	Window* window = _create_window();
-	window->name = strdup(name);
-	window->width = width;
-	window->height = height;
+	
+	/* Set properties */
+	window->name                   = strdup(name);
+	window->width                  = width;
+	window->height                 = height;
+	window->orientation            = 0;
+	window->enableTransparentColor = false;
+	window->transparentColor       = 0xFF00FF;
+	
+	/* Configure automatic rendering */
+	window->visible                = false;
+	window->hOffset                = 0;
+	window->vOffset                = 0;
+	window->drawWidth              = width;
+	window->drawHeight             = height;
+	
+	/* Buffer */
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
 		window->buffer = heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 	#else
 		window->buffer = heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_8BIT);
 	#endif
+	
+	/* Linked list */
 	window->_prevWindow = driver_framebuffer_window_last();
 	window->_nextWindow = NULL;
-	window->transparentColor = 0xFF00FF;
 	_add_window(window); //Add window to linked list of windows
 	return window;
 }
