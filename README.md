@@ -7,6 +7,7 @@ badge.team firmware has been used by many event badges, such as:
 * HackerHotel 2019
 * Disobey 2019
 * CampZone 2019
+* Hacktivity 2019
  
 <!--# Resources
 
