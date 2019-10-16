@@ -48,11 +48,22 @@ int sndmixer_queue_wav(const void *wav_start, const void *wav_end, int evictable
  *
  * This queues a piece of tracked music to be played. It will not be actually played until sndmixer_play is called.
  *
- * @param wav_start Start of the filedata
- * @param wav_end End of the filedata
+ * @param mod_start Start of the filedata
+ * @param mod_end End of the filedata
  * @return The ID of the queued sound, for use with the other functions.
  */
 int sndmixer_queue_mod(const void *mod_start, const void *mod_end);
+
+/**
+ * @brief Queue the data of a .mp3 file to be played
+ *
+ * This queues a piece of tracked music to be played. It will not be actually played until sndmixer_play is called.
+ *
+ * @param mp3_start Start of the filedata
+ * @param mp3_end End of the filedata
+ * @return The ID of the queued sound, for use with the other functions.
+ */
+int sndmixer_queue_mp3(const void *mp3_start, const void *mp3_end);
 
 /**
  * @brief Set or unset a sound to looping mode

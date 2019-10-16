@@ -13,6 +13,7 @@
 
 #include "snd_source_wav.h"
 #include "snd_source_mod.h"
+#include "snd_source_mp3.h"
 
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 
@@ -29,7 +30,8 @@ typedef enum {
 	CMD_PAUSE,
 	CMD_STOP,
 	CMD_PAUSE_ALL,
-	CMD_RESUME_ALL
+	CMD_RESUME_ALL,
+	CMD_QUEUE_MP3
 } sndmixer_cmd_ins_t;
 
 typedef struct {
@@ -121,7 +123,7 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
 }
 
 static void handle_cmd(sndmixer_cmd_t *cmd) {
-	if (cmd->cmd==CMD_QUEUE_WAV || cmd->cmd==CMD_QUEUE_MOD) {
+	if (cmd->cmd==CMD_QUEUE_WAV || cmd->cmd==CMD_QUEUE_MOD || cmd->cmd==CMD_QUEUE_MP3) {
 		int ch=find_free_channel();
 		if (ch<0) return; //no free channels
 		int r=0;
@@ -130,6 +132,8 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
 			r=init_source(ch, &sndmixer_source_wav, cmd->queue_file_start, cmd->queue_file_end);
 		} else if (cmd->cmd==CMD_QUEUE_MOD) {
 			r=init_source(ch, &sndmixer_source_mod, cmd->queue_file_start, cmd->queue_file_end);
+		} else if (cmd->cmd==CMD_QUEUE_MP3) {
+			r=init_source(ch, &sndmixer_source_mp3, cmd->queue_file_start, cmd->queue_file_end);
 		}
 		if (!r) {
 			printf("Sndmixer: Failed to start decoder for id %d\n", cmd->id);
@@ -259,6 +263,19 @@ int sndmixer_queue_mod(const void *mod_start, const void *mod_end) {
 		.cmd=CMD_QUEUE_MOD,
 		.queue_file_start=mod_start,
 		.queue_file_end=mod_end,
+		.flags=CHFL_PAUSED
+	};
+	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
+	return id;
+}
+
+int sndmixer_queue_mp3(const void *mp3_start, const void *mp3_end) {
+	int id=new_id();
+	sndmixer_cmd_t cmd={
+		.id=id,
+		.cmd=CMD_QUEUE_MP3,
+		.queue_file_start=mp3_start,
+		.queue_file_end=mp3_end,
 		.flags=CHFL_PAUSED
 	};
 	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
