@@ -2,10 +2,11 @@
 # Disobey 2019 version
 # Last updated on 13-09-2019
 
-import orientation, easydraw, display, ugfx           # Display & graphics
-import system, time, gc, sys                          # Generic
-import dashboard.resources.woezel_repo as woezel_repo # App repository
-
+import orientation, easydraw, display, ugfx            # Display & graphics
+import system, time, gc, sys                           # Generic
+import dashboard.resources.woezel_repo as woezel_repo  # App repository
+
+
 def btn_unhandled(pressed):
 	display.flush(display.FLAG_LUT_FASTEST)
 
@@ -17,7 +18,7 @@ def btn_update(pressed):
 	if pressed:
 		repo.update()
 		system.start("dashboard.installer", True)
-
+
 def show_categories(pressed = True, fromAppInstall = False):
 	if not pressed:
 		return
@@ -40,7 +41,8 @@ def show_categories(pressed = True, fromAppInstall = False):
 	ugfx.input_attach(ugfx.JOY_LEFT, btn_update)
 	ugfx.input_attach(ugfx.JOY_RIGHT, btn_unhandled)
 	display.flush(display.FLAG_LUT_NORMAL)
-
+
+
 def show_category(pressed=True, fromAppInstall = False):
 	global lastCategory
 	if not pressed:
@@ -102,9 +104,9 @@ def install_app(pressed=True):
 
 # ----
 
-orientation.default()
+orientation.default()
 selectBox = ugfx.List(0,0,ugfx.width(),ugfx.height())
-repo = woezel_repo
+repo = woezel_repo
 lastCategory = 0
 
 easydraw.messageCentered("Loading...", True, "/media/busy.png")

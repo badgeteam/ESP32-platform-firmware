@@ -55,7 +55,7 @@ static mp_obj_t button_callbacks[6] = {
 	mp_const_none, mp_const_none, mp_const_none
 };
 
-static void samd_event_handler(int pressed, int released)
+static void samd_event_handler(int pressed, int released)
 {
 	for (uint8_t btn = 0; btn<6; btn++) {
 		if ((pressed >> btn)&0x01) {

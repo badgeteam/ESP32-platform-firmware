@@ -234,7 +234,7 @@ def drawTask(onSleep=False):
 				display.drawText((display.width()-display.getTextWidth(nick, "roboto_regular12"))//2, currHeight, nick, 0x000000, "roboto_regular12")
 				currHeight += display.getTextHeight(nick, "roboto_regular12")
 			else:
-				title = "BADGE.TEAM"
+				title = "HACKTIVITY"
 				subtitle = consts.INFO_FIRMWARE_NAME 
 				logoHeight = display.getTextHeight(title, "fairlight12")+display.getTextHeight(subtitle, "roboto_regular12")
 				display.drawText((display.width()-display.getTextWidth(title, "fairlight12"))//2, currHeight + (app_height - logoHeight)//2,title, 0x000000, "fairlight12")

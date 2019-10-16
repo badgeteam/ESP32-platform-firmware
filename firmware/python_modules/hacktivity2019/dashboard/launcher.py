@@ -203,8 +203,8 @@ def start():
 			x0 = int(display.width()/2)
 			currentY = 20
 			
-			display.drawText(x0+((display.width()-x0)//2)-(display.getTextWidth("BADGE.TEAM", "fairlight12")//2), currentY, "BADGE.TEAM\n", 0x000000, "fairlight12")
-			currentY += display.getTextHeight("BADGE.TEAM", "fairlight12")
+			display.drawText(x0+((display.width()-x0)//2)-(display.getTextWidth("HACKTIVITY", "fairlight12")//2), currentY, "BADGE.TEAM\n", 0x000000, "fairlight12")
+			currentY += display.getTextHeight("HACKTIVITY", "fairlight12")
 			
 			display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("ESP32 platform", "roboto_regular12")/2), currentY, "ESP32 platform\n", 0x000000, "roboto_regular12")
 			display.drawLine(x0,0,x0,display.height()-1,0x000000)
