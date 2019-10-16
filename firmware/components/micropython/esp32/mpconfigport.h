@@ -321,6 +321,10 @@ extern const struct _mp_obj_module_t framebuffer_module;
 extern const struct _mp_obj_module_t samd_module;
 #endif
 
+#ifdef CONFIG_DRIVER_HACKTIVITY_SAMD_ENABLE
+extern const struct _mp_obj_module_t samd_module;
+#endif
+
 #ifdef CONFIG_DRIVER_EINK_ENABLE
 extern const struct _mp_obj_module_t eink_module;
 #endif
@@ -407,6 +411,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_DISOBEY_SAMD
 #endif
 
+#ifdef CONFIG_DRIVER_HACKTIVITY_SAMD_ENABLE
+#define BUILTIN_MODULE_HACKTIVITY_SAMD { MP_OBJ_NEW_QSTR(MP_QSTR_samd), (mp_obj_t)&samd_module },
+#else
+#define BUILTIN_MODULE_HACKTIVITY_SAMD
+#endif
+
 #ifdef CONFIG_DRIVER_EINK_ENABLE
 #define BUILTIN_MODULE_EINK { MP_OBJ_NEW_QSTR(MP_QSTR_eink), (mp_obj_t)&eink_module },
 #else
@@ -461,6 +471,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 	BUILTIN_MODULE_HUB75 \
 	BUILTIN_MODULE_EINK \
 	BUILTIN_MODULE_DISOBEY_SAMD \
+    BUILTIN_MODULE_HACKTIVITY_SAMD \
 	BUILTIN_MODULE_MPU6050 \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
 
