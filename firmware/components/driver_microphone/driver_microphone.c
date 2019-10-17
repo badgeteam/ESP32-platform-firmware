@@ -62,8 +62,8 @@ void init_output()
 	
 	static const i2s_pin_config_t pin_config = {
 		.bck_io_num = 13,
-		.ws_io_num = 15,
-		.data_out_num = 2,
+		.ws_io_num = 21,
+		.data_out_num = 18,
 		.data_in_num = I2S_PIN_NO_CHANGE
 	};
 	

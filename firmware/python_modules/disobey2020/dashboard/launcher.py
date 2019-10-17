@@ -30,6 +30,24 @@ def populate_apps():
 		userApps = []
 	for app in userApps:
 		add_app(app,read_metadata(app))
+	try:
+		userApps = os.listdir('apps')
+	except OSError:
+		userApps = []
+	for app in userApps:
+		add_app(app,read_metadata(app))
+	try:
+		userApps = os.listdir('/sd/lib')
+	except OSError:
+		userApps = []
+	for app in userApps:
+		add_app(app,read_metadata(app))
+	try:
+		userApps = os.listdir('/sd/apps')
+	except OSError:
+		userApps = []
+	for app in userApps:
+		add_app(app,read_metadata(app))
 	add_app("dashboard.installer",{"name":"Installer", "category":"system"})
 	add_app("dashboard.settings.nickname",{"name":"Set nickname", "category":"system"})
 	add_app("dashboard.settings.wifi",{"name":"Configure WiFi", "category":"system"})
@@ -68,7 +86,7 @@ def populate_options():
 # Read app metadata
 def read_metadata(app):
 	try:
-		install_path = get_install_path()
+		install_path = "/lib" #FIXME
 		info_file = "%s/%s/metadata.json" % (install_path, app)
 		#print("Reading "+info_file+"...")
 		with open(info_file) as f:
@@ -103,7 +121,7 @@ def uninstall():
 		global install_path
 		if ok:
 			easydraw.msg("Removing "+currentListTitles[selected]+"...", "Uninstalling...",True)
-			install_path = get_install_path()
+			install_path = "/lib" #FIXME
 			for rm_file in os.listdir("%s/%s" % (install_path, currentListTargets[selected]["file"])):
 				easydraw.msg("Deleting '"+rm_file+"'...")
 				os.remove("%s/%s/%s" % (install_path, currentListTargets[selected]["file"], rm_file))
@@ -122,23 +140,6 @@ def run():
 	options.destroy()
 	global currentListTargets
 	system.start(currentListTargets[selected]["file"], True)
-
-# Path
-
-def expandhome(s):
-	if "~/" in s:
-		h = os.getenv("HOME")
-		s = s.replace("~/", h + "/")
-	return s
-
-def get_install_path():
-	global install_path
-	if install_path is None:
-		# sys.path[0] is current module's path
-		install_path = sys.path[1]
-	install_path = expandhome(install_path)
-	return install_path
-
 
 # Actions        
 def input_a(pressed):

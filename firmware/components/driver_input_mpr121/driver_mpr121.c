@@ -152,91 +152,6 @@ esp_err_t driver_mpr121_start(bool baselineTracking)
 	return driver_mpr121_write_reg(MPR121_ECR, base | lastTouch);
 }
 
-esp_err_t driver_mpr121_configure(const uint32_t *baseline, uint8_t touch, uint8_t release)
-{
-	esp_err_t res;
-	res = driver_mpr121_write_reg(MPR121_SOFTRESET, 0x63); //Soft-reset
-	if (res != ESP_OK) return res;
-	vTaskDelay(1 / portTICK_PERIOD_MS);
-	
-	res = driver_mpr121_write_reg(MPR121_ECR, 0);
-	if (res != ESP_OK) return res;
-	
-	uint8_t value;
-	res = driver_mpr121_read_regs(MPR121_CONFIG2, (uint8_t *) &value, 1);
-	if (value != 0x24) return ESP_FAIL;
-	
-	driver_mpr121_stop();
-	for (int i=0; i<12; i++) {
-		if (driver_mpr121_is_touch_input(i)) {
-			res = driver_mpr121_write_reg(MPR121_TOUCHTH_0   + 2*i, touch); // touch
-			if (res != ESP_OK) return res;
-			res = driver_mpr121_write_reg(MPR121_RELEASETH_0 + 2*i, release); // release
-			if (res != ESP_OK) return res;
-			if (baseline != NULL) {
-				//printf("MPR121 baseline #%u is now set to %u >> 2 = %u\n", i, baseline[i], baseline[i] >> 2);
-				res = driver_mpr121_write_reg(MPR121_BASELINE_0 + i, baseline[i] >> 2); // baseline
-				if (res != ESP_OK) return res;
-			}
-		}
-	}
-	driver_mpr121_start(baseline == NULL);
-	
-	driver_mpr121_write_reg(MPR121_MHDR,     0x01);
-	driver_mpr121_write_reg(MPR121_NHDR,     0x01);
-	driver_mpr121_write_reg(MPR121_NCLR,     0x0E);
-	driver_mpr121_write_reg(MPR121_FDLR,     0x00);
-	
-	driver_mpr121_write_reg(MPR121_MHDF,     0x01);
-	driver_mpr121_write_reg(MPR121_NHDF,     0x05);
-	driver_mpr121_write_reg(MPR121_NCLF,     0x01);
-	driver_mpr121_write_reg(MPR121_FDLF,     0x00);
-	
-	driver_mpr121_write_reg(MPR121_NHDT,     0x00);
-	driver_mpr121_write_reg(MPR121_NCLT,     0x00);
-	driver_mpr121_write_reg(MPR121_FDLT,     0x00);
-	
-	driver_mpr121_write_reg(MPR121_DEBOUNCE, 0x00);
-	driver_mpr121_write_reg(MPR121_CONFIG1,  0x10); // default, 16µA charge current
-	driver_mpr121_write_reg(MPR121_CONFIG2,  0x20); // 0x5µs encoding, 1ms period
-	
-	/*
-	//Autoconfig
-	res = driver_mpr121_write_reg(MPR121_AUTOCONFIG0, 0x0B);
-	if (res != ESP_OK) return res;
-	res = driver_mpr121_write_reg(MPR121_UPLIMIT, 200);
-	if (res != ESP_OK) return res;
-	res = driver_mpr121_write_reg(MPR121_TARGETLIMIT, 180);
-	if (res != ESP_OK) return res;
-	res = driver_mpr121_write_reg(MPR121_LOWLIMIT, 130);
-	if (res != ESP_OK) return res;
-	*/
-	
-	driver_mpr121_start(baseline == NULL);
-	
-	ESP_LOGD(TAG, "configure done");
-	return ESP_OK;
-}
-
-static esp_err_t nvs_baseline_helper(uint8_t idx, uint32_t *value)
-{
-	if (idx > 11) {
-		ESP_LOGE(TAG, "NVS baseline index out of range: %d", idx);
-		return -1;
-	}
-	char key[14];
-	sprintf(key, "mpr121.base.%d", idx);
-	uint16_t v;
-	nvs_handle my_handle;
-	esp_err_t err = nvs_open("system", NVS_READWRITE, &my_handle);
-	if (err != ESP_OK) return err;
-	err = nvs_get_u16(my_handle, key, &v);
-	if (err == ESP_OK)
-		*value = v;
-	nvs_close(my_handle);
-	return err;
-}
-
 static esp_err_t configure_gpios(void)
 {
 #ifdef CONFIG_MPR121_ELE4_INPUT
@@ -417,6 +332,93 @@ static esp_err_t configure_gpios(void)
 	if (res != ESP_OK) return res;
 #endif
 	return ESP_OK;
+}
+
+esp_err_t driver_mpr121_configure(const uint32_t *baseline, uint8_t touch, uint8_t release)
+{
+	esp_err_t res;
+	res = driver_mpr121_write_reg(MPR121_SOFTRESET, 0x63); //Soft-reset
+	if (res != ESP_OK) return res;
+	vTaskDelay(1 / portTICK_PERIOD_MS);
+	
+	res = driver_mpr121_write_reg(MPR121_ECR, 0);
+	if (res != ESP_OK) return res;
+	
+	uint8_t value;
+	res = driver_mpr121_read_regs(MPR121_CONFIG2, (uint8_t *) &value, 1);
+	if (value != 0x24) return ESP_FAIL;
+	
+	driver_mpr121_stop();
+	for (int i=0; i<12; i++) {
+		if (driver_mpr121_is_touch_input(i)) {
+			res = driver_mpr121_write_reg(MPR121_TOUCHTH_0   + 2*i, touch); // touch
+			if (res != ESP_OK) return res;
+			res = driver_mpr121_write_reg(MPR121_RELEASETH_0 + 2*i, release); // release
+			if (res != ESP_OK) return res;
+			if (baseline != NULL) {
+				//printf("MPR121 baseline #%u is now set to %u >> 2 = %u\n", i, baseline[i], baseline[i] >> 2);
+				res = driver_mpr121_write_reg(MPR121_BASELINE_0 + i, baseline[i] >> 2); // baseline
+				if (res != ESP_OK) return res;
+			}
+		}
+	}
+	driver_mpr121_start(baseline == NULL);
+	
+	driver_mpr121_write_reg(MPR121_MHDR,     0x01);
+	driver_mpr121_write_reg(MPR121_NHDR,     0x01);
+	driver_mpr121_write_reg(MPR121_NCLR,     0x0E);
+	driver_mpr121_write_reg(MPR121_FDLR,     0x00);
+	
+	driver_mpr121_write_reg(MPR121_MHDF,     0x01);
+	driver_mpr121_write_reg(MPR121_NHDF,     0x05);
+	driver_mpr121_write_reg(MPR121_NCLF,     0x01);
+	driver_mpr121_write_reg(MPR121_FDLF,     0x00);
+	
+	driver_mpr121_write_reg(MPR121_NHDT,     0x00);
+	driver_mpr121_write_reg(MPR121_NCLT,     0x00);
+	driver_mpr121_write_reg(MPR121_FDLT,     0x00);
+	
+	driver_mpr121_write_reg(MPR121_DEBOUNCE, 0x00);
+	driver_mpr121_write_reg(MPR121_CONFIG1,  0x10); // default, 16µA charge current
+	driver_mpr121_write_reg(MPR121_CONFIG2,  0x20); // 0x5µs encoding, 1ms period
+	
+	/*
+	//Autoconfig
+	res = driver_mpr121_write_reg(MPR121_AUTOCONFIG0, 0x0B);
+	if (res != ESP_OK) return res;
+	res = driver_mpr121_write_reg(MPR121_UPLIMIT, 200);
+	if (res != ESP_OK) return res;
+	res = driver_mpr121_write_reg(MPR121_TARGETLIMIT, 180);
+	if (res != ESP_OK) return res;
+	res = driver_mpr121_write_reg(MPR121_LOWLIMIT, 130);
+	if (res != ESP_OK) return res;
+	*/
+	
+	driver_mpr121_start(baseline == NULL);
+	
+	configure_gpios();
+	
+	ESP_LOGD(TAG, "configure done");
+	return ESP_OK;
+}
+
+static esp_err_t nvs_baseline_helper(uint8_t idx, uint32_t *value)
+{
+	if (idx > 11) {
+		ESP_LOGE(TAG, "NVS baseline index out of range: %d", idx);
+		return -1;
+	}
+	char key[14];
+	sprintf(key, "mpr121.base.%d", idx);
+	uint16_t v;
+	nvs_handle my_handle;
+	esp_err_t err = nvs_open("system", NVS_READWRITE, &my_handle);
+	if (err != ESP_OK) return err;
+	err = nvs_get_u16(my_handle, key, &v);
+	if (err == ESP_OK)
+		*value = v;
+	nvs_close(my_handle);
+	return err;
 }
 
 esp_err_t driver_mpr121_init(void)

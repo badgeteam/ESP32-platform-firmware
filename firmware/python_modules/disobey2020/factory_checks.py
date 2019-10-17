@@ -1,4 +1,4 @@
-import machine, display, time, system, consts, easydraw, network
+import machine, display, time, system, consts, easydraw, network, neopixel, mpr121
 
 # 1) Introduction
 currentState = machine.nvs_getint('system', 'factory_checked')
@@ -36,3 +36,33 @@ machine.nvs_setint('system', 'factory_checked', 2)
 # 6) Show message
 easydraw.messageCentered("PASSED", True)
 display.flush()
+
+mpr121.set(10,1) #Calibration resets MPR121
+
+buzzer_pin = machine.Pin(12, machine.Pin.OUT)
+time.sleep(0.01)
+buzzer_pwm = machine.PWM(buzzer_pin, duty=50)
+
+while True:
+	buzzer_pwm.duty(50)
+	buzzer_pwm.freq(500)
+	neopixel.send(bytes([0xFF, 0, 0]*12))
+	time.sleep(0.25)
+	buzzer_pwm.freq(600)
+	neopixel.send(bytes([0, 0xFF, 0]*12))
+	time.sleep(0.25)
+	buzzer_pwm.freq(800)
+	neopixel.send(bytes([0, 0, 0xFF]*12))
+	time.sleep(0.25)
+	buzzer_pwm.freq(500)
+	neopixel.send(bytes([0xFF, 0, 0]*12))
+	time.sleep(0.25)
+	buzzer_pwm.freq(600)
+	neopixel.send(bytes([0, 0xFF, 0]*12))
+	time.sleep(0.25)
+	buzzer_pwm.freq(800)
+	neopixel.send(bytes([0, 0, 0xFF]*12))
+	time.sleep(0.25)
+	buzzer_pwm.freq(1000)
+	neopixel.send(bytes([0xFF, 0xFF, 0xFF]*12))
+	time.sleep(0.50)
