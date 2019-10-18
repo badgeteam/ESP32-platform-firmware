@@ -14,6 +14,7 @@
 #include "snd_source_wav.h"
 #include "snd_source_mod.h"
 #include "snd_source_mp3.h"
+#include "snd_source_synth.h"
 
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 
@@ -31,7 +32,9 @@ typedef enum {
 	CMD_STOP,
 	CMD_PAUSE_ALL,
 	CMD_RESUME_ALL,
-	CMD_QUEUE_MP3
+	CMD_QUEUE_MP3,
+	CMD_QUEUE_SYNTH,
+	CMD_FREQ
 } sndmixer_cmd_ins_t;
 
 typedef struct {
@@ -123,7 +126,7 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
 }
 
 static void handle_cmd(sndmixer_cmd_t *cmd) {
-	if (cmd->cmd==CMD_QUEUE_WAV || cmd->cmd==CMD_QUEUE_MOD || cmd->cmd==CMD_QUEUE_MP3) {
+	if (cmd->cmd==CMD_QUEUE_WAV || cmd->cmd==CMD_QUEUE_MOD || cmd->cmd==CMD_QUEUE_MP3 || cmd->cmd==CMD_QUEUE_SYNTH) {
 		int ch=find_free_channel();
 		if (ch<0) return; //no free channels
 		int r=0;
@@ -134,6 +137,9 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
 			r=init_source(ch, &sndmixer_source_mod, cmd->queue_file_start, cmd->queue_file_end);
 		} else if (cmd->cmd==CMD_QUEUE_MP3) {
 			r=init_source(ch, &sndmixer_source_mp3, cmd->queue_file_start, cmd->queue_file_end);
+		} else if (cmd->cmd==CMD_QUEUE_SYNTH) {
+			printf("CMD==CMD_QUEUE_SYNTH\n");
+			r=init_source(ch, &sndmixer_source_synth, 0, 0);
 		}
 		if (!r) {
 			printf("Sndmixer: Failed to start decoder for id %d\n", cmd->id);
@@ -166,6 +172,12 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
 		} else if (cmd->cmd==CMD_STOP) {
 			printf("Sndmixer: %d: cleaning up source because of ext request\n", cmd->id); 
 			clean_up_channel(ch);
+		} else if (cmd->cmd==CMD_FREQ) {
+			if (channel[ch].source->set_frequency) {
+				channel[ch].source->set_frequency(channel[ch].src_ctx, cmd->param);
+			} else {
+				printf("Not a synth!\n");
+			}
 		}
 	}
 }
@@ -282,6 +294,18 @@ int sndmixer_queue_mp3(const void *mp3_start, const void *mp3_end) {
 	return id;
 }
 
+int sndmixer_queue_synth() {
+	printf("sndmixer_queue_synth\n");
+	int id=new_id();
+	sndmixer_cmd_t cmd={
+		.id=id,
+		.cmd=CMD_QUEUE_SYNTH,
+		.flags=CHFL_PAUSED
+	};
+	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
+	return id;
+}
+
 void sndmixer_set_loop(int id, int do_loop) {
 	sndmixer_cmd_t cmd={
 		.cmd=CMD_LOOP,
@@ -334,6 +358,15 @@ void sndmixer_pause_all() {
 void sndmixer_resume_all() {
 	sndmixer_cmd_t cmd={
 		.cmd=CMD_RESUME_ALL,
+	};
+	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
+}
+
+void sndmixer_freq(int id, uint16_t frequency) {
+	sndmixer_cmd_t cmd={
+		.cmd=CMD_FREQ,
+		.id=id,
+		.param=frequency
 	};
 	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
 }

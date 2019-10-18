@@ -18,6 +18,8 @@ typedef struct {
 	int (*fill_buffer)(void *ctx, int8_t *buffer);
 	/*! Destroy source, free resources */
 	void (*deinit_source)(void *ctx);
+	/*! Set frequency of synthesizer */
+	void (*set_frequency)(void *ctx, uint16_t frequency);
 } sndmixer_source_t;
 
 /**
@@ -128,6 +130,11 @@ void sndmixer_pause_all();
  * This can be used to undo a sndmixer_pause_all() call.
  */
 void sndmixer_resume_all();
+
+
+//Basic synthesizer
+int sndmixer_queue_synth();
+void sndmixer_freq(int id, uint16_t frequency);
 
 
 #ifdef __cplusplus

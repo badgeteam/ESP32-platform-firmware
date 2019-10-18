@@ -118,6 +118,20 @@ static mp_obj_t modsndmixer_mp3(mp_obj_t _data) {
 	return mp_obj_new_int(id);
 }
 
+static mp_obj_t modsndmixer_synth() {
+	if (!sndmixer_started) { mp_raise_ValueError(msg_error_not_started); return mp_const_none; }
+	int id=sndmixer_queue_synth();
+	return mp_obj_new_int(id);
+}
+
+static mp_obj_t modsndmixer_freq(mp_obj_t _id, mp_obj_t _freq) {
+	if (!sndmixer_started) { mp_raise_ValueError(msg_error_not_started); return mp_const_none; }
+	int id = mp_obj_get_int(_id);
+	int freq = mp_obj_get_int(_freq);
+	sndmixer_freq(id, freq);
+	return mp_const_none;
+}
+
 /* --- */
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_begin_obj,      modsndmixer_begin);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_play_obj,       modsndmixer_play);
@@ -130,6 +144,8 @@ static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_volume_obj,     modsndmixer_volume)
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_wav_obj,        modsndmixer_wav);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_mod_obj,        modsndmixer_mod);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_mp3_obj,        modsndmixer_mp3);
+static MP_DEFINE_CONST_FUN_OBJ_0(modsndmixer_synth_obj,      modsndmixer_synth);
+static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_freq_obj,       modsndmixer_freq);
 
 static const mp_rom_map_elem_t sndmixer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_begin),      MP_ROM_PTR(&modsndmixer_begin_obj)},
@@ -143,6 +159,8 @@ static const mp_rom_map_elem_t sndmixer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_wav),        MP_ROM_PTR(&modsndmixer_wav_obj)},
 	{MP_ROM_QSTR(MP_QSTR_mod),        MP_ROM_PTR(&modsndmixer_mod_obj)},
 	{MP_ROM_QSTR(MP_QSTR_mp3),        MP_ROM_PTR(&modsndmixer_mp3_obj)},
+	{MP_ROM_QSTR(MP_QSTR_synth),      MP_ROM_PTR(&modsndmixer_synth_obj)},
+	{MP_ROM_QSTR(MP_QSTR_freq),       MP_ROM_PTR(&modsndmixer_freq_obj)},
 };
 
 static MP_DEFINE_CONST_DICT(sndmixer_module_globals, sndmixer_module_globals_table);
