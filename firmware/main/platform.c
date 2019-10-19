@@ -52,6 +52,7 @@ void platform_init()
 	INIT_DRIVER(ssd1306      , "SSD1306"    ) //128x64 OLED screen as found on the Disobey 2020 badge
 	INIT_DRIVER(eink         , "E-INK"      ) //296x128 e-ink display as found on the SHA2017 and HackerHotel 2019 badges
 	INIT_DRIVER(gxgde0213b1  , "GXGDE0213B1") //E-ink on OHS badge
+	INIT_DRIVER(nokia6100    , "NOKIA6100"  ) //Nokia 6100 LCD
 	INIT_DRIVER(ili9341      , "ILI9341"    ) //LCD display on wrover kit
 	INIT_DRIVER(fri3d        , "FRI3D"      ) //LEDs on the Fri3d camp 2018 badge
 	INIT_DRIVER(framebuffer  , "FRAMEBUFFER") //Framebuffer driver with basic drawing routines
@@ -62,6 +63,7 @@ void platform_init()
 	INIT_DRIVER(microphone   , "MICROPHONE" ) //Microphone driver
 	INIT_DRIVER(mpu6050      , "MPU6050"    ) //Accelerometer driver
 	INIT_DRIVER(sdcard       , "SDCARD"     ) //SD card driver
+	INIT_DRIVER(lora         , "LORA"       ) //LoRa modem driver
 	fflush(stdout);
 	vTaskDelay(100 / portTICK_PERIOD_MS); //Give things time to settle.
 }

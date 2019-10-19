@@ -1,5 +1,4 @@
 menu "Driver: Neopixel LED driver"
-	depends on DRIVER_VSPI_ENABLE
 	config DRIVER_NEOPIXEL_ENABLE
 		bool "Enable the neopixel LED driver"
 		default n
@@ -7,7 +6,6 @@ menu "Driver: Neopixel LED driver"
 	config NEOPIXEL_PIN
 		depends on DRIVER_NEOPIXEL_ENABLE
 		int "GPIO pin used for data output"
-		default 32
 		
 	config DRIVER_NEOPIXEL_USE_MPR121_PIN
 		depends on DRIVER_NEOPIXEL_ENABLE && DRIVER_MPR121_ENABLE

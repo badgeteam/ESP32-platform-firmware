@@ -329,6 +329,10 @@ extern const struct _mp_obj_module_t eink_module;
 extern const struct _mp_obj_module_t neopixel_module;
 #endif
 
+#ifdef CONFIG_DRIVER_LORA_ENABLE
+extern const struct _mp_obj_module_t lora_module;
+#endif
+
 #ifdef CONFIG_MICROPY_USE_REQUESTS
 extern const struct _mp_obj_module_t mp_module_requests;
 #define BUILTIN_MODULE_REQUESTS { MP_OBJ_NEW_QSTR(MP_QSTR_requests), (mp_obj_t)&mp_module_requests },
@@ -419,6 +423,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_NEOPIXEL
 #endif
 
+#ifdef CONFIG_DRIVER_LORA_ENABLE
+#define BUILTIN_MODULE_LORA { MP_OBJ_NEW_QSTR(MP_QSTR_lora), (mp_obj_t)&lora_module },
+#else
+#define BUILTIN_MODULE_LORA
+#endif
+
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 #define BUILTIN_MODULE_HUB75 { MP_OBJ_NEW_QSTR(MP_QSTR_hub75), (mp_obj_t)&hub75_module },
 #else
@@ -458,6 +468,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 	BUILTIN_MODULE_SSD1306 \
 	BUILTIN_MODULE_FRAMEBUFFER \
 	BUILTIN_MODULE_NEOPIXEL \
+	BUILTIN_MODULE_LORA \
 	BUILTIN_MODULE_HUB75 \
 	BUILTIN_MODULE_EINK \
 	BUILTIN_MODULE_DISOBEY_SAMD \
