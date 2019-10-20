@@ -25,8 +25,9 @@ def show_category(slug, name):
 	showMessage("Loading "+slug+"...")
 	try:
 		category = repo.getCategory(slug)
-	except:
+	except BaseException as e:
 		showMessage("Failed to open category "+slug+"!", True)
+		sys.print_exception(e)
 		time.sleep(1)
 		return
 	gc.collect()

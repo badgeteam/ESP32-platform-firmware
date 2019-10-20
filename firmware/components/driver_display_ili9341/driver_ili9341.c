@@ -197,7 +197,11 @@ esp_err_t driver_ili9341_reset(void) {
 
 esp_err_t driver_ili9341_set_backlight(bool state)
 {
-	return gpio_set_level(CONFIG_PIN_NUM_ILI9341_BACKLIGHT, !state);
+	#if CONFIG_PIN_NUM_ILI9341_BACKLIGHT >= 0
+		return gpio_set_level(CONFIG_PIN_NUM_ILI9341_BACKLIGHT, !state);
+	#else
+		return ESP_OK;
+	#endif
 }
 
 esp_err_t driver_ili9341_set_sleep(bool state)
@@ -246,8 +250,10 @@ esp_err_t driver_ili9341_init(void)
 	esp_err_t res;
 	
 	//Initialize backlight GPIO pin
-	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_BACKLIGHT, GPIO_MODE_OUTPUT);
-	if (res != ESP_OK) return res;
+	#if CONFIG_PIN_NUM_ILI9341_BACKLIGHT>=0
+		res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_BACKLIGHT, GPIO_MODE_OUTPUT);
+		if (res != ESP_OK) return res;
+	#endif
 
 	//Turn off backlight
 	res = driver_ili9341_set_backlight(false);

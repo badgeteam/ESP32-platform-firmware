@@ -1,0 +1,26 @@
+menu "Driver: Flipdot display (Otter)"
+	config DRIVER_FLIPDOTTER_ENABLE
+		depends on DRIVER_VSPI_ENABLE
+		bool "Enable the otter flipdot driver"
+		default n
+	
+	config PIN_NUM_FLIPDOTTER_LATCH
+		depends on DRIVER_FLIPDOTTER_ENABLE
+		int "GPIO pin used for latch"
+	
+	config PIN_NUM_FLIPDOTTER_FIRE
+		depends on DRIVER_FLIPDOTTER_ENABLE
+		int "GPIO pin used for fire"
+
+	config FLIPDOTTER_COLS
+		depends on DRIVER_FLIPDOTTER_ENABLE
+		int "Number of columns"
+	
+	config FLIPDOTTER_ROWS
+		depends on DRIVER_FLIPDOTTER_ENABLE
+		int "Number of rows"
+	
+	config FLIPDOTTER_MODULES
+		depends on DRIVER_FLIPDOTTER_ENABLE
+		int "Number of modules"
+endmenu
