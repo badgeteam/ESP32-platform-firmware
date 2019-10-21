@@ -126,6 +126,9 @@ extern const mp_obj_type_t machine_ds18x20_type;
 #ifdef CONFIG_MICROPY_USE_RFCOMM
 extern const mp_obj_type_t machine_rfcomm_type;
 #endif
+#ifdef CONFIG_MICROPY_USE_GPS
+extern const mp_obj_type_t machine_gps_type;
+#endif
 extern int mpy_heap_size;
 
 void machine_pins_init(void);

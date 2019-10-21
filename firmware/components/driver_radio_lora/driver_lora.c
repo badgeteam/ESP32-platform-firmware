@@ -44,9 +44,16 @@
 
 #define TAG "lora"
 
-static spi_device_handle_t spi_device = NULL;
-static int __implicit;
-static long __frequency;
+xSemaphoreHandle driver_lora_mux           = NULL; // Mutex for accessing the handler
+xSemaphoreHandle driver_lora_intr_trigger  = NULL; // Semaphore to trigger LoRa interrupt handling
+static spi_device_handle_t spi_device      = NULL; // SPI device handle for accessing the LoRa radio
+static bool __implicit                     = 0;    // LoRa header mode
+static long __frequency                    = 0;    // LoRa frequency
+driver_lora_intr_t driver_lora_handler     = NULL; // Interrupt handler
+void*              driver_lora_handler_arg = NULL; // Argument passed to interrupt handler
+
+
+/* SPI communication */
 
 esp_err_t driver_lora_write_reg(uint8_t reg, uint8_t val)
 {
@@ -80,6 +87,8 @@ esp_err_t driver_lora_read_reg(uint8_t reg, uint8_t* val)
 	return ESP_OK;
 }
 
+/* Basic device control */
+
 esp_err_t driver_lora_reset(void) {
 	#if CONFIG_PIN_NUM_LORA_RST >= 0
 	esp_err_t res = gpio_set_level(CONFIG_PIN_NUM_LORA_RST, false);
@@ -91,6 +100,8 @@ esp_err_t driver_lora_reset(void) {
 	ets_delay_us(200000);
 	return ESP_OK;
 }
+
+/* Header mode */
 
 esp_err_t driver_lora_explicit_header_mode(void)
 {
@@ -116,6 +127,8 @@ esp_err_t driver_lora_implicit_header_mode(uint8_t size)
 	return ESP_OK;
 }
 
+/* Radio mode */
+
 esp_err_t driver_lora_idle(void)
 {
    return driver_lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_STDBY);
@@ -130,6 +143,8 @@ esp_err_t driver_lora_receive(void)
 {
    return driver_lora_write_reg(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_CONTINUOUS);
 }
+
+/* Radio settings */
 
 esp_err_t driver_lora_set_tx_power(uint8_t level)
 {
@@ -247,6 +262,8 @@ esp_err_t driver_lora_disable_crc(void)
 	return driver_lora_write_reg(REG_MODEM_CONFIG_2, value & 0xfb);
 }
 
+/* Packet transmit */
+
 esp_err_t driver_lora_send_packet(uint8_t *buf, uint8_t size)
 {
 	esp_err_t res = driver_lora_idle();
@@ -282,6 +299,8 @@ esp_err_t driver_lora_send_packet(uint8_t *buf, uint8_t size)
 
 	return driver_lora_write_reg(REG_IRQ_FLAGS, IRQ_TX_DONE_MASK);
 }
+
+/* Packet receive */
 
 esp_err_t driver_lora_receive_packet(uint8_t *buf, uint8_t bufferSize, uint8_t* len)
 {
@@ -349,6 +368,8 @@ esp_err_t driver_lora_packet_snr(float* snr)
 	return ESP_OK;
 }
 
+/* Debugging */
+
 esp_err_t driver_lora_dump_registers(void)
 {
 	int i;
@@ -363,6 +384,30 @@ esp_err_t driver_lora_dump_registers(void)
 	printf("\n");
 	return ESP_OK;
 }
+
+/* Interrupt handling */
+
+void driver_lora_intr_task(void *arg)
+{
+	
+}
+
+void driver_lora_set_interrupt_handler(driver_lora_intr_t handler, void *arg)
+{
+	if (driver_lora_mux) xSemaphoreTake(driver_lora_mux, portMAX_DELAY);
+	driver_lora_handler     = handler;
+	driver_lora_handler_arg = arg;
+	if (driver_lora_mux) xSemaphoreGive(driver_lora_mux);
+}
+
+void driver_lora_intr_handler(void *arg)
+{ /* in interrupt handler */
+	if (gpio_get_level(CONFIG_PIN_NUM_LORA_INT) == 0) {
+		xSemaphoreGiveFromISR(driver_lora_intr_trigger, NULL);
+	}
+}
+
+/* Driver initialisation */
 
 esp_err_t driver_lora_init(void)
 {
@@ -401,13 +446,7 @@ esp_err_t driver_lora_init(void)
 	uint8_t version;
 	res = driver_lora_read_reg(REG_VERSION, &version);
 	if (res != ESP_OK) return res;
-	
-	//printf("LoRa radio version = 0x%02x\n", version);
-	
-	if (version != 0x12) {
-		//printf("LoRa version invalid!\n");
-		return ESP_FAIL;
-	}
+	if (version != 0x12) return ESP_FAIL;
 	
 	//Enter sleep mode
 	res = driver_lora_sleep();
@@ -428,9 +467,34 @@ esp_err_t driver_lora_init(void)
 	res = driver_lora_set_tx_power(17);
 	if (res != ESP_OK) return res;
 	
-	//Enter idle mode
-	//res = driver_lora_idle();
-	//if (res != ESP_OK) return res;
+	driver_lora_explicit_header_mode();
+	
+	//Create mux
+	driver_lora_mux = xSemaphoreCreateMutex();
+	if (driver_lora_mux == NULL) return ESP_ERR_NO_MEM;
+	
+	//Create semaphore
+	driver_lora_intr_trigger = xSemaphoreCreateBinary();
+	if (driver_lora_intr_trigger == NULL) return ESP_ERR_NO_MEM;
+	
+	//Assign interrupt handler
+	res = gpio_isr_handler_add(CONFIG_PIN_NUM_LORA_INT, driver_lora_intr_handler, NULL);
+	if (res != ESP_OK) return res;
+
+	//Create interrupt task
+	xTaskCreate(&driver_lora_intr_task, "LoRa interrupt task", 4096, NULL, 10, NULL);
+	xSemaphoreGive(driver_lora_intr_trigger);
+	
+	gpio_config_t io_conf = {
+		.intr_type    = GPIO_INTR_ANYEDGE,
+		.mode         = GPIO_MODE_INPUT,
+		.pin_bit_mask = 1LL << CONFIG_PIN_NUM_LORA_INT,
+		.pull_down_en = 0,
+		.pull_up_en   = 1,
+	};
+
+	res = gpio_config(&io_conf);
+	if (res != ESP_OK) return res;
 	
 	driver_lora_init_done = true;
 	ESP_LOGD(TAG, "init done");

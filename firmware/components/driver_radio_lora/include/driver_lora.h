@@ -50,6 +50,8 @@ __BEGIN_DECLS
 #define PA_OUTPUT_RFO_PIN              0
 #define PA_OUTPUT_PA_BOOST_PIN         1
 
+typedef void (*driver_lora_intr_t)(void*, bool); // Interrupt handler type
+
 extern esp_err_t driver_lora_init(void);
 extern esp_err_t driver_lora_explicit_header_mode(void);
 extern esp_err_t driver_lora_implicit_header_mode(uint8_t size);

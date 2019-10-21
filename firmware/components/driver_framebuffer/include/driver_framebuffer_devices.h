@@ -13,6 +13,7 @@
 #include "driver_hub75.h"
 #include "driver_gxgde0213b1.h"
 #include "driver_fri3d.h"
+#include "driver_flipdotter.h"
 
 /* E-INK display as used on the SHA2017 and HackerHotel 2019 badges */
 #if defined(CONFIG_DRIVER_EINK_ENABLE)
@@ -95,6 +96,16 @@
 	#define FB_HEIGHT FRI3D_HEIGHT
 	#define FB_TYPE_8BPP
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_fri3d_write(buffer);
+	#define COLOR_FILL_DEFAULT 0x000000
+	#define COLOR_TEXT_DEFAULT 0xFFFFFF
+
+/* Otter flipdot matrix */
+#elif CONFIG_DRIVER_FLIPDOTTER_ENABLE
+	#define FB_SIZE FLIPDOTTER_BUFFER_SIZE
+	#define FB_WIDTH FLIPDOTTER_WIDTH
+	#define FB_HEIGHT FLIPDOTTER_HEIGHT
+	#define FB_TYPE_1BPP
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_flipdotter_write(buffer);
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 #else

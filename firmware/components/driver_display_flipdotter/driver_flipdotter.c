@@ -17,10 +17,6 @@
 
 #define TAG "flipdotter"
 
-#define BUFFER_SIZE (CONFIG_FLIPDOTTER_COLS*CONFIG_FLIPDOTTER_ROWS*CONFIG_FLIPDOTTER_MODULES) / 8
-#define WIDTH CONFIG_FLIPDOTTER_COLS*CONFIG_FLIPDOTTER_MODULES
-#define HEIGHT CONFIG_FLIPDOTTER_ROWS
-
 const unsigned char index_to_bitpattern_map[28] = {
 	1,   2,  3,  4,  5,  6,  7,
 	9,  10, 11, 12, 13, 14, 15,
@@ -34,50 +30,20 @@ uint8_t __current_row = 0;
 uint8_t __current_mod = 0;
 bool __busy           = false;
 bool __queue          = false;
+bool __state_unknown  = false;
 
 uint8_t* stateCurrent = NULL;
-uint8_t* stateTarget  = NULL;
-uint8_t* stateQueue   = NULL;
+const uint8_t* stateTarget  = NULL;
 
-inline bool _get_pixel(uint8_t col, uint8_t row, uint8_t mod, uint8_t* buffer)
+xSemaphoreHandle driver_flipdotter_refresh_trigger = NULL;
+
+inline bool _get_pixel(uint8_t col, uint8_t row, uint8_t mod, const uint8_t* buffer)
 {
 	//1BPP horizontal
-	uint32_t position = (row * (WIDTH/8)) + (col / 8);
+	uint32_t position = (row * (FLIPDOTTER_WIDTH / 8)) + ((col + (mod * CONFIG_FLIPDOTTER_COLS)) / 8);
 	uint8_t  bit      = col % 8;
 	return buffer[position] >> bit;
 }
-
-/*esp_err_t driver_flipdotter_refresh()
-{
-	if (__busy) { //A refresh is already in progress
-		__queue = true;
-		return ESP_OK;
-	}
-	
-	memcpy(stateTarget, stateQueue, BUFFER_SIZE);
-	
-	__busy = true;
-	__queue = false;
-	__current_col = 0;
-	__current_row = 0;
-	__current_mod = 0;
-	_next_pixel();
-}
-
-void _next_pixel()
-{
-	if (!__busy) return;
-	
-	if ((__current_mod >= CONFIG_FLIPDOTTER_MODULES) {
-		//Done
-		memcpy(stateCurrent, stateTarget, BUFFER_SIZE);
-		__busy = false;
-		if (__queue) driver_flipdotter_refresh();
-		return;
-	}
-	
-	if (
-}*/
 
 esp_err_t driver_flipdotter_set_pixel(uint8_t col, uint8_t row, uint8_t mod, bool color)
 {
@@ -103,11 +69,78 @@ esp_err_t driver_flipdotter_set_pixel(uint8_t col, uint8_t row, uint8_t mod, boo
 	return spi_device_transmit(spi_device, &t);
 }
 
+void driver_flipdotter_refresh_task(void *arg)
+{
+	while (1) { //This function runs as a FreeRTOS task, that is why it has it's own "main" loop.
+		if (xSemaphoreTake(driver_flipdotter_refresh_trigger, portMAX_DELAY)) { //This check lets FreeRTOS pause this task until we get permission to access the "shared resource", which in this case is the refresh trigger
+			if (__current_col >= CONFIG_FLIPDOTTER_COLS) {
+				__current_col = 0;
+				__current_row++;
+			}
+			if (__current_row >= CONFIG_FLIPDOTTER_ROWS) {
+				__current_row = 0;
+				__current_mod++;
+			}
+			if (__current_mod >= CONFIG_FLIPDOTTER_MODULES) {
+				//Done
+				memcpy(stateCurrent, stateTarget, FLIPDOTTER_BUFFER_SIZE);
+				__state_unknown = false;
+				if (__queue) {
+					// Start over
+					__queue = false;
+					__current_col = 0;
+					__current_row = 0;
+					__current_mod = 0;
+					xSemaphoreGive(driver_flipdotter_refresh_trigger); //Continue
+				} else {
+					// Stop
+					//printf("refresh: done\n");
+					__busy = false;
+				}
+			} else {
+				bool currentValue = _get_pixel( __current_col, __current_row, __current_mod, stateCurrent);
+				bool targetValue  = _get_pixel( __current_col, __current_row, __current_mod, stateTarget);
+				
+				if ((currentValue == targetValue) && (!__state_unknown)) {
+					//printf("%d, %d, %d: -\n", __current_col, __current_row, __current_mod);
+					__current_col++; //Go to the next pixel
+					xSemaphoreGive(driver_flipdotter_refresh_trigger); //Continue, give ourselves the refresh trigger
+				} else {
+					//printf("%d, %d, %d: %d\n", __current_col, __current_row, __current_mod, targetValue);
+					driver_flipdotter_set_pixel(__current_col, __current_row, __current_mod, targetValue);
+					__current_col++; //Go to the next pixel
+					//Note: once the SPI transaction is completed the post transfer call back will give us back the refresh trigger semaphore, this task will thus wait for the end of the transfer.
+				}
+			}
+		}
+	}
+}
+
+esp_err_t driver_flipdotter_write(const uint8_t *buffer)
+{
+	stateTarget = buffer;
+	if (__busy) {
+		//If the display is already being refreshed then we tell the driver to start over once done
+		__queue = true;
+		printf("Flipdot is busy, queued refresh cycle\n");
+	} else {
+		//If the display is idle then we start the refresh cycle
+		__busy = true;
+		__queue = false;
+		__current_col = 0;
+		__current_row = 0;
+		__current_mod = 0;
+		xSemaphoreGive(driver_flipdotter_refresh_trigger);
+	}
+	return ESP_OK;
+}
+
 static void driver_flipdotter_post_transfer_callback(spi_transaction_t *t)
 {
 	gpio_set_level(CONFIG_PIN_NUM_FLIPDOTTER_FIRE, true);
 	ets_delay_us(200);
 	gpio_set_level(CONFIG_PIN_NUM_FLIPDOTTER_FIRE, false);
+	xSemaphoreGiveFromISR(driver_flipdotter_refresh_trigger, NULL);
 }
 
 esp_err_t driver_flipdotter_init(void)
@@ -136,32 +169,18 @@ esp_err_t driver_flipdotter_init(void)
 	res = spi_bus_add_device(VSPI_HOST, &devcfg, &spi_device);
 	if (res != ESP_OK) return res;
 	
-	/*stateCurrent = malloc(BUFFER_SIZE);
+	//Allocate buffer for current state
+	stateCurrent = malloc(FLIPDOTTER_BUFFER_SIZE);
 	if (!stateCurrent) return ESP_FAIL;
-	stateTarget  = malloc(BUFFER_SIZE);
-	if (!stateTarget) return ESP_FAIL;
+	memset(stateCurrent, 0x00, FLIPDOTTER_BUFFER_SIZE);
+	__state_unknown = true;
 	
-	memset(stateCurrent, 0x00, BUFFER_SIZE);
-	memset(stateTarget,  0xFF, BUFFER_SIZE);*/
+	//Initialize semaphore for refresh task
+	driver_flipdotter_refresh_trigger = xSemaphoreCreateBinary();
+	if (driver_flipdotter_refresh_trigger == NULL) return ESP_ERR_NO_MEM;
 	
-	//driver_flipdotter_refresh();
-	
-	/* TEST */
-	while (1) {
-		uint8_t mod = 0;
-		//for (uint8_t mod = 0; mod < CONFIG_FLIPDOTTER_MODULES; mod++) {
-			for (uint8_t row = 0; row < CONFIG_FLIPDOTTER_ROWS; row++) {
-				for (uint8_t col = 0; col < CONFIG_FLIPDOTTER_COLS; col++) {
-					//printf("%d, %d, %d\n", col, row, mod);
-					driver_flipdotter_set_pixel(col,row,mod,false);
-					vTaskDelay(5 / portTICK_PERIOD_MS);
-					driver_flipdotter_set_pixel(col,row,mod,true);
-					vTaskDelay(5 / portTICK_PERIOD_MS);
-				}
-			}
-		//}
-	}
-	
+	//Create the refresh task
+	xTaskCreate(&driver_flipdotter_refresh_task, "Flipdot display refresh task", 4096, NULL, 10, NULL);
 	
 	driver_flipdotter_init_done = true;
 	ESP_LOGD(TAG, "init done");

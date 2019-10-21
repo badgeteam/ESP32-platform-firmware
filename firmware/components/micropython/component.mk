@@ -107,6 +107,8 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ssd1306/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ili9341/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_gxgde0213b1/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_fri3d/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_nokia6100/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_flipdotter/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include
@@ -253,6 +255,11 @@ endif
 
 ifdef CONFIG_MICROPY_USE_RFCOMM
 SRC_C += esp32/machine_rfcomm.c
+endif
+
+ifdef CONFIG_MICROPY_USE_GPS
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libnmea/src/nmea
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libnmea/src/parsers
 endif
 
 EXTMOD_SRC_C = $(addprefix extmod/,\
