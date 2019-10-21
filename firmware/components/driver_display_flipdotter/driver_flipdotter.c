@@ -40,9 +40,15 @@ xSemaphoreHandle driver_flipdotter_refresh_trigger = NULL;
 inline bool _get_pixel(uint8_t col, uint8_t row, uint8_t mod, const uint8_t* buffer)
 {
 	//1BPP horizontal
-	uint32_t position = (row * (FLIPDOTTER_WIDTH / 8)) + ((col + (mod * CONFIG_FLIPDOTTER_COLS)) / 8);
-	uint8_t  bit      = col % 8;
-	return buffer[position] >> bit;
+	//uint32_t position = (row * (FLIPDOTTER_WIDTH / 8)) + ((col + (mod * CONFIG_FLIPDOTTER_COLS)) / 8);
+	//uint8_t  bit      = ((col + (mod * CONFIG_FLIPDOTTER_COLS))) % 8;
+
+	uint16_t x = col;
+	uint16_t y = row;
+	
+	uint32_t position = ( (y / 8) * FLIPDOTTER_WIDTH) + x + (mod * CONFIG_FLIPDOTTER_COLS);
+	uint8_t  bit      = y % 8;
+	return !((buffer[position] >> bit)&0x01);
 }
 
 esp_err_t driver_flipdotter_set_pixel(uint8_t col, uint8_t row, uint8_t mod, bool color)
@@ -138,7 +144,7 @@ esp_err_t driver_flipdotter_write(const uint8_t *buffer)
 static void driver_flipdotter_post_transfer_callback(spi_transaction_t *t)
 {
 	gpio_set_level(CONFIG_PIN_NUM_FLIPDOTTER_FIRE, true);
-	ets_delay_us(200);
+	ets_delay_us(250);
 	gpio_set_level(CONFIG_PIN_NUM_FLIPDOTTER_FIRE, false);
 	xSemaphoreGiveFromISR(driver_flipdotter_refresh_trigger, NULL);
 }
@@ -159,7 +165,7 @@ esp_err_t driver_flipdotter_init(void)
 
 	//Initialize SPI device
 	static const spi_device_interface_config_t devcfg = {
-		.clock_speed_hz = 16000000,
+		.clock_speed_hz = 32000000,
 		.mode           = 0,
 		.spics_io_num   = CONFIG_PIN_NUM_FLIPDOTTER_LATCH,
 		.queue_size     = 1,

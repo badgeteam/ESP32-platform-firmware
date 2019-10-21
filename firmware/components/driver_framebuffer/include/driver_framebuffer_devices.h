@@ -105,6 +105,7 @@
 	#define FB_WIDTH FLIPDOTTER_WIDTH
 	#define FB_HEIGHT FLIPDOTTER_HEIGHT
 	#define FB_TYPE_1BPP
+	#define FB_1BPP_VERT
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_flipdotter_write(buffer);
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
