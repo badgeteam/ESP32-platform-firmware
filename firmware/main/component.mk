@@ -10,3 +10,5 @@ COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver_rtcmem/include \
                             $(PROJECT_PATH)/components/driver_display_hub75/include \
                             $(PROJECT_PATH)/components/driver_display_gxgde0213b1/include \
                             $(PROJECT_PATH)/components/driver_display_fri3d/include \
+                            $(PROJECT_PATH)/components/driver_display_nokia6100/include \
+                            $(PROJECT_PATH)/components/driver_display_flipdotter/include \

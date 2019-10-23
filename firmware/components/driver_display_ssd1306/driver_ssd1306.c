@@ -39,10 +39,12 @@ static inline esp_err_t i2c_data(const uint8_t* buffer, uint16_t len)
 
 esp_err_t driver_ssd1306_reset(void)
 {
+#if CONFIG_PIN_NUM_SSD1306_RESET >= 0
 	gpio_set_level(CONFIG_PIN_NUM_SSD1306_RESET, false);
 	vTaskDelay(10 / portTICK_PERIOD_MS);
 	gpio_set_level(CONFIG_PIN_NUM_SSD1306_RESET, true);
 	vTaskDelay(5 / portTICK_PERIOD_MS);
+#endif
 	return ESP_OK;
 }
 
@@ -53,10 +55,10 @@ esp_err_t driver_ssd1306_init(void)
 	ESP_LOGD(TAG, "init called");
 	esp_err_t res = driver_i2c_init();
 	if (res != ESP_OK) return res;
-	
+#if CONFIG_PIN_NUM_SSD1306_RESET >= 0
 	gpio_set_direction(CONFIG_PIN_NUM_SSD1306_RESET, GPIO_MODE_OUTPUT);
-
 	driver_ssd1306_reset();
+#endif
 	
 #ifdef CONFIG_SSD1306_12832
 	res=i2c_command(0xae); // SSD1306_DISPLAYOFF

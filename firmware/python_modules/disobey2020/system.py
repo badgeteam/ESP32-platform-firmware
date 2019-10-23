@@ -5,16 +5,14 @@ def reboot():
 
 def sleep(duration=0, status=False):
 	import time, os, badge
-	# Not working for Disobey 2020 as the pins are not in the RTC domain
-	#machine.RTC().wake_on_ext0(pin = machine.Pin(19), level = 0)
+	machine.RTC().wake_on_ext0(pin = machine.Pin(34), level = 0) # MPR121 interrupt
 	#machine.RTC().wake_on_ext1([machine.Pin(5, machine.Pin.IN, machine.Pin.PULL_UP)], 0)
-	#---
 	if (duration >= 86400000): #One day
 		duration = 0
 	if status:
 		import term
 		if duration < 1:
-			term.header(True, "Sleeping until RESET is pressed!")
+			term.header(True, "Sleeping until a touch button is pressed!")
 		else:
 			term.header(True, "Sleeping for "+str(duration)+"ms...")
 	time.sleep(0.05)

@@ -55,7 +55,7 @@ static void mpr121_event_handler(void *b, bool state)
 	if ((pin < 0) || (pin > 11)) return;
 	if(button_callbacks[pin] != mp_const_none){
 		if ((!MP_OBJ_IS_FUN(button_callbacks[pin])) && (!MP_OBJ_IS_METH(button_callbacks[pin]))) {
-			printf("MPR121 ERROR: CALLBACK IS NOT FUN OR METH?!?! (pin %u)\n", pin);
+			printf("MPR121 ERROR: CALLBACK IS NOT FUNCTION OR METHOD?!?! (pin %u)\n", pin);
 		} else {
 			mp_sched_schedule(button_callbacks[pin], mp_obj_new_bool(state), NULL);
 		}

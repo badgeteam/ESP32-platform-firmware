@@ -18,6 +18,8 @@ typedef struct {
 	int (*fill_buffer)(void *ctx, int8_t *buffer);
 	/*! Destroy source, free resources */
 	void (*deinit_source)(void *ctx);
+	/*! Set frequency of synthesizer */
+	void (*set_frequency)(void *ctx, uint16_t frequency);
 } sndmixer_source_t;
 
 /**
@@ -48,11 +50,22 @@ int sndmixer_queue_wav(const void *wav_start, const void *wav_end, int evictable
  *
  * This queues a piece of tracked music to be played. It will not be actually played until sndmixer_play is called.
  *
- * @param wav_start Start of the filedata
- * @param wav_end End of the filedata
+ * @param mod_start Start of the filedata
+ * @param mod_end End of the filedata
  * @return The ID of the queued sound, for use with the other functions.
  */
 int sndmixer_queue_mod(const void *mod_start, const void *mod_end);
+
+/**
+ * @brief Queue the data of a .mp3 file to be played
+ *
+ * This queues a piece of mp3 music to be played. It will not be actually played until sndmixer_play is called.
+ *
+ * @param mp3_start Start of the filedata
+ * @param mp3_end End of the filedata
+ * @return The ID of the queued sound, for use with the other functions.
+ */
+int sndmixer_queue_mp3(const void *mp3_start, const void *mp3_end);
 
 /**
  * @brief Set or unset a sound to looping mode
@@ -117,6 +130,11 @@ void sndmixer_pause_all();
  * This can be used to undo a sndmixer_pause_all() call.
  */
 void sndmixer_resume_all();
+
+
+//Basic synthesizer
+int sndmixer_queue_synth();
+void sndmixer_freq(int id, uint16_t frequency);
 
 
 #ifdef __cplusplus

@@ -14,4 +14,25 @@ menu "Driver: VSPI bus"
 	config PIN_NUM_VSPI_MISO
 		depends on DRIVER_VSPI_ENABLE
 		int "GPIO pin used for MISO"
+	
+	config PIN_NUM_VSPI_WP
+		depends on DRIVER_VSPI_ENABLE
+		int "GPIO pin used for WP"
+		default -1
+	
+	config PIN_NUM_VSPI_HD
+		depends on DRIVER_VSPI_ENABLE
+		int "GPIO pin used for HD"
+		default -1
+	
+	config DRIVER_VSPI_DMA_CHANNEL
+		depends on DRIVER_VSPI_ENABLE
+		int "DMA channel"
+		default 2
+		range 0 2
+	
+	config DRIVER_VSPI_MAX_TRANSFERSIZE
+		depends on DRIVER_VSPI_ENABLE
+		int "Maximum transfer size (in bytes)"
+		default 4094
 endmenu

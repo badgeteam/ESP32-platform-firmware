@@ -1163,6 +1163,9 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
         //{ MP_ROM_QSTR(MP_QSTR_SPI),						MP_ROM_PTR(&machine_hw_spi_type) },
         { MP_ROM_QSTR(MP_QSTR_UART),					MP_ROM_PTR(&machine_uart_type) },
         { MP_OBJ_NEW_QSTR(MP_QSTR_RTC),					MP_ROM_PTR(&mach_rtc_type) },
+#ifdef CONFIG_MICROPY_USE_GPS
+        { MP_OBJ_NEW_QSTR(MP_QSTR_GPS),					MP_ROM_PTR(&machine_gps_type) },
+#endif
 #ifdef CONFIG_MICROPY_USE_RFCOMM
         { MP_OBJ_NEW_QSTR(MP_QSTR_RFCOMM),              MP_ROM_PTR(&machine_rfcomm_type) },
 #endif

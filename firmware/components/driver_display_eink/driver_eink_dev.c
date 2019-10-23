@@ -17,7 +17,6 @@
 #include <driver/spi_master.h>
 #include <esp_heap_caps.h>
 
-#include <driver_vspi.h>
 #include "include/driver_eink_dev.h"
 
 #ifdef CONFIG_DRIVER_EINK_ENABLE
@@ -49,61 +48,6 @@ static spi_device_handle_t spi_bus = NULL;
 // forward declarations
 static esp_err_t driver_eink_dev_release_spi(void);
 static void driver_spi_pre_transfer_callback(spi_transaction_t *t);
-
-static esp_err_t
-driver_eink_dev_claim_spi(void)
-{
-	// already claimed?
-	if (spi_bus != NULL) return ESP_OK;
-	
-	if (driver_eink_dev_type == DRIVER_EINK_NONE) return ESP_OK;
-
-	ESP_LOGI(TAG, "claiming VSPI bus");
-	driver_vspi_release_and_claim(driver_eink_dev_release_spi);
-
-	static const spi_bus_config_t buscfg = {
-		.mosi_io_num     = CONFIG_PIN_NUM_EPD_MOSI,
-		.miso_io_num     = -1, // MISO is not used, we are transferring to the slave only
-		.sclk_io_num     = CONFIG_PIN_NUM_EPD_CLK,
-		.quadwp_io_num   = -1,
-		.quadhd_io_num   = -1,
-		.max_transfer_sz = SPI_TRANSFER_SIZE,
-	};
-
-	esp_err_t res = spi_bus_initialize(VSPI_HOST, &buscfg, 2);
-	assert(res == ESP_OK);
-
-	static const spi_device_interface_config_t devcfg = {
-		.clock_speed_hz = 20 * 1000 * 1000,
-		.mode           = 0,  // SPI mode 0
-		.spics_io_num   = CONFIG_PIN_NUM_EPD_CS,
-		.queue_size     = 1,
-		.flags          = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE), // We are sending only in one direction (to the ePaper slave)
-		.pre_cb         = driver_spi_pre_transfer_callback,            // Specify pre-transfer callback to handle D/C line
-	};
-
-	res = spi_bus_add_device(VSPI_HOST, &devcfg, &spi_bus);
-	assert(res == ESP_OK);
-
-	ESP_LOGI(TAG, "claiming VSPI bus: done");
-	return res;
-}
-
-static esp_err_t driver_eink_dev_release_spi(void)
-{
-	ESP_LOGI(TAG, "releasing VSPI bus");
-	esp_err_t res = spi_bus_remove_device(spi_bus);
-	assert(res == ESP_OK);
-	spi_bus = NULL;
-
-	res = spi_bus_free(VSPI_HOST);
-	assert(res == ESP_OK);
-
-	driver_vspi_freed();
-
-	ESP_LOGI(TAG, "releasing VSPI bus: done");
-	return ESP_OK;
-}
 
 esp_err_t driver_eink_dev_reset(void) {
 	if (driver_eink_dev_type == DRIVER_EINK_NONE) return ESP_OK;
@@ -172,51 +116,40 @@ void driver_eink_dev_intr_handler(void *arg)
 /* This function is called (in irq context!) just before a transmission starts.
  * It will set the D/C line to the value indicated in the user field
  */
-static
-void driver_spi_pre_transfer_callback(spi_transaction_t *t)
+static void driver_spi_pre_transfer_callback(spi_transaction_t *t)
 {
 	uint8_t dc_level = *((uint8_t *) t->user);
 	gpio_set_level(CONFIG_PIN_NUM_EPD_DATA, (int) dc_level);
 }
 
 
-void
-driver_spi_send(const uint8_t *data, int len, const uint8_t dc_level)
+void driver_spi_send(const uint8_t *data, int len, const uint8_t dc_level)
 {
-	if (len == 0) {
-		return;
-	}
-	
+	if (len == 0) return;
 	if (driver_eink_dev_type == DRIVER_EINK_NONE) return ESP_OK;
-
-	esp_err_t ret = driver_eink_dev_claim_spi();
-	assert(ret == ESP_OK);
 
 	spi_transaction_t t = {
 		.length = len * 8,  // transaction length is in bits
 		.tx_buffer = data,
 		.user = (void *) &dc_level,
 	};
-	ret = spi_device_transmit(spi_bus, &t);
+	esp_err_t ret = spi_device_transmit(spi_bus, &t);
 	assert(ret == ESP_OK);
 }
 
-void
-driver_eink_dev_write_command(uint8_t command)
+void driver_eink_dev_write_command(uint8_t command)
 {
 	driver_eink_dev_busy_wait();
 	driver_spi_send(&command, 1, LOW);
 }
 
-void
-driver_eink_dev_write_byte(uint8_t data)
+void driver_eink_dev_write_byte(uint8_t data)
 {
 	driver_eink_dev_busy_wait();
 	driver_spi_send(&data, 1, HIGH);
 }
 
-void
-driver_eink_dev_write_command_stream(uint8_t command, const uint8_t *data,
+void driver_eink_dev_write_command_stream(uint8_t command, const uint8_t *data,
 										 unsigned int datalen)
 {
 	ESP_LOGI(TAG, "Sending SPI stream of %d bytes", datalen);
@@ -229,8 +162,7 @@ driver_eink_dev_write_command_stream(uint8_t command, const uint8_t *data,
  * Such a memory can only be accessed via 32-bit reads and writes,
  * any other type of access will generate a fatal LoadStoreError exception.
  */
-static void
-memcpy_u8_u32(uint8_t *dst, const uint32_t *src, size_t size)
+static void memcpy_u8_u32(uint8_t *dst, const uint32_t *src, size_t size)
 {
 	while (size-- > 0)
 	{
@@ -245,9 +177,7 @@ memcpy_u8_u32(uint8_t *dst, const uint32_t *src, size_t size)
 /* Send uint32_t stream in chunks of SPI_TRANSFER_SIZE
  * to use to the maximum the size of memory allocated in the SPI buffer
  */
-void
-driver_eink_dev_write_command_stream_u32(uint8_t command, const uint32_t *data,
-										 unsigned int datalen)
+void driver_eink_dev_write_command_stream_u32(uint8_t command, const uint32_t *data, unsigned int datalen)
 {
 	assert(SPI_TRANSFER_SIZE % 4 == 0);
 	
@@ -284,9 +214,6 @@ esp_err_t driver_eink_dev_init(enum driver_eink_dev_t dev_type)
 
 	ESP_LOGD(TAG, "init called");
 
-	// initialize VSPI sharing
-	driver_vspi_init();
-
 	driver_eink_dev_type = dev_type;
 	
 	if (driver_eink_dev_type == DRIVER_EINK_NONE) {
@@ -295,12 +222,10 @@ esp_err_t driver_eink_dev_init(enum driver_eink_dev_t dev_type)
 	}
 	
 	driver_eink_dev_intr_trigger = xSemaphoreCreateBinary();
-	if (driver_eink_dev_intr_trigger == NULL)
-		return ESP_ERR_NO_MEM;
+	if (driver_eink_dev_intr_trigger == NULL) return ESP_ERR_NO_MEM;
 
 	esp_err_t res = gpio_isr_handler_add(CONFIG_PIN_NUM_EPD_BUSY, driver_eink_dev_intr_handler, NULL);
-	if (res != ESP_OK)
-		return res;
+	if (res != ESP_OK) return res;
 
 	gpio_config_t io_conf = {
 		.intr_type    = GPIO_INTR_ANYEDGE,
@@ -310,80 +235,48 @@ esp_err_t driver_eink_dev_init(enum driver_eink_dev_t dev_type)
 		.pull_up_en   = 1,
 	};
 	res = gpio_config(&io_conf);
-	if (res != ESP_OK)
-		return res;
+	if (res != ESP_OK) return res;
 
 	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_CS, GPIO_MODE_OUTPUT);
-	if (res != ESP_OK)
-		return res;
+	if (res != ESP_OK) return res;
 
 	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_DATA, GPIO_MODE_OUTPUT);
-	if (res != ESP_OK)
-		return res;
+	if (res != ESP_OK) return res;
+	
 #if CONFIG_PIN_NUM_EPD_RESET > -1
 	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_RESET, GPIO_MODE_OUTPUT);
-	if (res != ESP_OK)
-		return res;
+	if (res != ESP_OK) return res;
 #endif
-
+	
 	res = gpio_set_direction(CONFIG_PIN_NUM_EPD_BUSY, GPIO_MODE_INPUT);
-	if (res != ESP_OK)
-		return res;
-
-
+	if (res != ESP_OK) return res;
+	
+	static const spi_device_interface_config_t devcfg = {
+		.clock_speed_hz = 20 * 1000 * 1000,
+		.mode           = 0,  // SPI mode 0
+		.spics_io_num   = CONFIG_PIN_NUM_EPD_CS,
+		.queue_size     = 1,
+		.flags          = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE), // We are sending only in one direction (to the ePaper slave)
+		.pre_cb         = driver_spi_pre_transfer_callback, // Specify pre-transfer callback to handle D/C line
+	};
+	res = spi_bus_add_device(VSPI_HOST, &devcfg, &spi_bus);
+	if (res != ESP_OK) return res;
+	
 	driver_eink_dev_init_done = true;
-
 	ESP_LOGD(TAG, "init done");
-
 	return ESP_OK;
 }
 
 #else
 
 // add dummy functions
-esp_err_t
-driver_eink_dev_reset(void) {
-	return ESP_OK;
-}
-
-bool
-driver_eink_dev_is_busy(void)
-{
-	return false;
-}
-
-void
-driver_eink_dev_busy_wait(void)
-{
-}
-
-void
-driver_eink_dev_write_command(uint8_t command)
-{
-}
-
-
-esp_err_t
-driver_eink_dev_init(enum driver_eink_dev_t dev_type)
-{
-	return ESP_OK;
-}
-
-void
-driver_eink_dev_write_byte(uint8_t data)
-{
-}
-
-void
-driver_eink_dev_write_command_stream(uint8_t command, const uint8_t *data,
-										 unsigned int datalen)
-{
-}
-
-void
-driver_eink_dev_write_command_stream_u32(uint8_t command, const uint32_t *data,
-										 unsigned int datalen)
-{
-}
+esp_err_t driver_eink_dev_reset(void) { return ESP_OK; }
+bool driver_eink_dev_is_busy(void) { return false; }
+void driver_eink_dev_busy_wait(void) {}
+void driver_eink_dev_write_command(uint8_t command) {}
+esp_err_t driver_eink_dev_init(enum driver_eink_dev_t dev_type) { return ESP_OK; }
+void driver_eink_dev_write_byte(uint8_t data) {}
+void driver_eink_dev_write_command_stream(uint8_t command, const uint8_t *data, unsigned int datalen) {}
+void driver_eink_dev_write_command_stream_u32(uint8_t command, const uint32_t *data, unsigned int datalen) {}
 
 #endif

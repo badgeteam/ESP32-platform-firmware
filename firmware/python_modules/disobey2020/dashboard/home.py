@@ -3,6 +3,11 @@ import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, ter
 import tasks.powermanagement as pm, tasks.otacheck as otacheck
 import easydraw, rtc
 
+COLOR_BG = 0x000000
+COLOR_FG = 0xFFFFFF
+
+LOGO = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x80\x00\x00\x00\x1a\x01\x00\x00\x00\x00W\xb8iC\x00\x00\x00\xecIDAT\x18\xd3\x95\xd1\xa1N\x041\x10\x06\xe0\x7f\xd2f\xe7\xc4\xe6\xba\t\xa6\x82d\t\xb9\x07\xa8\xac \xdc\x9cC\xf0\x10K\x82D\x9c<\x81\xd8K\xf0X\x1e\xa7\x0e\x1e\xa3\x12Y\xb9\x82P\xba{\x9b\xbd\xe0`\xe4'\xfe\xcc\xfc\x03\xfcs\x08P\xdf\x80IxF\x1b\x11g\xf0&\xd2{\xbfM*\x13\x07(\x86w\xa8\x10\x1e\x06\x93\x8f\x1c\x0b\x84\x02\xb5\xef\xe4\xc0Q\xef\xfa\x11\x0e\x0e67\xe2)\xe8]\xc9@*pAo\xe2U(\x993\\\xe3C\xec\x02{\x87\r\xeeF\x80>\xc3\xa3\\\xaa\xdc\xcf`\xe2S\x81[\xce/\x0b\xdcc#-\x0f\xfa\x04\x0e\xab\x0eZ\x0cc\x06\x0f{\x85Zx\x017\xc2Jx\r\xfa*@#\xb8\xd73\x94[`\x9b\xbe)`\xa7=&\xb0pR\x99<\xc1\x1a\x05jtR\xb5\xf9\x98\xa6\x82n\xf8\x93)H\xdd\x0et\x02g\x12e\x88k\x7f\xf7\xbb\r\x7f|\xc4\x0f\xc0\xa9K\xfd1u\xb7\xde\x00\x00\x00\x00IEND\xaeB`\x82"
+
 # Read configuration from NVS or apply default values
 cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
 if cfg_term_menu == None:
@@ -28,14 +33,17 @@ if cfg_greyscale == None:
 
 cfg_led_animation = machine.nvs_getstr('splash', 'ledApp') # Application which shows a LED animation while the splash screen is visible
 
+cfg_nick_text = machine.nvs_getstr("owner", "name")
+if not cfg_nick_text:
+	cfg_nick_text = "Welcome to Disobey 2020!"
+
 # Button callbacks
 def cbStartLauncher(pressed):
 	if pressed:
 		system.launcher(True)
 
 def cbFeedPowerManagement(pressed):
-	#pm.feed()
-	pass
+	pm.feed()
 
 # Flashlight
 flashlightStatus = False
@@ -43,11 +51,11 @@ def cbFlashlight(pressed):
 	global led_app, flashlightStatus
 	if pressed:
 		if flashlightStatus:
-			#pm.enable()
-			neopixel.send(bytes([0x00]*24))
+			pm.enable()
+			neopixel.send(bytes([0x00]*3*12))
 		else:
-			#pm.disable()
-			neopixel.send(bytes([0xFF]*24))
+			pm.disable()
+			neopixel.send(bytes([0xFF]*3*12))
 
 		if led_app:
 			try:
@@ -74,15 +82,22 @@ virtualtimers.activate(25)
 
 # Power management
 def cbSleep(idleTime=None):
+	global ledTask, scrollerTask
+	neopixel.send(bytes([0x00]*3*12))
 	if idleTime == None:
 		idleTime = virtualtimers.idle_time()
 	gui_redraw = True
+	virtualtimers.delete(scrollerTask)
+	virtualtimers.delete(ledTask)
+	display.windowHide("scroller")
 	drawTask(True)
+	display.flush()
+	time.sleep(0.1)
 	system.sleep(idleTime, True)
 
-#pm.callback(cbSleep)
-#pm.enable()
-#pm.feed()
+pm.callback(cbSleep)
+pm.enable()
+pm.feed()
 
 # WiFi
 wifi_status_prev = False
@@ -112,7 +127,7 @@ gui_app_current = -1
 
 def next_app(pressed):
 	global gui_apps, gui_app_current, gui_redraw
-	#pm.feed()
+	pm.feed()
 	if pressed:
 		if gui_app_current < len(gui_apps) - 1:
 			if gui_app_current >= 0:
@@ -129,7 +144,7 @@ def next_app(pressed):
 
 def prev_app(pressed):
 	global gui_apps, gui_app_current, gui_redraw
-	#pm.feed()
+	pm.feed()
 	if pressed:
 		if gui_app_current >= 0:
 			try:
@@ -149,7 +164,7 @@ def display_app(position):
 		gui_apps[gui_app_current].draw(position)
 	except BaseException as e:
 		sys.print_exception(e)
-		display.drawText(5, position, "("+gui_app_names[gui_app_current]+")", 0x000000, "Roboto_Regular18")
+		display.drawText(5, position, "("+gui_app_names[gui_app_current]+")", COLOR_FG, "Roboto_Regular18")
 
 def redraw_cb():
 	global gui_redraw
@@ -231,43 +246,42 @@ def drawPageIndicator(amount, position):
 	size = 4
 	offset = 6
 	for i in range(amount):
-		display.drawCircle(x, display.height()-8, size, 0, 359, i==position, 0x000000)
+		display.drawCircle(x, display.height()-8, size, 0, 359, i==position, COLOR_FG)
 		x+= size + offset
 
 def drawTask(onSleep=False):
 	global gui_redraw, cfg_nickname, gui_apps, gui_app_current, ota_available
 	if gui_redraw or onSleep:
 		gui_redraw = False
-		display.drawFill(0xFFFFFF)
+		display.drawFill(COLOR_BG)
 		currHeight = 0
 		noLine = False
 		if gui_app_current < 0:
-			if cfg_logo and cfg_nickname:
-				nick = machine.nvs_getstr("owner", "name")
-				display.drawText((display.width()-display.getTextWidth(nick, "roboto_regular12"))//2, currHeight, nick, 0x000000, "roboto_regular12")
-				currHeight += display.getTextHeight(nick, "roboto_regular12")#easydraw.nickname()
-				currHeight += 4
-				display.drawLine(0, currHeight, display.width()-1, currHeight, 0x000000)
-				currHeight += 4
-			app_height = display.height()-16-currHeight
-			logoHeight = drawLogo(currHeight, app_height, True)
-			if logoHeight > 0:
+			if cfg_logo:
+				if cfg_nickname:
+					# Logo and nickename enabled, first print nickname
+					display.drawText((display.width()-display.getTextWidth(cfg_nick_text, "roboto_regular12"))//2, currHeight, cfg_nick_text, COLOR_FG, "roboto_regular12")
+					currHeight += display.getTextHeight(cfg_nick_text, "roboto_regular12")#easydraw.nickname()
+					currHeight += 4
+					display.drawLine(0, currHeight, display.width()-1, currHeight, COLOR_FG)
+					currHeight += 4
+				#Print logo
+				app_height = display.height()-16-currHeight
+				logoHeight = drawLogo(currHeight, app_height, True)
+				if logoHeight > 0:
+					noLine = True
+				if logoHeight < 1:
+					#Logo enabled but failed to display
+					title = "BADGE.TEAM"
+					subtitle = "PLATFORM"
+					logoHeight = display.getTextHeight(title, "permanentmarker22")+display.getTextHeight(subtitle, "fairlight12")
+					display.drawText((display.width()-display.getTextWidth(title, "permanentmarker22"))//2, currHeight + (app_height - logoHeight)//2,title, COLOR_FG, "permanentmarker22")
+					currHeight += display.getTextHeight(title, "permanentmarker22")
+					display.drawText((display.width()-display.getTextWidth(subtitle, "fairlight12"))//2, currHeight + (app_height - logoHeight)//2,subtitle, COLOR_FG, "fairlight12")
+					currHeight += display.getTextHeight(subtitle, "fairlight12")
+			else:
 				noLine = True
-			if logoHeight < 1 and cfg_logo:
-				title = "BADGE.TEAM"
-				subtitle = "PLATFORM"
-				logoHeight = display.getTextHeight(title, "permanentmarker22")+display.getTextHeight(subtitle, "fairlight12")
-				display.drawText((display.width()-display.getTextWidth(title, "permanentmarker22"))//2, currHeight + (app_height - logoHeight)//2,title, 0x000000, "permanentmarker22")
-				currHeight += display.getTextHeight(title, "permanentmarker22")
-				display.drawText((display.width()-display.getTextWidth(subtitle, "fairlight12"))//2, currHeight + (app_height - logoHeight)//2,subtitle, 0x000000, "fairlight12")
-				currHeight += display.getTextHeight(subtitle, "fairlight12")
-			if (not cfg_logo) and cfg_nickname:
-				noLine = True
-				nick = machine.nvs_getstr("owner", "name")
-				if nick == None:
-					nick = "BADGE.TEAM"
-				display.drawText((display.width()-display.getTextWidth(nick, "roboto_regular12"))//2, currHeight, nick, 0x000000, "roboto_regular12")
-				currHeight += display.getTextHeight(nick, "roboto_regular12")
+				display.drawPng(0,0,LOGO)
 		else:
 			display_app(currHeight)
 
@@ -282,7 +296,7 @@ def drawTask(onSleep=False):
 		else:
 			info = ""#'Press START'
 		if not noLine:
-			display.drawLine(0, display.height()-16, display.width(), display.height()-16, 0x000000)
+			display.drawLine(0, display.height()-16, display.width(), display.height()-16, COLOR_FG)
 		easydraw.disp_string_right_bottom(0, info)
 		if len(gui_apps) > 0:
 			drawPageIndicator(len(gui_apps), gui_app_current)
@@ -301,7 +315,60 @@ gc.collect()
 if not rtc.isSet() and cfg_wifi:
 	wifi.connect() #Connecting to WiFi automatically sets the time using NTP (see wifiTask)
 
+# Test code for the scroller
+#import virtualtimers, display
+#virtualtimers.activate(25)
+#COLOR_FG = 0xFFFFFF
+#COLOR_BG = 0x000000
+#cfg_logo = False
+#cfg_nickname = True
+#cfg_nick_text = "Hello world"
+
+# Text scroller
+display.windowCreate("scroller", 512, 32) #Workaround!!! windows get corrupted when size is not in units of 8
+display.windowShow("scroller")
+display.windowMove("scroller", 65, display.height()-22) # Move out of visible screen
+display.drawFill("scroller", COLOR_BG)
+display.drawText("scroller", 0, 0, cfg_nick_text, COLOR_FG, "permanentmarker22")
+
+scrollerStartPos = 129
+scrollerEndPos = -display.getTextWidth(cfg_nick_text, "permanentmarker22") - 128
+scrollerPos = scrollerStartPos
+
+offsetTest = 0
+
+def scrollerTask():
+	global scrollerPos, scrollerEndPos, scrollerStartPos, offsetTest
+	display.windowMove("scroller", scrollerPos, display.height()-22-offsetTest) 
+	scrollerPos-=3
+	if scrollerPos < scrollerEndPos:
+		scrollerPos = scrollerStartPos
+	display.flush()
+	return 25
+
+if not cfg_logo and cfg_nickname:
+	virtualtimers.new(25, scrollerTask, True)
+
 # LED animation
+
+ledValue = 4
+ledDirection = False
+def ledTask():
+	global ledValue, ledDirection
+	if not flashlightStatus:
+		neopixel.send(bytes([0, 4+ledValue, 0]*5 + [0, 4+24-ledValue, 0]*7))
+	if ledDirection:
+		ledValue -=2
+		if ledValue <= 0:
+			levValue = 0
+			ledDirection = False
+	else:
+		ledValue += 6
+		if ledValue >= 24:
+			levValue = 24
+			ledDirection = True
+	return 25
+
 led_app = None
 if cfg_led_animation != None:
 	try:
@@ -313,8 +380,11 @@ if cfg_led_animation != None:
 		virtualtimers.new(0, led_app.step)
 	except:
 		pass
+else:
+	virtualtimers.new(25, ledTask, True)
 
 # Terminal menu
+
 if cfg_term_menu:
 	umenu = term_menu.UartMenu(cbSleep, pm, False)
 	umenu.main()

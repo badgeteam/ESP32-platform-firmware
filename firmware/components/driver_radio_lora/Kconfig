@@ -4,4 +4,16 @@ menu "Driver: LoRa radio"
 		bool "Enable the LoRa driver"
 		default n
 	
+	config PIN_NUM_LORA_RST
+		depends on DRIVER_LORA_ENABLE
+		int "GPIO pin used for LoRa reset"
+	
+	config PIN_NUM_LORA_CS
+		depends on DRIVER_LORA_ENABLE
+		int "GPIO pin used for LoRa chip-select"
+	
+	config PIN_NUM_LORA_INT
+		depends on DRIVER_LORA_ENABLE
+		int "GPIO pin used for LoRa interrupt"
+	
 endmenu
