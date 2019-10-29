@@ -7,35 +7,19 @@ menu "Driver: ILI9341 LCD display"
 	config PIN_NUM_ILI9341_RESET
 		depends on DRIVER_ILI9341_ENABLE
 		int "GPIO pin used for RESET"
-		default 18
 	
 	config PIN_NUM_ILI9341_DCX
 		depends on DRIVER_ILI9341_ENABLE
 		int "GPIO pin used for D/CX"
-		default 21
 		
 	config PIN_NUM_ILI9341_CS
 		depends on DRIVER_ILI9341_ENABLE
 		int "GPIO pin used for CS"
-		default 22
 	
 	config PIN_NUM_ILI9341_BACKLIGHT
 		depends on DRIVER_ILI9341_ENABLE
 		int "GPIO pin used for backlight"
-		default 5
-		
-	choice
-		prompt "LCD driver chip type"
-		default ILI9341_TYPE
-		depends on DRIVER_ILI9341_ENABLE
-	config DRIVER_ILI9341_TYPE_ILI9341
-		bool "ILI9341 (320x240)"
-	config DRIVER_ILI9341_TYPE_ST7789
-		bool "ST7789 (240x240) NOT WORKING"
-	config DRIVER_ILI9341_TYPE_ST7735
-		bool "ST7735 (160x80) NOT WORKING"
-	endchoice
-
+	
 	config ILI9341_ORIENTATION
 		depends on DRIVER_ILI9341_ENABLE
 		int "Hardware orientation (0-3)"
@@ -44,6 +28,6 @@ menu "Driver: ILI9341 LCD display"
 	
 	config ILI9341_COLOR_SWAP
 		depends on DRIVER_ILI9341_ENABLE
-		bool "Swap colors"
+		bool "Swap red and blue"
 		default n
 endmenu
