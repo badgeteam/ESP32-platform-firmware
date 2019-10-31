@@ -20,6 +20,8 @@ typedef struct {
 	void (*deinit_source)(void *ctx);
 	/*! Set frequency of synthesizer */
 	void (*set_frequency)(void *ctx, uint16_t frequency);
+	/*! Set waveform of synthesizer */
+	void (*set_waveform)(void *ctx, uint8_t waveform);
 } sndmixer_source_t;
 
 /**
@@ -135,6 +137,7 @@ void sndmixer_resume_all();
 //Basic synthesizer
 int sndmixer_queue_synth();
 void sndmixer_freq(int id, uint16_t frequency);
+void sndmixer_waveform(int id, uint8_t waveform);
 
 
 #ifdef __cplusplus

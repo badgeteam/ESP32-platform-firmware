@@ -9,7 +9,7 @@
 #include "freertos/queue.h"
 #include "freertos/portmacro.h"
 
-#include "8bkc-hal.h"
+#include "driver_i2s.h"
 
 #include "snd_source_wav.h"
 #include "snd_source_mod.h"
@@ -34,7 +34,8 @@ typedef enum {
 	CMD_RESUME_ALL,
 	CMD_QUEUE_MP3,
 	CMD_QUEUE_SYNTH,
-	CMD_FREQ
+	CMD_FREQ,
+	CMD_WAVEFORM
 } sndmixer_cmd_ins_t;
 
 typedef struct {
@@ -178,6 +179,12 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
 			} else {
 				printf("Not a synth!\n");
 			}
+		} else if (cmd->cmd==CMD_WAVEFORM) {
+			if (channel[ch].source->set_waveform) {
+				channel[ch].source->set_waveform(channel[ch].src_ctx, cmd->param);
+			} else {
+				printf("Not a synth!\n");
+			}
 		}
 	}
 }
@@ -223,7 +230,7 @@ static void sndmixer_task(void *arg) {
 			s=(s/no_channels)>>8;
 			mixbuf[i]=s+128; //because samples are signed, mix_buf is unsigned
 		}
-		kchal_sound_push(mixbuf, CHUNK_SIZE);
+		driver_i2s_sound_push(mixbuf, CHUNK_SIZE);
 	}
 	//ToDo: de-init channels/buffers/... if we ever implement a deinit cmd
 	vTaskDelete(NULL);
@@ -235,7 +242,7 @@ static void sndmixer_task(void *arg) {
 int sndmixer_init(int p_no_channels) {
 	no_channels=p_no_channels;
 	samplerate=CONFIG_DRIVER_SNDMIXER_SAMPLE_RATE;
-	kchal_sound_start();
+	driver_i2s_sound_start();
 	channel=calloc(sizeof(sndmixer_channel_t), no_channels);
 	if (!channel) return 0;
 	curr_id=0;
@@ -367,6 +374,15 @@ void sndmixer_freq(int id, uint16_t frequency) {
 		.cmd=CMD_FREQ,
 		.id=id,
 		.param=frequency
+	};
+	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
+}
+
+void sndmixer_waveform(int id, uint8_t waveform) {
+	sndmixer_cmd_t cmd={
+		.cmd=CMD_WAVEFORM,
+		.id=id,
+		.param=waveform
 	};
 	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
 }
