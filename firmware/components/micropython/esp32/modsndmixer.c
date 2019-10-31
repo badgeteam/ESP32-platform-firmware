@@ -5,6 +5,7 @@
 #include "py/mperrno.h"
 #include "py/mphal.h"
 #include "py/runtime.h"
+#include "py/stream.h"
 
 #include "sndmixer.h"
 
@@ -118,6 +119,12 @@ static mp_obj_t modsndmixer_mp3(mp_obj_t _data) {
 	return mp_obj_new_int(id);
 }
 
+static mp_obj_t modsndmixer_mp3_stream(mp_obj_t _stream) {
+	if (!sndmixer_started) { mp_raise_ValueError(msg_error_not_started); return mp_const_none; }
+	int id=sndmixer_queue_mp3_stream(mp_stream_posix_read, (void*) _stream);
+	return mp_obj_new_int(id);
+}
+
 static mp_obj_t modsndmixer_synth() {
 	if (!sndmixer_started) { mp_raise_ValueError(msg_error_not_started); return mp_const_none; }
 	int id=sndmixer_queue_synth();
@@ -152,6 +159,7 @@ static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_volume_obj,     modsndmixer_volume)
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_wav_obj,        modsndmixer_wav);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_mod_obj,        modsndmixer_mod);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_mp3_obj,        modsndmixer_mp3);
+static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_mp3_stream_obj, modsndmixer_mp3_stream);
 static MP_DEFINE_CONST_FUN_OBJ_0(modsndmixer_synth_obj,      modsndmixer_synth);
 static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_freq_obj,       modsndmixer_freq);
 static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_waveform_obj,   modsndmixer_waveform);
@@ -168,6 +176,7 @@ static const mp_rom_map_elem_t sndmixer_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_wav),        MP_ROM_PTR(&modsndmixer_wav_obj)},
 	{MP_ROM_QSTR(MP_QSTR_mod),        MP_ROM_PTR(&modsndmixer_mod_obj)},
 	{MP_ROM_QSTR(MP_QSTR_mp3),        MP_ROM_PTR(&modsndmixer_mp3_obj)},
+	{MP_ROM_QSTR(MP_QSTR_mp3_stream), MP_ROM_PTR(&modsndmixer_mp3_stream_obj)},
 	{MP_ROM_QSTR(MP_QSTR_synth),      MP_ROM_PTR(&modsndmixer_synth_obj)},
 	{MP_ROM_QSTR(MP_QSTR_freq),       MP_ROM_PTR(&modsndmixer_freq_obj)},
 	{MP_ROM_QSTR(MP_QSTR_waveform),   MP_ROM_PTR(&modsndmixer_waveform_obj)},

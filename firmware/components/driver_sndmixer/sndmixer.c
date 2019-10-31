@@ -33,6 +33,7 @@ typedef enum {
 	CMD_PAUSE_ALL,
 	CMD_RESUME_ALL,
 	CMD_QUEUE_MP3,
+	CMD_QUEUE_MP3_STREAM,
 	CMD_QUEUE_SYNTH,
 	CMD_FREQ,
 	CMD_WAVEFORM
@@ -127,7 +128,7 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
 }
 
 static void handle_cmd(sndmixer_cmd_t *cmd) {
-	if (cmd->cmd==CMD_QUEUE_WAV || cmd->cmd==CMD_QUEUE_MOD || cmd->cmd==CMD_QUEUE_MP3 || cmd->cmd==CMD_QUEUE_SYNTH) {
+	if (cmd->cmd==CMD_QUEUE_WAV || cmd->cmd==CMD_QUEUE_MOD || cmd->cmd==CMD_QUEUE_MP3 || cmd->cmd==CMD_QUEUE_MP3_STREAM || cmd->cmd==CMD_QUEUE_SYNTH) {
 		int ch=find_free_channel();
 		if (ch<0) return; //no free channels
 		int r=0;
@@ -138,6 +139,9 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
 			r=init_source(ch, &sndmixer_source_mod, cmd->queue_file_start, cmd->queue_file_end);
 		} else if (cmd->cmd==CMD_QUEUE_MP3) {
 			r=init_source(ch, &sndmixer_source_mp3, cmd->queue_file_start, cmd->queue_file_end);
+		} else if (cmd->cmd==CMD_QUEUE_MP3_STREAM) {
+			printf("CMD==CMD_QUEUE_MP3_STREAM\n");
+			r=init_source(ch, &sndmixer_source_mp3_stream, cmd->queue_file_start, cmd->queue_file_end);
 		} else if (cmd->cmd==CMD_QUEUE_SYNTH) {
 			printf("CMD==CMD_QUEUE_SYNTH\n");
 			r=init_source(ch, &sndmixer_source_synth, 0, 0);
@@ -295,6 +299,20 @@ int sndmixer_queue_mp3(const void *mp3_start, const void *mp3_end) {
 		.cmd=CMD_QUEUE_MP3,
 		.queue_file_start=mp3_start,
 		.queue_file_end=mp3_end,
+		.flags=CHFL_PAUSED
+	};
+	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
+	return id;
+}
+
+int sndmixer_queue_mp3_stream(stream_read_type read_func, void* stream) {
+	printf("Queue mp3 stream.\n");
+	int id=new_id();
+	sndmixer_cmd_t cmd={
+		.id=id,
+		.cmd=CMD_QUEUE_MP3_STREAM,
+		.queue_file_start= (void*) read_func,
+		.queue_file_end=stream,
 		.flags=CHFL_PAUSED
 	};
 	xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
