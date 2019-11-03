@@ -13,7 +13,7 @@
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 
 #define CHUNK_SIZE 32
-#define INTERNAL_BUFFER_SIZE 1024*8
+#define INTERNAL_BUFFER_SIZE 1024*32
 #define INTERNAL_BUFFER_FETCH_WHEN 1024 //new data will be fetched when there is less than this amount of data
 
 typedef struct {

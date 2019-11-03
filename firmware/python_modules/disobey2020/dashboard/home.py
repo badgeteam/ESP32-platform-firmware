@@ -1,10 +1,12 @@
 # Homescreen application
-import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, term_menu, orientation, display, buttons, neopixel
+import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, term_menu, orientation, display, buttons, neopixel, _thread
 import tasks.powermanagement as pm, tasks.otacheck as otacheck
 import easydraw, rtc
 
 COLOR_BG = 0x000000
 COLOR_FG = 0xFFFFFF
+
+stopThreads = False
 
 LOGO = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x80\x00\x00\x00\x1a\x01\x00\x00\x00\x00W\xb8iC\x00\x00\x00\xecIDAT\x18\xd3\x95\xd1\xa1N\x041\x10\x06\xe0\x7f\xd2f\xe7\xc4\xe6\xba\t\xa6\x82d\t\xb9\x07\xa8\xac \xdc\x9cC\xf0\x10K\x82D\x9c<\x81\xd8K\xf0X\x1e\xa7\x0e\x1e\xa3\x12Y\xb9\x82P\xba{\x9b\xbd\xe0`\xe4'\xfe\xcc\xfc\x03\xfcs\x08P\xdf\x80IxF\x1b\x11g\xf0&\xd2{\xbfM*\x13\x07(\x86w\xa8\x10\x1e\x06\x93\x8f\x1c\x0b\x84\x02\xb5\xef\xe4\xc0Q\xef\xfa\x11\x0e\x0e67\xe2)\xe8]\xc9@*pAo\xe2U(\x993\\\xe3C\xec\x02{\x87\r\xeeF\x80>\xc3\xa3\\\xaa\xdc\xcf`\xe2S\x81[\xce/\x0b\xdcc#-\x0f\xfa\x04\x0e\xab\x0eZ\x0cc\x06\x0f{\x85Zx\x017\xc2Jx\r\xfa*@#\xb8\xd73\x94[`\x9b\xbe)`\xa7=&\xb0pR\x99<\xc1\x1a\x05jtR\xb5\xf9\x98\xa6\x82n\xf8\x93)H\xdd\x0et\x02g\x12e\x88k\x7f\xf7\xbb\r\x7f|\xc4\x0f\xc0\xa9K\xfd1u\xb7\xde\x00\x00\x00\x00IEND\xaeB`\x82"
 
@@ -82,13 +84,14 @@ virtualtimers.activate(25)
 
 # Power management
 def cbSleep(idleTime=None):
-	global ledTask, scrollerTask
+	global stopThreads#scrollerTask#, ledTask
 	neopixel.send(bytes([0x00]*3*12))
 	if idleTime == None:
 		idleTime = virtualtimers.idle_time()
 	gui_redraw = True
-	virtualtimers.delete(scrollerTask)
-	virtualtimers.delete(ledTask)
+	#virtualtimers.delete(scrollerTask)
+	#virtualtimers.delete(ledTask)
+	stopThreads = True
 	display.windowHide("scroller")
 	drawTask(True)
 	display.flush()
@@ -331,43 +334,43 @@ display.windowMove("scroller", 65, display.height()-22) # Move out of visible sc
 display.drawFill("scroller", COLOR_BG)
 display.drawText("scroller", 0, 0, cfg_nick_text, COLOR_FG, "permanentmarker22")
 
-scrollerStartPos = 129
-scrollerEndPos = -display.getTextWidth(cfg_nick_text, "permanentmarker22") - 128
-scrollerPos = scrollerStartPos
-
-offsetTest = 0
-
-def scrollerTask():
-	global scrollerPos, scrollerEndPos, scrollerStartPos, offsetTest
-	display.windowMove("scroller", scrollerPos, display.height()-22-offsetTest) 
-	scrollerPos-=3
-	if scrollerPos < scrollerEndPos:
-		scrollerPos = scrollerStartPos
-	display.flush()
-	return 25
+def scrollerThread():
+	scrollerStartPos = 129
+	scrollerEndPos = -display.getTextWidth(cfg_nick_text, "permanentmarker22") - 128
+	scrollerPos = scrollerStartPos
+	global stopThreads
+	while not stopThreads:
+		display.windowMove("scroller", scrollerPos, display.height()-22) 
+		scrollerPos-=4
+		if scrollerPos < scrollerEndPos:
+			scrollerPos = scrollerStartPos
+		display.flush()
+		time.sleep_ms(40)
 
 if not cfg_logo and cfg_nickname:
-	virtualtimers.new(25, scrollerTask, True)
+	#virtualtimers.new(25, scrollerTask, True)
+	_thread.start_new_thread("SCROLLER", scrollerThread, ())
 
 # LED animation
 
-ledValue = 4
-ledDirection = False
-def ledTask():
-	global ledValue, ledDirection
-	if not flashlightStatus:
-		neopixel.send(bytes([0, 4+ledValue, 0]*5 + [0, 4+24-ledValue, 0]*7))
-	if ledDirection:
-		ledValue -=2
-		if ledValue <= 0:
-			levValue = 0
-			ledDirection = False
-	else:
-		ledValue += 6
-		if ledValue >= 24:
-			levValue = 24
-			ledDirection = True
-	return 25
+def ledThread():
+	ledValue = 4
+	ledDirection = False
+	global flashlightStatus, stopThreads
+	while not stopThreads:
+		if not flashlightStatus:
+			neopixel.send(bytes([0, 4+ledValue, 0]*5 + [0, 4+24-ledValue, 0]*7))
+		if ledDirection:
+			ledValue -=2
+			if ledValue <= 0:
+				levValue = 0
+				ledDirection = False
+		else:
+			ledValue += 6
+			if ledValue >= 24:
+				levValue = 24
+				ledDirection = True
+		time.sleep_ms(30)
 
 led_app = None
 if cfg_led_animation != None:
@@ -377,11 +380,12 @@ if cfg_led_animation != None:
 			led_app.init()
 		except:
 			pass
-		virtualtimers.new(0, led_app.step)
+		#virtualtimers.new(0, led_app.step)
 	except:
 		pass
 else:
-	virtualtimers.new(25, ledTask, True)
+	#virtualtimers.new(25, ledTask, True)
+	_thread.start_new_thread("LED", ledThread, ())
 
 # Terminal menu
 
