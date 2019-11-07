@@ -1,4 +1,4 @@
-import term, orientation, system, time, uos, json, badge
+import term, orientation, system, time, uos, json, machine
 
 system.serialWarning()
 term.header(True, "Services")
@@ -9,7 +9,7 @@ for app in apps:
 	if "ledsrv.py" in uos.listdir('/lib/'+app):
 		services.append(app)
 
-current = badge.nvs_get_str('splash', 'ledApp', None)
+current = machine.nvs_getstr('splash', 'ledApp')
 
 while True:
 	options = []
@@ -27,7 +27,7 @@ while True:
 	if selected == len(services):
 		current = None
 		try:
-			badge.nvs_erase_key('splash', 'ledApp')
+			machine.nvs_erase('splash', 'ledApp')
 		except:
 			pass
 		term.header(True, "Services")
@@ -35,7 +35,7 @@ while True:
 		time.sleep(1)
 	else:
 		current = services[selected]
-		badge.nvs_set_str('splash', 'ledApp', current)
+		machine.nvs_setstr('splash', 'ledApp', current)
 		term.header(True, "Services")
 		print("Selected "+current)
 		time.sleep(1)

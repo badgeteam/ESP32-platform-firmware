@@ -1,4 +1,4 @@
-import network, term, appglue, sys, badge, version, time,json, gc, urequests, easydraw
+import network, term, appglue, sys, version, time,json, gc, urequests, easydraw, machine
 
 easydraw.msg("This app can only be controlled using the USB-serial connection.", "Notice", True)
 
@@ -15,8 +15,8 @@ def connectWiFi():
     nw = network.WLAN(network.STA_IF)
     if not nw.isconnected():
         nw.active(True)
-        ssid = badge.nvs_get_str('system', 'wifi.ssid', '')
-        password = badge.nvs_get_str('system', 'wifi.password', '')
+        ssid = machine.nvs_getstr('system', 'wifi.ssid') or ''
+        password = machine.nvs_getstr('system', 'wifi.password')
         nw.connect(ssid, password) if password else nw.connect(ssid)
 
         print("Connecting to '"+ssid+"'...")

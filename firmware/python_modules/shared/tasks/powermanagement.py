@@ -1,4 +1,4 @@
-import virtualtimers, sys, machine, system, deepsleep
+import virtualtimers, sys, machine, system
 
 requestedStandbyTime = 0
 onSleepCallback = None
@@ -34,8 +34,8 @@ def state():
 
 def usb_attached():
     try:
-        import badge
-        return badge.usb_volt_sense() > 4500
+        import voltages
+        return voltages.usb() > 4500
     except:
         return False
 
@@ -52,8 +52,8 @@ def pm_task():
 
     usbStayAwake = False
     try:
-        import badge
-        usbStayAwake = badge.usb_attached() and machine.nvs_get_u8('system', 'usb_stay_awake')
+        import voltages
+        usbStayAwake = voltages.usb() > 2500 and machine.nvs_get_u8('system', 'usb_stay_awake')
     except:
         pass
 

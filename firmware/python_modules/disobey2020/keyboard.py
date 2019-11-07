@@ -1,16 +1,16 @@
-import display, buttons
+import display as _display
+import buttons as _buttons
 
-mode = 0
-xpos = 0
-lastPartMoveUp = False
-visibleLine = 0
+_MODE           = 0
+_XPOS           =  0
+_LASTPARTMOVEUP = False
+_VISIBLELINE    = 0
+_FONT_KEY       = "roboto_regular12"
+_FONT_TEXT      = "roboto_regular12"
+_CHAR_HEIGHT    = _display.getTextHeight("X", _FONT_KEY)
+_CHAR_WIDTH     = _display.getTextWidth("X", _FONT_KEY)
 
-keyFont = "roboto_regular12"
-textFont = "roboto_regular12"
-charHeight = display.getTextHeight("X", keyFont)
-charWidth = display.getTextWidth("X", keyFont)
-
-charMap = [
+_CHAR_MAP = [
 	"a","b","c","d","e","f","g","h","i",
 	"j","k","l","m","n","o","p","q","r",
 	"s","t","u","v","w","x","y","z"," ",
@@ -24,292 +24,289 @@ charMap = [
 	">",":",";"
 	]
 
-def calcPos():
-	global text, cursorX, cursorY
-	parts = text.split("\n")
+def _calcPos():
+	global _TEXT, _CURSOR_X, _CURSOR_Y
+	parts = _TEXT.split("\n")
 	pos = 0
-	for i in range(cursorY):
+	for i in range(_CURSOR_Y):
 		pos += len(parts[i])+1
-	pos += cursorX
-	if len(parts[cursorY]) < 1:
-		cursorX = 0
-	print("Cursor ( ",cursorX,",",cursorY," ) = ",pos)
+	pos += _CURSOR_X
+	if len(parts[_CURSOR_Y]) < 1:
+		_CURSOR_X = 0
 	return pos
 
-def changePosition(amount):
-	global xpos
-	xpos += amount
-	if xpos >= len(charMap):
-		xpos = xpos - len(charMap)
-	if xpos < 0:
-		xpos = len(charMap) + xpos
+def _changePosition(amount):
+	global _XPOS
+	_XPOS += amount
+	if _XPOS >= len(_CHAR_MAP):
+		_XPOS = _XPOS - len(_CHAR_MAP)
+	if _XPOS < 0:
+		_XPOS = len(_CHAR_MAP) + _XPOS
 
-def onUp(pressed):
-	global mode, cursorX, cursorY, text, lastPartMoveUp
+def _onUp(pressed):
+	global _MODE, _CURSOR_X, _CURSOR_Y, _TEXT, _LASTPARTMOVEUP
 	if pressed:
-		if mode == 0:
-			changePosition(9)
-		if mode == 1:
-			cursorY -= 1
-			if cursorY < 0:
-				cursorY = 0
-			if cursorX > len(text.split("\n")[cursorY]):
-				cursorX = len(text.split("\n")[cursorY])
-		draw()
+		if _MODE == 0:
+			_changePosition(9)
+		if _MODE == 1:
+			_CURSOR_Y -= 1
+			if _CURSOR_Y < 0:
+				_CURSOR_Y = 0
+			if _CURSOR_X > len(_TEXT.split("\n")[_CURSOR_Y]):
+				_CURSOR_X = len(_TEXT.split("\n")[_CURSOR_Y])
+		_draw()
 
-def onDown(pressed):
-	global mode, cursorX, cursorY, text, lastPartMoveUp
+def _onDown(pressed):
+	global _MODE, _CURSOR_X, _CURSOR_Y, _TEXT, _LASTPARTMOVEUP
 	if pressed:
-		if mode == 0:
-			changePosition(-9)
-		if mode == 1:
-			cursorY += 1
-			if cursorY > len(text.split("\n"))-1:
-				cursorY = len(text.split("\n"))-1
-			if cursorX > len(text.split("\n")[cursorY]):
-				cursorX = len(text.split("\n")[cursorY])
-		draw()
+		if _MODE == 0:
+			_changePosition(-9)
+		if _MODE == 1:
+			_CURSOR_Y += 1
+			if _CURSOR_Y > len(_TEXT.split("\n"))-1:
+				_CURSOR_Y = len(_TEXT.split("\n"))-1
+			if _CURSOR_X > len(_TEXT.split("\n")[_CURSOR_Y]):
+				_CURSOR_X = len(_TEXT.split("\n")[_CURSOR_Y])
+		_draw()
 
-def onRight(pressed):
-	global xpos, cursorX, cursorY, text, mode
+def _onRight(pressed):
+	global _XPOS, _CURSOR_X, _CURSOR_Y, _TEXT, _MODE
 	if pressed:
-		if mode == 0:
-			changePosition(1)
-		if mode == 1:
-			cursorX += 1
-			if cursorX > len(text.split("\n")[cursorY]):
-				cursorY += 1
-				if cursorY > len(text.split("\n"))-1:
-					cursorY = len(text.split("\n"))-1
-					cursorX = len(text.split("\n")[cursorY])
+		if _MODE == 0:
+			_changePosition(1)
+		if _MODE == 1:
+			_CURSOR_X += 1
+			if _CURSOR_X > len(_TEXT.split("\n")[_CURSOR_Y]):
+				_CURSOR_Y += 1
+				if _CURSOR_Y > len(_TEXT.split("\n"))-1:
+					_CURSOR_Y = len(_TEXT.split("\n"))-1
+					_CURSOR_X = len(_TEXT.split("\n")[_CURSOR_Y])
 				else:
-					cursorX = 0
-		draw()
+					_CURSOR_X = 0
+		_draw()
 
-def onLeft(pressed):
-	global xpos, cursorX, cursorY, text, mode
+def _onLeft(pressed):
+	global _XPOS, _CURSOR_X, _CURSOR_Y, _TEXT, _MODE
 	if pressed:
-		if mode == 0:
-			changePosition(-1)
-		if mode == 1:
-			if cursorX > 0 or cursorY > 0:
-				cursorX -= 1
-				if cursorX < 0:
-					cursorY -= 1
-					if cursorY < 0:
-						cursorY = 0
-					cursorX = len(text.split("\n")[cursorY])
-		draw()
-def onA(pressed):
-	global text, shift, cursorX, cursorY, xpos, mode, _cbAccept, _cbCancel
+		if _MODE == 0:
+			_changePosition(-1)
+		if _MODE == 1:
+			if _CURSOR_X > 0 or _CURSOR_Y > 0:
+				_CURSOR_X -= 1
+				if _CURSOR_X < 0:
+					_CURSOR_Y -= 1
+					if _CURSOR_Y < 0:
+						_CURSOR_Y = 0
+					_CURSOR_X = len(_TEXT.split("\n")[_CURSOR_Y])
+		_draw()
+def _onA(pressed):
+	global _TEXT, shift, _CURSOR_X, _CURSOR_Y, _XPOS, _MODE, _CB_ACCEPT, _CB_CANCEL
 	if pressed:
-		if mode == 0:
-			textPos = calcPos()
-			if textPos >= len(text):
-				text += charMap[xpos]
+		if _MODE == 0:
+			_TEXTPos = _calcPos()
+			if _TEXTPos >= len(_TEXT):
+				_TEXT += _CHAR_MAP[_XPOS]
 			else:
-				text = text[:textPos] + charMap[xpos] + text[textPos:]
-			cursorX += 1
-			draw()
-		if mode == 1:
-			textPos = calcPos()
-			if textPos >= len(text):
-				text += "\n"
+				_TEXT = _TEXT[:_TEXTPos] + _CHAR_MAP[_XPOS] + _TEXT[_TEXTPos:]
+			_CURSOR_X += 1
+			_draw()
+		if _MODE == 1:
+			_TEXTPos = _calcPos()
+			if _TEXTPos >= len(_TEXT):
+				_TEXT += "\n"
 			else:
-				text = text[:textPos] + "\n" + text[textPos:]
-			cursorX = 0
-			cursorY += 1
-			draw()
-		if mode == 2:
-			mode = 3
-			draw()
-			buttons.popMapping()
-			_cbAccept(text)
+				_TEXT = _TEXT[:_TEXTPos] + "\n" + _TEXT[_TEXTPos:]
+			_CURSOR_X = 0
+			_CURSOR_Y += 1
+			_draw()
+		if _MODE == 2:
+			_MODE = 3
+			_draw()
+			_buttons.popMapping()
+			_CB_ACCEPT(_TEXT)
 
-def onB(pressed):
-	global text, originalText, _cbAccept, _cbCancel, cursorX, cursorY, mode
+def _onB(pressed):
+	global _TEXT, _TEXT_ORIG, _CB_ACCEPT, _CB_CANCEL, _CURSOR_X, _CURSOR_Y, _MODE
 	if pressed:
-		if mode == 2:
-			mode = 3
-			draw()
-			buttons.popMapping()
-			if _cbCancel:
-				_cbCancel(text)
+		if _MODE == 2:
+			_MODE = 3
+			_draw()
+			_buttons.popMapping()
+			if _CB_CANCEL:
+				_CB_CANCEL(_TEXT)
 			else:
-				_cbAccept(originalText)
+				_CB_ACCEPT(_TEXT_ORIG)
 		else:
-			if len(text) > 0:
-				textPos = calcPos()
+			if len(_TEXT) > 0:
+				_TEXTPos = _calcPos()
 				lenOfPrevLine = 0
-				if len(text.split("\n"))>0 and cursorY > 0:
-					lenOfPrevLine = len(text.split("\n")[cursorY-1])
-				if len(text) > textPos and textPos > 0:
-					text = text[0 : textPos - 1 :] + text[textPos::]
-					cursorX -= 1
-				elif len(text) > 0:
-					text = text[:-1]
-					cursorX -= 1
-				if cursorX < 0:
-					cursorX = lenOfPrevLine
-					cursorY -= 1
-					if cursorY < 0:
-						cursorY = 0
-		draw()
+				if len(_TEXT.split("\n"))>0 and _CURSOR_Y > 0:
+					lenOfPrevLine = len(_TEXT.split("\n")[_CURSOR_Y-1])
+				if len(_TEXT) > _TEXTPos and _TEXTPos > 0:
+					_TEXT = _TEXT[0 : _TEXTPos - 1 :] + _TEXT[_TEXTPos::]
+					_CURSOR_X -= 1
+				elif len(_TEXT) > 0:
+					_TEXT = _TEXT[:-1]
+					_CURSOR_X -= 1
+				if _CURSOR_X < 0:
+					_CURSOR_X = lenOfPrevLine
+					_CURSOR_Y -= 1
+					if _CURSOR_Y < 0:
+						_CURSOR_Y = 0
+		_draw()
 
-def onSelect(pressed):
-	global mode
+def _onSelect(pressed):
+	global _MODE
 	if pressed:
-		mode += 1
-		if mode > 2:
-			mode = 0
-		draw()
+		_MODE += 1
+		if _MODE > 2:
+			_MODE = 0
+		_draw()
 
-def draw():
-	global cx, cy, text, cursorX, cursorY, title, mode, xpos, lastPartMoveUp, visibleLine
+def _draw():
+	global _TEXT, _CURSOR_X, _CURSOR_Y, _TITLE, _MODE, _XPOS, _LASTPARTMOVEUP, _VISIBLELINE
 
-	modeText = "INP"
-	if mode == 1:
-		modeText = "CUR"
-	if mode == 2:
-		modeText = "ACT"
+	_MODE_TEXT = "INP"
+	if _MODE == 1:
+		_MODE_TEXT = "CUR"
+	if _MODE == 2:
+		_MODE_TEXT = "ACT"
 		
-	display.drawFill(0xFFFFFF)
-	display.drawRect(0, 0, display.width(), 14, True, 0x000000)
-	display.drawText(0, 0, title, 0xFFFFFF, keyFont)
-	display.drawText(128-24, 0, modeText, 0xFFFFFF, keyFont)
+	_display.drawFill(0xFFFFFF)
+	_display.drawRect(0, 0, _display.width(), 14, True, 0x000000)
+	_display.drawText(0, 0, _TITLE, 0xFFFFFF, _FONT_KEY)
+	_display.drawText(128-24, 0, _MODE_TEXT, 0xFFFFFF, _FONT_KEY)
 
 	offsetX1 = 0
 	arrow1 = False
 	offsetX2 = 0
 	arrow2 = False
 
-	cursorPos = calcPos()
+	cursorPos = _calcPos()
 
-	textWithCursor = text[:cursorPos] + "|" + text[cursorPos:]
+	_TEXTWithCursor = _TEXT[:cursorPos] + "|" + _TEXT[cursorPos:]
 
-	textWithCursorLines = textWithCursor.split("\n")
-	textWithCursorLines.append("")
+	_TEXTWithCursorLines = _TEXTWithCursor.split("\n")
+	_TEXTWithCursorLines.append("")
 	
-	lineWithCursorLength = display.getTextWidth(textWithCursorLines[cursorY], textFont)
-	lineWithCursorLengthUntilCursor = display.getTextWidth(textWithCursorLines[cursorY][:cursorX], textFont)
+	lineWithCursorLength = _display.getTextWidth(_TEXTWithCursorLines[_CURSOR_Y], _FONT_TEXT)
+	lineWithCursorLengthUntilCursor = _display.getTextWidth(_TEXTWithCursorLines[_CURSOR_Y][:_CURSOR_X], _FONT_TEXT)
 	
-	if (lineWithCursorLength < display.width()):
+	if (lineWithCursorLength < _display.width()):
 		offsetX = 0
 	else:
-		offsetX = lineWithCursorLengthUntilCursor + display.getTextWidth(" ", textFont) - display.width()//2
-		if offsetX < -display.getTextWidth(" ", textFont):
-			offsetX = -display.getTextWidth(" ", textFont)
-		print("Applied X offset", offsetX)
+		offsetX = lineWithCursorLengthUntilCursor + _display.getTextWidth(" ", _FONT_TEXT) - _display.width()//2
+		if offsetX < -_display.getTextWidth(" ", _FONT_TEXT):
+			offsetX = -_display.getTextWidth(" ", _FONT_TEXT)
 		
-	arrow = lineWithCursorLength - offsetX > display.width()
+	arrow = lineWithCursorLength - offsetX > _display.width()
 	
-	if visibleLine + 1 < cursorY:
-		visibleLine = cursorY -1
-		print("Cursor was below visible area")
+	if _VISIBLELINE + 1 < _CURSOR_Y:
+		_VISIBLELINE = _CURSOR_Y -1
 	
-	if visibleLine < 0:
-		visibleLine = 0
-		print("Corrected visible area to line 0")
+	if _VISIBLELINE < 0:
+		_VISIBLELINE = 0
 	
-	if cursorY < visibleLine:
-		visibleLine = cursorY
-		print("Cursor was above visible area")
-	
-	print("Drawing line (and +1)", visibleLine)
-	
-	for i in range(len(textWithCursorLines)):
+	if _CURSOR_Y < _VISIBLELINE:
+		_VISIBLELINE = _CURSOR_Y
+		
+	for i in range(len(_TEXTWithCursorLines)):
 		v = "-"
-		if i == visibleLine:
+		if i == _VISIBLELINE:
 			v = ">"
-		print(v+" "+textWithCursorLines[i])
 	
 	arrow1L = False
 	arrow2L = False
 	
-	if cursorY == visibleLine:
+	if _CURSOR_Y == _VISIBLELINE:
 		offsetX1 = offsetX
 		if offsetX > 0:
 			 arrow1L = True
 		if arrow:
 			arrow1 = True
 	else:
-		if display.getTextWidth(textWithCursorLines[visibleLine], textFont) > display.width():
+		if _display.getTextWidth(_TEXTWithCursorLines[_VISIBLELINE], _FONT_TEXT) > _display.width():
 			arrow1 = True
-	if cursorY == visibleLine+1:
+	if _CURSOR_Y == _VISIBLELINE+1:
 		offsetX2 = offsetX
 		if offsetX > 0:
 			 arrow2L = True
 		if arrow:
 			arrow2 = True
 	else:
-		if display.getTextWidth(textWithCursorLines[visibleLine+1], textFont) > display.width():
+		if _display.getTextWidth(_TEXTWithCursorLines[_VISIBLELINE+1], _FONT_TEXT) > _display.width():
 			arrow2 = True
 	
-	display.drawText(-offsetX1, 17 + 0 * 13, textWithCursorLines[visibleLine], 0x000000, textFont)
-	display.drawText(-offsetX2, 17 + 1 * 13, textWithCursorLines[visibleLine+1], 0x000000, textFont)
+	_display.drawText(-offsetX1, 17 + 0 * 13, _TEXTWithCursorLines[_VISIBLELINE], 0x000000, _FONT_TEXT)
+	_display.drawText(-offsetX2, 17 + 1 * 13, _TEXTWithCursorLines[_VISIBLELINE+1], 0x000000, _FONT_TEXT)
 	
 	if arrow1:
-		display.drawRect(119, 17 + 0 * 13, 9, display.getTextHeight(" ", textFont), True, 0x000000)
-		display.drawText(120, 17 + 0 * 13, ">", 0xFFFFFF, textFont)
+		_display.drawRect(119, 17 + 0 * 13, 9, _display.getTextHeight(" ", _FONT_TEXT), True, 0x000000)
+		_display.drawText(120, 17 + 0 * 13, ">", 0xFFFFFF, _FONT_TEXT)
 	
 	if arrow2:
-		display.drawRect(119, 17 + 1 * 13, 9, display.getTextHeight(" ", textFont), True, 0x000000)
-		display.drawText(120, 17 + 1 * 13, ">", 0xFFFFFF, textFont)
+		_display.drawRect(119, 17 + 1 * 13, 9, _display.getTextHeight(" ", _FONT_TEXT), True, 0x000000)
+		_display.drawText(120, 17 + 1 * 13, ">", 0xFFFFFF, _FONT_TEXT)
 
 	if arrow1L:
-		display.drawRect(0, 17 + 0 * 13, 9, display.getTextHeight(" ", textFont), True, 0x000000)
-		display.drawText(0, 17 + 0 * 13, "<", 0xFFFFFF, textFont)
+		_display.drawRect(0, 17 + 0 * 13, 9, _display.getTextHeight(" ", _FONT_TEXT), True, 0x000000)
+		_display.drawText(0, 17 + 0 * 13, "<", 0xFFFFFF, _FONT_TEXT)
 	
 	if arrow2L:
-		display.drawRect(0, 17 + 1 * 13, 9, display.getTextHeight(" ", textFont), True, 0x000000)
-		display.drawText(0, 17 + 1 * 13, "<", 0xFFFFFF, textFont)
+		_display.drawRect(0, 17 + 1 * 13, 9, _display.getTextHeight(" ", _FONT_TEXT), True, 0x000000)
+		_display.drawText(0, 17 + 1 * 13, "<", 0xFFFFFF, _FONT_TEXT)
 
-	display.drawRect(0, display.height()-15, display.width(), 15, True, 0x000000)
-	if mode == 0:
+	_display.drawRect(0, _display.height()-15, _display.width(), 15, True, 0x000000)
+	if _MODE == 0:
 		for i in range(9):
-			item = xpos + (i-4)
+			item = _XPOS + (i-4)
 			if item < 0:
-				item = len(charMap)+item
-			if item >= len(charMap):
-				item = item % len(charMap)
-			if xpos == item:
-				display.drawRect(i*14+1, display.height()-14, 14, 14, True, 0xFFFFFF)
-				display.drawRect(i*14+1, display.height()-14, 14, 14, False, 0x000000)
-				display.drawText(i*14+1 + 3, display.height()-14, charMap[item], 0x000000, keyFont)
+				item = len(_CHAR_MAP)+item
+			if item >= len(_CHAR_MAP):
+				item = item % len(_CHAR_MAP)
+			if _XPOS == item:
+				_display.drawRect(i*14+1, _display.height()-14, 14, 14, True, 0xFFFFFF)
+				_display.drawRect(i*14+1, _display.height()-14, 14, 14, False, 0x000000)
+				_display.drawText(i*14+1 + 3, _display.height()-14, _CHAR_MAP[item], 0x000000, _FONT_KEY)
 			else:
-				display.drawRect(i*14+1, display.height()-14, 14, 14, True, 0x000000)
-				display.drawText(i*14+1 + 3, display.height()-14, charMap[item], 0xFFFFFF, keyFont)
-	elif mode == 1:
-		display.drawText(0, display.height()-14, "CURSOR, A: NL, B: RM", 0xFFFFFF, keyFont)
-	elif mode == 2:
-		display.drawText(0, display.height()-14, "A: OK, B: CANCEL", 0xFFFFFF, keyFont)
+				_display.drawRect(i*14+1, _display.height()-14, 14, 14, True, 0x000000)
+				_display.drawText(i*14+1 + 3, _display.height()-14, _CHAR_MAP[item], 0xFFFFFF, _FONT_KEY)
+	elif _MODE == 1:
+		_display.drawText(0, _display.height()-14, "CURSOR, A: NL, B: RM", 0xFFFFFF, _FONT_KEY)
+	elif _MODE == 2:
+		_display.drawText(0, _display.height()-14, "A: OK, B: CANCEL", 0xFFFFFF, _FONT_KEY)
 	else:
-		display.drawText(0, display.height()-14, "Processing...", 0xFFFFFF, keyFont)
+		_display.drawText(0, _display.height()-14, "Processing...", 0xFFFFFF, _FONT_KEY)
 
-	display.flush(display.FLAG_LUT_FASTEST)
+	_display.flush(_display.FLAG_LUT_FASTEST)
 
 
-def show(newTitle, initialText, cbAccept, cbCancel=None):
-	global cx, cy, text, originalText, title, cursorX, cursorY, _cbAccept, _cbCancel, mode, lastPartMoveUp
-	mode = 0
-	title = newTitle
-	display.drawFill(0xFFFFFF)
-	cx = 0
-	cy = 0
-	text = initialText
-	originalText = initialText
-	_cbAccept = cbAccept
-	_cbCancel = cbCancel
-	cursorY = len(text.split("\n"))-1
-	cursorX = len(text.split("\n")[-1])+1
-	lastPartMoveUp = True
-	visibleLine = 0
-	buttons.pushMapping();
-	buttons.attach(buttons.BTN_A, onA)
-	buttons.attach(buttons.BTN_B, onB)
-	buttons.attach(buttons.BTN_DOWN, onDown)
-	buttons.attach(buttons.BTN_RIGHT, onRight)
-	buttons.attach(buttons.BTN_UP, onUp)
-	buttons.attach(buttons.BTN_LEFT, onLeft)
-	buttons.attach(buttons.BTN_SELECT, onSelect)
-	draw()
+def show(new_TITLE, initial_TEXT, cbAccept, cbCancel=None):
+	'''
+	Show a _TEXT input dialog to the user
+	:param _TITLE: _TITLE of the dialog
+	:param _TEXT: Intial value (can be "")
+	:param cbAccept: Callback executed when the user accepts
+	:param cbCancel: (optional) Callback executed when the user cancels
+	'''
+	global _TEXT, _TEXT_ORIG, _TITLE, _CURSOR_X, _CURSOR_Y, _CB_ACCEPT, _CB_CANCEL, _MODE, _LASTPARTMOVEUP
+	_MODE = 0
+	_TITLE = new_TITLE
+	_display.drawFill(0xFFFFFF)
+	_TEXT = initial_TEXT
+	_TEXT_ORIG = initial_TEXT
+	_CB_ACCEPT = cbAccept
+	_CB_CANCEL = cbCancel
+	_CURSOR_Y = len(_TEXT.split("\n"))-1
+	_CURSOR_X = len(_TEXT.split("\n")[-1])+1
+	_LASTPARTMOVEUP = True
+	_VISIBLELINE = 0
+	_buttons.pushMapping();
+	_buttons.attach(_buttons.BTN_A, _onA)
+	_buttons.attach(_buttons.BTN_B, _onB)
+	_buttons.attach(_buttons.BTN_DOWN, _onDown)
+	_buttons.attach(_buttons.BTN_RIGHT, _onRight)
+	_buttons.attach(_buttons.BTN_UP, _onUp)
+	_buttons.attach(_buttons.BTN_LEFT, _onLeft)
+	_buttons.attach(_buttons.BTN_SELECT, _onSelect)
+	_draw()

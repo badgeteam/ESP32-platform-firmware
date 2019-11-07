@@ -12,6 +12,7 @@ def flash_daemon(number):
             sys.stdout.flush()
             system('env CONFIG_ESPTOOLPY_PORT_X=%s ./erase.sh' % device)
             system('env CONFIG_ESPTOOLPY_PORT_X=%s ./flash.sh' % device)
+            system('env CONFIG_ESPTOOLPY_PORT_X=%s ./write_zip_disobey2020.sh' % device)
 
             # Give system time to adjust
             time.sleep(1)

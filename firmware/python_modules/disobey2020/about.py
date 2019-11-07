@@ -1,1 +1,0 @@
-../sha2017/about.py

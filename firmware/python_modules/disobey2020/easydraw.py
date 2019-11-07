@@ -1,4 +1,4 @@
-import display, badge, version, time, orientation, machine
+import display, version, time, orientation, machine
 
 lastTitle = ""
 
@@ -97,7 +97,7 @@ def messageCentered(message, firstLineTitle=True, png=None):
 		pngSize = (0,0)
 		if png != None:
 			try:
-				pngSize = badge.png_info(png)
+				pngSize = display.pngInfo(png)
 				pngSize = [pngSize[0], pngSize[1]+2] #Little bit of extra offset
 			except BaseException as e:
 				#print("Error in PNG height",e)

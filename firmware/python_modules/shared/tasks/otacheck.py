@@ -1,4 +1,4 @@
-import wifi, badge, time, consts
+import wifi, time, consts
 
 def download_info(show=False):
 	import urequests as req
@@ -19,13 +19,12 @@ def download_info(show=False):
 def available(update=False, show=False):
 	if update:
 		if not wifi.status():
-			return badge.nvs_get_u8('badge','OTA.ready',0)
-
+			return machine.nvs_get_u8('system','OTA.ready') == 1
 		info = download_info(show)
 		if info:
 			if info["build"] > consts.INFO_FIRMWARE_BUILD:
-				badge.nvs_set_u8('badge','OTA.ready',1)
+				machine.nvs_set_u8('system', 'OTA.ready', 1)
 				return True
 
-		badge.nvs_set_u8('badge','OTA.ready',0)
-	return badge.nvs_get_u8('badge','OTA.ready',0)
+		machine.nvs_set_u8('system', 'OTA.ready', 0)
+	return machine.nvs_get_u8('system', 'OTA.ready') == 1

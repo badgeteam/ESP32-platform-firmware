@@ -1,4 +1,4 @@
-import machine, display, time, system, consts, easydraw, network, neopixel, mpr121
+import machine, display, time, system, consts, easydraw, network, neopixel, mpr121, sndmixer
 
 # 1) Introduction
 currentState = machine.nvs_getint('system', 'factory_checked')
@@ -32,6 +32,7 @@ import dashboard.resources.png_icons
 
 # 5) Set flag
 machine.nvs_setint('system', 'factory_checked', 2)
+machine.nvs_setint('system', 'force_sponsors', 1)
 
 # 6) Show message
 easydraw.messageCentered("PASSED", True)
@@ -43,26 +44,38 @@ buzzer_pin = machine.Pin(12, machine.Pin.OUT)
 time.sleep(0.01)
 buzzer_pwm = machine.PWM(buzzer_pin, duty=50)
 
+sndmixer.begin(2)
+synth = sndmixer.synth()
+sndmixer.volume(synth, 50)
+sndmixer.waveform(synth, 1)
+
 while True:
 	buzzer_pwm.duty(50)
 	buzzer_pwm.freq(500)
+	sndmixer.freq(synth, 500)
 	neopixel.send(bytes([0xFF, 0, 0]*12))
 	time.sleep(0.25)
 	buzzer_pwm.freq(600)
+	sndmixer.freq(synth, 600)
 	neopixel.send(bytes([0, 0xFF, 0]*12))
 	time.sleep(0.25)
 	buzzer_pwm.freq(800)
+	sndmixer.freq(synth, 800)
 	neopixel.send(bytes([0, 0, 0xFF]*12))
 	time.sleep(0.25)
 	buzzer_pwm.freq(500)
+	sndmixer.freq(synth, 500)
 	neopixel.send(bytes([0xFF, 0, 0]*12))
 	time.sleep(0.25)
 	buzzer_pwm.freq(600)
+	sndmixer.freq(synth, 600)
 	neopixel.send(bytes([0, 0xFF, 0]*12))
 	time.sleep(0.25)
 	buzzer_pwm.freq(800)
+	sndmixer.freq(synth, 800)
 	neopixel.send(bytes([0, 0, 0xFF]*12))
 	time.sleep(0.25)
 	buzzer_pwm.freq(1000)
+	sndmixer.freq(synth, 1000)
 	neopixel.send(bytes([0xFF, 0xFF, 0xFF]*12))
 	time.sleep(0.50)

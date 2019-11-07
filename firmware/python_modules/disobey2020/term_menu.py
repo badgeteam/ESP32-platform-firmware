@@ -1,4 +1,4 @@
-import term, deepsleep as ds, system, version, consts
+import term, system, version, consts
 
 class UartMenu():
 	def __init__(self, gts, pm, safe = False, pol="Power off"):

@@ -1,9 +1,9 @@
-import system, badge, keyboard
+import system, machine, keyboard
 
 def callback(value):
     if value:
-        badge.nvs_set_str("owner", "name", value)
+        machine.nvs_setstr("owner", "name", value)
     system.home()
 
-nickname = badge.nvs_get_str("owner", "name", "")
+nickname = machine.nvs_getstr("owner", "name") or ""
 keyboard.show("Nickname", nickname, callback)

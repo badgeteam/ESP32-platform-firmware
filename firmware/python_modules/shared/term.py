@@ -23,7 +23,6 @@ def header(cls = False, text = ""):
 	else:
 		text = consts.INFO_HARDWARE_NAME
 	color(37, 44, 1)
-	# print(badge.deviceType.replace("_"," ")+" "+text+u"\r\n")
 	print(" "+text+u"\r\n")
 	color()
 	
@@ -95,7 +94,7 @@ def menu(title, items, selected = 0, text="", width=32):
 							selected += 1
 							needFullDraw = False
 			elif (ord(key)==0x01):
-				import tasks.powermanagement as pm#, badge
+				import tasks.powermanagement as pm
 				pm.disable()
 				draw_menu(title, items, selected, text)
 				pm.resume()

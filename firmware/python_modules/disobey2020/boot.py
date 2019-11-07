@@ -28,6 +28,9 @@ if machine.nvs_getint("system", 'factory_checked'):
 #Application starting
 if __chk_recovery:
 	app = "dashboard.recovery"
+elif machine.nvs_getint('system', 'force_sponsors'):
+	machine.nvs_setint('system', 'force_sponsors', 0)
+	system.start("sponsors_disobey_2020")
 else:
 	app = rtc.read_string()
 	if not app:

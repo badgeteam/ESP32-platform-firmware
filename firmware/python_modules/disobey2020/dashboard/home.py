@@ -42,7 +42,7 @@ if not cfg_nick_text:
 # Button callbacks
 def cbStartLauncher(pressed):
 	if pressed:
-		system.launcher(True)
+		system.launcher(False)
 
 def cbFeedPowerManagement(pressed):
 	pm.feed()

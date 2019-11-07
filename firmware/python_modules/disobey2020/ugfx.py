@@ -1,5 +1,7 @@
 import display, gc, buttons
 
+print("USING UGFX IS DEPRECATED, PLEASE USE THE 'display' AND 'buttons' APIs instead!")
+
 display_flags = 0
 
 def orientation(deg=None):

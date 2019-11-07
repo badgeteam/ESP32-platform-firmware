@@ -36,6 +36,7 @@ def start(app, status=False):
 			display.drawText( 0, 28, "LOADING APP...", 0, "org18")
 			display.drawText( 0, 52, appName,          0, "org18")
 			display.flush()
+			time.sleep_ms(10) #Give display some time
 		except:
 			easydraw.messageCentered("Loading...", False, "/media/busy.png")
 	machine.RTC().write_string(app)

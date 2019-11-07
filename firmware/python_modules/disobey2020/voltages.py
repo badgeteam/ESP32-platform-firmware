@@ -1,42 +1,35 @@
-import badge, display, time, neopixel, buttons
+import machine
 
-dataPoints = [0]*64
-dataPoints2 = [0]*64
+PIN_VBAT   = 39
+PIN_VUSB   = 36
+PIN_VIDENT = 32
 
+_vbat = machine.ADC(PIN_VBAT)
+_vbat.atten(machine.ADC.ATTN_11DB)
 
-ledState = False
-def toggleLeds(pressed):
-	global ledState
-	if pressed:
-		ledState = not ledState
-		if ledState:
-			neopixel.send(bytes([0xFF, 0xFF, 0xFF]*12))
-		else:
-			neopixel.send(bytes([0, 0, 0]*12))
+_vusb = machine.ADC(PIN_VUSB)
+_vusb.atten(machine.ADC.ATTN_11DB)
 
-buttons.attach(buttons.BTN_A, toggleLeds)
+_vident = machine.ADC(PIN_VIDENT)
+_vident.atten(machine.ADC.ATTN_11DB)
 
-def draw(vbatt, vusb):
-	display.drawFill(0x000000)
-	display.drawText(0,0,"Battery")
-	display.drawText(0,15,"USB")
-	display.drawText(50,0,str(vbatt)+"v")
-	display.drawText(50,15,str(vusb)+"v")
-	
-	dataPoints.pop(0)
-	dataPoints.append(round(vbatt*8))
-	for i in range(64):
-		display.drawPixel(i,display.height()-1-dataPoints[i],0xFFFFFF)
-	
-	dataPoints2.pop(0)
-	dataPoints2.append(round(vusb*8))
-	for i in range(64):
-		display.drawPixel(64+i,display.height()-1-dataPoints2[i],0xFFFFFF)
-		
-	display.flush()
+def usb():
+	'''
+	Read USB input voltage
+	:return: integer, voltage in mV
+	'''
+	return int(_vusb.read()*1.97)
 
-while True:
-	vbatt = badge.battery_volt_sense()/1000.0
-	vusb = badge.usb_volt_sense()/1000.0
-	draw(vbatt, vusb)
-	time.sleep(0.1)
+def battery():
+	'''
+	Read battery voltage
+	:return: integer, voltage in mV
+	'''
+	return int(_vbat.read()*1.94)
+
+def identification():
+	'''
+	Read identification voltage
+	:return: integer, voltage in mV
+	'''
+	return int(_vident.read()*1.94)

@@ -1,4 +1,4 @@
-import ugfx, badge, consts
+import consts
 
 build                  = consts.INFO_FIRMWARE_BUILD
 name                   = consts.INFO_FIRMWARE_NAME
