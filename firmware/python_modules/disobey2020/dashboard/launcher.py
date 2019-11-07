@@ -1,276 +1,147 @@
-import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display, machine, term, term_menu
+import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os
 
-orientation.default()
+default_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x00\x00\x00\x00[\x01GY\x00\x00\x00nIDAT\x08\xd7U\xce\xb1\r\x800\x0c\x05\xd1\x1fQ\xa4\xcc\x02\x88\xacAEVb\x02\xcchH\x14\xac\x01b\x00R\xa6\xb0l\x1cRq\xc5\xab\x0f\xf8\n\xd9 \x01\x9c\xf8\x15]q\x1b|\xc6\x89p\x97\x19\xf1\x90\x11\xf11\x92j\xdf \xd5\xe1\x87L\x06W\xf2b\\b\xec\x15_\x89\x82$\x89\x91\x98\x18\x91\xa94\x82j\x86g:\xd11mpLk\xdbhC\xd6\x0b\xf2 ER-k\xcb\xc6\x00\x00\x00\x00IEND\xaeB`\x82'
 
-term.header(True, "Loading...")
+home_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x03\x00\x00\x00I\xb4\xe8\xb7\x00\x00\x00\x06PLTE\xff\xff\xff\x00\x00\x00U\xc2\xd3~\x00\x00\x00\tpHYs\x00\x00\x13\xaf\x00\x00\x13\xaf\x01c\xe6\x8e\xc3\x00\x00\x00\x19tEXtSoftware\x00www.inkscape.org\x9b\xee<\x1a\x00\x00\x00[IDAT\x08\x99\x8d\xce!\x0e\xc5 \x00\x04\xd1qH\x8e\xc0Q8Ze\xcf\xd5Tp\r\x1a\x04\x16\x89 \xddn\x93~\xffG<=\xc8\xa1{3+\x9b\x99L\r\xe68\xcd~\x998\xc4J33\xb7;1\xa4\xc8%\xed4\xa9\xd0\xa5\xfeQ\xc3\x8fV\x8c\xfb\x9b\xd6{\xa1B`@dA\xe6]{\x00\xb4\x17e\x0cD\xcab!\x00\x00\x00\x00IEND\xaeB`\x82'
 
-# Application list
+trash_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x03\x00\x00\x00I\xb4\xe8\xb7\x00\x00\x00\x06PLTE\xff\xff\xff\x00\x00\x00U\xc2\xd3~\x00\x00\x00\tpHYs\x00\x00\x13\xaf\x00\x00\x13\xaf\x01c\xe6\x8e\xc3\x00\x00\x00\x19tEXtSoftware\x00www.inkscape.org\x9b\xee<\x1a\x00\x00\x00VIDAT\x08\x99\x95\xce\xb1\r\x80 \x14\x84\xe13\x16\x8c\xc1(\x8c&\x1b\xbc\x91t\x03F\x80\x15\x08\r\t\xe8y\x89\x95\xb1\xf2/\xbe\xf2r\xa0\x02\xbb\x17\xc5\x89c\x15\xa9\t\xab\xc4iuG\x01\xdcC\xcf\xc3\xa3\x93/F\x16\xd5~\xd0\xd2ge\x92\x01\x13\x08\xb8\x80\r\x8c\x8b\x1e\xa8\x1bL\xedW\xf4`=\x10\x0f\x00\x00\x00\x00IEND\xaeB`\x82'
 
-apps = []
+def drawMessageBox(text):
+	width = display.getTextWidth(text, "org18")
+	height = display.getTextHeight(text, "org18")
+	display.drawRect((display.width()-width-4)//2, (display.height()-height-4)//2, width+2, height+2, True, 0xFFFFFF)
+	display.drawText((display.width()-width)//2, (display.height()-height)//2-2, text, 0x000000, "org18")
 
-def add_app(app,information):
-	global apps
+def drawApp(app, position, amount):
+	display.drawFill(0x000000)
+	display.drawRect(0,0,display.width(), 10, True, 0xFFFFFF)
+	display.drawText(2, 0, "LAUNCHER", 0x000000, "org18")
+	positionText = "{}/{}".format(position+1, amount)
+	if app["path"].startswith("/sd"):
+		positionText  = "SD "+positionText
+	positionWidth = display.getTextWidth(positionText, "org18")
+	display.drawText(display.width()-positionWidth-2, 0, positionText, 0x000000, "org18")
+	titleWidth = display.getTextWidth(app["name"], "7x5")
+	display.drawText((display.width()-titleWidth)//2,display.height()-10, app["name"], 0xFFFFFF, "7x5")
 	try:
-		title = information["name"]
-	except:
-		title = app
-	try:
-		category = information["category"]
-	except:
-		category = ""
-	info = {"file":app,"title":title,"category":category}
-	apps.append(info)
-
-def populate_apps():
-	global apps
-	apps = []
-	try:
-		userApps = os.listdir('lib')
-	except OSError:
-		userApps = []
-	for app in userApps:
-		add_app(app,read_metadata(app))
-	try:
-		userApps = os.listdir('apps')
-	except OSError:
-		userApps = []
-	for app in userApps:
-		add_app(app,read_metadata(app))
-	try:
-		userApps = os.listdir('/sd/lib')
-	except OSError:
-		userApps = []
-	for app in userApps:
-		add_app(app,read_metadata(app))
-	try:
-		userApps = os.listdir('/sd/apps')
-	except OSError:
-		userApps = []
-	for app in userApps:
-		add_app(app,read_metadata(app))
-	add_app("dashboard.installer",{"name":"Installer", "category":"system"})
-	add_app("dashboard.settings.nickname",{"name":"Set nickname", "category":"system"})
-	add_app("dashboard.settings.wifi",{"name":"Configure WiFi", "category":"system"})
-	add_app("dashboard.tools.update_apps",{"name":"Update apps", "category":"system"})
-	add_app("dashboard.tools.update_firmware",{"name":"Firmware update", "category":"system"})
-	add_app("dashboard.other.about",{"name":"About", "category":"system"})
-
-# List as shown on screen
-currentListTitles = []
-currentListTargets = []
-
-def populate_category(category="",system=True):
-	global apps
-	global currentListTitles
-	global currentListTargets
-	currentListTitles = []
-	currentListTargets = []
-	for app in apps:
-		if (category=="" or category==app["category"] or (system and app["category"]=="system")) and (not app["category"]=="hidden"):
-			currentListTitles.append(app["title"])
-			currentListTargets.append(app)
-			
-def populate_options():
-	global options
-	if orientation.isLandscape():
-		if display.width() > 128:
-			options = ugfx.List(0,0,int(ugfx.width()/2),ugfx.height())
+		icon_data = None
+		if app["icon"]:
+			if not app["icon"].startswith(b"\x89PNG"):
+				with open(app["icon"], "rb") as icon_file:
+					icon_data = icon_file.read()
+			else:
+				icon_data = app["icon"]
+		if not icon_data:
+			display.drawPng(48,15,default_icon)
 		else:
-			options = ugfx.List(0,0,ugfx.width(),ugfx.height())
-	else:
-		options = ugfx.List(0,0,ugfx.width(),int(ugfx.height()-18*4))
-	global currentListTitles
-	for title in currentListTitles:
-		options.add_item(title)
+			info = display.pngInfo(icon_data)
+			if info[0] == 32 and info[1] == 32:
+				display.drawPng(48,15,icon_data)
+			else:
+				drawMessageBox("Invalid icon size\nExpected 32x32!")
+	except BaseException as e:
+		sys.print_exception(e)
+		drawMessageBox("Icon parsing error!")
+	
+	if not position < 1:
+		display.drawText(0, display.height()//2-12, "<", 0xFFFFFF, "roboto_regular18")	
+	if not position >= (amount-1):
+		display.drawText(display.width()-10, display.height()//2-12, ">", 0xFFFFFF, "roboto_regular18")
+	
+	display.flush()
 
-# Read app metadata
-def read_metadata(app):
+def loadInfo(folder, name):
 	try:
-		install_path = "/lib" #FIXME
-		info_file = "%s/%s/metadata.json" % (install_path, app)
-		#print("Reading "+info_file+"...")
+		info_file = "%s/%s/metadata.json".format(folder, name)
 		with open(info_file) as f:
 			information = f.read()
 		return ujson.loads(information)
 	except BaseException as e:
-		#print("[ERROR] Can not read metadata for app "+app)
-		sys.print_exception(e)
-		information = {"name":app,"description":"","category":"", "author":"","revision":0}
-		return [app,""]
-	
-# Uninstaller
+		return None
 
-def uninstall():
-	global options
-	selected = options.selected_index()
-	options.destroy()
-	
-	global currentListTitles
-	global currentListTargets
-		
-	if currentListTargets[selected]["category"] == "system":
-		#print("System apps can not be removed.")
-		dialogs.notice("Can not uninstall '"+currentListTitles[selected]+"'!\nSystem apps can not be removed!","UNINSTALL")
-		#easydraw.msg("System apps can not be removed!","Error",True)
-		#time.sleep(2)
-		#print("Returning to menu.")
-		start()
-		return
-	
-	def perform_uninstall(ok):
-		global install_path
-		if ok:
-			easydraw.msg("Removing "+currentListTitles[selected]+"...", "Uninstalling...",True)
-			install_path = "/lib" #FIXME
-			for rm_file in os.listdir("%s/%s" % (install_path, currentListTargets[selected]["file"])):
-				easydraw.msg("Deleting '"+rm_file+"'...")
-				os.remove("%s/%s/%s" % (install_path, currentListTargets[selected]["file"], rm_file))
-			easydraw.msg("Deleting folder...")
-			os.rmdir("%s/%s" % (install_path, currentListTargets[selected]["file"]))
-			easydraw.msg("Uninstall completed!")
-		start()
+def listApps():
+	apps = []
+	for folder in sys.path:
+		if folder != '':
+			try:
+				files = os.listdir(folder)
+			except OSError:
+				files = []
+				print("Folder {} could not be accessed.".format(folder))
+			if len(files) < 1:
+				print("Folder {} is empty.".format(folder))
+			for name in files:
+				hidden = False
+				app = {"path":folder+"/"+name, "name":name, "icon":None, "category":"unknown"}
+				metadata = loadInfo(folder, name)
+				if metadata:
+					if "name" in metadata:
+						app["name"]     = metadata["name"]
+					if "category" in metadata:
+						app["category"] = metadata["category"]
+					if "icon" in metadata:
+						app["icon"] = metadata["icon"]
+					if "hidden" in metadata:
+						hidden = metadata["hidden"]
+				if not hidden:
+					apps.append(app)
+				print("Found app {} in {}".format(app["name"], app["path"]))
+	return apps
 
-	uninstall = dialogs.prompt_boolean('Are you sure you want to remove %s?' % currentListTitles[selected], cb=perform_uninstall, title="UNINSTALL")
-
-# Run app
-		
-def run():
-	global options
-	selected = options.selected_index()
-	options.destroy()
-	global currentListTargets
-	system.start(currentListTargets[selected]["file"], True)
-
-# Actions        
-def input_a(pressed):
-	pm.feed()
+def onLeft(pressed):
+	global currentApp, apps
 	if pressed:
-		run()
-	
-def input_b(pressed):
-	pm.feed()
-	#if pressed:
-	#	system.home()
+		currentApp -= 1
+		if currentApp < 0:
+			currentApp = len(apps)-1
+		drawApp(apps[currentApp], currentApp, len(apps))
 
-def input_start(pressed):
-	pm.feed()
+def onRight(pressed):
+	global currentApp, apps
 	if pressed:
-		system.home()
+		currentApp += 1
+		if currentApp >= len(apps):
+			currentApp = 0
+		drawApp(apps[currentApp], currentApp, len(apps))
 
-def input_select(pressed):
-	pm.feed()
+def onA(pressed):
+	global currentApp, apps
 	if pressed:
-		uninstall()
+		system.start(apps[currentApp]["path"])
 
-def input_other(pressed):
-	pm.feed()
-	if pressed:
-		global einkNeedsUpdate
-		einkNeedsUpdate = True
-		#display.flush(display.FLAG_LUT_FASTEST)
+# Launcher
+orientation.default()
+term.header(True, "Loading...")
+apps = listApps()
+apps.append({"path":"dashboard.home",                  "name":"Home",               "icon":home_icon, "category":"system"})
+apps.append({"path":"dashboard.installer",             "name":"Installer",          "icon":None, "category":"system"})
+apps.append({"path":"dashboard.tools.uninstaller",     "name":"Remove an app",      "icon":trash_icon, "category":"system"})
+apps.append({"path":"dashboard.settings.wifi",         "name":"WiFi configuration", "icon":None, "category":"system"})
+apps.append({"path":"dashboard.tools.update_apps",     "name":"Update apps",        "icon":None, "category":"system"})
+apps.append({"path":"dashboard.tools.update_firmware", "name":"Update firmware",    "icon":None, "category":"system"})
+apps.append({"path":"dashboard.other.about",           "name":"About",              "icon":None, "category":"system"})
 
-# Power management
-def pm_cb(dummy):
-	system.home()
+currentApp = 0
 
-einkNeedsUpdate = False
-def updateEink():
-	global einkNeedsUpdate
-	if einkNeedsUpdate:
-		einkNeedsUpdate = False
-		display.flush(display.FLAG_LUT_FASTEST)
-	return 100
+buttons.attach(buttons.BTN_LEFT, onLeft)
+buttons.attach(buttons.BTN_RIGHT, onRight)
+buttons.attach(buttons.BTN_A, onA)
 
-def init_power_management():
-	pm.set_timeout(5*60*1000) # Set timeout to 5 minutes
-	pm.callback(pm_cb) # Go to splash instead of sleep
-	pm.feed(True)
-
-# Main application
-def start():
-	ugfx.input_init()
-	ugfx.set_lut(ugfx.LUT_FASTER)
-	ugfx.clear(ugfx.WHITE)
-
-	# Instructions
-	if orientation.isLandscape():
-		if display.width() > 128:
-			x0 = int(display.width()/2)
-			currentY = 20
-			
-			display.drawText(x0+((display.width()-x0)//2)-(display.getTextWidth("BADGE.TEAM", "fairlight12")//2), currentY, "BADGE.TEAM\n", 0x000000, "fairlight12")
-			currentY += display.getTextHeight("BADGE.TEAM", "fairlight12")
-			
-			display.drawText(x0+int((display.width()-x0)/2)-int(display.getTextWidth("ESP32 platform", "roboto_regular12")/2), currentY, "ESP32 platform\n", 0x000000, "roboto_regular12")
-			display.drawLine(x0,0,x0,display.height()-1,0x000000)
-			pixHeight = display.getTextHeight(" ", "roboto_regular12")
-			currentY = pixHeight*5
-			
-			lineY = display.height()-pixHeight*6-pixHeight//2
-			display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
-			
-			display.drawText(x0+5, display.height()-pixHeight*6, "A: Run\n", 0x000000, "roboto_regular12")
-			display.drawText(x0+5, display.height()-pixHeight*5, "START: Return to home\n", 0x000000, "roboto_regular12")
-			display.drawText(x0+5, display.height()-pixHeight*4, "SELECT: Uninstall app\n", 0x000000, "roboto_regular12")
-			
-			lineY = display.height()-pixHeight*2-pixHeight//2
-			display.drawLine(x0, lineY, display.width()-1, lineY, 0x000000)
-			display.drawText(x0+5, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "roboto_regular12")
-			display.drawText(x0+5, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "roboto_regular12")
-	else:
-		pixHeight = display.getTextHeight(" ", "roboto_regular12")
-		display.drawLine(0, display.height()-18*4, display.width(), display.height()-18*4, ugfx.BLACK)
-		display.drawText(0, display.height()-pixHeight*6, "A: Run\n", 0x000000, "roboto_regular12")
-		display.drawText(0, display.height()-pixHeight*5, "START: Home\n", 0x000000, "roboto_regular12")
-		display.drawText(0, display.height()-pixHeight*4, "SELECT: Uninstall\n", 0x000000, "roboto_regular12")
-		
-		lineY = display.height()-pixHeight*2-pixHeight//2
-		display.drawLine(0, lineY, display.width()-1, lineY, 0x000000)
-		display.drawText(0, display.height()-pixHeight*2, consts.INFO_FIRMWARE_NAME, 0x000000, "roboto_regular12")
-		display.drawText(0, display.height()-pixHeight, "Build "+str(consts.INFO_FIRMWARE_BUILD), 0x000000, "roboto_regular12")
-
-	global options
-	global install_path
-	options = None
-	install_path = None
-
-	ugfx.input_attach(ugfx.BTN_A, input_a)
-	ugfx.input_attach(ugfx.BTN_B, input_b)
-	ugfx.input_attach(ugfx.BTN_SELECT, input_select)
-	ugfx.input_attach(ugfx.JOY_UP, input_other)
-	ugfx.input_attach(ugfx.JOY_DOWN, input_other)
-	ugfx.input_attach(ugfx.JOY_LEFT, input_other)
-	ugfx.input_attach(ugfx.JOY_RIGHT, input_other)
-	ugfx.input_attach(ugfx.BTN_START, input_start)
-
-	populate_apps()
-	populate_category()
-	populate_options()
-
-	# do a greyscale flush on start
-	ugfx.flush(ugfx.GREYSCALE)
-
-start()
-
-def goToSleep(unused_variable=None):
-	system.home()
+drawApp(apps[0],0,len(apps))
 
 # Read configuration from NVS or apply default values
 cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
 if cfg_term_menu == None:
 	cfg_term_menu = True # If not set the menu is shown
 
-# Scheduler
-virtualtimers.activate(100) # Start scheduler with 100ms ticks
-virtualtimers.new(100, updateEink)
-
 # Terminal menu
-if cfg_term_menu:
-	init_power_management()
-	umenu = term_menu.UartMenu(system.home, pm, False, "< Back")
-	umenu.main()
+labels = []
 
-#(Note: power management is disabled when the menu is disabled, to keep the python prompt clean and usefull)
+for app in apps:
+	labels.append(app["name"])
+labels.append("< Back")
 
-term.header(True, "Python shell")
-print("Type \"import menu\" to access the menu.")
+start = term.menu("Launcher", labels, 0, "")
+if start >= len(apps):
+	system.home()
+system.start(apps[start]["path"])
