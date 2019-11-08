@@ -14,6 +14,7 @@
 #include "driver_gxgde0213b1.h"
 #include "driver_fri3d.h"
 #include "driver_flipdotter.h"
+#include "driver_st7735.h"
 
 /* E-INK display as used on the SHA2017 and HackerHotel 2019 badges */
 #if defined(CONFIG_DRIVER_EINK_ENABLE)
@@ -75,6 +76,17 @@
 	#define FB_TYPE_16BPP
 	#define FB_ALPHA_ENABLED
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_ili9341_write_partial(buffer, x0, y0, x1, y1)
+	#define COLOR_FILL_DEFAULT 0x000000
+	#define COLOR_TEXT_DEFAULT 0xFFFFFF
+	
+/* ST7735 color OLED */
+#elif defined(CONFIG_DRIVER_ST7735_ENABLE)
+	#define FB_SIZE ST7735_BUFFER_SIZE
+	#define FB_WIDTH ST7735_WIDTH
+	#define FB_HEIGHT ST7735_HEIGHT
+	#define FB_TYPE_16BPP
+	//#define FB_ALPHA_ENABLED
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_st7735_write_partial(buffer, x0, y0, x1, y1)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 	

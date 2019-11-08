@@ -1,0 +1,22 @@
+menu "Driver: ST7735 LCD display"
+	config DRIVER_ST7735_ENABLE
+		depends on DRIVER_VSPI_ENABLE
+		bool "Enable the ST7735 display driver"
+		default n
+		
+	config PIN_NUM_ST7735_RESET
+		depends on DRIVER_ST7735_ENABLE
+		int "GPIO pin used for RESET"
+	
+	config PIN_NUM_ST7735_DCX
+		depends on DRIVER_ST7735_ENABLE
+		int "GPIO pin used for D/CX"
+		
+	config PIN_NUM_ST7735_CS
+		depends on DRIVER_ST7735_ENABLE
+		int "GPIO pin used for CS"
+	
+	config PIN_NUM_ST7735_BACKLIGHT
+		depends on DRIVER_ST7735_ENABLE
+		int "GPIO pin used for backlight"
+endmenu
