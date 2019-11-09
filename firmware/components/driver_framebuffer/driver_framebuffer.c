@@ -20,16 +20,31 @@ uint8_t* framebuffer;
 
 /* Color space conversions */
 
-inline uint16_t rgbTo565(uint32_t in)
+inline uint16_t convert24to16(uint32_t in) //RGB24 to 565
 {
 	uint8_t r = (in>>16)&0xFF;
 	uint8_t g = (in>>8)&0xFF;
 	uint8_t b = in&0xFF;
-	uint16_t out = ((b & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (r >> 3);
-	return out;
+	return ((b & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (r >> 3);
 }
 
-inline uint8_t rgbToGrey(uint32_t in)
+inline uint8_t convert24to8C(uint32_t in) //RGB24 to 256-color
+{
+	uint8_t r = ((in>>16)&0xFF) >> 5;
+	uint8_t g = ((in>> 8)&0xFF) >> 5;
+	uint8_t b = ( in     &0xFF) >> 6;
+	return r | (g<<3) | (b<<6);
+}
+
+inline uint32_t convert8Cto24(uint8_t in) //256-color to RGB24
+{
+	uint8_t r = in & 0x07;
+	uint8_t g = (in>>3) & 0x07;
+	uint8_t b = in >> 6;
+	return b | (g << 8) | (r << 16);
+}
+
+inline uint8_t convert24to8(uint32_t in) //RGB24 to 8-bit greyscale
 {
 	uint8_t r = (in>>16)&0xFF;
 	uint8_t g = (in>>8)&0xFF;
@@ -37,7 +52,7 @@ inline uint8_t rgbToGrey(uint32_t in)
 	return ( r + g + b + 1 ) / 3;
 }
 
-inline bool greyToBw(uint8_t in)
+inline bool convert8to1(uint8_t in) //8-bit greyscale to black&white
 {
 	return in >= 128;
 }
@@ -118,16 +133,21 @@ void driver_framebuffer_fill(Window* window, uint32_t value)
 	if (!window) driver_framebuffer_set_dirty_area(0,0,width-1,height-1, true);
 	
 	#if   defined(FB_TYPE_1BPP)
-		memset(buffer, greyToBw(rgbToGrey(value)) ? 0xFF : 0x00, (width*height)/8);
+		memset(buffer, convert8to1(convert24to8(value)) ? 0xFF : 0x00, (width*height)/8);
 	#elif defined(FB_TYPE_8BPP)
-		memset(buffer, rgbToGrey(value), width*height);
+		memset(buffer, convert24to8(value), width*height);
 	#elif defined(FB_TYPE_16BPP)
-		value = rgbTo565(value);
+		value = convert24to16(value);
 		uint8_t c0 = (value>>8)&0xFF;
 		uint8_t c1 = value&0xFF;
 		for (uint32_t i = 0; i < width*height*2; i+=2) {
 			buffer[i + 0] = c0;
 			buffer[i + 1] = c1;
+		}
+	#elif defined(FB_TYPE_8CBPP)
+		value = convert24to8C(value);
+		for (uint32_t i = 0; i < width*height; i++) {
+			buffer[i] = value;
 		}
 	#elif defined(FB_TYPE_24BPP)
 		uint8_t r = (value>>16)&0xFF;
@@ -163,23 +183,19 @@ void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t 
 	#if defined(FB_TYPE_1BPP)
 		//The 1-bit-per-pixel displays all seem to have their own pixel format...
 		//To-do: clean this up
-		value = greyToBw(rgbToGrey(value));
+		value = convert8to1(convert24to8(value));
 		#ifndef FB_1BPP_VERT
 			#if defined(FB_1BPP_OHS)
-			#warning "USING OHS!!"
 				uint32_t position = ((width-x-1) + y * width) / 8;
 				uint8_t  bit      = x % 8;
 			#elif defined(FB_1BPP_VERT2)
-				#warning "USING VERT2!"
 				uint32_t position = (y/8) + (x*height/8);
 				uint8_t  bit      = y % 8;
 			#else
-			#warning "USING HORI!"
 				uint32_t position = (y * (width/8)) + (x / 8);
 				uint8_t  bit      = x % 8;
 			#endif
 		#else
-			#warning "USING VERT!"
 			uint32_t position = ( (y / 8) * width) + x;
 			uint8_t  bit      = y % 8;
 		#endif
@@ -192,18 +208,20 @@ void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t 
 		}
 		if (oldVal != buffer[position]) changed = true;
 	#elif defined(FB_TYPE_8BPP)
-		value = rgbToGrey(value);
+		value = convert24to8(value);
 		uint32_t position = (y * width) + x;
 		if (buffer[position] != value) changed = true;
 		buffer[position] = value;
 	#elif defined(FB_TYPE_16BPP)
-		value = rgbTo565(value);
+		value = convert24to16(value);
 		uint8_t c0 = (value>>8)&0xFF;
 		uint8_t c1 = value&0xFF;
 		uint32_t position = (y * width * 2) + (x * 2);
 		if (buffer[position + 0] != c0 || buffer[position + 1] != c1) changed = true;
 		buffer[position + 0] = c0;
 		buffer[position + 1] = c1;
+	#elif defined(FB_TYPE_8CBPP)
+		buffer[(y * width) + x] = convert24to8C(value);
 	#elif defined(FB_TYPE_24BPP)
 		uint8_t r = (value>>16)&0xFF;
 		uint8_t g = (value>>8)&0xFF;
@@ -272,6 +290,8 @@ uint32_t driver_framebuffer_getPixel(Window* window, int16_t x, int16_t y)
 		uint8_t g = ((((color >> 5 ) & 0x3F) * 259) + 33) >> 6;
 		uint8_t b = ((((color      ) & 0x1F) * 527) + 23) >> 6;
 		return r << 16 | g << 8 | b;
+	#elif defined(FB_TYPE_8CBPP)
+		return convert8Cto24(buffer[(y * width) + x]);
 	#elif defined(FB_TYPE_24BPP)
 		uint32_t position = (y * width * 3) + (x * 3);
 		return (buffer[position+2] << 16) + (buffer[position+1] << 8) + (buffer[position + 0]);

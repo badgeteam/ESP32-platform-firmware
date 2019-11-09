@@ -95,7 +95,11 @@
 	#define FB_SIZE ST7789V_BUFFER_SIZE
 	#define FB_WIDTH ST7789V_WIDTH
 	#define FB_HEIGHT ST7789V_HEIGHT
-	#define FB_TYPE_16BPP
+	#ifdef CONFIG_DRIVER_ST7789V_8C
+			#define FB_TYPE_8CBPP
+	#else
+			#define FB_TYPE_16BPP
+	#endif
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_st7789v_write_partial(buffer, x0, y0, x1, y1)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
@@ -138,6 +142,8 @@
 #if defined(FB_TYPE_1BPP)
 	#define PIXEL_SIZE 1
 #elif defined(FB_TYPE_8BPP)
+	#define PIXEL_SIZE 8
+#elif defined(FB_TYPE_8CBPP)
 	#define PIXEL_SIZE 8
 #elif defined(FB_TYPE_16BPP)
 	#define PIXEL_SIZE 16

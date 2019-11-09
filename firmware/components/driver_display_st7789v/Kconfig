@@ -19,4 +19,8 @@ menu "Driver: ST7789V LCD display"
 	config PIN_NUM_ST7789V_BACKLIGHT
 		depends on DRIVER_ST7789V_ENABLE
 		int "GPIO pin used for backlight"
+	
+	config DRIVER_ST7789V_8C
+		depends on DRIVER_ST7789V_ENABLE
+		bool "Reduce color depth to 256 colors"
 endmenu
