@@ -15,7 +15,7 @@
 #include "driver_fri3d.h"
 #include "driver_flipdotter.h"
 #include "driver_st7735.h"
-#include "driver_st7789V.h"
+#include "driver_st7789v.h"
 
 /* E-INK display as used on the SHA2017 and HackerHotel 2019 badges */
 #if defined(CONFIG_DRIVER_EINK_ENABLE)
