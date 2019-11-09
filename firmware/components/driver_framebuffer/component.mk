@@ -12,4 +12,5 @@ COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver_display_hub75/incl
                             $(PROJECT_PATH)/components/driver_display_fri3d/include \
                             $(PROJECT_PATH)/components/driver_display_flipdotter/include \
                             $(PROJECT_PATH)/components/driver_display_st7735/include \
+                            $(PROJECT_PATH)/components/driver_display_st7789V/include \
                             $(PROJECT_PATH)/components/png \

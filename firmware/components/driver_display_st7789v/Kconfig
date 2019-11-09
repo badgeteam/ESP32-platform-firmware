@@ -1,0 +1,22 @@
+menu "Driver: ST7789V LCD display"
+	config DRIVER_ST7789V_ENABLE
+		depends on DRIVER_VSPI_ENABLE
+		bool "Enable the ST7789V display driver"
+		default n
+		
+	config PIN_NUM_ST7789V_RESET
+		depends on DRIVER_ST7789V_ENABLE
+		int "GPIO pin used for RESET"
+	
+	config PIN_NUM_ST7789V_DCX
+		depends on DRIVER_ST7789V_ENABLE
+		int "GPIO pin used for D/CX"
+		
+	config PIN_NUM_ST7789V_CS
+		depends on DRIVER_ST7789V_ENABLE
+		int "GPIO pin used for CS"
+	
+	config PIN_NUM_ST7789V_BACKLIGHT
+		depends on DRIVER_ST7789V_ENABLE
+		int "GPIO pin used for backlight"
+endmenu
