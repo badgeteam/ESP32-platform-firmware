@@ -2,7 +2,7 @@
 #define PLATFORM_H
 
 #include "include/system.h"
-#include "include/nvs.h"
+#include "include/nvs_init.h"
 
 #include "esp_log.h"
 

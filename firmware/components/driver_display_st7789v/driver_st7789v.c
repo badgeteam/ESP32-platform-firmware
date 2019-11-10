@@ -130,7 +130,10 @@ esp_err_t driver_st7789v_reset(void) {
 esp_err_t driver_st7789v_set_backlight(bool state)
 {
 	#if CONFIG_PIN_NUM_ST7789V_BACKLIGHT >= 0
-		return gpio_set_level(CONFIG_PIN_NUM_ST7789V_BACKLIGHT, !state);
+		#ifdef CONFIG_DRIVER_ST7789V_BACKLIGHT_INVERT
+			state = !state;
+		#endif
+		return gpio_set_level(CONFIG_PIN_NUM_ST7789V_BACKLIGHT, state);
 	#else
 		return ESP_OK;
 	#endif

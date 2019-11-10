@@ -6,7 +6,8 @@ menu "Driver: ST7789V LCD display"
 		
 	config PIN_NUM_ST7789V_RESET
 		depends on DRIVER_ST7789V_ENABLE
-		int "GPIO pin used for RESET"
+		int "GPIO pin used for RESET (or -1 for software reset)"
+		default -1
 	
 	config PIN_NUM_ST7789V_DCX
 		depends on DRIVER_ST7789V_ENABLE
@@ -18,9 +19,30 @@ menu "Driver: ST7789V LCD display"
 	
 	config PIN_NUM_ST7789V_BACKLIGHT
 		depends on DRIVER_ST7789V_ENABLE
-		int "GPIO pin used for backlight"
+		int "GPIO pin used for backlight (or -1)"
+		default -1
+		
+	config DRIVER_ST7789V_BACKLIGHT_INVERT
+		depends on DRIVER_ST7789V_ENABLE
+		bool "Backlight pin is inverted (active low)"
+		default n
 	
 	config DRIVER_ST7789V_8C
 		depends on DRIVER_ST7789V_ENABLE
 		bool "Reduce color depth to 256 colors"
+	
+	config DRIVER_ST7789V_WIDTH
+		depends on DRIVER_ST7789V_ENABLE
+		int "Screen width"
+		default 320
+	
+	config DRIVER_ST7789V_HEIGHT
+		depends on DRIVER_ST7789V_ENABLE
+		int "Screen height"
+		default 240
+	
+	config DRIVER_ST7789V_OFFSET_Y
+		depends on DRIVER_ST7789V_ENABLE
+		int "Screen window offset Y"
+		default 0
 endmenu

@@ -1,6 +1,6 @@
-#include "include/nvs.h"
+#include "include/nvs_init.h"
 
-#define TAG "NVS"
+#define TAG "NVS init"
 
 esp_err_t nvs_format()
 {
