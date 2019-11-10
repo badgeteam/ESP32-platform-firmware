@@ -41,6 +41,11 @@ menu "Driver: ST7789V LCD display"
 		int "Screen height"
 		default 240
 	
+	config DRIVER_ST7789V_OFFSET_X
+		depends on DRIVER_ST7789V_ENABLE
+		int "Screen window offset X"
+		default 0
+	
 	config DRIVER_ST7789V_OFFSET_Y
 		depends on DRIVER_ST7789V_ENABLE
 		int "Screen window offset Y"

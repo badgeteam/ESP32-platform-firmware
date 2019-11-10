@@ -266,7 +266,7 @@ esp_err_t driver_st7789v_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
 			transactionWidth = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/2;
 		}
-		res = driver_st7789v_set_addr_window(x0, y0+ST7789V_OFFSET_Y, transactionWidth, h);
+		res = driver_st7789v_set_addr_window(x0+ST7789V_OFFSET_X, y0+ST7789V_OFFSET_Y, transactionWidth, h);
 		if (res != ESP_OK) return res;
 		for (uint16_t currentLine = 0; currentLine < h; currentLine++) {
 			for (uint16_t i = 0; i<transactionWidth; i++) {
@@ -288,7 +288,7 @@ esp_err_t driver_st7789v_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 	/*while (h > 0) {
 		uint16_t lines = h;
 		if (lines > 1) lines = 1;
-		esp_err_t res = driver_st7789v_set_addr_window(0, y0+ST7789V_OFFSET_Y, ST7789V_WIDTH, lines);
+		esp_err_t res = driver_st7789v_set_addr_window(ST7789V_OFFSET_X, y0+ST7789V_OFFSET_Y, ST7789V_WIDTH, lines);
 		if (res != ESP_OK) break;
 		res = driver_st7789v_send(frameBuffer+(y0*ST7789V_WIDTH)*2, ST7789V_WIDTH*lines*2, true);
 		if (res != ESP_OK) break;
@@ -301,7 +301,7 @@ esp_err_t driver_st7789v_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
 			transactionWidth = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/2;
 		}
-		res = driver_st7789v_set_addr_window(x0, y0+ST7789V_OFFSET_Y, transactionWidth, h);
+		res = driver_st7789v_set_addr_window(x0+ST7789V_OFFSET_X, y0+ST7789V_OFFSET_Y, transactionWidth, h);
 		if (res != ESP_OK) return res;
 		for (uint16_t currentLine = 0; currentLine < h; currentLine++) {
 			for (uint16_t i = 0; i<transactionWidth; i++) {
