@@ -349,36 +349,61 @@ esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 	uint16_t w = x1-x0+1;
 	uint16_t h = y1-y0+1;
 
-	if (w >= ILI9341_WIDTH) {
-		while (h > 0) {
-			uint16_t lines = h;
-			if (lines > ILI9341_MAX_LINES) lines = ILI9341_MAX_LINES;
-			esp_err_t res = driver_ili9341_set_addr_window(0, y0, ILI9341_WIDTH, lines);
-			if (res != ESP_OK) break;
-			res = driver_ili9341_send(frameBuffer+(y0*ILI9341_WIDTH)*2, ILI9341_WIDTH*lines*2, true);
-			if (res != ESP_OK) break;
-			y0 += lines;
-			h -= lines;
+#if CONFIG_DRIVER_ILI9341_8C
+	while (w > 0) {
+		uint16_t transactionWidth = w;
+		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
+			transactionWidth = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/2;
 		}
-	} else {
-		while (h > 0) {
-			uint16_t lines = h;
-			if (w*2*lines > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
-				lines = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/(w*2);
+		res = driver_ili9341_set_addr_window(x0, y0, transactionWidth, h);
+		if (res != ESP_OK) return res;
+		for (uint16_t currentLine = 0; currentLine < h; currentLine++) {
+			for (uint16_t i = 0; i<transactionWidth; i++) {
+				uint8_t color8 = frameBuffer[x0+i+(y0+currentLine)*ILI9341_WIDTH];
+				uint8_t r = color8 & 0x07;
+				uint8_t g = (color8>>3) & 0x07;
+				uint8_t b = color8 >> 6;
+				internalBuffer[i*2+0] = g | (r << 5);
+				internalBuffer[i*2+1] = (b << 3);
 			}
-			for (uint16_t y = 0; y < lines; y++) {
-				uint32_t internalBufferOffset = y*w*2; //Current line * width * 2 (because 16-bit per pixel)
-				uint32_t frameBufferOffset    = (x0+(y0+y)*ILI9341_WIDTH)*2;
-				memcpy(internalBuffer+internalBufferOffset, frameBuffer+frameBufferOffset, w*2);
-				res = driver_ili9341_set_addr_window(x0, y0, w, lines);
-				if (res != ESP_OK) return res;
-				res = driver_ili9341_send(internalBuffer, w*lines*2, true);
-				if (res != ESP_OK) return res;
-			}
-			h -= lines;
-			y0 += lines;
+			res = driver_ili9341_send(internalBuffer, transactionWidth*2, true);
+			if (res != ESP_OK) return res;
 		}
+		w -= transactionWidth;
+		x0 += transactionWidth;
 	}
+#else
+	//Old code
+	/*while (h > 0) {
+		uint16_t lines = h;
+		if (lines > 1) lines = 1;
+		esp_err_t res = driver_ili9341_set_addr_window(0, y0+ILI9341_OFFSET_Y, ILI9341_WIDTH, lines);
+		if (res != ESP_OK) break;
+		res = driver_ili9341_send(frameBuffer+(y0*ILI9341_WIDTH)*2, ILI9341_WIDTH*lines*2, true);
+		if (res != ESP_OK) break;
+		y0 += lines;
+		h -= lines;
+	}*/
+	//New (untested) code
+	while (w > 0) {
+		uint16_t transactionWidth = w;
+		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
+			transactionWidth = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/2;
+		}
+		res = driver_ili9341_set_addr_window(x0, y0, transactionWidth, h);
+		if (res != ESP_OK) return res;
+		for (uint16_t currentLine = 0; currentLine < h; currentLine++) {
+			for (uint16_t i = 0; i<transactionWidth; i++) {
+				internalBuffer[i*2+0] = frameBuffer[((x0+i)+(y0+currentLine)*ILI9341_WIDTH)*2+0];
+				internalBuffer[i*2+1] = frameBuffer[((x0+i)+(y0+currentLine)*ILI9341_WIDTH)*2+1];
+			}
+			res = driver_ili9341_send(internalBuffer, transactionWidth*2, true);
+			if (res != ESP_OK) return res;
+		}
+		w -= transactionWidth;
+		x0 += transactionWidth;
+	}
+#endif
 	return res;
 }
 

@@ -221,7 +221,10 @@ void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t 
 		buffer[position + 0] = c0;
 		buffer[position + 1] = c1;
 	#elif defined(FB_TYPE_8CBPP)
-		buffer[(y * width) + x] = convert24to8C(value);
+		uint32_t position = (y * width) + x;
+		value = convert24to8C(value);
+		if (value != buffer[position]) changed = true;
+		buffer[position] = value;
 	#elif defined(FB_TYPE_24BPP)
 		uint8_t r = (value>>16)&0xFF;
 		uint8_t g = (value>>8)&0xFF;

@@ -74,7 +74,11 @@
 	#define FB_SIZE ILI9341_BUFFER_SIZE
 	#define FB_WIDTH ILI9341_WIDTH
 	#define FB_HEIGHT ILI9341_HEIGHT
-	#define FB_TYPE_16BPP
+	#ifdef CONFIG_DRIVER_ILI9341_8C
+			#define FB_TYPE_8CBPP
+	#else
+			#define FB_TYPE_16BPP
+	#endif
 	#define FB_ALPHA_ENABLED
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_ili9341_write_partial(buffer, x0, y0, x1, y1)
 	#define COLOR_FILL_DEFAULT 0x000000
