@@ -15,7 +15,7 @@ These badges were developed for use with our platform and are our main developme
 ## Other badges
 We added or plan on adding build targets for these badges. They did not come with our software originally. Our effort is more of an "after market upgrade" so to say...
 
- - [Open Hardware Summit (OHS) 2018 badge](#)
+ - [Open Hardware Summit (OHS) 2018 badge](https://oshwabadge2018.github.io/)
  - [FRI3D camp 2018 badge](#)
 
 ## The CCC camp 2019 "CARD10" badge
