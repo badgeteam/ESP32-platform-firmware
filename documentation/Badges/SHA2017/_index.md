@@ -4,6 +4,8 @@ nodateline: true
 weight: 1
 ---
 
+![SHA2017](sha2017.svg)
+
 On this page you'll find all the hints, tips, datasheets, secret codes and assorted stuff you'll need to hack the SHA2017 Badge! 
 
  - [Getting started](getting_started)
