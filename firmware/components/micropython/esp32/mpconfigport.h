@@ -210,6 +210,9 @@
 #define MICROPY_PY_UHASHLIB                 (0) // We use the ESP32 version
 #define MICROPY_PY_UHASHLIB_SHA1            (MICROPY_PY_USSL && MICROPY_SSL_MBEDTLS)
 
+#define MICROPY_PY_UCRYPTOLIB               (1)
+#define MICROPY_PY_UCRYPTOLIB_CTR           (1)
+
 #ifdef CONFIG_MICROPY_USE_WEBSOCKETS
 #define MICROPY_PY_WEBSOCKET                (1)
 #else
@@ -447,6 +450,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_MPU6050
 #endif
 
+#if MICROPY_PY_UCRYPTOLIB
+#define BUILTIN_MODULE_UCRYPTOLIB { MP_OBJ_NEW_QSTR(MP_QSTR_ucryptolib), (mp_obj_t)&mp_module_ucryptolib },
+#else
+#define BUILTIN_MODULE_UCRYPTOLIB
+#endif
+
 
 #define MICROPY_PORT_BUILTIN_MODULES \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_utime),    (mp_obj_t)&utime_module }, \
@@ -458,6 +467,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_consts), (mp_obj_t)&consts_module }, \
+	BUILTIN_MODULE_UCRYPTOLIB \
 	BUILTIN_MODULE_SNDMIXER \
 	BUILTIN_MODULE_CURL \
 	BUILTIN_MODULE_REQUESTS \

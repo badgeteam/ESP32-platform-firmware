@@ -266,6 +266,7 @@ endif
 
 EXTMOD_SRC_C = $(addprefix extmod/,\
 	modbtree.c \
+	moducryptolib.c \
 	)
 
 LIB_SRC_C = $(addprefix lib/,\
