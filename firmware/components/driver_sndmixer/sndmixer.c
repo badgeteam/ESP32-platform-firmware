@@ -115,7 +115,7 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
 	if (chunksz<=0) return 0; //failed
 	channel[ch].source=srcfns;
 	channel[ch].volume=128;
-	channel[ch].buffer=malloc(chunksz);
+	channel[ch].buffer=malloc(chunksz * 2);
 	if (!channel[ch].buffer) {
 		clean_up_channel(ch);
 		return 0;
@@ -231,7 +231,7 @@ static void sndmixer_task(void *arg) {
 				}
 			}
 			//Bring back to -32768-32767. Volume did *256, channels did *no_channels.
-			s=(s/no_channels)>>8;
+			s=(s/256)/no_channels;
 			mixbuf[i]=s+32768; //because samples are signed, mix_buf is unsigned
 		}
 		driver_i2s_sound_push(mixbuf, CHUNK_SIZE);
