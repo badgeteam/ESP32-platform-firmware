@@ -15,7 +15,7 @@ typedef struct {
 	/*! Get the actual sample rate at which the source returns data */
 	int (*get_sample_rate)(void *ctx);
 	/*! Decode a bufferful of data. Returns 0 when file ended or something went wrong. Returns amount of bytes in buffer (normally what init_source returned) otherwise. */
-	int (*fill_buffer)(void *ctx, int8_t *buffer);
+	int (*fill_buffer)(void *ctx, int16_t *buffer);
 	/*! Destroy source, free resources */
 	void (*deinit_source)(void *ctx);
 	/*! Set frequency of synthesizer */

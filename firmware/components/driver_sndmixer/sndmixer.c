@@ -60,7 +60,7 @@ typedef struct {
 	void *src_ctx;
 	int volume; //0-256
 	int flags;
-	int8_t *buffer;
+	int16_t *buffer;
 	int chunksz;
 	uint32_t dds_rate; //Rate; 16.16 fixed
 	uint32_t dds_acc; //DDS accumulator, 16.16 fixed
@@ -197,7 +197,7 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
 
 //Sound mixer main loop.
 static void sndmixer_task(void *arg) {
-	uint8_t mixbuf[CHUNK_SIZE];
+	uint16_t mixbuf[CHUNK_SIZE];
 	printf("Sndmixer task up.\n");
 	while(1) {
 		//Handle any commands that are sent to us.
@@ -230,9 +230,9 @@ static void sndmixer_task(void *arg) {
 					s+=channel[ch].buffer[channel[ch].dds_acc>>16]*channel[ch].volume;
 				}
 			}
-			//Bring back to -128-127. Volume did *256, channels did *no_channels.
+			//Bring back to -32768-32767. Volume did *256, channels did *no_channels.
 			s=(s/no_channels)>>8;
-			mixbuf[i]=s+128; //because samples are signed, mix_buf is unsigned
+			mixbuf[i]=s+32768; //because samples are signed, mix_buf is unsigned
 		}
 		driver_i2s_sound_push(mixbuf, CHUNK_SIZE);
 	}

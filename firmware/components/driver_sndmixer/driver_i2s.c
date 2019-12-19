@@ -54,9 +54,23 @@ void driver_i2s_sound_start() {
 	#else
 		const i2s_port_t port = 0;
 	#endif
-	
+
+//        REG_SET_BIT(  0x3FF4F01C,BIT(2)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(12)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(3));
+//        REG_SET_BIT(  0x3FF4F01C,BIT(13));
 	i2s_driver_install(port, &cfg, 4, &soundQueue);
+
+//        REG_SET_BIT(  0x3FF4F01C,BIT(2)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(12)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(3));
+//        REG_SET_BIT(  0x3FF4F01C,BIT(13));
 	i2s_set_sample_rates(port, cfg.sample_rate);
+
+//        REG_SET_BIT(  0x3FF4F01C,BIT(2)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(12)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(3));
+//        REG_SET_BIT(  0x3FF4F01C,BIT(13));
 	#ifdef CONFIG_DRIVER_SNDMIXER_I2S_DAC_INTERNAL
 		i2s_set_pin(port, NULL);
 		#ifdef CONFIG_DRIVER_SNDMIXER_I2S_INTERNAL_DAC_BOTH
@@ -75,7 +89,15 @@ void driver_i2s_sound_start() {
 			.data_out_num = CONFIG_DRIVER_SNDMIXER_PIN_DATA_OUT,
 			.data_in_num  = I2S_PIN_NO_CHANGE
 		};
+//        REG_SET_BIT(  0x3FF4F01C,BIT(2)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(12)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(3));
+//        REG_SET_BIT(  0x3FF4F01C,BIT(13));
 		i2s_set_pin(port, &pin_config);
+//        REG_SET_BIT(  0x3FF4F01C,BIT(2)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(12)); // Delay WS by 3 cycles
+//        REG_SET_BIT(  0x3FF4F01C,BIT(3));
+//        REG_SET_BIT(  0x3FF4F01C,BIT(13));
 	#endif
 	soundRunning=1;
 }
@@ -85,18 +107,31 @@ void driver_i2s_sound_stop() {
 }
 
 #define SND_CHUNKSZ 32
-void driver_i2s_sound_push(uint8_t *buf, int len) {
+void driver_i2s_sound_push(uint16_t *buf, int len) {
 	uint32_t tmpb[SND_CHUNKSZ];
 	int i=0;
 	while (i<len) {
 		int plen=len-i;
 		if (plen>SND_CHUNKSZ) plen=SND_CHUNKSZ;
 		for (int j=0; j<plen; j++) {
-			int s=((((int)buf[i+j])-128)*config.volume); //Make [-128,127], multiply with volume
-			s=(s>>8)+128; //divide off volume max, get back to [0-255]
-			if (s>255) s=255;
+			int s=((((int)buf[i+j])-32768)*config.volume); //Make [-32768,32767], multiply with volume
+			s=(s>>8)+32768; //divide off volume max, get back to [0-32767]
+			if (s>65536) s=65536;
 			if (s<0) s=0;
-			tmpb[j]=((s)<<8)+((s)<<24);
+
+			int next_s=0;
+			if (j < plen) {
+                next_s = ((((int)buf[i+j+1])-32768)*config.volume); //Make [-32768,32767], multiply with volume
+                next_s=(next_s>>8)+32768; //divide off volume max, get back to [0-32767]
+                if (next_s>65536) s=65536;
+                if (next_s<0) s=0;
+			}
+
+			// (16-bit)
+			unsigned char msb = (s>>8) & 0xFF;
+			unsigned char lsb = s      & 0xFE;
+			tmpb[j] = (msb<<24) + (lsb<<16) + (msb<<8) + lsb;
+//			tmpb[j] = (s & 0xFFFE) + ((s & 0xFFFF) << 1) + ((next_s >> 15) & 0x01);
 		}
 		
 		#ifdef DRIVER_SNDMIXER_I2S_PORT1

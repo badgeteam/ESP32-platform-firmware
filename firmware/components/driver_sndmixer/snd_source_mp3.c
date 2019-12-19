@@ -172,14 +172,14 @@ int mp3_get_sample_rate(void *ctx) {
 	return mp3->lastRate;
 }
 
-int mp3_fill_buffer(void *ctx, int8_t *buffer) {
+int mp3_fill_buffer(void *ctx, int16_t *buffer) {
 	mp3_ctx_t *mp3 = (mp3_ctx_t*) ctx;
 	if (mp3->bufferValid < 1) mp3_decode(ctx);	
 	if (mp3->bufferValid > 0) {
 		int len = mp3->bufferValid;
 		if (len > CHUNK_SIZE) len = CHUNK_SIZE;
 		for (int i=0; i<len; i++) {
-			buffer[i] = mp3->buffer[mp3->bufferOffset + i] >> 8; //MP3 gives 16-bit audio, make that 8 :D
+			buffer[i] = mp3->buffer[mp3->bufferOffset + i];
 		}
 		mp3->bufferValid -= len;
 		mp3->bufferOffset += len;
