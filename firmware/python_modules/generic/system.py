@@ -1,29 +1,31 @@
-import machine
+import machine, time, os, term
+import _device as device
 
 def reboot():
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):
-	import time, os
-	
+	if not device.configureWakeupSource():
+		print("No wakeup source available, rebooting...")
+		reboot()
+		return
 	if (duration >= 86400000): #One day
 		duration = 0
 	if status:
-		import term
 		if duration < 1:
-			term.header(True, "Sleeping forever...")
+			term.header(True, "Sleeping until a touch button is pressed!")
 		else:
 			term.header(True, "Sleeping for "+str(duration)+"ms...")
-	time.sleep(0.05)
+	time.sleep(0.05) #Wait for UART output to be flushed
 	machine.deepsleep(duration)
 
 def start(app, status=False):
 	if status:
-		import term
 		if app == "" or app == "launcher":
 			term.header(True, "Loading menu...")
 		else:
 			term.header(True, "Loading application "+app+"...")
+		device.showLoadingScreen(app)
 	machine.RTC().write_string(app)
 	reboot()
 
@@ -40,28 +42,28 @@ def shell(status=False):
 
 def ota(status=False):
 	if status:
-		import term
 		term.header(True, "Starting update...")
+		device.showLoadingScreen("OTA update")
 	rtc = machine.RTC()
-	rtc.write(0,1)
+	rtc.write(0,1) # Boot mode selection magic
 	rtc.write(1,254)
 	reboot()
 
 def serialWarning():
-	pass
+	device.showMessage("This app can only be controlled using the USB-serial connection!", "/media/crown.png")
 	
 def crashedWarning():
-	pass
+	device.showMessage("FATAL ERROR\nthe app has crashed", "/media/alert.png")
 
 def isColdBoot():
 	if machine.wake_reason() == (7, 0):
 		return True
 	return False
 
-def isWakeup(fromTimer=True,fromButton=True, fromIr=True, fromUlp=True):
-	if fromButton and machine.wake_reason() == (3, 1):
+def isWakeup(fromTimer=True, fromExt0=True, fromExt1=True, fromUlp=True):
+	if fromExt0   and machine.wake_reason() == (3, 1):
 		return True
-	if fromIr     and machine.wake_reason() == (3, 2):
+	if fromExt1   and machine.wake_reason() == (3, 2):
 		return True
 	if fromTimer  and machine.wake_reason() == (3, 4):
 		return True

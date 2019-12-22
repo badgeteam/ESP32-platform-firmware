@@ -1,1 +1,1 @@
-../sha2017/dialogs.py
+../disobey2020/dialogs.py

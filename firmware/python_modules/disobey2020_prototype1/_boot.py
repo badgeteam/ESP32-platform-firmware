@@ -1,1 +1,1 @@
-../shared/_boot.py
+../disobey2020/_boot.py

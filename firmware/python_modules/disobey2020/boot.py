@@ -1,13 +1,11 @@
 import machine, sys, system, time, os
+import _device as device
 
 rtc = machine.RTC()
 rtc.write(0,0)
 rtc.write(1,0)
 
-sdPower = machine.Pin(19, machine.Pin.OUT)
-sdPower.value(True)
-time.sleep(0.05)
-os.mountsd()
+device.prepareForWakeup()
 
 __chk_recovery = False
 
@@ -24,13 +22,11 @@ if machine.nvs_getint("system", 'factory_checked'):
 	except:
 		pass
 
-
-#Application starting
 if __chk_recovery:
 	app = "dashboard.recovery"
 elif machine.nvs_getint('system', 'force_sponsors'):
 	machine.nvs_setint('system', 'force_sponsors', 0)
-	system.start("sponsors_disobey_2020")
+	app = "sponsors_disobey_2020"
 else:
 	app = rtc.read_string()
 	if not app:
@@ -56,4 +52,4 @@ if app and not app == "shell":
 			system.launcher()
 
 if app and app == "shell":
-	print("\nWelcome to the python shell of your badge!\nCheck out https://wiki.badge.team/ for instructions.")
+	print("\nWelcome to the python shell of your badge!\nNeed help? Check out https://docs.badge.team/ for documentation.")

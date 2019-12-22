@@ -40,6 +40,10 @@ display.flush()
 
 mpr121.set(10,1) #Calibration resets MPR121
 
+#REMOVE THIS
+system.reboot()
+time.sleep(60)
+
 buzzer_pin = machine.Pin(12, machine.Pin.OUT)
 time.sleep(0.01)
 buzzer_pwm = machine.PWM(buzzer_pin, duty=50)

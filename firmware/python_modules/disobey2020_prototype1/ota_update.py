@@ -1,1 +1,0 @@
-../sha2017/ota_update.py
