@@ -23,8 +23,6 @@
 
 #ifdef CONFIG_DRIVER_NOKIA6100_ENABLE
 
-#error "Sorry, this driver is not finished *AT ALL*, can't continue."
-
 #define NOKIA6100_MAX_LINES 8
 
 static const char *TAG = "nokia6100";
@@ -33,7 +31,7 @@ uint8_t *internalBuffer; //Internal transfer buffer for doing partial updates
 
 static spi_device_handle_t spi_bus = NULL;
 
-//#define CONFIG_DRIVER_NOKIA6100_PHILLIPS
+#define CONFIG_DRIVER_NOKIA6100_PHILLIPS
 
 const uint8_t nokia6100_init_data[] = {
 #ifdef CONFIG_DRIVER_NOKIA6100_PHILLIPS
@@ -41,8 +39,8 @@ const uint8_t nokia6100_init_data[] = {
 	BSTRON,   0,
 	DISPON,   0,
 	PCOLMOD,  1, 0x03,
-	MADCTL,   1, 0x00,
-	SETCON,   1, 0x30,
+	MADCTL,   1, 0xC0,
+	SETCON,   1, 0x3f,
 	NOPP,     0,
 	0x00
 #else
@@ -59,9 +57,26 @@ const uint8_t nokia6100_init_data[] = {
 #endif
 };
 
+inline uint8_t reverse(uint8_t b) {
+   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+   return b;
+}
+
 esp_err_t driver_nokia6100_send9(const uint8_t type, const uint8_t command)
 {
-	uint16_t data = ((type<<8) | command);
+	uint16_t data = (command>>1) | ((command&1)<<15) | (type<<7);//0x8003;//command;//((type<<8) | command); 0x8000
+	/*uint16_t data = type +
+				((command&  1)<<7) +
+				((command&  2)<<6) +
+				((command&  4)<<5) +
+				((command&  8)<<4) +
+				((command& 16)<<3) +
+				((command& 32)<<2) +
+				((command& 64)<<1) +
+				((command&128)<<0);*/
+	//if (!type) printf("NOKIA6100 send9 0x%03x\n", data);
 	spi_transaction_t t = {
 		.length = 9,
 		.tx_buffer = &data
@@ -71,13 +86,13 @@ esp_err_t driver_nokia6100_send9(const uint8_t type, const uint8_t command)
 
 esp_err_t driver_nokia6100_send_command(uint8_t cmd)
 {
-	printf("NOKIA6100 send command 0x%02x\n", cmd);
+	//printf("NOKIA6100 send command 0x%02x\n", cmd);
 	return driver_nokia6100_send9(0, cmd);
 }
 
 esp_err_t driver_nokia6100_send_data(uint8_t data)
 {
-	printf("NOKIA6100 send data 0x%02x\n", data);
+	//printf("NOKIA6100 send data 0x%02x\n", data);
 	return driver_nokia6100_send9(1, data);
 }
 
@@ -89,7 +104,7 @@ esp_err_t driver_nokia6100_write_initData(const uint8_t * data)
 		if(!cmd) return ESP_OK; //END
 		len = *data++;
 		driver_nokia6100_send_command(cmd);
-		if (len > 0) driver_nokia6100_send_data(data[0]);
+		for (uint8_t i = 0; i < len; i++) driver_nokia6100_send_data(data[i]);
 		data+=len;
 	}
 	return ESP_OK;
@@ -97,9 +112,11 @@ esp_err_t driver_nokia6100_write_initData(const uint8_t * data)
 
 esp_err_t driver_nokia6100_reset(void) {
 	#if CONFIG_PIN_NUM_NOKIA6100_RESET >= 0
+	printf("Reset LOW\n");
 	esp_err_t res = gpio_set_level(CONFIG_PIN_NUM_NOKIA6100_RESET, false);
 	if (res != ESP_OK) return res;
 	ets_delay_us(200000);
+	printf("Reset HIGH\n");
 	res = gpio_set_level(CONFIG_PIN_NUM_NOKIA6100_RESET, true);
 	if (res != ESP_OK) return res;
 	#endif
@@ -110,29 +127,6 @@ esp_err_t driver_nokia6100_reset(void) {
 esp_err_t driver_nokia6100_set_backlight(bool state)
 {
 	return gpio_set_level(CONFIG_PIN_NUM_NOKIA6100_BACKLIGHT, state);
-}
-
-uint8_t *framespi = NULL;
-
-void writeframe9(int offset, uint16_t value)
-{
-  int index = offset/8; // offset in framespi
-  int shift = offset%8; // bitshift to apply
-  uint8_t mask0 = 0xff<<(8-shift);
-  uint8_t mask1 = 0xff>>(7-shift);
-
-  framespi[index] = (framespi[index]&mask0)|(value>>1)>>shift;
-  framespi[index+1] = (value&mask1) << (7-shift);
-}
-
-void writeframe(int nbits)
-{
-	printf("NOKIA6100 writeframe(%d)\n", nbits);
-	spi_transaction_t t = {
-		.length = (nbits/64)*64,
-		.tx_buffer = &framespi
-	};
-	spi_device_transmit(spi_bus, &t);
 }
 
 esp_err_t driver_nokia6100_init(void)
@@ -150,7 +144,7 @@ esp_err_t driver_nokia6100_init(void)
 	//Turn off backlight
 	res = driver_nokia6100_set_backlight(false);
 	if (res != ESP_OK) return res;
-
+	
 	//Allocate partial update buffer
 	internalBuffer = heap_caps_malloc(CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
 	if (!internalBuffer) return ESP_FAIL;
@@ -162,11 +156,13 @@ esp_err_t driver_nokia6100_init(void)
 	#endif
 	
 	static const spi_device_interface_config_t devcfg = {
-		.clock_speed_hz = 1 * 1000 * 1000,
-		.mode           = 0,  // SPI mode 0
+		.clock_speed_hz = 8000 * 1000,
+		.mode           = 3,  // SPI mode 3
+		.cs_ena_pretrans = 0,
+        .cs_ena_posttrans = 0,
 		.spics_io_num   = CONFIG_PIN_NUM_NOKIA6100_CS,
-		.queue_size     = 1,
-		.flags          = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),//SPI_DEVICE_HALFDUPLEX,
+		.queue_size     = 50,
+		.flags          = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE)
 	};
 	res = spi_bus_add_device(VSPI_HOST, &devcfg, &spi_bus);
 	if (res != ESP_OK) return res;
@@ -182,74 +178,16 @@ esp_err_t driver_nokia6100_init(void)
 	//Turn on backlight
 	res = driver_nokia6100_set_backlight(true);
 	if (res != ESP_OK) return res;
-	
-	/* TEST */
-	
-	/*framespi = (uint8_t*) heap_caps_malloc(792*sizeof(uint8_t), MALLOC_CAP_DMA);
-	
-	driver_nokia6100_send_command(PASETP);
-	driver_nokia6100_send_data(0);
-	driver_nokia6100_send_data(131);
-	
-	driver_nokia6100_send_command(CASETP);
-	driver_nokia6100_send_data(0);
-	driver_nokia6100_send_data(131);
-	
-	driver_nokia6100_send_command(RAMWRP);
-	
-	uint16_t data = 0x00FF;
-	
-	int k = 0;
-	for (uint32_t i = 0; i < NOKIA6100_WIDTH * NOKIA6100_HEIGHT; i++) {
-		writeframe9(k, ((data>>4)&0xff) | (1 << 8));
-		k+=9;
-		writeframe9(k, (data&0x0F)<<4 | (data>>8) | (1 << 8));
-		k+=9;
-		writeframe9(k, (data&0xff) | (1 << 8));
-		k+=9;
 		
-		i+=2;
-		if (i%128==0) {
-			writeframe(k);
-			k = 0;
-		}
-	}*/
+#ifdef CONFIG_DRIVER_NOKIA6100_PHILLIPS
+printf("USING PHILLIPS\n");
+#else
+printf("USING EPSON\n");
+#endif
 	
-	/* TEST */
-	
-	uint16_t color = 0xF00;
-	
-	/*
-	
-	driver_nokia6100_send_command(0x00);//NOP for Phillips
-	
-	driver_nokia6100_send_command(PASETP);
-	driver_nokia6100_send_data(20);
-	driver_nokia6100_send_data(20);
-	driver_nokia6100_send_command(CASETP);
-	driver_nokia6100_send_data(20);
-	driver_nokia6100_send_data(20);
-	driver_nokia6100_send_command(RAMWRP);
-	driver_nokia6100_send_data((color>>4)&0x00FF);
-	driver_nokia6100_send_data(((color&0x0F)<<4));*/
-	
-	driver_nokia6100_send_command(PASET);
-	driver_nokia6100_send_data(0);
-	driver_nokia6100_send_data(131);
-	driver_nokia6100_send_command(CASET);
-	driver_nokia6100_send_data(0);
-	driver_nokia6100_send_data(131);
-	driver_nokia6100_send_command(RAMWR);
-	
-
-	for(unsigned int i=0; i < (131*131)/2; i++) {
-		driver_nokia6100_send_data((color>>4)&0x00FF);
-		driver_nokia6100_send_data(((color&0x0F)<<4)|(color>>8));
-		driver_nokia6100_send_data(color&0x0FF);
-	}
-
 	driver_nokia6100_init_done = true;
 	ESP_LOGD(TAG, "init done");
+	printf("NOKIA 6100 INIT FUNC COMPLETED\n");
 	return ESP_OK;
 }
 
@@ -262,8 +200,57 @@ esp_err_t driver_nokia6100_write_partial(const uint8_t *buffer, uint16_t x0, uin
 {
 	if (x0 > x1) return ESP_FAIL;
 	if (y0 > y1) return ESP_FAIL;
-	uint16_t w = x1-x0;
-	uint16_t h = y1-y0;
+	
+	printf("X %u to %d, Y %u to %u\n", x0, x1, y0, y1);
+	
+	for (uint32_t x = x0; x < x1; x++) {
+		for (uint32_t y = y0; y < y1; y++) {
+			#ifdef CONFIG_DRIVER_NOKIA6100_PHILLIPS
+				driver_nokia6100_send_command(PASETP);
+			#else
+				driver_nokia6100_send_command(PASET);
+			#endif
+			driver_nokia6100_send_data(y);
+			driver_nokia6100_send_data(y);
+
+			#ifdef CONFIG_DRIVER_NOKIA6100_PHILLIPS
+				driver_nokia6100_send_command(CASETP);
+			#else
+				driver_nokia6100_send_command(CASET);
+			#endif
+			driver_nokia6100_send_data(x);
+			driver_nokia6100_send_data(x);
+			
+			#ifdef CONFIG_DRIVER_NOKIA6100_PHILLIPS
+				driver_nokia6100_send_command(RAMWRP);
+			#else
+				driver_nokia6100_send_command(RAMWR);
+			#endif
+			
+			
+			uint16_t data = (buffer[(x+y*NOKIA6100_WIDTH)*2]<<8)+buffer[(x+y*NOKIA6100_WIDTH)*2+1];
+			
+			//HACK HACK HACK
+			// This display should have proper 12-bit fb...
+			// ...currently using 16-bit fb, throwing away bits and...
+			/// ...writing only one pixel at a time, followed by a NOP
+			
+			uint8_t b = data>>12;
+			uint8_t g = (data>>7)&0xF;
+			uint8_t r = (data>>1)&0xF;
+			
+			if ((x == 0)&&(y == 0)) printf("R=%02x, G=%02x, B=%02x\n", r,g,b);
+			
+			//driver_nokia6100_send_data(((data>>4)&0xff));
+			//driver_nokia6100_send_data((data&0x0F)<<4 | (data>>8));
+			//driver_nokia6100_send_data(data&0xff);
+			
+			driver_nokia6100_send_data((r<<4)+g);
+			driver_nokia6100_send_data((b<<4)+0);
+			driver_nokia6100_send_command(NOPP);
+		}
+	}
+	
 	return ESP_OK;
 }
 

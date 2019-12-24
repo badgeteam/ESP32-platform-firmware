@@ -16,6 +16,7 @@
 #include "driver_flipdotter.h"
 #include "driver_st7735.h"
 #include "driver_st7789v.h"
+#include "driver_nokia6100.h"
 
 /* E-INK display as used on the SHA2017 and HackerHotel 2019 badges */
 #if defined(CONFIG_DRIVER_EINK_ENABLE)
@@ -137,6 +138,16 @@
 	#define FB_TYPE_1BPP
 	#define FB_1BPP_VERT
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_flipdotter_write(buffer);
+	#define COLOR_FILL_DEFAULT 0x000000
+	#define COLOR_TEXT_DEFAULT 0xFFFFFF
+	
+/* Nokia 6100 LCD */
+#elif defined(CONFIG_DRIVER_NOKIA6100_ENABLE)
+	#define FB_SIZE NOKIA6100_BUFFER_SIZE
+	#define FB_WIDTH NOKIA6100_WIDTH
+	#define FB_HEIGHT NOKIA6100_HEIGHT
+	#define FB_TYPE_16BPP
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_nokia6100_write_partial(buffer, x0, y0, x1, y1)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 #else
