@@ -66,17 +66,7 @@ inline uint8_t reverse(uint8_t b) {
 
 esp_err_t driver_nokia6100_send9(const uint8_t type, const uint8_t command)
 {
-	uint16_t data = (command>>1) | ((command&1)<<15) | (type<<7);//0x8003;//command;//((type<<8) | command); 0x8000
-	/*uint16_t data = type +
-				((command&  1)<<7) +
-				((command&  2)<<6) +
-				((command&  4)<<5) +
-				((command&  8)<<4) +
-				((command& 16)<<3) +
-				((command& 32)<<2) +
-				((command& 64)<<1) +
-				((command&128)<<0);*/
-	//if (!type) printf("NOKIA6100 send9 0x%03x\n", data);
+	uint16_t data = (command>>1) | ((command&1)<<15) | (type<<7);
 	spi_transaction_t t = {
 		.length = 9,
 		.tx_buffer = &data
@@ -175,19 +165,12 @@ esp_err_t driver_nokia6100_init(void)
 	res = driver_nokia6100_write_initData(nokia6100_init_data);
 	if (res != ESP_OK) return res;
 
-	//Turn on backlight
+	//Turn on backlight (FIXME: remove this?)
 	res = driver_nokia6100_set_backlight(true);
 	if (res != ESP_OK) return res;
-		
-#ifdef CONFIG_DRIVER_NOKIA6100_PHILLIPS
-printf("USING PHILLIPS\n");
-#else
-printf("USING EPSON\n");
-#endif
 	
 	driver_nokia6100_init_done = true;
 	ESP_LOGD(TAG, "init done");
-	printf("NOKIA 6100 INIT FUNC COMPLETED\n");
 	return ESP_OK;
 }
 
@@ -201,8 +184,7 @@ esp_err_t driver_nokia6100_write_partial(const uint8_t *buffer, uint16_t x0, uin
 	if (x0 > x1) return ESP_FAIL;
 	if (y0 > y1) return ESP_FAIL;
 	
-	printf("X %u to %d, Y %u to %u\n", x0, x1, y0, y1);
-	
+	//HACK currently this sends one pixel per transaction, VERY slow!
 	for (uint32_t x = x0; x < x1; x++) {
 		for (uint32_t y = y0; y < y1; y++) {
 			#ifdef CONFIG_DRIVER_NOKIA6100_PHILLIPS
@@ -227,30 +209,23 @@ esp_err_t driver_nokia6100_write_partial(const uint8_t *buffer, uint16_t x0, uin
 				driver_nokia6100_send_command(RAMWR);
 			#endif
 			
-			
-			uint16_t data = (buffer[(x+y*NOKIA6100_WIDTH)*2]<<8)+buffer[(x+y*NOKIA6100_WIDTH)*2+1];
-			
-			//HACK HACK HACK
-			// This display should have proper 12-bit fb...
-			// ...currently using 16-bit fb, throwing away bits and...
-			/// ...writing only one pixel at a time, followed by a NOP
-			
+			//HACK currently this expects a 16-bit framebuffer...
+			uint16_t data = (buffer[(x+y*NOKIA6100_WIDTH)*2]<<8)+buffer[(x+y*NOKIA6100_WIDT
+H)*2+1];
+			//HACK ...of which we throw away the unused bits
 			uint8_t b = data>>12;
 			uint8_t g = (data>>7)&0xF;
 			uint8_t r = (data>>1)&0xF;
 			
-			if ((x == 0)&&(y == 0)) printf("R=%02x, G=%02x, B=%02x\n", r,g,b);
-			
-			//driver_nokia6100_send_data(((data>>4)&0xff));
-			//driver_nokia6100_send_data((data&0x0F)<<4 | (data>>8));
-			//driver_nokia6100_send_data(data&0xff);
+			driver_nokia6100_send_data(((data>>4)&0xff));
+			driver_nokia6100_send_data((data&0x0F)<<4 | (data>>8));
+			driver_nokia6100_send_data(data&0xff);
 			
 			driver_nokia6100_send_data((r<<4)+g);
 			driver_nokia6100_send_data((b<<4)+0);
 			driver_nokia6100_send_command(NOPP);
 		}
 	}
-	
 	return ESP_OK;
 }
 

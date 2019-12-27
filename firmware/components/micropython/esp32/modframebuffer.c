@@ -617,6 +617,20 @@ static mp_obj_t framebuffer_draw_png(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
+static mp_obj_t framebuffer_backlight(mp_uint_t n_args, const mp_obj_t *args)
+{
+	if (n_args > 0) {
+		uint8_t brightness = mp_obj_get_int(args[0]);
+		esp_err_t res = driver_framebuffer_setBacklight(brightness);
+		if (res != ESP_OK) {
+			mp_raise_ValueError("Failed to set backlight brightness!");
+		}
+		return mp_const_none;
+	} else {
+		return mp_obj_new_int(driver_framebuffer_getBacklight());
+	}
+}
+
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_flush_obj,                0, 1, framebuffer_flush      );
 /* Flush the framebuffer to the display. Arguments: flags (optional) */
 
@@ -698,6 +712,9 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_png_info_obj,            
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_draw_png_obj,              3, 4, framebuffer_draw_png);
 /* Draw a PNG image. Arguments: x, y, buffer with PNG data or filename of PNG image */
 
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_backlight_obj,             0, 1, framebuffer_backlight);
+/* Set or get the backlight brightness level. Arguments: level (0-255) (optional) */
+
 static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	/* Constants */
 	{MP_ROM_QSTR( MP_QSTR_FLAG_FORCE                    ), MP_ROM_INT( FB_FLAG_FORCE                         )}, //Refresh even when not dirty
@@ -720,6 +737,7 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_pngInfo                       ), MP_ROM_PTR( &framebuffer_png_info_obj             )}, //Get information about a PNG image
 	{MP_ROM_QSTR( MP_QSTR_getTextWidth                  ), MP_ROM_PTR( &framebuffer_get_text_width_obj       )}, //Get the width a string would take
 	{MP_ROM_QSTR( MP_QSTR_getTextHeight                 ), MP_ROM_PTR( &framebuffer_get_text_height_obj      )}, //Get the height a string would take
+	{MP_ROM_QSTR( MP_QSTR_backlight                     ), MP_ROM_PTR( &framebuffer_backlight_obj            )}, //Get or set the backlight brightness level
 	
 	/* Functions: compositor windows */
 	{MP_ROM_QSTR( MP_QSTR_windowCreate                  ), MP_ROM_PTR( &framebuffer_window_create_obj        )}, //Create a new window

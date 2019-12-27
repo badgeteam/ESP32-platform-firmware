@@ -44,7 +44,7 @@
 	#define FB_HEIGHT GXGDE0213B1_HEIGHT
 	#define FB_TYPE_1BPP
 	#define FB_1BPP_OHS
-	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_gxgde0213b1_write(buffer);
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_gxgde0213b1_write(buffer)
 	#define COLOR_FILL_DEFAULT 0xFFFFFF
 	#define COLOR_TEXT_DEFAULT 0x000000
 	
@@ -55,7 +55,7 @@
 	#define FB_HEIGHT SSD1306_HEIGHT
 	#define FB_TYPE_1BPP
 	#define FB_1BPP_VERT2
-	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_ssd1306_write_part(buffer,x0,y0,x1,y1);
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_ssd1306_write_part(buffer,x0,y0,x1,y1)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 
@@ -66,7 +66,10 @@
 	#define FB_HEIGHT ERC12864_HEIGHT
 	#define FB_TYPE_1BPP
 	#define FB_1BPP_VERT
-	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_erc12864_write_part(buffer,x0,y0,x1,y1);
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_erc12864_write_part(buffer,x0,y0,x1,y1)
+	#ifdef CONFIG_DRIVER_DISOBEY_SAMD_ENABLE
+		#define FB_SET_BACKLIGHT(brightness) driver_disobey_samd_write_backlight(brightness)
+	#endif
 	#define COLOR_FILL_DEFAULT 0xFFFFFF
 	#define COLOR_TEXT_DEFAULT 0x000000
 
@@ -82,6 +85,7 @@
 	#endif
 	#define FB_ALPHA_ENABLED
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_ili9341_write_partial(buffer, x0, y0, x1, y1)
+	#define FB_SET_BACKLIGHT(brightness) driver_ili9341_set_backlight(brightness > 127)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 	
@@ -92,6 +96,7 @@
 	#define FB_HEIGHT ST7735_HEIGHT
 	#define FB_TYPE_16BPP
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_st7735_write_partial(buffer, x0, y0, x1, y1)
+	#define FB_SET_BACKLIGHT(brightness) driver_st7735_set_backlight(brightness > 127)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 	
@@ -106,6 +111,7 @@
 			#define FB_TYPE_16BPP
 	#endif
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_st7789v_write_partial(buffer, x0, y0, x1, y1)
+	#define FB_SET_BACKLIGHT(brightness) driver_st7789v_set_backlight(brightness > 127)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 	
@@ -146,8 +152,9 @@
 	#define FB_SIZE NOKIA6100_BUFFER_SIZE
 	#define FB_WIDTH NOKIA6100_WIDTH
 	#define FB_HEIGHT NOKIA6100_HEIGHT
-	#define FB_TYPE_16BPP
+	#define FB_TYPE_16BPP //HACK use 12-bit color depth when this mode is ready for use
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_nokia6100_write_partial(buffer, x0, y0, x1, y1)
+	#define FB_SET_BACKLIGHT(brightness) driver_nokia6100_set_backlight(brightness > 127)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 #else
@@ -160,6 +167,8 @@
 	#define PIXEL_SIZE 8
 #elif defined(FB_TYPE_8CBPP)
 	#define PIXEL_SIZE 8
+#elif defined(FB_TYPE_12BPP)
+	#define PIXEL_SIZE 12
 #elif defined(FB_TYPE_16BPP)
 	#define PIXEL_SIZE 16
 #elif defined(FB_TYPE_24BPP)

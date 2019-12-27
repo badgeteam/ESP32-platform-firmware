@@ -136,6 +136,28 @@ void driver_framebuffer_fill(Window* window, uint32_t value)
 		memset(buffer, convert8to1(convert24to8(value)) ? 0xFF : 0x00, (width*height)/8);
 	#elif defined(FB_TYPE_8BPP)
 		memset(buffer, convert24to8(value), width*height);
+	#elif defined(FB_TYPE_12BPP)
+		uint8_t r = (value >> 20) &0x0F;
+		uint8_t g = (value >> 12) &0x0F;
+		uint8_t b = (value >> 04) &0x0F;
+		for (uint32_t position = 0; position < width*height; position++) {
+			#elif defined(FB_TYPE_12BPP)
+			uint32_t positionBits = (x+(y*width))*12;
+			uint32_t positionByte = positionBits/8;
+			uint8_t positionBit = positionBits % 8;
+			switch(positionBit) {
+				case 0:
+					buffer[positionByte+0] = (r<<4) | g;
+					buffer[positionByte+1] = (b<<4) | (buffer[positionByte+1]&0x0F);
+					break;
+				case 4:
+					buffer[positionByte+0] = (buffer[positionByte+0]&0xF0) | r;
+					buffer[positionByte+1] = (g<<4) | b;
+					break;
+				default:
+					printf("??? %u, %u: %u = %u(%u)\n", x,y,positionBits, positionByte, positionBit);
+			}
+		}
 	#elif defined(FB_TYPE_16BPP)
 		value = convert24to16(value);
 		uint8_t c0 = (value>>8)&0xFF;
@@ -181,23 +203,24 @@ void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t 
 	if (!driver_framebuffer_orientation_apply(window, &x, &y)) return;
 	bool changed = false;
 	#if defined(FB_TYPE_1BPP)
-		//The 1-bit-per-pixel displays all seem to have their own pixel format...
-		//To-do: clean this up
 		value = convert8to1(convert24to8(value));
-		#ifndef FB_1BPP_VERT
-			#if defined(FB_1BPP_OHS)
-				uint32_t position = ((width-x-1) + y * width) / 8;
-				uint8_t  bit      = x % 8;
-			#elif defined(FB_1BPP_VERT2)
-				uint32_t position = (y/8) + (x*height/8);
-				uint8_t  bit      = y % 8;
-			#else
-				uint32_t position = (y * (width/8)) + (x / 8);
-				uint8_t  bit      = x % 8;
-			#endif
-		#else
+		#if defined(FB_1BPP_VERT)
+			// A byte consists of 8 vertical pixels,
+			// each byte is placed next to each other horizontally
 			uint32_t position = ( (y / 8) * width) + x;
 			uint8_t  bit      = y % 8;
+		#elif defined(FB_1BPP_VERT2)
+			// TODO: description
+			uint32_t position = (y/8) + (x*height/8);
+			uint8_t  bit      = y % 8;
+		#elif defined(FB_1BPP_OHS)
+			// TODO: description
+			uint32_t position = ((width-x-1) + y * width) / 8;
+			uint8_t  bit      = x % 8;
+		#else
+			// TODO: description
+			uint32_t position = (y * (width/8)) + (x / 8);
+			uint8_t  bit      = x % 8;
 		#endif
 
 		uint8_t oldVal = buffer[position];
@@ -212,6 +235,28 @@ void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t 
 		uint32_t position = (y * width) + x;
 		if (buffer[position] != value) changed = true;
 		buffer[position] = value;
+	#elif defined(FB_TYPE_12BPP)
+		//12-bit (RRRRGGGGBBBB)
+		uint32_t positionBits = (x+(y*width))*12;
+		uint32_t positionByte = positionBits/8;
+		uint8_t positionBit = positionBits % 8;
+		
+		uint8_t r = (value >> 20) &0x0F;
+		uint8_t g = (value >> 12) &0x0F;
+		uint8_t b = (value >> 04) &0x0F;
+		
+		switch(positionBit) {
+			case 0:
+				buffer[positionByte+0] = (r<<4) | g;
+				buffer[positionByte+1] = (b<<4) | (buffer[positionByte+1]&0x0F);
+				break;
+			case 4:
+				buffer[positionByte+0] = (buffer[positionByte+0]&0xF0) | r;
+				buffer[positionByte+1] = (g<<4) | b;
+				break;
+			default:
+				printf("??? %u, %u: %u = %u(%u)\n", x,y,positionBits, positionByte, positionBit);
+		}
 	#elif defined(FB_TYPE_16BPP)
 		value = convert24to16(value);
 		uint8_t c0 = (value>>8)&0xFF;
@@ -286,6 +331,30 @@ uint32_t driver_framebuffer_getPixel(Window* window, int16_t x, int16_t y)
 	#elif defined(FB_TYPE_8BPP)
 		uint32_t position = (y * width) + x;
 		return (buffer[position] << 16) + (buffer[position]<<8) + buffer[position];
+	#elif defined(FB_TYPE_12BPP)
+		//12-bit (RRRRGGGGBBBB)
+		uint32_t positionBits = (x+(y*width))*12;
+		uint32_t positionByte = positionBits/8;
+		uint8_t positionBit = positionBits % 8;
+		
+		uint8_t r = 0;
+		uint8_t g = 0;
+		uint8_t b = 0;
+		
+		switch(positionBit) {
+			case 0:
+				r = (buffer[positionByte+0] & 0xF0);
+				g = (buffer[positionByte+0] << 4);
+				b = (buffer[positionByte+1] & 0xF0);
+				break;
+			case 4:
+				r = (buffer[positionByte+0] << 4);
+				g = (buffer[positionByte+1] & 0xF0);
+				b = (buffer[positionByte+1] << 4);
+				break;
+			default:
+				printf("??? %u, %u: %u = %u(%u)\n", x,y,positionBits, positionByte, positionBit);
+		}
 	#elif defined(FB_TYPE_16BPP)
 		uint32_t position = (y * width * 2) + (x * 2);
 		uint32_t color = (buffer[position] << 8) + (buffer[position + 1]);
@@ -459,6 +528,23 @@ uint16_t driver_framebuffer_getHeight(Window* window)
 	int16_t width, height;
 	driver_framebuffer_get_orientation_size(window, &width, &height);
 	return height;
+}
+
+
+uint8_t currentBrightness = 0;
+esp_err_t driver_framebuffer_setBacklight(uint8_t brightness)
+{
+	#if defined(FB_SET_BACKLIGHT)
+		currentBrightness = brightness;
+		return FB_SET_BACKLIGHT(brightness);
+	#else
+		return ESP_FAIL;
+	#endif
+}
+
+uint8_t driver_framebuffer_getBacklight()
+{
+	return currentBrightness;
 }
 
 #else

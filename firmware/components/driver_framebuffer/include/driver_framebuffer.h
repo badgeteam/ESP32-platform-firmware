@@ -63,4 +63,10 @@ esp_err_t driver_framebuffer_png(Window* window, int16_t x, int16_t y, lib_reade
 void driver_framebuffer_blit(Window* source, Window* target);
 /* Blit a window to the framebuffer of another window or the main framebuffer */
 
+esp_err_t driver_framebuffer_setBacklight(uint8_t level);
+/* Set the brightness of the backlight (0-255) */
+
+uint8_t driver_framebuffer_getBacklight();
+/* Get the brightness of the backlight */
+
 #endif //_DRIVER_FRAMEBUFFER_H_
