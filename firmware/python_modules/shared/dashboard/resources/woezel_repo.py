@@ -1,6 +1,6 @@
 import time, machine, gc, easydraw, term, uos, json, urequests, gc, sys, wifi, consts
 
-path = "/woezel_packages"
+path = "/cache/woezel"
 categories = []
 lastUpdate = 0
 
@@ -9,7 +9,7 @@ try:
 except:
 	pass
 
-def setPath(newPath="/woezel_packages"):
+def setPath(newPath="/cache/woezel"):
 	global path
 	path = newPath
 	categories = []
@@ -22,13 +22,12 @@ def setPath(newPath="/woezel_packages"):
 def _showProgress(msg, error=False, icon_wifi=False):
 	term.header(True, "Installer")
 	print(msg)
+	icon = "/media/busy.png"
 	if error:
-		easydraw.messageCentered(msg, False, "/media/alert.png")
-	else:
-		if icon_wifi:
-			easydraw.messageCentered(msg, False, "/media/wifi.png")
-		else:
-			easydraw.messageCentered(msg, False, "/media/busy.png")
+		icon = "/media/alert.png"
+	elif icon_wifi:
+		icon = "/media/wifi.png"
+	easydraw.messageCentered(msg, False, icon)
 
 def update():
 	global path, categories, lastUpdate
@@ -40,7 +39,7 @@ def update():
 			return False
 	_showProgress("Downloading categories...")
 	try:
-		request = urequests.get("https://badge.team/eggs/categories/json", timeout=30)
+		request = urequests.get("https://badge.team/basket/{}/categories/json".format(consts.INFO_HARDWARE_WOEZEL_NAME), timeout=30)
 		_showProgress("Saving categories...")
 		categories_file = open(path+'/categories.json', 'w')
 		categories_file.write(request.text)
@@ -51,7 +50,7 @@ def update():
 			gc.collect()
 			slug = category["slug"]
 			_showProgress("Downloading '"+category["name"]+"'...")
-			f = urequests.get("https://badge.team/basket/"+consts.INFO_HARDWARE_WOEZEL_NAME+"/category/%s/json" % slug, timeout=30)
+			f = urequests.get("https://badge.team/basket/{}/category/{}/json".format(consts.INFO_HARDWARE_WOEZEL_NAME, slug), timeout=30)
 			f_file = open(path+'/'+slug+'.json', 'w')
 			f_file.write(f.text)
 			f_file.close()
@@ -64,7 +63,7 @@ def update():
 		return True
 	except BaseException as e:
 		sys.print_exception(e)
-		_showProgress("Failed!", True)
+		_showProgress("Failed.", True)
 		gc.collect()
 	return False
 
@@ -74,15 +73,14 @@ def load():
 		f = open(path+"/lastUpdate", 'r')
 		data = f.read()
 		f.close()
-		#print("Last update at",data)
 		lastUpdate = int(data)
 		f = open(path+"/categories.json")
 		categories = json.loads(f.read())
 		f.close()
 		gc.collect()
 		if (lastUpdate + 900) < int(time.time()):
-			print("Too old", lastUpdate + 900, "<", int(time.time()))
-			time.sleep(2)
+			print("Current repository cache is too old!", lastUpdate + 900, "<", int(time.time()))
+			#time.sleep(2)
 			return False
 		return True
 	except BaseException as e:

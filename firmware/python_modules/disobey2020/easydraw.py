@@ -10,7 +10,7 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 	"""
 	global messageHistory, lastTitle
 	
-	num_lines = ((display.height() - 16)//display.getTextHeight(" ", version.font_default)) - 2
+	num_lines = ((display.height() - 11)//display.getTextHeight(" ", "7x5"))
 	
 	if reset:
 		lastTitle = title
@@ -20,33 +20,31 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 		if reset:
 			raise exception
 	except:
-		display.drawFill(0xFFFFFF)
+		display.drawFill(0x000000)
 		messageHistory = []
 		lastTitle = title
 		
-	lineHeight = display.getTextHeight(" ", version.font_default)
+	lineHeight = display.getTextHeight(" ", "7x5")
 
 	if len(messageHistory)<num_lines:
-		display.drawText(0, 16 + (len(messageHistory) * lineHeight), message, 0x000000, version.font_default)
+		display.drawText(0, 11 + (len(messageHistory) * lineHeight), message, 0xFFFFFF, "7x5")
 		messageHistory.append(message)
 	else:
 		messageHistory.pop(0)
 		messageHistory.append(message)
-		display.drawRect(0, 16, display.width(), display.height()-15, True, 0xFFFFFF)
+		display.drawRect(0, 11, display.width(), display.height()-15, True, 0x000000)
 		for i, message in enumerate(messageHistory):
-			display.drawText(0, 16 + (i * lineHeight), message, 0x000000, version.font_default)
+			display.drawText(0, 11 + (i * lineHeight), message, 0xFFFFFF, "7x5")
 
-	display.drawRect(0, 0, display.width(), 14, True, 0)
-	display.drawText(0, 0, lastTitle, 0xFFFFFF, "Roboto_Regular12")
-	#h = display.getTextHeight(" ", version.font_header)
-	#display.drawLine(0, h, display.width(), h, 0x000000)
+	display.drawRect(0, 0, display.width(), 10, True, 0xFFFFFF)
+	display.drawText(2, 0, lastTitle, 0x000000, "org18")
 
 	display.flush(display.FLAG_LUT_FASTEST)
 	
 	return len(messageHistory)>=num_lines-1
 	
 def msg(message, title = "Loading...", reset = False, wait = 0):
-	num_lines = ((display.height() - 16)//display.getTextHeight(" ", version.font_default)) - 2
+	num_lines = ((display.height() - 11)//display.getTextHeight(" ", "7x5"))
 	scroll = False
 	try:
 		lines = lineSplit(str(message))

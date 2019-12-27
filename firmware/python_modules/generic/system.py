@@ -50,7 +50,7 @@ def ota(status=False):
 	reboot()
 
 def serialWarning():
-	device.showMessage("This app can only be controlled using the USB-serial connection!", "/media/crown.png")
+	device.showMessage("This app can only be controlled using the USB serial port!", "/media/usb.png")
 	
 def crashedWarning():
 	device.showMessage("FATAL ERROR\nthe app has crashed", "/media/alert.png")

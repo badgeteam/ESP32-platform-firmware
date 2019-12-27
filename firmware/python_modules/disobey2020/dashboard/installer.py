@@ -7,14 +7,14 @@ orientation.default()
 def showMessage(msg, error=False, icon_wifi=False, icon_ok=False):
 	term.header(True, "Installer")
 	print(msg)
+	icon = "/media/busy.png"
 	if error:
-		easydraw.messageCentered("ERROR\n"+msg, True, "/media/alert.png")
+		icon = "/media/alert.png"
 	elif icon_wifi:
-		easydraw.messageCentered("PLEASE WAIT\n"+msg, True, "/media/wifi.png")
+		icon = "/media/wifi.png"
 	elif icon_ok:
-		easydraw.messageCentered(msg, True, "/media/ok.png")
-	else:
-		easydraw.messageCentered("PLEASE WAIT\n"+msg, True, "/media/busy.png")
+		icon = "/media/ok.png"
+	easydraw.messageCentered(msg, False, icon)
 
 # Listbox element
 myList = ugfx.List(0,0,ugfx.width(),ugfx.height())
@@ -93,16 +93,16 @@ def show_category(pressed=True, fromAppInstall = False):
 		except BaseException as e:
 			showMessage("Failed to open category "+slug+"!", True)
 			display.drawFill()
-			print("CAT OPEN ERR", e)
-			time.sleep(1)
+			time.sleep(2)
 			show_categories()
 			return
+		print(category)
 		gc.collect()
 		for package in category:
 			myList.add_item("%s rev. %s" % (package["name"], package["revision"]))
+			print("Adding", "%s rev. %s" % (package["name"], package["revision"]))
 		myList.visible(True)
 		myList.enabled(True)
-		#Input handling
 		ugfx.input_attach(ugfx.BTN_START, btn_exit)
 		ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
 		ugfx.input_attach(ugfx.BTN_A, install_app)
@@ -111,19 +111,15 @@ def show_category(pressed=True, fromAppInstall = False):
 		ugfx.input_attach(ugfx.JOY_DOWN, btn_unhandled)
 		ugfx.input_attach(ugfx.JOY_LEFT, btn_unhandled)
 		ugfx.input_attach(ugfx.JOY_RIGHT, btn_unhandled)
-		#Hint
-		#easydraw.disp_string_right_bottom(0, "START: Exit")
-		#easydraw.disp_string_right_bottom(1, "A: Install app")
-		#easydraw.disp_string_right_bottom(2, "B: Back")
-		#Flush screen
 		display.flush(display.FLAG_LUT_NORMAL)
 	except BaseException as e:
 		sys.print_exception(e)
 		print("ERROR", e)
 		showMessage("Internal error", True)
 		display.drawFill()
-		time.sleep(1)
+		time.sleep(10)
 		show_categories()
+	print("Done!")
 
 # Install application
 
@@ -154,7 +150,9 @@ display.drawFill()
 if not repo.load():
 	if not repo.update():
 		if repo.lastUpdate==0:
-			showMessage("Failed to load repository. Returning to launcher...")
+			time.sleep(2)
+			showMessage("Failed to load repository!")
+			time.sleep(4)
 			display.drawFill()
 			system.launcher()
 

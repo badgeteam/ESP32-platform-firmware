@@ -42,6 +42,8 @@ if not cfg_nick_text:
 # Button callbacks
 def cbStartLauncher(pressed):
 	if pressed:
+		global stopThreads
+		stopThreads = True
 		system.launcher(False)
 
 def cbFeedPowerManagement(pressed):
@@ -401,4 +403,5 @@ else:
 		c = machine.stdin_get(1,1)
 		if c == "\x03" or c == "\x04": # CTRL+C or CTRL+D
 			wait = False
+	stopThreads = True
 	import shell

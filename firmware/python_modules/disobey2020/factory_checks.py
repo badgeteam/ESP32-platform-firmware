@@ -28,7 +28,8 @@ else:
 # 4) Install icons (workaround)
 easydraw.messageCentered("Installing...", False)
 display.flush()
-import dashboard.resources.png_icons
+import dashboard.resources.png_icons as icons
+icons.install()
 
 # 5) Set flag
 machine.nvs_setint('system', 'factory_checked', 2)
@@ -38,11 +39,7 @@ machine.nvs_setint('system', 'force_sponsors', 1)
 easydraw.messageCentered("PASSED", True)
 display.flush()
 
-mpr121.set(10,1) #Calibration resets MPR121
-
-#REMOVE THIS
-system.reboot()
-time.sleep(60)
+mpr121.set(10,1) #Calibration resets MPR121, here we re-enable LED power
 
 buzzer_pin = machine.Pin(12, machine.Pin.OUT)
 time.sleep(0.01)
