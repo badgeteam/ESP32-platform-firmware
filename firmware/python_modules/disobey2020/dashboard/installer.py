@@ -1,4 +1,4 @@
-import orientation, dashboard.resources.woezel_repo as woezel_repo, term, easydraw, system, time, gc, ugfx, wifi, uos, json, sys, woezel, display, errno
+import orientation, dashboard.resources.woezel_repo as woezel_repo, term, easydraw, system, time, gc, ugfx, wifi, uos, json, sys, woezel, display, errno, buttons
 
 repo = woezel_repo
 
@@ -50,19 +50,22 @@ def show_categories(pressed = True, fromAppInstall = False):
 	myList.enabled(True)
 	myList.visible(True)
 	#Input handling
-	ugfx.input_attach(ugfx.BTN_START, btn_exit)
-	ugfx.input_attach(ugfx.BTN_SELECT, btn_update)
-	ugfx.input_attach(ugfx.BTN_A, show_category)
 	ugfx.input_attach(ugfx.BTN_B, btn_unhandled)
 	ugfx.input_attach(ugfx.JOY_UP, btn_unhandled)
 	ugfx.input_attach(ugfx.JOY_DOWN, btn_unhandled)
 	ugfx.input_attach(ugfx.JOY_LEFT, btn_unhandled)
 	ugfx.input_attach(ugfx.JOY_RIGHT, btn_unhandled)
-	#Hint
-	#easydraw.disp_string_right_bottom(0, "START: Exit app")
-	#easydraw.disp_string_right_bottom(1, "A: Open category")
-	#easydraw.disp_string_right_bottom(2, "SELECT: Update repo")
-	#Flush screen
+	try:
+		buttons.BTN_START
+		ugfx.input_attach(ugfx.BTN_START, btn_exit)
+	except:
+		ugfx.input_attach(ugfx.BTN_B, btn_exit)
+	try:
+		buttons.BTN_SELECT
+		ugfx.input_attach(ugfx.BTN_SELECT, btn_update)
+	except:
+		ugfx.input_attach(ugfx.JOY_UP, btn_update)
+	ugfx.input_attach(ugfx.BTN_A, show_category)
 	display.flush(display.FLAG_LUT_NORMAL)
 
 # Category browsing
@@ -103,8 +106,14 @@ def show_category(pressed=True, fromAppInstall = False):
 			print("Adding", "%s rev. %s" % (package["name"], package["revision"]))
 		myList.visible(True)
 		myList.enabled(True)
-		ugfx.input_attach(ugfx.BTN_START, btn_exit)
-		ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
+		try:
+			ugfx.input_attach(ugfx.BTN_START, btn_exit)
+		except:
+			pass
+		try:
+			ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
+		except:
+			pass
 		ugfx.input_attach(ugfx.BTN_A, install_app)
 		ugfx.input_attach(ugfx.BTN_B, show_categories)
 		ugfx.input_attach(ugfx.JOY_UP, btn_unhandled)
@@ -128,8 +137,14 @@ def install_app(pressed=True):
 	if pressed:
 		slug = category[myList.selected_index()]["slug"]
 		#Input handling
-		ugfx.input_attach(ugfx.BTN_START, btn_exit)
-		ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
+		try:
+			ugfx.input_attach(ugfx.BTN_START, btn_exit)
+		except:
+			pass
+		try:
+			ugfx.input_attach(ugfx.BTN_SELECT, btn_unhandled)
+		except:
+			pass
 		ugfx.input_attach(ugfx.BTN_A, btn_unhandled)
 		ugfx.input_attach(ugfx.BTN_B, btn_unhandled)
 		ugfx.input_attach(ugfx.JOY_UP, btn_unhandled)

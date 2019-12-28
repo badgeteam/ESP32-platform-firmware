@@ -1,13 +1,14 @@
-import machine, time, term, easydraw, display
+import machine, time, term, easydraw, display, samd
 
 def reboot():
+	for i in range(6):
+		samd.led(i,0,0,0)
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):
-	# Not working for Disobey 2020 as the pins are not in the RTC domain
+	for i in range(6):
+		samd.led(i,0,0,0)
 	machine.RTC().wake_on_ext0(pin = machine.Pin(25), level = 0)
-	#machine.RTC().wake_on_ext1([machine.Pin(5, machine.Pin.IN, machine.Pin.PULL_UP)], 0)
-	#---
 	if (duration >= 86400000): #One day
 		duration = 0
 	if status:
@@ -19,6 +20,8 @@ def sleep(duration=0, status=False):
 	machine.deepsleep(duration)
 
 def start(app, status=False):
+	for i in range(6):
+		samd.led(i,0,0,0)
 	if status:
 		appName = app
 		if app == "" or app.startswith("dashboard."):
@@ -26,11 +29,8 @@ def start(app, status=False):
 			appName = ""
 		else:
 			term.header(True, "Loading application "+app+"...")
-			#easydraw.messageCentered("Loading '"+app+"'...", False, "/media/busy.png")
 		try:
-			#info = display.pngInfo("/media/busy.png")
 			display.drawFill()
-			#display.drawPng((display.width()-info[0])//2, (display.height()-info[1])//2, "/media/busy.png")
 			import mascot
 			display.drawPng( 64,  0, mascot.snek                 )
 			display.drawText( 0, 28, "LOADING APP...", 0, "org18")

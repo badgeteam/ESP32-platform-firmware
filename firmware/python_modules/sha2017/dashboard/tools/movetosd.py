@@ -235,7 +235,10 @@ except:
 buttons.attach(buttons.BTN_LEFT,  onLeft)
 buttons.attach(buttons.BTN_RIGHT, onRight)
 buttons.attach(buttons.BTN_A,     onA)
-buttons.attach(buttons.BTN_START, onB)
+try:
+	buttons.attach(buttons.BTN_START, onB)
+except:
+	pass
 buttons.attach(buttons.BTN_B,     onB)
 
 def showMenu():

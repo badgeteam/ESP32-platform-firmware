@@ -10,7 +10,7 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 	"""
 	global messageHistory, lastTitle
 	
-	num_lines = ((display.height() - 16)//display.getTextHeight(" ", version.font_default)) - 2
+	num_lines = ((display.height() - 16)//display.getTextHeight(" ", version.font_default))
 	
 	if reset:
 		lastTitle = title
@@ -44,7 +44,7 @@ def msg_nosplit(message, title = 'Loading...', reset = False):
 	return len(messageHistory)>=num_lines-1
 	
 def msg(message, title = "Loading...", reset = False, wait = 0):
-	num_lines = ((display.height() - 16)//display.getTextHeight(" ", version.font_default)) - 2
+	num_lines = ((display.height() - 16)//display.getTextHeight(" ", version.font_default))
 	scroll = False
 	try:
 		lines = lineSplit(str(message))

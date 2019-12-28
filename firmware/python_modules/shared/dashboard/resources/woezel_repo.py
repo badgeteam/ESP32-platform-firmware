@@ -5,6 +5,11 @@ categories = []
 lastUpdate = 0
 
 try:
+	uos.mkdir("/cache")
+except:
+	pass
+
+try:
 	uos.mkdir(path)
 except:
 	pass
@@ -62,8 +67,8 @@ def update():
 		gc.collect()
 		return True
 	except BaseException as e:
-		sys.print_exception(e)
 		_showProgress("Failed.", True)
+		sys.print_exception(e)
 		gc.collect()
 	return False
 

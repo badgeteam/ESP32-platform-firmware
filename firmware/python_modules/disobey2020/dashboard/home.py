@@ -1,14 +1,27 @@
 # Homescreen application
-import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, term_menu, orientation, display, buttons, neopixel, _thread
+import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, term_menu, orientation, display, buttons, _thread
 import tasks.powermanagement as pm, tasks.otacheck as otacheck
-import easydraw, rtc
+import easydraw, rtc, consts
 
-COLOR_BG = 0x000000
-COLOR_FG = 0xFFFFFF
+try:
+	import neopixel
+except:
+	neopixel = None
+try:
+	import samd
+except:
+	samd = None
+
+if consts.INFO_HARDWARE_NAME == "Disobey 2019":
+	COLOR_BG = 0xFFFFFF
+	COLOR_FG = 0x000000
+	LOGO = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x80\x00\x00\x00\x1a\x01\x00\x00\x00\x00W\xb8iC\x00\x00\x00\xf0IDAT\x18\xd3\x8d\xd1\xa1N\xc4@\x10\x06\xe0!\x88\xcaJ\xe4>\x06\xb8}\x1c,\x9e\xe4*\x10'O I\xe8C p7G\x10+\xf7\x01.\x17\x9a \xd6\\\xd2\xbdT\xdc4m\xe6g\xdb+\xbd\x80\x81\x91\x9f\x98\xfc\xf3\x0f\xe1\xd7\xd0\x1f\xa0\xa0\xfe\x02\x889\x1eP\x19\x98\t\\4zSl\xf2\x9eT,\xf5\x02\xe7\xd1\xc2>g\x91\x16b\x12\xd8\x04\x8d+y)\xa6[\x17\x03,=\x02\xd5\xec\xd4v\xeb\xb4\x03y\x82\xbd\xde\xb2\xeb\xad\xe2\x1bv\xb8\xe60\xc3\xcac\x8b\xd7\x01\xd0\x9d\xe1\x89?{*&\x88\xe61\xc1\x9b\xd0\xfd\x0c/\xd8r%Yw\x02\x8fc\x89\x8e\xa3`\x02\x87\xf0\x81\x86e\x06?\xc0\x91\xe5\x00\xbdL\xa0\x03\xf8\xbb3\xa4[\x10\xea\xa2N\x10\xc6\x1c#\x04xn#\x8dp@\x82\x06%\xb7\x15-\xf2\xb1\xa0w\xb9\x12\xb5\xdcT\x99\x9e\xc0\xc7\\\t\xec\xab\x9f%o\xec\xbf\xde\x00|\x01\x10\x96RtD\x90\x0f\xda\x00\x00\x00\x00IEND\xaeB`\x82"
+else:
+	COLOR_BG = 0x000000
+	COLOR_FG = 0xFFFFFF
+	LOGO = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x80\x00\x00\x00\x1a\x01\x00\x00\x00\x00W\xb8iC\x00\x00\x00\xecIDAT\x18\xd3\x95\xd1\xa1N\x041\x10\x06\xe0\x7f\xd2f\xe7\xc4\xe6\xba\t\xa6\x82d\t\xb9\x07\xa8\xac \xdc\x9cC\xf0\x10K\x82D\x9c<\x81\xd8K\xf0X\x1e\xa7\x0e\x1e\xa3\x12Y\xb9\x82P\xba{\x9b\xbd\xe0`\xe4'\xfe\xcc\xfc\x03\xfcs\x08P\xdf\x80IxF\x1b\x11g\xf0&\xd2{\xbfM*\x13\x07(\x86w\xa8\x10\x1e\x06\x93\x8f\x1c\x0b\x84\x02\xb5\xef\xe4\xc0Q\xef\xfa\x11\x0e\x0e67\xe2)\xe8]\xc9@*pAo\xe2U(\x993\\\xe3C\xec\x02{\x87\r\xeeF\x80>\xc3\xa3\\\xaa\xdc\xcf`\xe2S\x81[\xce/\x0b\xdcc#-\x0f\xfa\x04\x0e\xab\x0eZ\x0cc\x06\x0f{\x85Zx\x017\xc2Jx\r\xfa*@#\xb8\xd73\x94[`\x9b\xbe)`\xa7=&\xb0pR\x99<\xc1\x1a\x05jtR\xb5\xf9\x98\xa6\x82n\xf8\x93)H\xdd\x0et\x02g\x12e\x88k\x7f\xf7\xbb\r\x7f|\xc4\x0f\xc0\xa9K\xfd1u\xb7\xde\x00\x00\x00\x00IEND\xaeB`\x82"
 
 stopThreads = False
-
-LOGO = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x80\x00\x00\x00\x1a\x01\x00\x00\x00\x00W\xb8iC\x00\x00\x00\xecIDAT\x18\xd3\x95\xd1\xa1N\x041\x10\x06\xe0\x7f\xd2f\xe7\xc4\xe6\xba\t\xa6\x82d\t\xb9\x07\xa8\xac \xdc\x9cC\xf0\x10K\x82D\x9c<\x81\xd8K\xf0X\x1e\xa7\x0e\x1e\xa3\x12Y\xb9\x82P\xba{\x9b\xbd\xe0`\xe4'\xfe\xcc\xfc\x03\xfcs\x08P\xdf\x80IxF\x1b\x11g\xf0&\xd2{\xbfM*\x13\x07(\x86w\xa8\x10\x1e\x06\x93\x8f\x1c\x0b\x84\x02\xb5\xef\xe4\xc0Q\xef\xfa\x11\x0e\x0e67\xe2)\xe8]\xc9@*pAo\xe2U(\x993\\\xe3C\xec\x02{\x87\r\xeeF\x80>\xc3\xa3\\\xaa\xdc\xcf`\xe2S\x81[\xce/\x0b\xdcc#-\x0f\xfa\x04\x0e\xab\x0eZ\x0cc\x06\x0f{\x85Zx\x017\xc2Jx\r\xfa*@#\xb8\xd73\x94[`\x9b\xbe)`\xa7=&\xb0pR\x99<\xc1\x1a\x05jtR\xb5\xf9\x98\xa6\x82n\xf8\x93)H\xdd\x0et\x02g\x12e\x88k\x7f\xf7\xbb\r\x7f|\xc4\x0f\xc0\xa9K\xfd1u\xb7\xde\x00\x00\x00\x00IEND\xaeB`\x82"
 
 # Read configuration from NVS or apply default values
 cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
@@ -53,7 +66,7 @@ def cbFeedPowerManagement(pressed):
 flashlightStatus = False
 def cbFlashlight(pressed):
 	global led_app, flashlightStatus
-	if pressed:
+	if pressed and neopixel:
 		if flashlightStatus:
 			pm.enable()
 			neopixel.send(bytes([0x00]*3*12))
@@ -70,16 +83,45 @@ def cbFlashlight(pressed):
 			except:
 				pass
 		flashlightStatus = not flashlightStatus
-
-buttons.attach(buttons.BTN_A,      cbFeedPowerManagement)
-buttons.attach(buttons.BTN_B,      cbFeedPowerManagement)
-buttons.attach(buttons.BTN_START,  cbStartLauncher      )
-buttons.attach(buttons.BTN_SELECT, cbFeedPowerManagement)
-buttons.attach(buttons.BTN_DOWN,   cbFeedPowerManagement)
-buttons.attach(buttons.BTN_RIGHT,  cbFeedPowerManagement)
-buttons.attach(buttons.BTN_UP,     cbFeedPowerManagement)
-buttons.attach(buttons.BTN_LEFT,   cbFeedPowerManagement)
-buttons.attach(buttons.BTN_FLASH,  cbFlashlight         )
+try:
+	buttons.attach(buttons.BTN_A,      cbFeedPowerManagement)
+except:
+	pass
+try:
+	buttons.attach(buttons.BTN_B,      cbFeedPowerManagement)
+except:
+	pass
+try:
+	buttons.attach(buttons.BTN_DOWN,   cbFeedPowerManagement)
+except:
+	pass
+try:
+	buttons.attach(buttons.BTN_RIGHT,  cbFeedPowerManagement)
+except:
+	pass
+try:
+	buttons.attach(buttons.BTN_UP,     cbFeedPowerManagement)
+except:
+	pass
+try:
+	buttons.attach(buttons.BTN_LEFT,   cbFeedPowerManagement)
+except:
+	pass
+try:
+	buttons.attach(buttons.BTN_FLASH,  cbFlashlight         )
+except:
+	pass
+try: # First try to attach the start button to the launcher
+	buttons.attach(buttons.BTN_START,  cbStartLauncher      )
+except:
+	try: # If the start button is not available use the A/OK button
+		buttons.attach(buttons.BTN_A, cbStartLauncher)
+	except:
+		pass
+try:
+	buttons.attach(buttons.BTN_SELECT, cbFeedPowerManagement)
+except:
+	pass
 
 # Scheduler
 virtualtimers.activate(25)
@@ -87,7 +129,8 @@ virtualtimers.activate(25)
 # Power management
 def cbSleep(idleTime=None):
 	global stopThreads#scrollerTask#, ledTask
-	neopixel.send(bytes([0x00]*3*12))
+	if neopixel:
+		neopixel.send(bytes([0x00]*3*12))
 	if idleTime == None:
 		idleTime = virtualtimers.idle_time()
 	gui_redraw = True
@@ -263,13 +306,6 @@ def drawTask(onSleep=False):
 		noLine = False
 		if gui_app_current < 0:
 			if cfg_logo:
-				if cfg_nickname:
-					# Logo and nickename enabled, first print nickname
-					display.drawText((display.width()-display.getTextWidth(cfg_nick_text, "roboto_regular12"))//2, currHeight, cfg_nick_text, COLOR_FG, "roboto_regular12")
-					currHeight += display.getTextHeight(cfg_nick_text, "roboto_regular12")#easydraw.nickname()
-					currHeight += 4
-					display.drawLine(0, currHeight, display.width()-1, currHeight, COLOR_FG)
-					currHeight += 4
 				#Print logo
 				app_height = display.height()-16-currHeight
 				logoHeight = drawLogo(currHeight, app_height, True)
@@ -320,15 +356,6 @@ gc.collect()
 if not rtc.isSet() and cfg_wifi:
 	wifi.connect() #Connecting to WiFi automatically sets the time using NTP (see wifiTask)
 
-# Test code for the scroller
-#import virtualtimers, display
-#virtualtimers.activate(25)
-#COLOR_FG = 0xFFFFFF
-#COLOR_BG = 0x000000
-#cfg_logo = False
-#cfg_nickname = True
-#cfg_nick_text = "Hello world"
-
 # Text scroller
 display.windowCreate("scroller", 512, 32) #Workaround!!! windows get corrupted when size is not in units of 8
 display.windowShow("scroller")
@@ -360,19 +387,34 @@ def ledThread():
 	ledDirection = False
 	global flashlightStatus, stopThreads
 	while not stopThreads:
-		if not flashlightStatus:
-			neopixel.send(bytes([0, 4+ledValue, 0]*5 + [0, 4+24-ledValue, 0]*7))
-		if ledDirection:
-			ledValue -=2
-			if ledValue <= 0:
-				levValue = 0
-				ledDirection = False
-		else:
-			ledValue += 6
-			if ledValue >= 24:
-				levValue = 24
-				ledDirection = True
-		time.sleep_ms(30)
+		if neopixel:
+			if (not flashlightStatus):
+				neopixel.send(bytes([0, 4+ledValue, 0]*5 + [0, 4+24-ledValue, 0]*7))
+			if ledDirection:
+				ledValue -=2
+				if ledValue <= 0:
+					levValue = 0
+					ledDirection = False
+			else:
+				ledValue += 6
+				if ledValue >= 24:
+					levValue = 24
+					ledDirection = True
+		if samd:
+			for i in range(6):
+				samd.led(i, (ledValue == i)*255, (ledValue < i)*255, (ledValue > i)*255)
+			if ledDirection:
+				ledValue -= 1
+				if ledValue <= 0:
+					levValue = 0
+					ledDirection = False
+			else:
+				ledValue += 1
+				if ledValue >= 6:
+					levValue = 6
+					ledDirection = True
+			
+		time.sleep_ms(60)
 
 led_app = None
 if cfg_led_animation != None:
@@ -382,11 +424,9 @@ if cfg_led_animation != None:
 			led_app.init()
 		except:
 			pass
-		#virtualtimers.new(0, led_app.step)
 	except:
 		pass
 else:
-	#virtualtimers.new(25, ledTask, True)
 	_thread.start_new_thread("LED", ledThread, ())
 
 # Terminal menu

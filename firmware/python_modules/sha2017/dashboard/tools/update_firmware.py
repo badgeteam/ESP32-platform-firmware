@@ -93,7 +93,10 @@ else:
 	message = "Could not connect to the WiFi network. You can still choose to start the OTA procedure."
 
 ugfx.input_attach(ugfx.BTN_A, start)
-ugfx.input_attach(ugfx.BTN_START, cancel)
+try:
+	ugfx.input_attach(ugfx.BTN_START, cancel)
+except:
+	pass
 ugfx.input_attach(ugfx.BTN_B, cancel)
 
 items = ["Cancel", "Start OTA update"]

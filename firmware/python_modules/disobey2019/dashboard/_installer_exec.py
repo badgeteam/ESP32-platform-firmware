@@ -1,1 +1,0 @@
-../../sha2017/dashboard/_installer_exec.py

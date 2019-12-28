@@ -24,8 +24,8 @@ names = [
 	"Thank you all!"]
 
 def action_exit(pushed):
-    if (pushed):
-        system.launcher()
+	if (pushed):
+		system.launcher()
 
 def show_names():
 	global names
@@ -46,12 +46,15 @@ def show_names():
 		time.sleep(0.8)
 
 def main():
-    buttons.attach(buttons.BTN_A, action_exit)
-    buttons.attach(buttons.BTN_B, action_exit)
-    buttons.attach(buttons.BTN_START, action_exit)
-    show_names()
-    sys.stdin.read(1) #Wait for any key
-    action_exit(True)
-    
+	buttons.attach(buttons.BTN_A, action_exit)
+	buttons.attach(buttons.BTN_B, action_exit)
+	try:
+		buttons.attach(buttons.BTN_START, action_exit)
+	except:
+		pass
+	show_names()
+	sys.stdin.read(1) #Wait for any key
+	action_exit(True)
+	
 
 main()

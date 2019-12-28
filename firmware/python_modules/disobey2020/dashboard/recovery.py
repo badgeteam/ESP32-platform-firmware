@@ -75,7 +75,10 @@ currentApp = 0
 buttons.attach(buttons.BTN_LEFT,  onLeft)
 buttons.attach(buttons.BTN_RIGHT, onRight)
 buttons.attach(buttons.BTN_A,     onA)
-buttons.attach(buttons.BTN_START, onA)
+try:
+	buttons.attach(buttons.BTN_START, onA)
+except:
+	pass
 buttons.attach(buttons.BTN_B,     onB)
 
 drawApp(apps[0],0,len(apps))

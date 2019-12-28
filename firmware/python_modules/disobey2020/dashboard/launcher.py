@@ -1,5 +1,12 @@
 import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os
 
+haveSD = False
+try:
+	os.listdir("/sd")
+	haveSD = True
+except:
+	pass
+
 default_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x00\x00\x00\x00[\x01GY\x00\x00\x00nIDAT\x08\xd7U\xce\xb1\r\x800\x0c\x05\xd1\x1fQ\xa4\xcc\x02\x88\xacAEVb\x02\xcchH\x14\xac\x01b\x00R\xa6\xb0l\x1cRq\xc5\xab\x0f\xf8\n\xd9 \x01\x9c\xf8\x15]q\x1b|\xc6\x89p\x97\x19\xf1\x90\x11\xf11\x92j\xdf \xd5\xe1\x87L\x06W\xf2b\\b\xec\x15_\x89\x82$\x89\x91\x98\x18\x91\xa94\x82j\x86g:\xd11mpLk\xdbhC\xd6\x0b\xf2 ER-k\xcb\xc6\x00\x00\x00\x00IEND\xaeB`\x82'
 
 home_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x03\x00\x00\x00I\xb4\xe8\xb7\x00\x00\x00\x06PLTE\xff\xff\xff\x00\x00\x00U\xc2\xd3~\x00\x00\x00\tpHYs\x00\x00\x13\xaf\x00\x00\x13\xaf\x01c\xe6\x8e\xc3\x00\x00\x00\x19tEXtSoftware\x00www.inkscape.org\x9b\xee<\x1a\x00\x00\x00[IDAT\x08\x99\x8d\xce!\x0e\xc5 \x00\x04\xd1qH\x8e\xc0Q8Ze\xcf\xd5Tp\r\x1a\x04\x16\x89 \xddn\x93~\xffG<=\xc8\xa1{3+\x9b\x99L\r\xe68\xcd~\x998\xc4J33\xb7;1\xa4\xc8%\xed4\xa9\xd0\xa5\xfeQ\xc3\x8fV\x8c\xfb\x9b\xd6{\xa1B`@dA\xe6]{\x00\xb4\x17e\x0cD\xcab!\x00\x00\x00\x00IEND\xaeB`\x82'
@@ -131,11 +138,14 @@ drawMessageBox("Loading...")
 display.flush()
 term.header(True, "Loading...")
 apps = listApps()
+amountOfUserApps = len(apps)
 apps.append({"path":"dashboard.home",                  "name":"Home",               "icon":home_icon,      "category":"system"})
 apps.append({"path":"dashboard.installer",             "name":"Installer",          "icon":installer_icon, "category":"system"})
-apps.append({"path":"dashboard.tools.uninstall",       "name":"Remove an app",      "icon":trash_icon,     "category":"system"})
-apps.append({"path":"dashboard.tools.update_apps",     "name":"Update apps",        "icon":installer_icon, "category":"system"})
-apps.append({"path":"dashboard.tools.movetosd",        "name":"Move from/to SD",    "icon":settings_icon, "category":"system"})
+if amountOfUserApps > 0:
+	apps.append({"path":"dashboard.tools.uninstall",       "name":"Remove an app",      "icon":trash_icon,     "category":"system"})
+	apps.append({"path":"dashboard.tools.update_apps",     "name":"Update apps",        "icon":installer_icon, "category":"system"})
+if haveSD:
+	apps.append({"path":"dashboard.tools.movetosd",        "name":"Move from/to SD",    "icon":settings_icon, "category":"system"})
 apps.append({"path":"dashboard.tools.update_firmware", "name":"Update firmware",    "icon":installer_icon, "category":"system"})
 apps.append({"path":"dashboard.settings.nickname",     "name":"Configure nickname", "icon":nickname_icon,  "category":"system"})
 apps.append({"path":"dashboard.settings.wifi",         "name":"WiFi setup",         "icon":settings_icon,  "category":"system"})
@@ -146,7 +156,10 @@ currentApp = 0
 buttons.attach(buttons.BTN_LEFT,  onLeft)
 buttons.attach(buttons.BTN_RIGHT, onRight)
 buttons.attach(buttons.BTN_A,     onA)
-buttons.attach(buttons.BTN_START, onA)
+try:
+	buttons.attach(buttons.BTN_START, onA)
+except:
+	pass
 buttons.attach(buttons.BTN_B,     onB)
 
 drawApp(apps[0],0,len(apps))

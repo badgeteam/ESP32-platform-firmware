@@ -54,7 +54,10 @@ def exitApp(pressed):
 
 ugfx.input_attach(ugfx.BTN_A, connectClick)
 ugfx.input_attach(ugfx.BTN_B, exitApp)
-ugfx.input_attach(ugfx.BTN_START, exitApp)
+try:
+	ugfx.input_attach(ugfx.BTN_START, exitApp)
+except:
+	pass
 ugfx.input_attach(ugfx.JOY_UP, lambda pushed: ugfx.flush() if pushed else 0)
 ugfx.input_attach(ugfx.JOY_DOWN, lambda pushed: ugfx.flush() if pushed else 0)
 ugfx.set_lut(ugfx.LUT_FASTER)

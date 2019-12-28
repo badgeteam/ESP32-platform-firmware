@@ -14,4 +14,5 @@ COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver_display_hub75/incl
                             $(PROJECT_PATH)/components/driver_display_st7735/include \
                             $(PROJECT_PATH)/components/driver_display_st7789v/include \
                             $(PROJECT_PATH)/components/driver_display_nokia6100/include \
+                            $(PROJECT_PATH)/components/driver_io_disobey_samd/include \
                             $(PROJECT_PATH)/components/png \

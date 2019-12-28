@@ -17,6 +17,7 @@
 #include "driver_st7735.h"
 #include "driver_st7789v.h"
 #include "driver_nokia6100.h"
+#include "driver_disobey_samd.h"
 
 /* E-INK display as used on the SHA2017 and HackerHotel 2019 badges */
 #if defined(CONFIG_DRIVER_EINK_ENABLE)

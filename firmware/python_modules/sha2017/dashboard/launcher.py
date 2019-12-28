@@ -1,4 +1,11 @@
-import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display, eink, machine, term, term_menu
+import ugfx, badge, sys, uos as os, system, consts, easydraw, virtualtimers, tasks.powermanagement as pm, dialogs, time, ujson, sys, orientation, display, eink, machine, term, term_menu, os
+
+haveSD = False
+try:
+	os.listdir("/sd")
+	haveSD = True
+except:
+	pass
 
 orientation.default()
 

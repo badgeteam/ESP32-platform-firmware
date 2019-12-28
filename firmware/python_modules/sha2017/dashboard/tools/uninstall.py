@@ -150,13 +150,23 @@ term.header(True, "Loading...")
 buttons.attach(buttons.BTN_LEFT,  onLeft)
 buttons.attach(buttons.BTN_RIGHT, onRight)
 buttons.attach(buttons.BTN_A,     onA)
-buttons.attach(buttons.BTN_START, onB)
+try:
+	buttons.attach(buttons.BTN_START, onB)
+except:
+	pass
 buttons.attach(buttons.BTN_B,     onB)
 
 def showMenu():
 	global currentApp, apps
 	apps = listApps()
 	currentApp = 0
-	drawApp(apps[0],0,len(apps))
+	if len(apps)>0:
+		drawApp(apps[0],0,len(apps))
+	else:
+		display.drawFill(0x000000)
+		drawMessageBox("No apps installed!")
+		display.flush()
+		time.sleep(5)
+		system.launcher()
 
 showMenu()
