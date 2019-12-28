@@ -141,7 +141,7 @@ def onB(pressed):
 		system.launcher()
 
 # Launcher
-orientation.default()
+orientation.landscape()
 display.drawFill(0x000000)
 drawMessageBox("Loading...")
 display.flush()

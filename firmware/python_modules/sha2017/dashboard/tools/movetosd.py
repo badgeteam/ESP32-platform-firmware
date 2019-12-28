@@ -157,9 +157,9 @@ def move(path):
 			os.mkdir(target)
 	except:
 		drawTitle()
-		drawMessageBox("Failed to create target!")
+		drawMessageBox("FAILED TO\nCREATE TARGET")
 		display.flush()
-		time.sleep(2)
+		time.sleep(4)
 		showMenu()
 		return
 	
@@ -217,11 +217,20 @@ def onB(pressed):
 		system.launcher()
 
 # Launcher
-orientation.default()
-display.drawFill(0x000000)
+orientation.landscape()
+drawTitle()
 drawMessageBox("Loading...")
 display.flush()
 term.header(True, "Loading...")
+
+try:
+	os.listdir("/sd")
+except:
+	drawTitle()
+	drawMessageBox("NO SD CARD FOUND\nInsert SD card!")
+	display.flush()
+	time.sleep(5)
+	system.launcher()
 
 buttons.attach(buttons.BTN_LEFT,  onLeft)
 buttons.attach(buttons.BTN_RIGHT, onRight)

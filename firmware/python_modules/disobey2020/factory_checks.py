@@ -1,15 +1,20 @@
-import machine, display, time, system, consts, easydraw, network, neopixel, mpr121, sndmixer
+import machine, display, time, system, consts, easydraw, network, neopixel, mpr121, sndmixer, identification
 
 # 1) Introduction
 currentState = machine.nvs_getint('system', 'factory_checked')
 easydraw.messageCentered("FACTORY\n"+consts.INFO_FIRMWARE_NAME+"\nBuild "+str(consts.INFO_FIRMWARE_BUILD), True)
 display.flush()
-time.sleep(2)
+time.sleep(1.5)
 
-# 2) Calibrate the MPR121
+# 2) Determine badge type
+easydraw.messageCentered(identification.getName(), True)
+display.flush()
+time.sleep(3)
+
+# 3) Calibrate the MPR121
 import _mpr121calib
 
-# 3) Make sure that WiFi works
+# 4) Make sure that WiFi works
 easydraw.messageCentered("WiFi\nScanning...", True)
 display.flush()
 sta_if = network.WLAN(network.STA_IF)
@@ -18,28 +23,31 @@ data = sta_if.scan()
 if len(data) > 0:
 	easydraw.messageCentered("WiFi\nFound {}".format(len(data)), True)
 	display.flush()
-	for item in data:
-		print("SSID: {}, BSSID: {}. CHANNEL: {}, RSSI: {}, AUTHMODE: {} / {}, HIDDEN: {}".format(item[0], item[1], item[2], item[3], item[4], item[5], item[6]))
+	#for item in data:
+	#	print("SSID: {}, BSSID: {}. CHANNEL: {}, RSSI: {}, AUTHMODE: {} / {}, HIDDEN: {}".format(item[0], item[1], item[2], item[3], item[4], item[5], item[6]))
 else:
 	easydraw.messageCentered("WiFi\nNo network!", True)
+	display.flush()
 	while True:
 		time.sleep(1) #Sleep forever
 
-# 4) Install icons (workaround)
+# 5) Install icons (workaround)
 easydraw.messageCentered("Installing...", False)
 display.flush()
 import dashboard.resources.png_icons as icons
 icons.install()
 
-# 5) Set flag
+# 6) Set flag
 machine.nvs_setint('system', 'factory_checked', 2)
 machine.nvs_setint('system', 'force_sponsors', 1)
 
-# 6) Show message
+# 7) Show message
 easydraw.messageCentered("PASSED", True)
 display.flush()
 
-mpr121.set(10,1) #Calibration resets MPR121, here we re-enable LED power
+# 8) Blink LEDs and make noise
+
+mpr121.set(10,1) # Calibration resets MPR121, here we re-enable LED power
 
 buzzer_pin = machine.Pin(12, machine.Pin.OUT)
 time.sleep(0.01)

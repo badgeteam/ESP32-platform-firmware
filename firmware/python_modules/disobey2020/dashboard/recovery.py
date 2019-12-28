@@ -60,13 +60,15 @@ drawMessageBox("Loading...")
 display.flush()
 term.header(True, "Loading...")
 apps = []
-apps.append({"path":"dashboard.home",                  "name":"Home",               "icon":None,      "category":"system"})
+apps.append({"path":"dashboard.tools.reset_default",   "name":"Reset homescreen",   "icon":None, "category":"system"})
+apps.append({"path":"dashboard.tools.battery_monitor", "name":"Battery monitor",    "icon":None, "category":"system"})
 apps.append({"path":"dashboard.settings.wifi",         "name":"WiFi setup",         "icon":None,  "category":"system"})
 apps.append({"path":"dashboard.tools.update_firmware", "name":"Update firmware",    "icon":None, "category":"system"})
-apps.append({"path":"dashboard.tools.force_ota",       "name":"Force OTA update",    "icon":None, "category":"system"})
+apps.append({"path":"dashboard.tools.force_ota",       "name":"Force OTA update",   "icon":None, "category":"system"})
 apps.append({"path":"dashboard.installer",             "name":"Installer",          "icon":None, "category":"system"})
 apps.append({"path":"dashboard.tools.uninstaller",     "name":"Remove an app",      "icon":None,     "category":"system"})
 apps.append({"path":"dashboard.tools.update_apps",     "name":"Update apps",        "icon":None, "category":"system"})
+apps.append({"path":"dashboard.home",                  "name":"Home",               "icon":None,      "category":"system"})
 
 currentApp = 0
 
