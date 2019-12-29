@@ -196,6 +196,7 @@ SRC_C =  $(addprefix esp32/,\
 	modmpr121.c \
 	moderc12864.c \
 	modneopixel.c \
+	modloopback.c \
 	modssd1306.c \
 	modeink.c \
 	modespnow.c \

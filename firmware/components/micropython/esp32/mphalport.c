@@ -53,6 +53,8 @@
 #include "telnet.h"
 #endif
 
+#include "modloopback.h"
+
 uint32_t mp_hal_wdg_rst_tmo = 0;
 RTC_DATA_ATTR uint64_t mp_hal_ticks_base;
 
@@ -128,6 +130,8 @@ int mp_hal_stdin_rx_chr(uint32_t timeout)
 		// read telnet first
 		if (telnet_rx_any()) return telnet_rx_char();
 		#endif
+		
+		if (loopback_rx_any()) return loopback_rx_char();
 
 		c = ringbuf_get(&stdin_ringbuf);
     	if (c < 0) {
@@ -212,6 +216,7 @@ static void telnet_stdout_tx_str(const char *str, uint32_t len)
 // send newline character to printf channel
 //-------------------------------
 void mp_hal_stdout_tx_newline() {
+	loopback_stdout_put("\n", 1);
 	#ifdef CONFIG_MICROPY_USE_TELNET
    	if (telnet_loggedin()) telnet_tx_strn("\r\n", 2);
    	else {
@@ -226,6 +231,7 @@ void mp_hal_stdout_tx_newline() {
 //------------------------------------------
 void mp_hal_stdout_tx_str(const char *str) {
 	if (str == NULL) return;
+	loopback_stdout_put(str, strlen(str));
 	#ifdef CONFIG_MICROPY_USE_TELNET
    	if (telnet_loggedin()) telnet_tx_strn(str, strlen(str));
    	else {
@@ -248,6 +254,7 @@ void mp_hal_stdout_tx_str(const char *str) {
 //---------------------------------------------------------
 void mp_hal_stdout_tx_strn(const char *str, uint32_t len) {
 	if (str == NULL) return;
+	loopback_stdout_put(str, len);
 	#ifdef CONFIG_MICROPY_USE_TELNET
    	if (telnet_loggedin()) telnet_tx_strn(str, len);
    	else {
@@ -270,6 +277,7 @@ void mp_hal_stdout_tx_strn(const char *str, uint32_t len) {
 //----------------------------------------------------------------
 void mp_hal_stdout_tx_strn_cooked(const char *str, uint32_t len) {
 	if (str == NULL) return;
+	loopback_stdout_put(str, len);
 	#ifdef CONFIG_MICROPY_USE_TELNET
    	if (telnet_loggedin()) telnet_stdout_tx_str(str, len);
    	else {
