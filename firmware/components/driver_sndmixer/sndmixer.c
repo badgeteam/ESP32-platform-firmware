@@ -119,7 +119,7 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
     return 0;  // failed
   channel[ch].source = srcfns;
   channel[ch].volume = 128;
-  channel[ch].buffer = malloc(chunksz);
+  channel[ch].buffer = malloc(chunksz * sizeof(channel[ch].buffer[0]));
   if (!channel[ch].buffer) {
     clean_up_channel(ch);
     return 0;
@@ -241,8 +241,8 @@ static void sndmixer_task(void *arg) {
                 (channel[ch].chunksz << 16);  // reset dds acc; we have parsed chunksize samples.
             channel[ch].chunksz = r;          // save new chunksize
           }
-          // Multiply by volume, add to cumulative sample
-          s += (int32_t)(channel[ch].buffer[channel[ch].dds_acc >> 16]) * channel[ch].volume;
+          // Multiply by volume, add to cumulative sample. Limit volume to 1/2 maximum.
+          s += (int32_t)(channel[ch].buffer[channel[ch].dds_acc >> 16]) * channel[ch].volume / 2;
         }
       }
       // Correct for the number of channels and the multiplication by the volume

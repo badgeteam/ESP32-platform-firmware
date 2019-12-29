@@ -12,8 +12,9 @@
 
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 
-#define CHUNK_SIZE           32
-#define INTERNAL_BUFFER_SIZE 1024 * 40
+#define MAX_SAMPLES_PER_FRAME (1152 * 2)
+#define CHUNK_SIZE            32
+#define INTERNAL_BUFFER_SIZE  1024 * 40
 #define INTERNAL_BUFFER_FETCH_WHEN \
   8192  // new data will be fetched when there is less than this amount of data
 
@@ -42,13 +43,13 @@ inline void _readData(mp3_ctx_t *mp3) {
   if (dataAvailable < INTERNAL_BUFFER_FETCH_WHEN) {
     // 1) Get rid of old data
     if (mp3->dataCurr != mp3->dataStart) {
+      // Move available data to the begin of the buffer
       // printf("Moving %d bytes of data from %p to %p.\n", dataAvailable, mp3->dataCurr,
       // mp3->dataStart);
-      memcpy(mp3->dataStart, mp3->dataCurr,
-             dataAvailable);  // Move available data to the begin of the buffer
+      memmove(mp3->dataStart, mp3->dataCurr, dataAvailable);
+      mp3->dataCurr = mp3->dataStart;
+      mp3->dataEnd  = mp3->dataStart + dataAvailable;
     }
-    mp3->dataCurr = mp3->dataStart;  // Our current position is now the start of the buffer
-    mp3->dataEnd  = mp3->dataStart + dataAvailable;
 
     amountFetched = mp3->stream_read(mp3->stream, mp3->dataEnd, bufferAvailable);
     mp3->dataEnd += amountFetched;  // Our buffer now (hopefully) contains more data
@@ -114,7 +115,7 @@ int mp3_init_source(const void *data_start, const void *data_end, int req_sample
   mp3->dataEnd      = (unsigned char *)data_end;    // End of data
   mp3->lastRate     = 0;
   mp3->lastChannels = 0;
-  mp3->buffer       = calloc(1152 * 2, sizeof(short));
+  mp3->buffer       = calloc(MAX_SAMPLES_PER_FRAME, sizeof(short));
   mp3->bufferValid  = 0;
   mp3->bufferOffset = 0;
   mp3->dataPtr      = NULL;
@@ -127,7 +128,7 @@ int mp3_init_source(const void *data_start, const void *data_end, int req_sample
 
   *ctx = (void *)mp3;
 
-  mp3_decode((void *)mp3);  // Decode first part
+  mp3_decode(*ctx);  // Decode first part
 
   return CHUNK_SIZE;  // Chunk size
 }
@@ -149,7 +150,7 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   // Fill the struct with info
   mp3->lastRate     = 0;
   mp3->lastChannels = 0;
-  mp3->buffer       = calloc(1152 * 2, sizeof(short));
+  mp3->buffer       = calloc(MAX_SAMPLES_PER_FRAME, sizeof(short));
   mp3->bufferValid  = 0;
   mp3->bufferOffset = 0;
 
@@ -161,11 +162,16 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   mp3->dataCurr  = mp3->dataPtr;
   mp3->dataEnd   = mp3->dataPtr;
 
-  *ctx = (void *)mp3;
+  if (!mp3->dataPtr) {
+    return 0;
+  }
+
+  *ctx      = (void *)mp3;
+  int tries = 5;
   do {
     printf("Beep boop infinite loop\r\n");
     _readData(mp3);
-  } while (!mp3_decode(*ctx));
+  } while (!mp3_decode(*ctx) && --tries);
   printf("MP3 stream source started, data at %p!\n", mp3->dataStart);
 
   return CHUNK_SIZE;  // Chunk size
