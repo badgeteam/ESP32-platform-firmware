@@ -60,7 +60,7 @@ typedef struct {
   void *src_ctx;
   int volume;  // 0-256
   int flags;
-  int8_t *buffer;
+  int16_t *buffer;
   int chunksz;
   uint32_t dds_rate;  // Rate; 16.16 fixed
   uint32_t dds_acc;   // DDS accumulator, 16.16 fixed
@@ -125,7 +125,7 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
     return 0;
   }
   channel[ch].chunksz  = chunksz;
-  int real_rate        = srcfns->get_sample_rate(channel[ch].src_ctx);
+  int64_t real_rate    = srcfns->get_sample_rate(channel[ch].src_ctx);
   channel[ch].dds_rate = (real_rate << 16) / samplerate;
   channel[ch].dds_acc  = chunksz << 16;  // to force the main thread to get new data
   return 1;
@@ -210,7 +210,7 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
 
 // Sound mixer main loop.
 static void sndmixer_task(void *arg) {
-  uint8_t mixbuf[CHUNK_SIZE];
+  int16_t mixbuf[CHUNK_SIZE];
   printf("Sndmixer task up.\n");
   while (1) {
     // Handle any commands that are sent to us.
@@ -221,7 +221,7 @@ static void sndmixer_task(void *arg) {
 
     // Assemble CHUNK_SIZE worth of samples and dump it into the I2S subsystem.
     for (int i = 0; i < CHUNK_SIZE; i++) {
-      int s =
+      int32_t s =
           0;  // current sample value, multiplied by 256 (because of multiplies by channel volume)
       for (int ch = 0; ch < no_channels; ch++) {
         if (channel[ch].source) {
@@ -242,12 +242,19 @@ static void sndmixer_task(void *arg) {
             channel[ch].chunksz = r;          // save new chunksize
           }
           // Multiply by volume, add to cumulative sample
-          s += channel[ch].buffer[channel[ch].dds_acc >> 16] * channel[ch].volume;
+          s += (int32_t)(channel[ch].buffer[channel[ch].dds_acc >> 16]) * channel[ch].volume;
         }
       }
-      // Bring back to -128-127. Volume did *256, channels did *no_channels.
-      s         = (s / no_channels) >> 8;
-      mixbuf[i] = s + 128;  // because samples are signed, mix_buf is unsigned
+      // Correct for the number of channels and the multiplication by the volume
+      s /= no_channels * 256;
+
+      // Saturate
+      if (s > INT16_MAX)
+        s = INT16_MAX;
+      if (s < INT16_MIN)
+        s = INT16_MIN;
+
+      mixbuf[i] = s;
     }
     driver_i2s_sound_push(mixbuf, CHUNK_SIZE);
   }

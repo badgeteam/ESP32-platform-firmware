@@ -97,18 +97,19 @@ int wav_get_sample_rate(void *ctx) {
   return wav->rate;
 }
 
-int wav_fill_buffer(void *ctx, int8_t *buffer) {
+int wav_fill_buffer(void *ctx, int16_t *buffer) {
   wav_ctx_t *wav = (wav_ctx_t *)ctx;
   for (int i = 0; i < CHUNK_SIZE; i++) {
     if (wav->pos >= wav->data_len)
       return i;
     if (wav->bits == 8) {
-      buffer[i] = ((uint8_t)wav->data[wav->pos]) - 128;
+      buffer[i] = (((uint8_t)wav->data[wav->pos]) - 128);
       wav->pos += 1;
     } else {
       buffer[i] = wav->data[wav->pos];
       wav->pos += 2;
     }
+    buffer[i] <<= 8;
     if (wav->channels != 1)
       wav->pos += (wav->channels - 1) * (wav->bits / 8);
   }

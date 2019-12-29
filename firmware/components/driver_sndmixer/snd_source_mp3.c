@@ -13,9 +13,9 @@
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 
 #define CHUNK_SIZE           32
-#define INTERNAL_BUFFER_SIZE 1024 * 32
+#define INTERNAL_BUFFER_SIZE 1024 * 40
 #define INTERNAL_BUFFER_FETCH_WHEN \
-  1024  // new data will be fetched when there is less than this amount of data
+  8192  // new data will be fetched when there is less than this amount of data
 
 typedef struct {
   HMP3Decoder hMP3Decoder;
@@ -35,8 +35,8 @@ typedef struct {
 
 inline void _readData(mp3_ctx_t *mp3) {
   // Fetch data for internal buffer
-  int dataAvailable   = mp3->dataEnd - mp3->dataCurr + 1;
-  int bufferAvailable = INTERNAL_BUFFER_SIZE - (mp3->dataEnd - mp3->dataStart) - 1;
+  int dataAvailable   = mp3->dataEnd - mp3->dataCurr;
+  int bufferAvailable = INTERNAL_BUFFER_SIZE - (mp3->dataEnd - mp3->dataStart);
   int amountFetched   = 0;
 
   if (dataAvailable < INTERNAL_BUFFER_FETCH_WHEN) {
@@ -48,9 +48,9 @@ inline void _readData(mp3_ctx_t *mp3) {
              dataAvailable);  // Move available data to the begin of the buffer
     }
     mp3->dataCurr = mp3->dataStart;  // Our current position is now the start of the buffer
-    mp3->dataEnd  = mp3->dataStart + dataAvailable - 1;
+    mp3->dataEnd  = mp3->dataStart + dataAvailable;
 
-    int amountFetched = mp3->stream_read(mp3->stream, mp3->dataEnd + 1, bufferAvailable);
+    amountFetched = mp3->stream_read(mp3->stream, mp3->dataEnd, bufferAvailable);
     mp3->dataEnd += amountFetched;  // Our buffer now (hopefully) contains more data
   }
 
@@ -63,12 +63,12 @@ int mp3_decode(void *ctx) {
   if (mp3->stream)
     _readData(mp3);
 
-  int available = mp3->dataEnd - mp3->dataCurr + 1;
+  int available = mp3->dataEnd - mp3->dataCurr;
 
   int nextSync = MP3FindSyncWord(mp3->dataCurr, available);
   if (nextSync >= 0) {
     mp3->dataCurr += nextSync;
-    available = mp3->dataEnd - mp3->dataCurr + 1;
+    available = mp3->dataEnd - mp3->dataCurr;
 
     // printf("Next syncword @ %d, available = %d\n", nextSync, available);
     int ret = MP3Decode(mp3->hMP3Decoder, &mp3->dataCurr, &available, mp3->buffer, 0);
@@ -160,13 +160,13 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   mp3->dataStart = mp3->dataPtr;
   mp3->dataCurr  = mp3->dataPtr;
   mp3->dataEnd   = mp3->dataPtr;
-  _readData(mp3);
-
-  printf("MP3 stream source started, data at %p!\n", mp3->dataStart);
 
   *ctx = (void *)mp3;
-
-  mp3_decode((void *)mp3);  // Decode first part
+  do {
+    printf("Beep boop infinite loop\r\n");
+    _readData(mp3);
+  } while (!mp3_decode(*ctx));
+  printf("MP3 stream source started, data at %p!\n", mp3->dataStart);
 
   return CHUNK_SIZE;  // Chunk size
 }
@@ -177,7 +177,7 @@ int mp3_get_sample_rate(void *ctx) {
   return mp3->lastRate;
 }
 
-int mp3_fill_buffer(void *ctx, int8_t *buffer) {
+int mp3_fill_buffer(void *ctx, int16_t *buffer) {
   mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
   if (mp3->bufferValid < 1)
     mp3_decode(ctx);
@@ -186,11 +186,14 @@ int mp3_fill_buffer(void *ctx, int8_t *buffer) {
     if (len > CHUNK_SIZE)
       len = CHUNK_SIZE;
     for (int i = 0; i < len; i++) {
-      buffer[i] = mp3->buffer[mp3->bufferOffset + i] >> 8;  // MP3 gives 16-bit audio, make that 8
-                                                            // :D
+      int rv = 0;
+      for (int j = 0; j < mp3->lastChannels; j++) {
+        rv += mp3->buffer[mp3->bufferOffset + i * mp3->lastChannels + j];
+      }
+      buffer[i] = (rv / mp3->lastChannels);
     }
     mp3->bufferValid -= len;
-    mp3->bufferOffset += len;
+    mp3->bufferOffset += len * mp3->lastChannels;
     return len;
   }
 

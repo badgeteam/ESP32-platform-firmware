@@ -45,22 +45,20 @@ int mod_get_sample_rate(void *ctx) {
   return mod->sample_rate;
 }
 
-int mod_fill_buffer(void *ctx, int8_t *buffer) {
+int mod_fill_buffer(void *ctx, int16_t *buffer) {
   mod_ctx_t *mod = (mod_ctx_t *)ctx;
   int *samps     = (int *)buffer;
   int r          = replay_get_audio(mod->replay, samps);
   //	printf("Got %d samps from ibxm.\n", r);
   for (int i = 0; i < r; i++) {
     int s = samps[i + 1];
-    if (s > 32767)
-      s = 32767;
-    if (s < -32767)
-      s = -32767;
-    buffer[i] = s >> 8;
-    //		if (i<16) buffer[i]=0;
+    if (s > INT16_MAX)
+      s = INT16_MAX;
+    if (s < INT16_MIN)
+      s = INT16_MIN;
+    buffer[i] = s;
   }
   return r;
-  //	return r-10;
 }
 
 void mod_deinit_source(void *ctx) {

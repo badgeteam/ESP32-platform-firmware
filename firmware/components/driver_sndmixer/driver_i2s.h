@@ -21,7 +21,7 @@ void driver_i2s_sound_start();
 void driver_i2s_sound_stop();
 
 // Push audio to the driver
-void driver_i2s_sound_push(uint8_t *buf, int len);
+void driver_i2s_sound_push(int16_t *buf, int len);
 
 // Set the volume (0-255)
 void driver_i2s_set_volume(uint8_t new_volume);

@@ -127,7 +127,7 @@ int synth_get_sample_rate(void *ctx) {
   return synth->sampleRate;
 }
 
-int synth_fill_buffer(void *ctx, int8_t *buffer) {
+int synth_fill_buffer(void *ctx, int16_t *buffer) {
   synth_ctx_t *synth = (synth_ctx_t *)ctx;
 
   if (synth->frequency == 0) {
@@ -175,6 +175,7 @@ int synth_fill_buffer(void *ctx, int8_t *buffer) {
       default:
         buffer[i] = 0;
     }
+    buffer[i] <<= 8;
   }
   return CHUNK_SIZE;
 }
