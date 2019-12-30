@@ -16,10 +16,11 @@ int sndmixer_channels = 0;
 
 const char *msg_error_not_started = "sndmixer task not started!";
 
-static mp_obj_t modsndmixer_begin(mp_obj_t _channels) {
+static mp_obj_t modsndmixer_begin(mp_obj_t _channels, mp_obj_t _stereo) {
   int channels = mp_obj_get_int(_channels);
+  int stereo   = mp_obj_is_true(_stereo);
   if (!sndmixer_started) {
-    sndmixer_init(channels);
+    sndmixer_init(channels, stereo);
     sndmixer_started  = 1;
     sndmixer_channels = channels;
   } else {
@@ -192,7 +193,7 @@ static mp_obj_t modsndmixer_waveform(mp_obj_t _id, mp_obj_t _waveform) {
 }
 
 /* --- */
-static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_begin_obj, modsndmixer_begin);
+static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_begin_obj, modsndmixer_begin);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_play_obj, modsndmixer_play);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_pause_obj, modsndmixer_pause);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_stop_obj, modsndmixer_stop);

@@ -10,12 +10,13 @@ extern "C" {
  */
 typedef struct {
   /*! Initialize the sound source. Returns size of data returned per call of fill_buffer. */
-  int (*init_source)(const void *data_start, const void *data_end, int req_sample_rate, void **ctx);
+  int (*init_source)(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
+                     int *stereo);
   /*! Get the actual sample rate at which the source returns data */
   int (*get_sample_rate)(void *ctx);
   /*! Decode a bufferful of data. Returns 0 when file ended or something went wrong. Returns amount
    * of bytes in buffer (normally what init_source returned) otherwise. */
-  int (*fill_buffer)(void *ctx, int16_t *buffer);
+  int (*fill_buffer)(void *ctx, int16_t *buffer, int stereo);
   /*! Destroy source, free resources */
   void (*deinit_source)(void *ctx);
   /*! Set frequency of synthesizer */
@@ -32,7 +33,7 @@ typedef struct {
  *
  * @param no_channels Amount if sounds to be able to be played simultaneously.
  */
-int sndmixer_init(int no_channels);
+int sndmixer_init(int no_channels, int stereo);
 
 /**
  * @brief Queue the data of a .wav file to be played

@@ -67,8 +67,8 @@ int mp3_decode(void *ctx) {
     _readData(mp3);
 
   int available = mp3->dataEnd - mp3->dataCurr;
+  int nextSync  = MP3FindSyncWord(mp3->dataCurr, available);
 
-  int nextSync = MP3FindSyncWord(mp3->dataCurr, available);
   if (nextSync >= 0) {
     mp3->dataCurr += nextSync;
     available = mp3->dataEnd - mp3->dataCurr;
@@ -83,14 +83,15 @@ int mp3_decode(void *ctx) {
 
     MP3FrameInfo fi;
     MP3GetLastFrameInfo(mp3->hMP3Decoder, &fi);
+
     mp3->lastRate     = fi.samprate;
     mp3->lastChannels = fi.nChans;
     int validSamples  = fi.outputSamps / mp3->lastChannels;
+    mp3->bufferValid  = validSamples;
+    mp3->bufferOffset = 0;
     // printf("MP3Decode OK, buffer @ %p, available = %d, rate = %d, channels = %d, validSamples =
     // %d\n", mp3->dataCurr, available, mp3->lastRate, mp3->lastChannels, validSamples);
 
-    mp3->bufferValid  = validSamples;
-    mp3->bufferOffset = 0;
     return 1;
   } else {
     // printf("No syncword found\n");
@@ -98,7 +99,8 @@ int mp3_decode(void *ctx) {
   }
 }
 
-int mp3_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx) {
+int mp3_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
+                    int *stereo) {
   // Allocate space for the information struct
   mp3_ctx_t *mp3 = calloc(sizeof(mp3_ctx_t), 1);
   if (!mp3)
@@ -128,7 +130,8 @@ int mp3_init_source(const void *data_start, const void *data_end, int req_sample
 
   printf("MP3 source started, data at %p with size %u!\n", mp3->dataStart, length);
 
-  *ctx = (void *)mp3;
+  *ctx    = (void *)mp3;
+  *stereo = (mp3->lastChannels == 2);
 
   mp3_decode(*ctx);  // Decode first part
 
@@ -140,7 +143,7 @@ err:
 }
 
 int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int req_sample_rate,
-                           void **ctx) {
+                           void **ctx, int *stereo) {
   // Allocate space for the information struct
   mp3_ctx_t *mp3 = calloc(sizeof(mp3_ctx_t), 1);
   if (!mp3)
@@ -181,8 +184,10 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   if (!tries) {
     goto err;
   }
-  printf("MP3 stream source started, data at %p!\n", mp3->dataStart);
+  printf("MP3 stream source started, data at %p, %d Hz, %d channels!\n", mp3->dataStart,
+         mp3->lastRate, mp3->lastChannels);
 
+  *stereo = mp3->lastChannels == 2;
   return CHUNK_SIZE;  // Chunk size
 
 err:
@@ -196,20 +201,21 @@ int mp3_get_sample_rate(void *ctx) {
   return mp3->lastRate;
 }
 
-int mp3_fill_buffer(void *ctx, int16_t *buffer) {
+int mp3_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
   mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
-  if (mp3->bufferValid < 1)
+  if (mp3->bufferValid <= 0)
     mp3_decode(ctx);
   if (mp3->bufferValid > 0) {
     int len = mp3->bufferValid;
     if (len > CHUNK_SIZE)
       len = CHUNK_SIZE;
     for (int i = 0; i < len; i++) {
-      int rv = 0;
-      for (int j = 0; j < mp3->lastChannels; j++) {
-        rv += mp3->buffer[mp3->bufferOffset + i * mp3->lastChannels + j];
+      if (stereo && (mp3->lastChannels == 2)) {
+        buffer[i * 2 + 0] = mp3->buffer[mp3->bufferOffset + i * 2 + 0];
+        buffer[i * 2 + 1] = mp3->buffer[mp3->bufferOffset + i * 2 + 1];
+      } else {
+        buffer[i] = mp3->buffer[mp3->bufferOffset + i * mp3->lastChannels];
       }
-      buffer[i] = (rv / mp3->lastChannels);
     }
     mp3->bufferValid -= len;
     mp3->bufferOffset += len * mp3->lastChannels;

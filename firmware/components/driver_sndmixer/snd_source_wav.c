@@ -11,7 +11,7 @@
 #define CHUNK_SIZE 32
 
 typedef struct {
-  const int8_t *data;
+  const uint8_t *data;
   int pos;
   int data_len;
   int rate;
@@ -46,7 +46,8 @@ typedef struct __attribute__((packed)) {
   };
 } chunk_hdr_t;
 
-int wav_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx) {
+int wav_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
+                    int *stereo) {
   // Check sanity first
   char *p        = (char *)data_start;
   wav_ctx_t *wav = calloc(sizeof(wav_ctx_t), 1);
@@ -72,7 +73,7 @@ int wav_init_source(const void *data_start, const void *data_end, int req_sample
         wav->channels = 1;
     } else if (memcmp(ch->magic, "data", 4) == 0) {
       wav->data_len = ch->size;
-      wav->data     = ch->data;
+      wav->data     = (uint8_t *)ch->data;
     }
     p += 8 + ch->size;
     if (ch->size & 1)
@@ -86,6 +87,7 @@ int wav_init_source(const void *data_start, const void *data_end, int req_sample
   printf("Wav: %d bit/sample, %d Hz, %d bytes long\n", wav->bits, wav->rate, wav->data_len);
   wav->pos = 0;
   *ctx     = (void *)wav;
+  *stereo  = (wav->channels >= 2);
   return CHUNK_SIZE;
 err:
   free(wav);
@@ -97,21 +99,37 @@ int wav_get_sample_rate(void *ctx) {
   return wav->rate;
 }
 
-int wav_fill_buffer(void *ctx, int16_t *buffer) {
+int16_t get_sample(wav_ctx_t *wav) {
+  int16_t rv = 0;
+  if (wav->bits == 8) {
+    rv = (wav->data[wav->pos] - 128) << 8;
+    wav->pos += 1;
+  } else {
+    rv = wav->data[wav->pos] | wav->data[wav->pos + 1] << 8;
+    wav->pos += 2;
+  }
+  return rv;
+}
+
+int wav_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
   wav_ctx_t *wav = (wav_ctx_t *)ctx;
+  int channels   = 1;
+  if (wav->channels == 2 && stereo) {
+    channels = 2;
+  }
   for (int i = 0; i < CHUNK_SIZE; i++) {
     if (wav->pos >= wav->data_len)
       return i;
-    if (wav->bits == 8) {
-      buffer[i] = (((uint8_t)wav->data[wav->pos]) - 128);
-      wav->pos += 1;
+    if (channels == 2) {
+      buffer[i * 2 + 0] = get_sample(wav);
+      buffer[i * 2 + 1] = get_sample(wav);
     } else {
-      buffer[i] = wav->data[wav->pos];
-      wav->pos += 2;
+      int32_t sum = 0;
+      for (int k = 0; k < wav->channels; k++) {
+        sum += get_sample(wav);
+      }
+      buffer[i] = sum / wav->channels;
     }
-    buffer[i] <<= 8;
-    if (wav->channels != 1)
-      wav->pos += (wav->channels - 1) * (wav->bits / 8);
   }
   return CHUNK_SIZE;
 }
