@@ -54,9 +54,9 @@ int wav_init_source(const void *data_start, const void *data_end, int req_sample
     goto err;
   riff_hdr_t *riff = (riff_hdr_t *)p;
   if (memcmp(riff->riffmagic, "RIFF", 4) != 0)
-    return -1;
+    goto err;
   if (memcmp(riff->wavemagic, "WAVE", 4) != 0)
-    return -1;
+    goto err;
   p += sizeof(riff_hdr_t);
   while (p < (char *)data_end) {
     chunk_hdr_t *ch = (chunk_hdr_t *)p;
