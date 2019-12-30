@@ -14,20 +14,20 @@
 #include "driver/dac.h"
 #include "soc/rtc_cntl_reg.h"
 
-//Start audio output driver
-void    driver_i2s_sound_start();
+// Start audio output driver
+void driver_i2s_sound_start();
 
-//Stop audio output driver
-void    driver_i2s_sound_stop();
+// Stop audio output driver
+void driver_i2s_sound_stop();
 
-//Push audio to the driver
-void    driver_i2s_sound_push(uint8_t *buf, int len);
+// Push audio to the driver
+void driver_i2s_sound_push(int16_t *buf, int len);
 
-//Set the volume (0-255)
-void    driver_i2s_set_volume(uint8_t new_volume);
+// Set the volume (0-255)
+void driver_i2s_set_volume(uint8_t new_volume);
 
-//Get the volume
+// Get the volume
 uint8_t driver_i2s_get_volume();
 
-//Mute audio output
-void    driver_i2s_sound_mute(int doMute);
+// Mute audio output
+void driver_i2s_sound_mute(int doMute);
