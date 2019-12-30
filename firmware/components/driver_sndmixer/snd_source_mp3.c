@@ -34,6 +34,8 @@ typedef struct {
   void *stream;  // Pointer to stream
 } mp3_ctx_t;
 
+void mp3_deinit_source(void *ctx);
+
 inline void _readData(mp3_ctx_t *mp3) {
   // Fetch data for internal buffer
   int dataAvailable   = mp3->dataEnd - mp3->dataCurr;
@@ -100,13 +102,13 @@ int mp3_init_source(const void *data_start, const void *data_end, int req_sample
   // Allocate space for the information struct
   mp3_ctx_t *mp3 = calloc(sizeof(mp3_ctx_t), 1);
   if (!mp3)
-    return -1;
+    goto err;
 
   // Start the MP3 library
   mp3->hMP3Decoder = MP3InitDecoder();
   if (!mp3->hMP3Decoder) {
     printf("Out of memory error! hMP3Decoder is NULL\n");
-    return -1;
+    goto err;
   }
 
   // Fill the struct with info
@@ -131,6 +133,10 @@ int mp3_init_source(const void *data_start, const void *data_end, int req_sample
   mp3_decode(*ctx);  // Decode first part
 
   return CHUNK_SIZE;  // Chunk size
+
+err:
+  mp3_deinit_source(mp3);
+  return -1;
 }
 
 int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int req_sample_rate,
@@ -138,13 +144,13 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   // Allocate space for the information struct
   mp3_ctx_t *mp3 = calloc(sizeof(mp3_ctx_t), 1);
   if (!mp3)
-    return -1;
+    goto err;
 
   // Start the MP3 library
   mp3->hMP3Decoder = MP3InitDecoder();
   if (!mp3->hMP3Decoder) {
     printf("Out of memory error! hMP3Decoder is NULL\n");
-    return -1;
+    goto err;
   }
 
   // Fill the struct with info
@@ -163,7 +169,7 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   mp3->dataEnd   = mp3->dataPtr;
 
   if (!mp3->dataPtr) {
-    return 0;
+    goto err;
   }
 
   *ctx      = (void *)mp3;
@@ -172,9 +178,16 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
     printf("Beep boop infinite loop\r\n");
     _readData(mp3);
   } while (!mp3_decode(*ctx) && --tries);
+  if (!tries) {
+    goto err;
+  }
   printf("MP3 stream source started, data at %p!\n", mp3->dataStart);
 
   return CHUNK_SIZE;  // Chunk size
+
+err:
+  mp3_deinit_source(mp3);
+  return -1;
 }
 
 int mp3_get_sample_rate(void *ctx) {
@@ -208,11 +221,14 @@ int mp3_fill_buffer(void *ctx, int16_t *buffer) {
 
 void mp3_deinit_source(void *ctx) {
   mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
-  MP3FreeDecoder(mp3->hMP3Decoder);
-  free(mp3->buffer);
-  if (mp3->dataPtr)
-    free(mp3->dataPtr);  // Stream
-  free(mp3);
+  if (mp3) {
+    MP3FreeDecoder(mp3->hMP3Decoder);
+    if (mp3->buffer)
+      free(mp3->buffer);
+    if (mp3->dataPtr)
+      free(mp3->dataPtr);  // Stream
+    free(mp3);
+  }
 }
 
 const sndmixer_source_t sndmixer_source_mp3 = {.init_source     = mp3_init_source,
