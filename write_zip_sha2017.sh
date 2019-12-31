@@ -1,5 +1,5 @@
 #!/bin/bash
-source set_env.sh
+export PATH="$PATH:$(pwd)/xtensa-esp32-elf/bin"
 
 cd first_boot_files
 zip -0 ../files.zip -xi *
