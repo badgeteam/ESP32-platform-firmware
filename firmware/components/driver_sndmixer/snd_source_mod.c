@@ -13,7 +13,8 @@ typedef struct {
   int sample_rate;
 } mod_ctx_t;
 
-int mod_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx) {
+int mod_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
+                    int *stereo) {
   mod_ctx_t *mod = calloc(sizeof(mod_ctx_t), 1);
   if (!mod)
     return -1;
@@ -30,6 +31,7 @@ int mod_init_source(const void *data_start, const void *data_end, int req_sample
     goto err;
   mod->sample_rate = req_sample_rate;
   *ctx             = (void *)mod;
+  *stereo          = 0;
   return calculate_mix_buf_len(req_sample_rate) * 4;  // ToDo: check this!
 err:
   if (mod->module)
@@ -45,10 +47,11 @@ int mod_get_sample_rate(void *ctx) {
   return mod->sample_rate;
 }
 
-int mod_fill_buffer(void *ctx, int16_t *buffer) {
+int mod_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
   mod_ctx_t *mod = (mod_ctx_t *)ctx;
   int *samps     = (int *)buffer;
   int r          = replay_get_audio(mod->replay, samps);
+  (void)stereo;
   //	printf("Got %d samps from ibxm.\n", r);
   for (int i = 0; i < r; i++) {
     int s = samps[i + 1];

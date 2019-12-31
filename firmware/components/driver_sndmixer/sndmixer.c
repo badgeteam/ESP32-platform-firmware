@@ -21,6 +21,7 @@
 #define CHFL_EVICTABLE (1 << 0)
 #define CHFL_PAUSED    (1 << 1)
 #define CHFL_LOOP      (1 << 2)
+#define CHFL_STEREO    (1 << 3)
 
 typedef enum {
   CMD_QUEUE_WAV = 1,
@@ -71,6 +72,7 @@ static int no_channels;
 static int samplerate;
 static volatile uint32_t curr_id = 0;
 static QueueHandle_t cmd_queue;
+static int use_stereo = 0;
 
 // Grabs a new ID by atomically increasing curr_id and returning its value. This is called outside
 // of the audio playing thread, hence the atomicity.
@@ -114,12 +116,15 @@ static int find_free_channel() {
 
 static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data_start,
                        const void *data_end) {
-  int chunksz = srcfns->init_source(data_start, data_end, samplerate, &channel[ch].src_ctx);
+  int stereo = 0;
+  int chunksz =
+      srcfns->init_source(data_start, data_end, samplerate, &channel[ch].src_ctx, &stereo);
   if (chunksz <= 0)
     return 0;  // failed
   channel[ch].source = srcfns;
   channel[ch].volume = 128;
-  channel[ch].buffer = malloc(chunksz * sizeof(channel[ch].buffer[0]));
+  channel[ch].buffer =
+      malloc(chunksz * sizeof(channel[ch].buffer[0]) * ((stereo && use_stereo) ? 2 : 1));
   if (!channel[ch].buffer) {
     clean_up_channel(ch);
     return 0;
@@ -128,6 +133,11 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
   int64_t real_rate    = srcfns->get_sample_rate(channel[ch].src_ctx);
   channel[ch].dds_rate = (real_rate << 16) / samplerate;
   channel[ch].dds_acc  = chunksz << 16;  // to force the main thread to get new data
+  channel[ch].flags    = 0;
+  if (stereo && use_stereo) {
+    printf("Starting stereo channel\n");
+    channel[ch].flags |= CHFL_STEREO;
+  }
   return 1;
 }
 
@@ -156,8 +166,8 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
       printf("Sndmixer: Failed to start decoder for id %d\n", cmd->id);
       return;  // fail
     }
-    channel[ch].id    = cmd->id;  // success; set ID
-    channel[ch].flags = cmd->flags;
+    channel[ch].id = cmd->id;  // success; set ID
+    channel[ch].flags |= cmd->flags;
   } else if (cmd->cmd == CMD_PAUSE_ALL) {
     for (int x = 0; x < no_channels; x++)
       channel[x].flags |= CHFL_PAUSED;
@@ -206,11 +216,11 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
   }
 }
 
-#define CHUNK_SIZE 64
+#define CHUNK_SIZE 32
 
 // Sound mixer main loop.
 static void sndmixer_task(void *arg) {
-  int16_t mixbuf[CHUNK_SIZE];
+  int16_t mixbuf[CHUNK_SIZE * (use_stereo ? 2 : 1)];
   printf("Sndmixer task up.\n");
   while (1) {
     // Handle any commands that are sent to us.
@@ -221,42 +231,58 @@ static void sndmixer_task(void *arg) {
 
     // Assemble CHUNK_SIZE worth of samples and dump it into the I2S subsystem.
     for (int i = 0; i < CHUNK_SIZE; i++) {
-      int32_t s =
-          0;  // current sample value, multiplied by 256 (because of multiplies by channel volume)
+      // current sample value, multiplied by 256 (because of multiplies by channel volume)
+      int32_t s[2] = {0, 0};
       for (int ch = 0; ch < no_channels; ch++) {
-        if (channel[ch].source) {
+        sndmixer_channel_t *chan = &channel[ch];
+        if (chan->source) {
           // Channel is active.
-          channel[ch].dds_acc += channel[ch].dds_rate;  // select next sample
+          chan->dds_acc += chan->dds_rate;  // select next sample
           // dds_acc>>16 now gives us which sample to get from the buffer.
-          if ((channel[ch].dds_acc >> 16) >= channel[ch].chunksz) {
+          while ((chan->dds_acc >> 16) >= chan->chunksz && chan->source) {
             // That value is outside the channels chunk buffer. Refill that first.
-            int r = channel[ch].source->fill_buffer(channel[ch].src_ctx, channel[ch].buffer);
+            int r = chan->source->fill_buffer(chan->src_ctx, chan->buffer, use_stereo);
             if (r == 0) {
               // Source is done.
-              printf("Sndmixer: %d: cleaning up source because of EOF\n", channel[ch].id);
+              printf("Sndmixer: %d: cleaning up source because of EOF\n", chan->id);
               clean_up_channel(ch);
               continue;
             }
-            channel[ch].dds_acc -=
-                (channel[ch].chunksz << 16);  // reset dds acc; we have parsed chunksize samples.
-            channel[ch].chunksz = r;          // save new chunksize
+            chan->dds_acc -=
+                (chan->chunksz << 16);  // reset dds acc; we have parsed chunksize samples.
+            chan->chunksz = r;          // save new chunksize
+          }
+          if (!chan->source) {
+            continue;
           }
           // Multiply by volume, add to cumulative sample. Limit volume to 1/2 maximum.
-          s += (int32_t)(channel[ch].buffer[channel[ch].dds_acc >> 16]) * channel[ch].volume / 2;
+          uint32_t acc = chan->dds_acc >> 16;
+          if (chan->flags & CHFL_STEREO) {
+            s[0] += (int32_t)(chan->buffer[acc * 2 + 0]) * chan->volume / 2;
+            s[1] += (int32_t)(chan->buffer[acc * 2 + 1]) * chan->volume / 2;
+          } else {
+            s[0] += (int32_t)(chan->buffer[acc]) * chan->volume / 2;
+            s[1] += (int32_t)(chan->buffer[acc]) * chan->volume / 2;
+          }
         }
       }
       // Correct for the number of channels and the multiplication by the volume
-      s /= no_channels * 256;
+      s[0] /= no_channels * 256;
+      s[1] /= no_channels * 256;
 
       // Saturate
-      if (s > INT16_MAX)
-        s = INT16_MAX;
-      if (s < INT16_MIN)
-        s = INT16_MIN;
+#define SAT(x, min, max) ((x > max) ? max : (x < min) ? min : x)
+      s[0] = SAT(s[0], INT16_MIN, INT16_MAX);
+      s[1] = SAT(s[1], INT16_MIN, INT16_MAX);
 
-      mixbuf[i] = s;
+      if (use_stereo) {
+        mixbuf[i * 2 + 0] = s[0];
+        mixbuf[i * 2 + 1] = s[1];
+      } else {
+        mixbuf[i] = (s[0] + s[1]) / 2;
+      }
     }
-    driver_i2s_sound_push(mixbuf, CHUNK_SIZE);
+    driver_i2s_sound_push(mixbuf, CHUNK_SIZE, use_stereo);
   }
   // ToDo: de-init channels/buffers/... if we ever implement a deinit cmd
   vTaskDelete(NULL);
@@ -265,11 +291,12 @@ static void sndmixer_task(void *arg) {
 // Run on core 1 if enabled, core 0 if not.
 #define MY_CORE (portNUM_PROCESSORS - 1)
 
-int sndmixer_init(int p_no_channels) {
+int sndmixer_init(int p_no_channels, int stereo) {
   no_channels = p_no_channels;
   samplerate  = CONFIG_DRIVER_SNDMIXER_SAMPLE_RATE;
   driver_i2s_sound_start();
-  channel = calloc(sizeof(sndmixer_channel_t), no_channels);
+  channel    = calloc(sizeof(sndmixer_channel_t), no_channels);
+  use_stereo = stereo;
   if (!channel)
     return 0;
   curr_id   = 0;

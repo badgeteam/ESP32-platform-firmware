@@ -83,21 +83,27 @@ void driver_i2s_sound_stop() {
 }
 
 #define SND_CHUNKSZ 32
-void driver_i2s_sound_push(int16_t *buf, int len) {
-  uint32_t tmpb[SND_CHUNKSZ];
+void driver_i2s_sound_push(int16_t *buf, int len, int stereo_input) {
+  uint16_t tmpb[SND_CHUNKSZ * 2];
   int i = 0;
   while (i < len) {
     int plen = len - i;
-    if (plen > SND_CHUNKSZ)
+    if (plen > SND_CHUNKSZ) {
       plen = SND_CHUNKSZ;
-    for (int j = 0; j < plen; j++) {
-      int32_t s =
-          (((int32_t)buf[i + j]) * config.volume);  // multiply with volume into a 32-bit int
-      s /= 256;                                     // divide off volume max
-
-      // Remove the offset to move it into the range [0:65535]
-      uint32_t unsigned_sample = (s - INT16_MIN);
-      tmpb[j] = (unsigned_sample) + (unsigned_sample << 16);  // Use the same data for both channels
+    }
+    for (int sample = 0; sample < plen; sample++) {
+      int32_t s[2] = {0, 0};
+      if (stereo_input) {
+        s[0] = buf[(i + sample) * 2 + 0];
+        s[1] = buf[(i + sample) * 2 + 1];
+      } else {
+        s[0] = s[1] = buf[i + sample];
+      }
+      // Multiply with volume/volume_max, then offset to [0:UINT16_MAX]
+      s[0]                       = s[0] * config.volume / 256 - INT16_MIN;
+      s[1]                       = s[1] * config.volume / 256 - INT16_MIN;
+      tmpb[(i + sample) * 2 + 0] = s[0];
+      tmpb[(i + sample) * 2 + 1] = s[1];
     }
 
 #ifdef DRIVER_SNDMIXER_I2S_PORT1
@@ -106,7 +112,7 @@ void driver_i2s_sound_push(int16_t *buf, int len) {
     const i2s_port_t port = 0;
 #endif
 
-    i2s_write_bytes(port, (char *)tmpb, plen * 4, portMAX_DELAY);
+    i2s_write_bytes(port, (char *)tmpb, plen * 2 * sizeof(tmpb[0]), portMAX_DELAY);
     i += plen;
   }
 }
