@@ -235,7 +235,7 @@ static void sndmixer_task(void *arg) {
       int32_t s[2] = {0, 0};
       for (int ch = 0; ch < no_channels; ch++) {
         sndmixer_channel_t *chan = &channel[ch];
-        if (chan->source) {
+        if (chan->source  && !(chan->flags & CHFL_PAUSED)) {
           // Channel is active.
           chan->dds_acc += chan->dds_rate;  // select next sample
           // dds_acc>>16 now gives us which sample to get from the buffer.
