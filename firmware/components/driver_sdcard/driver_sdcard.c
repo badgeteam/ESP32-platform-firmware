@@ -57,38 +57,38 @@ esp_err_t driver_sdcard_mount(const char* mount_point, bool format_if_mount_fail
 	#ifdef CONFIG_DRIVER_SDCARD_MODE_SPI
 		sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 		
-		#ifdef DRIVER_SDCARD_BUS_HSPI
+		#ifdef CONFIG_DRIVER_SDCARD_BUS_HSPI
 			host.slot = HSPI_HOST;
 		#else
 			host.slot = VSPI_HOST;
 		#endif
 		
 		sdspi_slot_config_t slot_config = SDSPI_SLOT_CONFIG_DEFAULT();
-		slot_config.gpio_miso   = DRIVER_SDCARD_PIN_MISO;
-		slot_config.gpio_mosi   = DRIVER_SDCARD_PIN_MOSI;
-		slot_config.gpio_sck    = DRIVER_SDCARD_PIN_CLK;
-		slot_config.gpio_cs     = DRIVER_SDCARD_PIN_CS;
-		slot_config.dma_channel = DRIVER_SDCARD_DMA_CHANNEL;
+		slot_config.gpio_miso   = CONFIG_DRIVER_SDCARD_PIN_MISO;
+		slot_config.gpio_mosi   = CONFIG_DRIVER_SDCARD_PIN_MOSI;
+		slot_config.gpio_sck    = CONFIG_DRIVER_SDCARD_PIN_CLK;
+		slot_config.gpio_cs     = CONFIG_DRIVER_SDCARD_PIN_CS;
+		slot_config.dma_channel = CONFIG_DRIVER_SDCARD_DMA_CHANNEL;
 		
-		gpio_pad_select_gpio(DRIVER_SDCARD_PIN_MISO);
-		gpio_pad_select_gpio(DRIVER_SDCARD_PIN_MOSI);
-		gpio_pad_select_gpio(DRIVER_SDCARD_PIN_CLK);
-		gpio_pad_select_gpio(DRIVER_SDCARD_PIN_CS);
+		gpio_pad_select_gpio(CONFIG_DRIVER_SDCARD_PIN_MISO);
+		gpio_pad_select_gpio(CONFIG_DRIVER_SDCARD_PIN_MOSI);
+		gpio_pad_select_gpio(CONFIG_DRIVER_SDCARD_PIN_CLK);
+		gpio_pad_select_gpio(CONFIG_DRIVER_SDCARD_PIN_CS);
 		
-		gpio_set_direction(DRIVER_SDCARD_PIN_MISO, GPIO_MODE_INPUT_OUTPUT_OD);
-		gpio_set_direction(DRIVER_SDCARD_PIN_MOSI, GPIO_MODE_INPUT_OUTPUT_OD);
-		gpio_set_direction(DRIVER_SDCARD_PIN_CLK,  GPIO_MODE_INPUT_OUTPUT_OD);
-		gpio_set_direction(DRIVER_SDCARD_PIN_CS,   GPIO_MODE_INPUT_OUTPUT);
+		gpio_set_direction(CONFIG_DRIVER_SDCARD_PIN_MISO, GPIO_MODE_INPUT_OUTPUT_OD);
+		gpio_set_direction(CONFIG_DRIVER_SDCARD_PIN_MOSI, GPIO_MODE_INPUT_OUTPUT_OD);
+		gpio_set_direction(CONFIG_DRIVER_SDCARD_PIN_CLK,  GPIO_MODE_INPUT_OUTPUT_OD);
+		gpio_set_direction(CONFIG_DRIVER_SDCARD_PIN_CS,   GPIO_MODE_INPUT_OUTPUT);
 		
-		gpio_set_pull_mode(DRIVER_SDCARD_PIN_MISO, GPIO_PULLUP_ONLY);
-		gpio_set_pull_mode(DRIVER_SDCARD_PIN_MOSI, GPIO_PULLUP_ONLY);
-		gpio_set_pull_mode(DRIVER_SDCARD_PIN_CLK,  GPIO_PULLUP_ONLY);
-		gpio_set_pull_mode(DRIVER_SDCARD_PIN_CS,   GPIO_PULLUP_ONLY);
+		gpio_set_pull_mode(CONFIG_DRIVER_SDCARD_PIN_MISO, GPIO_PULLUP_ONLY);
+		gpio_set_pull_mode(CONFIG_DRIVER_SDCARD_PIN_MOSI, GPIO_PULLUP_ONLY);
+		gpio_set_pull_mode(CONFIG_DRIVER_SDCARD_PIN_CLK,  GPIO_PULLUP_ONLY);
+		gpio_set_pull_mode(CONFIG_DRIVER_SDCARD_PIN_CS,   GPIO_PULLUP_ONLY);
 		
-		gpio_set_level(DRIVER_SDCARD_PIN_MISO, 1);
-		gpio_set_level(DRIVER_SDCARD_PIN_MOSI, 1);
-		gpio_set_level(DRIVER_SDCARD_PIN_CLK,  1);
-		gpio_set_level(DRIVER_SDCARD_PIN_CS,   1);
+		gpio_set_level(CONFIG_DRIVER_SDCARD_PIN_MISO, 1);
+		gpio_set_level(CONFIG_DRIVER_SDCARD_PIN_MOSI, 1);
+		gpio_set_level(CONFIG_DRIVER_SDCARD_PIN_CLK,  1);
+		gpio_set_level(CONFIG_DRIVER_SDCARD_PIN_CS,   1);
 		
 	#else //1-line or 4-line SD mode
 		sdmmc_host_t host = SDMMC_HOST_DEFAULT();
