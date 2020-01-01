@@ -80,8 +80,8 @@ CONFIG_MONITOR_BAUD=115200
 #
 # Firmware & device configuration
 #
-CONFIG_INFO_FIRMWARE_NAME="Unknown"
-CONFIG_INFO_FIRMWARE_BUILD=2019091401
+CONFIG_INFO_FIRMWARE_NAME="Happy new year!"
+CONFIG_INFO_FIRMWARE_BUILD=20010101
 CONFIG_INFO_HARDWARE_NAME="CampZone 2019"
 CONFIG_INFO_HARDWARE_FOLDER="campzone2019"
 CONFIG_INFO_HARDWARE_WOEZEL_NAME="campzone2019"
@@ -181,6 +181,10 @@ CONFIG_DRIVER_VSPI_ENABLE=
 #
 
 #
+# Driver: Flipdot display (Otter)
+#
+
+#
 # Driver: Fri3d camp 2018 badge display
 #
 CONFIG_DRIVER_FRI3D_ENABLE=
@@ -212,7 +216,19 @@ CONFIG_HUB75_CLOCK_SPEED=1200000
 #
 
 #
+# Driver: Nokia 6100 LCD display
+#
+
+#
 # Driver: SSD1306 OLED display
+#
+
+#
+# Driver: ST7735 LCD display
+#
+
+#
+# Driver: ST7789V LCD display
 #
 
 #
@@ -231,6 +247,11 @@ CONFIG_DRIVER_MPR121_ENABLE=
 # Driver: Disobey 2019 SAMD I/O
 #
 CONFIG_DRIVER_DISOBEY_SAMD_ENABLE=
+
+#
+# Driver: Neopixel LED driver
+#
+CONFIG_DRIVER_NEOPIXEL_ENABLE=
 
 #
 # Driver: microphone

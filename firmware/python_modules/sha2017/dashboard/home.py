@@ -3,6 +3,8 @@ import machine, gc, time, uos, json, sys, system, virtualtimers, wifi, term, ter
 import tasks.powermanagement as pm, tasks.otacheck as otacheck
 import easydraw, rtc
 
+
+
 # Read configuration from NVS or apply default values
 cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
 if cfg_term_menu == None:

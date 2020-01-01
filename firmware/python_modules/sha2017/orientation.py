@@ -1,10 +1,7 @@
-import version, machine, display, buttons
+import consts, machine, display, buttons
 
 def getDefault():
-	res = machine.nvs_get_u16('system', 'orientation')
-	if not res:
-		res = version.default_orientation
-	return res
+	return machine.nvs_get_u16('system', 'orientation') or consts.DEFAULT_ORIENTATION
 
 def setDefault(value):
 	if value == 0 or value == 90 or value == 180 or value == 270:
@@ -15,7 +12,7 @@ def setDefault(value):
 #---
 
 def default(rotateButtons=True):
-	value = getDefault()
+	value = machine.nvs_get_u16('system', 'orientation') or consts.DEFAULT_ORIENTATION
 	if rotateButtons:
 		buttons.rotate(value)
 	display.orientation(value)

@@ -1,4 +1,7 @@
-import machine, eink
+import machine, eink, consts, easydraw, term, display
+
+def setDisplayOrientation(value=None):
+	display.orientation(value or machine.nvs_get_u16('system', 'orientation') or consts.DEFAULT_ORIENTATION)
 
 def reboot():
 	eink.busy_wait()
@@ -29,7 +32,6 @@ def sleep(duration=0, status=False):
 
 def start(app, status=False):
 	if status:
-		import term, easydraw
 		if app == "" or app == "launcher":
 			term.header(True, "Loading menu...")
 			easydraw.messageCentered("PLEASE WAIT\nStarting the menu...", True, "/media/busy.png")
@@ -52,7 +54,6 @@ def shell(status=False):
 
 def ota(status=False):
 	if status:
-		import term, easydraw
 		term.header(True, "Starting update...")
 		easydraw.messageCentered("PLEASE WAIT\nStarting update...", True, "/media/busy.png")
 	rtc = machine.RTC()
@@ -61,11 +62,12 @@ def ota(status=False):
 	reboot()
 
 def serialWarning():
-	import easydraw
-	easydraw.messageCentered("NOTICE\n\nThis app can only be controlled using the USB-serial connection.", True, "/media/crown.png")
+	oldOrientation = display.orientation()
+	setDisplayOrientation()
+	easydraw.messageCentered("NOTICE\n\nThis app can only be controlled using the USB-serial connection.", True, "/media/usb.png")
+	display.orientation(oldOrientation)
 	
 def crashedWarning():
-	import easydraw
 	easydraw.messageCentered("An error occured!\n\nThe running app has crashed.", True, "/media/alert.png")
 
 def isColdBoot():
