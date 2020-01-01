@@ -1,7 +1,8 @@
 ﻿---
 BasedOnStyle: Chromium
 AlignConsecutiveAssignments: 'true'
-AlignConsecutiveMacros: 'true'
+# VSCode currently doesnt support AlignConsecutiveMacros, if you get errors with code formatting comment this option
+AlignConsecutiveMacros: 'true' 
 AlignOperands: 'true'
 AllowShortBlocksOnASingleLine: 'false'
 AllowShortFunctionsOnASingleLine: Empty

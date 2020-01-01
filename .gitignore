@@ -6,3 +6,5 @@ cmake-build-debug
 *.pyc
 *qstrdefs.generated.h
 __pycache__
+.vscode
+xtensa-esp32-elf

@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/firmware/build/include/",
+                "${workspaceFolder}/firmware/components/**",
+                "${workspaceFolder}/firmware/main/**",
+                "${workspaceFolder}/esp-idf/components/freertos/**",
+                "${workspaceFolder}/esp-idf/components/**",
+                "${default}"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "${workspaceFolder}/firmware/build/include/",
+                    "${workspaceFolder}/firmware/components/**",
+                    "${workspaceFolder}/firmware/main/**",
+                    "${workspaceFolder}/esp-idf/components/freertos/**",
+                    "${workspaceFolder}/esp-idf/components/**",
+                    "${default}"
+                ]
+            },
+            "intelliSenseMode": "gcc-x64",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
