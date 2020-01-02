@@ -31,7 +31,8 @@ static struct {
 } g_mic_state = {MIC_SAMP_RATE_8_KHZ, MIC_ENCODING_PCM_8_BIT, 0, 0, 0};
 
 static int g_configured = 0;
-static i2s_config_t g_config;
+static i2s_config_t g_i2s_config;
+static i2s_pin_config_t g_pin_config;
 
 uint32_t driver_microphone_get_sampling_rate() {
   switch (g_mic_state.rate) {
@@ -117,22 +118,20 @@ esp_err_t driver_microphone_init() {
 
   g_configured = 1;
 
-  g_config = (i2s_config_t){.mode                 = I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM,
-                            .sample_rate          = 48000,
-                            .bits_per_sample      = 16,
-                            .channel_format       = I2S_CHANNEL_FMT_RIGHT_LEFT,
-                            .communication_format = I2S_COMM_FORMAT_PCM,
-                            .dma_buf_count        = 2,
-                            .dma_buf_len          = 8,
-                            .use_apll             = 0,
-                            .intr_alloc_flags     = ESP_INTR_FLAG_LEVEL1};
+  g_i2s_config = (i2s_config_t){.mode            = I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_PDM,
+                                .sample_rate     = 48000,
+                                .bits_per_sample = 16,
+                                .channel_format  = I2S_CHANNEL_FMT_RIGHT_LEFT,
+                                .communication_format = I2S_COMM_FORMAT_PCM,
+                                .dma_buf_count        = 2,
+                                .dma_buf_len          = 8,
+                                .use_apll             = 0,
+                                .intr_alloc_flags     = ESP_INTR_FLAG_LEVEL1};
 
-  i2s_pin_config_t pin_config = {
+  g_pin_config = (i2s_pin_config_t){
       .ws_io_num   = 25,
       .data_in_num = 35,
   };
-
-  i2s_set_pin(CONFIG_DRIVER_MICROPHONE_I2S_NUM, &pin_config);
 
   return ESP_OK;
 }
@@ -145,7 +144,8 @@ esp_err_t driver_microphone_start(mic_sampling_rate rate, mic_encoding encoding,
   ESP_LOGD(TAG, "init called");
 
   g_mic_state.rate = rate;
-  i2s_driver_install(CONFIG_DRIVER_MICROPHONE_I2S_NUM, &g_config, 0, NULL);
+  i2s_driver_install(CONFIG_DRIVER_MICROPHONE_I2S_NUM, &g_i2s_config, 0, NULL);
+  i2s_set_pin(CONFIG_DRIVER_MICROPHONE_I2S_NUM, &g_pin_config);
   i2s_set_clk(CONFIG_DRIVER_MICROPHONE_I2S_NUM, driver_microphone_get_sampling_rate(), 16,
               I2S_CHANNEL_MONO);
 
