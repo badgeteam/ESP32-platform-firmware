@@ -265,6 +265,11 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libnmea/src/nmea
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libnmea/src/parsers
 endif
 
+ifdef CONFIG_MICROPY_USE_AM2320
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sensor_am2320/include
+SRC_C += esp32/modam2320.c
+endif
+
 EXTMOD_SRC_C = $(addprefix extmod/,\
 	modbtree.c \
 	moducryptolib.c \
