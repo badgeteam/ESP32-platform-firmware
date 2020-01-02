@@ -1,8 +1,6 @@
 #include <sdkconfig.h>
 
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <esp_log.h>
@@ -11,21 +9,11 @@
 #include "include/driver_microphone.h"
 #include "include/driver_microphone_internal.h"
 
-#include <string.h>
-#include <stdint.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
 #include "driver/i2s.h"
 #include "esp_sleep.h"
-#include "nvs.h"
-#include "nvs_flash.h"
 
-#include "driver/gpio.h"
-#include "driver/adc.h"
-#include "driver/dac.h"
-#include "soc/rtc_cntl_reg.h"
 #include "opus.h"
 
 #ifdef CONFIG_DRIVER_MICROPHONE_ENABLE
@@ -33,8 +21,6 @@
 #define TAG "microphone"
 
 #define READ_LEN (1024 * 64)
-
-static QueueHandle_t soundQueue;
 
 static struct {
   mic_sampling_rate rate;
@@ -123,7 +109,6 @@ static void ICS41350_record_task(void *arg) {
 
 esp_err_t driver_microphone_init(mic_sampling_rate rate, mic_encoding encoding, uint16_t frame_size,
                                  uint8_t frame_backlog) {
-  static bool driver_microphone_init_done = false;
   if (mic_state.running || !mic_state.stopped) {
     return ESP_ERR_INVALID_STATE;
   }
@@ -154,7 +139,6 @@ esp_err_t driver_microphone_init(mic_sampling_rate rate, mic_encoding encoding, 
 
   xTaskCreate(ICS41350_record_task, "ICS41350_record_task", 1024 * 2, NULL, 5, NULL);
 
-  driver_microphone_init_done = true;
   ESP_LOGD(TAG, "init done");
   return ESP_OK;
 }
