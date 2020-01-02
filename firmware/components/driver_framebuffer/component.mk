@@ -1,6 +1,8 @@
 # Component Makefile
 
-COMPONENT_ADD_INCLUDEDIRS := .
+COMPONENT_SRCDIRS := . fonts png
+
+COMPONENT_ADD_INCLUDEDIRS := png
 
 COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver_display_hub75/include \
                             $(PROJECT_PATH)/components/driver_display_gxgde0213b1/include \
@@ -15,4 +17,3 @@ COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver_display_hub75/incl
                             $(PROJECT_PATH)/components/driver_display_st7789v/include \
                             $(PROJECT_PATH)/components/driver_display_nokia6100/include \
                             $(PROJECT_PATH)/components/driver_io_disobey_samd/include \
-                            $(PROJECT_PATH)/components/png \
