@@ -18,10 +18,10 @@ before_install:
   - PROJECT_PATH=$(pwd)
 
 script:
-  - pip install pyserial
   - make --version
   - du -hs
   - unzip -p toolchain/xtensa-esp32-elf-linux64.zip xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar | tar xvf -
+  - pip2 install --user -r esp-idf/requirements.txt
   - ./build.sh
   - du -hs
 
