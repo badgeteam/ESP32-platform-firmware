@@ -9,6 +9,7 @@
 #include <esp_err.h>
 
 #include "include/driver_microphone.h"
+#include "include/driver_microphone_internal.h"
 
 #include <string.h>
 #include <stdint.h>
@@ -35,20 +36,6 @@
 
 static QueueHandle_t soundQueue;
 
-typedef struct {
-  // Type of encoded data
-  mic_encoding data_type;
-  // Length of the data, in bytes
-  uint32_t data_size;
-  // The actual data
-  void *data;
-} mic_data;
-
-static mic_data *data_backlog;
-volatile static size_t data_backlog_size = 0;
-volatile static size_t data_backlog_head = 0;
-volatile static size_t data_backlog_tail = 0;
-
 static struct {
   mic_sampling_rate rate;
   mic_encoding encoding;
@@ -56,40 +43,6 @@ static struct {
   volatile int running;  // Set to 1 when initialized, set to 0 when the recording task should stop
   volatile int stopped;  // Set to 0 when initialized, set to 1 when the recording task has stopped
 } mic_state = {MIC_SAMP_RATE_8_KHZ, MIC_ENCODING_PCM_8_BIT, 0, 0, 0};
-
-static inline size_t data_backlog_get_used() {
-  size_t tail = data_backlog_tail;
-  size_t head = data_backlog_head;
-  size_t size = data_backlog_size;
-
-  if (head < tail) {
-    return size - (tail - head) + 1;
-  } else {
-    return head - tail;
-  }
-}
-
-static inline size_t data_backlog_get_free() {
-  size_t tail = data_backlog_tail;
-  size_t head = data_backlog_head;
-  size_t size = data_backlog_size;
-  if (head < tail) {
-    return tail - head - 1;
-  } else {
-    return size - (head - tail);
-  }
-}
-
-static void data_backlog_put(void *buffer, size_t size) {
-  if (data_backlog_get_free() > 0) {
-    size_t head                  = data_backlog_head;
-    data_backlog[head].data_type = mic_state.encoding;
-    data_backlog[head].data_size = size;
-    data_backlog[head].data      = malloc(size);
-    memcpy(data_backlog[head].data, buffer, size);
-    data_backlog_head = (head + 1) % (data_backlog_size + 1);
-  }
-}
 
 uint32_t driver_microphone_get_sampling_rate() {
   switch (mic_state.rate) {
@@ -153,10 +106,10 @@ static void ICS41350_record_task(void *arg) {
       int ret = opus_encode(opus_encoder, buffer, mic_state.frame_size, opus_buffer,
                             mic_state.frame_size);
       if (ret > 0) {
-        data_backlog_put(opus_buffer, ret);
+        driver_microphone_ring_buffer_put(mic_state.encoding, opus_buffer, ret);
       }
     } else {
-      data_backlog_put(buffer, read);
+      driver_microphone_ring_buffer_put(mic_state.encoding, buffer, read);
     }
   }
 
