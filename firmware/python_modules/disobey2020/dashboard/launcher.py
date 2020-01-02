@@ -164,16 +164,20 @@ buttons.attach(buttons.BTN_B,     onB)
 
 drawApp(apps[0],0,len(apps))
 
-# Read configuration from NVS or apply default values
-cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu') # Show a menu on the serial port instead of a prompt
-if cfg_term_menu == None:
-	cfg_term_menu = True # If not set the menu is shown
-
 # Terminal menu
 labels = []
 
 for app in apps:
-	labels.append(app["name"])
+	label = app["name"]
+	if app["path"].startswith("/sd"):
+		label += " [SD card]"
+	elif app["path"].startswith("/lib"):
+		label += " [Legacy]"
+	#elif app["path"].startswith("/apps"):
+	#	label += " [Platform]"
+	#else:
+	#	label += " [Built-in]"
+	labels.append(label)
 labels.append("< Back")
 
 start = term.menu("Launcher", labels, 0, "")
