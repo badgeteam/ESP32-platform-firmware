@@ -28,6 +28,24 @@ static const char *TAG = "driver_i2c";
 // mutex for accessing the I2C bus
 static xSemaphoreHandle driver_i2c_mux = NULL;
 
+esp_err_t claim_i2c_bus(void)
+{
+	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE) {
+		ESP_LOGD(TAG, "i2c bus is busy");
+		return ESP_ERR_TIMEOUT;
+	}
+	return ESP_OK;
+}
+
+esp_err_t release_i2c_bus(void)
+{
+	if (xSemaphoreGive(driver_i2c_mux) != pdTRUE) {
+		ESP_LOGE(TAG, "i2c bus could not be released");
+		return ESP_ERR_TIMEOUT;
+	}
+	return ESP_OK;
+}
+
 esp_err_t driver_i2c_init(void)
 {
 	static bool driver_i2c_init_done = false;
@@ -68,236 +86,221 @@ esp_err_t driver_i2c_init(void)
 
 esp_err_t driver_i2c_read_reg(uint8_t addr, uint8_t reg, uint8_t *value, size_t value_len)
 {
-	esp_err_t res;
-	
-	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE) {
-		ESP_LOGD(TAG, "i2c bus is busy");
-		return ESP_ERR_TIMEOUT;
-	}
+	esp_err_t res = claim_i2c_bus();
+	if ( res != ESP_OK ) return res;
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 	res = i2c_master_start(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, ( addr << 1 ) | WRITE_BIT, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 
 	res = i2c_master_start(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, ( addr << 1 ) | READ_BIT, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	if (value_len > 1) {
 		res = i2c_master_read(cmd, value, value_len-1, ACK_VAL);
-		if ( res != ESP_OK ) return res;
+		if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	}
 	res = i2c_master_read_byte(cmd, &value[value_len-1], NACK_VAL);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_stop(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 
 	res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
 
-	xSemaphoreGive(driver_i2c_mux);
+	release_i2c_bus();
 	return res;
 }
 
 esp_err_t driver_i2c_write_byte(uint8_t addr, uint8_t value)
 {
-	esp_err_t res;
-	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE) {
-		ESP_LOGD(TAG, "i2c bus is busy");
-		return ESP_ERR_TIMEOUT;
-	}
+	esp_err_t res = claim_i2c_bus();
+	if ( res != ESP_OK ) return res;
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 	res = i2c_master_start(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, ( addr << 1 ) | WRITE_BIT, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, value, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_stop(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 
 	res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
 
-	xSemaphoreGive(driver_i2c_mux);
+	release_i2c_bus();
 	return res;
 }
 
 esp_err_t driver_i2c_write_reg(uint8_t addr, uint8_t reg, uint8_t value)
 {
-	esp_err_t res;
-	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE) {
-		ESP_LOGD(TAG, "i2c bus is busy");
-		return ESP_ERR_TIMEOUT;
-	}
+	esp_err_t res = claim_i2c_bus();
+	if ( res != ESP_OK ) return res;
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 	res = i2c_master_start(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, ( addr << 1 ) | WRITE_BIT, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, value, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_stop(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 
 	res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
 
-	xSemaphoreGive(driver_i2c_mux);
+	release_i2c_bus();
 	return res;
 }
 
 esp_err_t driver_i2c_write_buffer(uint8_t addr, const uint8_t* buffer, uint16_t len)
 {
-	esp_err_t res;
-	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE) {
-		ESP_LOGD(TAG, "i2c bus is busy");
-		return ESP_ERR_TIMEOUT;
-	}
+	esp_err_t res = claim_i2c_bus();
+	if ( res != ESP_OK ) return res;
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 	res = i2c_master_start(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, ( addr << 1 ) | WRITE_BIT, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	for (uint16_t i = 0; i < len; i++) {
 		res = i2c_master_write_byte(cmd, buffer[i], ACK_CHECK_EN);
-		if ( res != ESP_OK ) return res;
+		if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	}
 
 	res = i2c_master_stop(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 
 	res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
 
-	xSemaphoreGive(driver_i2c_mux);
+	release_i2c_bus();
 	return res;
 }
 
 esp_err_t driver_i2c_write_buffer_reg(uint8_t addr, uint8_t reg, const uint8_t* buffer, uint16_t len)
 {
-	esp_err_t res;
-	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE) {
-		ESP_LOGD(TAG, "i2c bus is busy");
-		return ESP_ERR_TIMEOUT;
-	}
+	esp_err_t res = claim_i2c_bus();
+	if ( res != ESP_OK ) return res;
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 	res = i2c_master_start(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, ( addr << 1 ) | WRITE_BIT, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	for (uint16_t i = 0; i < len; i++) {
 		res = i2c_master_write_byte(cmd, buffer[i], ACK_CHECK_EN);
-		if ( res != ESP_OK ) return res;
+		if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	}
 
 	res = i2c_master_stop(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 
 	res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
 
-	xSemaphoreGive(driver_i2c_mux);
+	release_i2c_bus();
 	return res;
 }
 
 esp_err_t driver_i2c_write_reg32(uint8_t addr, uint8_t reg, uint32_t value)
 {
-	esp_err_t res;
-	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE) {
-		ESP_LOGD(TAG, "i2c bus is busy");
-		return ESP_ERR_TIMEOUT;
-	}
+	esp_err_t res = claim_i2c_bus();
+	if ( res != ESP_OK ) return res;
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 	res = i2c_master_start(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
+	
 	res = i2c_master_write_byte(cmd, ( addr << 1 ) | WRITE_BIT, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
+	
 	res = i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
+	
 	res = i2c_master_write_byte(cmd, (value)&0xFF, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
+	
 	res = i2c_master_write_byte(cmd, (value>>8)&0xFF, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
+	
 	res = i2c_master_write_byte(cmd, (value>>16)&0xFF, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
+	
 	res = i2c_master_write_byte(cmd, (value>>24)&0xFF, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
+	
 	res = i2c_master_stop(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 
 	res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
 
-	xSemaphoreGive(driver_i2c_mux);
+	release_i2c_bus();
 	return res;
 }
 
 esp_err_t driver_i2c_read_event(uint8_t addr, uint8_t *buf)
 {
-	esp_err_t res;
-	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE) {
-		ESP_LOGD(TAG, "i2c bus is busy");
-		return ESP_ERR_TIMEOUT;
-	}
+	esp_err_t res = claim_i2c_bus();
+	if ( res != ESP_OK ) return res;
 
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
 	res = i2c_master_start(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_write_byte(cmd, ( addr << 1 ) | READ_BIT, ACK_CHECK_EN);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_read(cmd, buf, 2, ACK_VAL);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_read_byte(cmd, &buf[2], NACK_VAL);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 	
 	res = i2c_master_stop(cmd);
-	if ( res != ESP_OK ) return res;
+	if ( res != ESP_OK ) { release_i2c_bus(); return res; }
 
 	res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
 	i2c_cmd_link_delete(cmd);
 
-	xSemaphoreGive(driver_i2c_mux);
+	release_i2c_bus();
 	return res;
 }
 
