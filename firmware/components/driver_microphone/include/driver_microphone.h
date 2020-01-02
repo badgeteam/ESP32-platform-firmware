@@ -16,9 +16,10 @@ typedef enum { MIC_ENCODING_PCM_8_BIT, MIC_ENCODING_PCM_16_BIT, MIC_ENCODING_OPU
 
 __BEGIN_DECLS
 
-extern esp_err_t driver_microphone_init(mic_sampling_rate rate, mic_encoding encoding,
-                                        uint16_t frame_size, uint8_t frame_backlog);
+extern esp_err_t driver_microphone_init();
 extern uint32_t driver_microphone_get_sampling_rate();
+extern esp_err_t driver_microphone_start(mic_sampling_rate rate, mic_encoding encoding,
+                                         uint16_t frame_size, uint8_t frame_backlog);
 
 __END_DECLS
 
