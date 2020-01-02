@@ -143,8 +143,4 @@ esp_err_t driver_microphone_init(mic_sampling_rate rate, mic_encoding encoding, 
   return ESP_OK;
 }
 
-#else  // CONFIG_DRIVER_MICROPHONE_ENABLE
-esp_err_t driver_microphone_init(void) {
-  return ESP_OK;
-}  // Dummy function, leave empty!
 #endif
