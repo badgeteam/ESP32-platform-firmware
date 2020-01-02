@@ -27,7 +27,16 @@ esp_err_t driver_am2320_init(void)
 {
     if (driver_am2320_init_done)
         return ESP_OK;
+
     ESP_LOGD(TAG, "init called");
+
+    if (CONFIG_I2C_MASTER_FREQ_HZ > 100000) {
+        ESP_LOGE(
+            TAG,
+            "I2C clock is too high for AM2320 module! Should be maximum of 100000 but is set to %d",
+            CONFIG_I2C_MASTER_FREQ_HZ);
+        return ESP_FAIL;
+    }
 
     ESP_LOGD(TAG, "init done");
     driver_am2320_init_done = true;
@@ -107,7 +116,7 @@ esp_err_t driver_am2320_read_sensor(float *temperature, float *humidity)
     if (result[0] != 0x03 || (result[2] == 0xFF && result[3] == 0xFF)) {
         ESP_LOGD(TAG, "Data does not match expected format");
         *humidity    = SENSOR_NAN_VALUE;
-        *temperature = SENSOR_NAN_VALUE;        
+        *temperature = SENSOR_NAN_VALUE;
         return ESP_OK;
     }
 
