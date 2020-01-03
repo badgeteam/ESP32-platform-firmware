@@ -108,7 +108,7 @@ esp_err_t driver_am2320_read_sensor(float *temperature, float *humidity)
         ESP_LOGD(TAG, "Data does not match expected format");
         *humidity    = SENSOR_NAN_VALUE;
         *temperature = SENSOR_NAN_VALUE;
-        return ESP_OK;
+        return ESP_ERR_INVALID_RESPONSE;
     }
 
     // Validate the crc, if failed return NAN
@@ -118,7 +118,7 @@ esp_err_t driver_am2320_read_sensor(float *temperature, float *humidity)
         ESP_LOGD(TAG, "CRC check on data failed");
         *humidity    = SENSOR_NAN_VALUE;
         *temperature = SENSOR_NAN_VALUE;
-        return ESP_OK;
+        return ESP_ERR_INVALID_CRC;
     }
 
     uint16_t humidity_raw    = result[2] * 256 + result[3];  // Sensor data uses high/low byte
