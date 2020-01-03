@@ -576,11 +576,6 @@ menu "MicroPython"
 				endchoice
 
 		endmenu
-		config MICROPY_USE_AM2320
-			bool "Use AM2320 I2C module"
-			default n
-			help
-				Include AM2320 I2C sensor module into build
 	endmenu
 	menu "File systems"
 		config MICROPY_FILESYSTEM_TYPE

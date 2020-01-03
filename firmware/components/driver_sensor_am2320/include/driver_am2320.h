@@ -10,13 +10,19 @@
 #include <stdint.h>
 #include <esp_err.h>
 
-#define CACHE_TIMEOUT_MS 10 * (1000 * 1000) // 10 seconds
+#define CACHE_TIMEOUT_MS 10 * (1000 * 1000)  // 10 seconds
 #define SENSOR_NAN_VALUE 0xFFFF
+
+#if CONFIG_I2C_MASTER_FREQ_HZ > 100000
+#error \
+    "I2C interface speed is set to more than 100kHz, the AM2320 sensor supports a speed of at most 100kHz."
+#endif
+
 __BEGIN_DECLS
 
 extern esp_err_t driver_am2320_init(void);
-extern esp_err_t driver_am2320_get_temperature(float *temperature);
-extern esp_err_t driver_am2320_get_humidity(float *humidity);
+extern float driver_am2320_get_temperature();
+extern float driver_am2320_get_humidity();
 extern esp_err_t driver_am2320_read_sensor(float *temperature, float *humidity);
 
 __END_DECLS

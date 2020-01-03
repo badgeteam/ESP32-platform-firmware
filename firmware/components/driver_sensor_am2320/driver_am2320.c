@@ -14,10 +14,10 @@
 #include <include/driver_i2c.h>
 #include "include/driver_am2320.h"
 
+#ifdef CONFIG_DRIVER_AM2320_ENABLE
+
 static const char *TAG              = "driver_am2320";
 static bool driver_am2320_init_done = false;
-
-#ifdef CONFIG_DRIVER_AM2320_ENABLE
 
 static float cached_temperature = 0;
 static float cached_humidity    = 0;
@@ -30,16 +30,9 @@ esp_err_t driver_am2320_init(void)
 
     ESP_LOGD(TAG, "init called");
 
-    if (CONFIG_I2C_MASTER_FREQ_HZ > 100000) {
-        ESP_LOGE(
-            TAG,
-            "I2C clock is too high for AM2320 module! Should be maximum of 100000 but is set to %d",
-            CONFIG_I2C_MASTER_FREQ_HZ);
-        return ESP_FAIL;
-    }
+    driver_am2320_init_done = true;
 
     ESP_LOGD(TAG, "init done");
-    driver_am2320_init_done = true;
     return ESP_OK;
 }
 
@@ -73,19 +66,17 @@ static void update_cache()
 }
 
 // Uses cached value
-esp_err_t driver_am2320_get_temperature(float *temperature)
+float driver_am2320_get_temperature()
 {
     update_cache();
-    *temperature = cached_temperature;
-    return ESP_OK;
+    return cached_temperature;
 }
 
 // Uses cached value
-esp_err_t driver_am2320_get_humidity(float *humidity)
+float driver_am2320_get_humidity()
 {
     update_cache();
-    *humidity = cached_humidity;
-    return ESP_OK;
+    return cached_humidity;
 }
 
 // Does actual sensor reading and provide temperature and humidity, this call takes 2 seconds and
@@ -145,11 +136,6 @@ esp_err_t driver_am2320_read_sensor(float *temperature, float *humidity)
 #else
 esp_err_t driver_am2320_init(void)
 {
-    if (driver_am2320_init_done)
-        return ESP_OK;
-    ESP_LOGD(TAG, "driver is not enabled");
-
-    driver_am2320_init_done = true;
     return ESP_OK;
 }
 #endif

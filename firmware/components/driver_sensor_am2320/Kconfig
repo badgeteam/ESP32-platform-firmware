@@ -1,19 +1,11 @@
 menu "Driver: AM2320 I2C temp/hum sensor"
 	config DRIVER_AM2320_ENABLE
 		depends on DRIVER_I2C_ENABLE
-		bool "Enable the AM2320 I2C driver (Will set I2C clock to 100khz!)"
+		bool "Enable the AM2320 I2C driver (You will need to set the I2C clock to 100Khz)"
 		default n		
 
 	config DRIVER_AM2320_I2C_ADDRESS
 		depends on DRIVER_AM2320_ENABLE
 		hex "I2c address for the AM2320 sensor"
 		default 0x5C
-		select I2C_MASTER_FREQ_HZ
-
-	# This is used to force the already set clock value to 100khz
-	config I2C_MASTER_FREQ_HZ
-		depends on DRIVER_AM2320_ENABLE
-		int "Set I2C clock to 100khz"
-		default 100000
-		range 100000 100000		
 endmenu

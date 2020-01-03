@@ -12,25 +12,19 @@
 
 // This is the function which will be called from Python as am2320.get_temperature().
 STATIC mp_obj_t am2320_get_temperature() {
-    
-    float temperature = 0;
-    driver_am2320_get_temperature(&temperature);
-
     // convert to MicroPython object.
-    return mp_obj_new_float(temperature);
+    return mp_obj_new_float(driver_am2320_get_temperature());
 }
+
 // Define a Python reference to the function above
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(am2320_get_temperature_obj, am2320_get_temperature);
 
 // This is the function which will be called from Python as am2320.get_temperature().
 STATIC mp_obj_t am2320_get_humidity() {
-    
-    float humidity = 0;
-    driver_am2320_get_humidity(&humidity);
-
     // convert to MicroPython object.
-    return mp_obj_new_float(humidity);
+    return mp_obj_new_float(driver_am2320_get_humidity());
 }
+
 // Define a Python reference to the function above
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(am2320_get_humidity_obj, am2320_get_humidity);
 
