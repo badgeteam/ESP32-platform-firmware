@@ -14,10 +14,10 @@
 #define SENSOR_NAN_VALUE 0xFFFF
 
 #ifdef CONFIG_DRIVER_AM2320_ENABLE
-	#if CONFIG_I2C_MASTER_FREQ_HZ > 100000
-    #error \
-        "I2C interface speed is set to more than 100kHz, the AM2320 sensor supports a speed of at most 100kHz."
-    #endif
+#if CONFIG_I2C_MASTER_FREQ_HZ > 100000
+#error \
+    "I2C interface speed is set to more than 100kHz, the AM2320 sensor supports a speed of at most 100kHz."
+#endif
 #endif
 
 __BEGIN_DECLS
