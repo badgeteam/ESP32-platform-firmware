@@ -357,7 +357,6 @@ void micropython_entry(void)
 
 	nvs_close(mpy_nvs_handle);
 
-	MainTaskCore = 0;
 	MainTaskHandle = xTaskCreateStaticPinnedToCore(&mp_task, "mp_task", mp_task_stack_len, NULL, CONFIG_MICROPY_TASK_PRIORITY, mp_task_stack, &mp_task_tcb, MainTaskCore);
 
 	if (!MainTaskHandle) {
