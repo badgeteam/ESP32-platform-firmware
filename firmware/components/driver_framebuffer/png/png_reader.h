@@ -1,5 +1,4 @@
-#ifndef LIB_PNG_READER_H
-#define LIB_PNG_READER_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -11,6 +10,10 @@
 #endif
 
 #include "reader.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum lib_png_error_t {
 	LIB_PNG_ERROR_BASE = 0x1100,
@@ -73,4 +76,6 @@ extern int lib_png_read_header(struct lib_png_reader *pr);
 extern int lib_png_load_image(Window *window, struct lib_png_reader *pr, uint16_t offset_x, uint16_t offset_y, uint32_t dst_min_x, uint32_t dst_min_y, uint32_t dst_width, uint32_t dst_height, uint32_t dst_linelen);
 extern void lib_png_destroy(struct lib_png_reader *pr);
 
-#endif // LIB_PNG_READER_H
+#ifdef __cplusplus
+}
+#endif

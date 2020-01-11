@@ -1,5 +1,5 @@
-#ifndef _DRIVER_FRAMEBUFFER_H_
-#define _DRIVER_FRAMEBUFFER_H_
+#pragma once
+
 #include "sdkconfig.h"
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +36,10 @@
 #define COLOR_GREEN 0x00FF00
 #define COLOR_BLUE  0x0000FF
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 esp_err_t driver_framebuffer_init();
 /* Initialize the framebuffer driver (called once at system boot from platform.c) */
 
@@ -69,4 +73,6 @@ esp_err_t driver_framebuffer_setBacklight(uint8_t level);
 uint8_t driver_framebuffer_getBacklight();
 /* Get the brightness of the backlight */
 
-#endif //_DRIVER_FRAMEBUFFER_H_
+#ifdef __cplusplus
+}
+#endif

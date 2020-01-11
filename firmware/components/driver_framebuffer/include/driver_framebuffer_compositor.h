@@ -1,11 +1,15 @@
-#ifndef _DRIVER_FRAMEBUFFER_COMPOSITOR_H_
-#define _DRIVER_FRAMEBUFFER_COMPOSITOR_H_
+#pragma once
+
 #include "sdkconfig.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include "esp_system.h"
 #include "driver_framebuffer_orientation_internal.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct Window_t {
 	/* Linked list */
@@ -50,4 +54,6 @@ void driver_framebuffer_window_focus(Window* window);
 void driver_framebuffer_window_getSize(Window* window, int16_t* width, int16_t* height);
 /* Get the width and height of a window */
 
+#ifdef __cplusplus
+}
 #endif

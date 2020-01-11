@@ -1,8 +1,11 @@
-#ifndef _DRIVER_FRAMEBUFFER_TEXT_H_
-#define _DRIVER_FRAMEBUFFER_TEXT_H_
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Fonts */
 
@@ -28,4 +31,6 @@ uint16_t driver_framebuffer_print_len(Window* window, const char* str, int16_t l
 uint16_t driver_framebuffer_get_string_width(const char* str, const GFXfont *font);
 uint16_t driver_framebuffer_get_string_height(const char* str, const GFXfont *font);
 
+#ifdef __cplusplus
+}
 #endif

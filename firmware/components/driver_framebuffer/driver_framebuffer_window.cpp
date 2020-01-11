@@ -14,7 +14,7 @@ Window* windows = NULL;
 /* Private functions */
 inline Window* _create_window()
 { //Create an empty window object
-	Window* window = malloc(sizeof(Window));
+	Window* window = (Window*) malloc(sizeof(Window));
 	if (!window) return NULL;
 	memset(window, 0, sizeof(Window));
 	return window;
@@ -65,7 +65,7 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 	window->name                   = strdup(name);
 	window->width                  = width;
 	window->height                 = height;
-	window->orientation            = 0;
+	window->orientation            = landscape;
 	window->enableTransparentColor = false;
 	window->transparentColor       = 0xFF00FF;
 	
@@ -78,9 +78,9 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 	
 	/* Buffer */
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
-		window->buffer = heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+		window->buffer = (uint8_t*) heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 	#else
-		window->buffer = heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_8BIT);
+		window->buffer = (uint8_t*) heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_8BIT);
 	#endif
 	
 	/* Linked list */

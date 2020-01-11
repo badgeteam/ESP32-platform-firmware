@@ -1,8 +1,7 @@
 /* This file specifies the framebuffer configuration for the displays that are supported. */
 /* The order in this file determines priority if multiple drivers are enabled */
 
-#ifndef _DRIVER_FRAMEBUFFER_DEVICES_H_
-#define _DRIVER_FRAMEBUFFER_DEVICES_H_
+#pragma once
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
@@ -179,5 +178,3 @@
 #endif
 
 #endif
-
-#endif //_DRIVER_FRAMEBUFFER_DEVICES_H_

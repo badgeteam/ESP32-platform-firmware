@@ -66,25 +66,25 @@ esp_err_t driver_framebuffer_init()
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 		ESP_LOGI(TAG, "Allocating %u bytes for framebuffer 1", FB_SIZE);
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
-			framebuffer1 = heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+			framebuffer1 = (uint8_t*) heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 		#else
-			framebuffer1 = heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
+			framebuffer1 = (uint8_t*) heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
 		#endif
 		if (!framebuffer1) return ESP_FAIL;
 		ESP_LOGI(TAG, "Allocating %u bytes for framebuffer 2", FB_SIZE);
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
-			framebuffer2 = heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+			framebuffer2 = (uint8_t*) heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 		#else
-			framebuffer2 = heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
+			framebuffer2 = (uint8_t*) heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
 		#endif
 		if (!framebuffer2) return ESP_FAIL;
 		framebuffer = framebuffer1;
 	#else
 		ESP_LOGI(TAG, "Allocating %u bytes for the framebuffer", FB_SIZE);
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
-		framebuffer = heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+		framebuffer = (uint8_t*) heap_caps_malloc(FB_SIZE, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 		#else
-		framebuffer = heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
+		framebuffer = (uint8_t*) heap_caps_malloc(FB_SIZE, MALLOC_CAP_8BIT);
 		#endif
 		if (!framebuffer) {
 			ESP_LOGE(TAG, "Unable to allocate memory for the framebuffer.");
