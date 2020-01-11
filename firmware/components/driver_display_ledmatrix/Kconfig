@@ -1,0 +1,5 @@
+menu "Driver: LED matrix"
+	config DRIVER_LEDMATRIX_ENABLE
+		bool "Enable the LED matrix driver"
+		default n
+endmenu
