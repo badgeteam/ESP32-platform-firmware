@@ -31,21 +31,25 @@ const uint8_t* buffer;
 void displayTask(void* arg)
 {
 	while (1) {
-		for (uint8_t s = 0; s < 0xFF; s++) {
+		if (!buffer) {
+			vTaskDelay(1 / portTICK_PERIOD_MS);
+			continue;
+		}
+		for (uint8_t s = 0; s < 0x3F; s+=4) {
 			for (uint8_t c = 0; c < sizeof(columns); c++) {
 				//TickType_t xLastWakeTime = xTaskGetTickCount();
-				bool any = false;
+				int any = 0;
 				for (uint8_t r = 0; r < sizeof(rows); r++) {
-					bool state = buffer && (buffer[r*sizeof(columns) + c] > s);
-					if (state) any = true;
+					bool state = buffer[r*sizeof(columns) + c] > s;
+					if (state) any++;
 					gpio_set_level(rows[r], state);
 				}
 				if (any) gpio_set_level(columns[c], true);
-				vTaskDelay(1 / portTICK_PERIOD_MS);
-				//vTaskDelayUntil( &xLastWakeTime, 1.0 / rate * 1000 / portTICK_PERIOD_MS );
-				gpio_set_level(columns[c], false);
 				//vTaskDelay(1 / portTICK_PERIOD_MS);
+				ets_delay_us(1);
+				gpio_set_level(columns[c], false);
 			}
+			ets_delay_us(5);
 		}
 	}
 }
