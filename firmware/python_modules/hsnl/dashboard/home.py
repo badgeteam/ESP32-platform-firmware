@@ -67,7 +67,7 @@ def ledThread():
 			display.drawPixel(xR,yR,color(R))
 			display.drawPixel(xG,yG,color(G))
 		display.flush()
-		time.sleep_ms(2)
+		time.sleep_ms(5)
 
 # Space state
 def setAll(state):
@@ -126,8 +126,8 @@ def connectToWiFi():
 			time.sleep(2)
 			setAll(0)
 			time.sleep(2)
-	setAll(2)
-	time.sleep(1)
+	#setAll(2)
+	#time.sleep(1)
 	setAll(0)
 	return wifi.status()
 
