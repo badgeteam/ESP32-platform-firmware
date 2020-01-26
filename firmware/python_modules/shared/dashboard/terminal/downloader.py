@@ -1,8 +1,11 @@
 import wifi, term, system, urequests
 
+system.serialWarning()
+
 while True:
 	wifi.connect()
-	if not wifi.wait(showStatus=True):
+	term.header(True, "Connecting to WiFi...")
+	if not wifi.wait():
 		system.home()
 
 	print("Enter a URL to download from or nothing to cancel.")

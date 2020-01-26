@@ -11,6 +11,8 @@ __BEGIN_DECLS
  */
 extern esp_err_t driver_i2c_init(void);
 
+extern esp_err_t driver_i2c_read_bytes(uint8_t addr, uint8_t *value, size_t value_len);
+
 /** read register via i2c bus
  * @return ESP_OK on success; any other value indicates an error
  */
