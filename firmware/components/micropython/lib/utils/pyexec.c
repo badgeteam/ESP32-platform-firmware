@@ -210,7 +210,7 @@ STATIC int pyexec_raw_repl_process_char(int c) {
 
     if (MP_STATE_VM(repl_line)->len == 0) {
         // exit for a soft reset
-        mp_hal_stdout_tx_str("\r\n");
+        mp_hal_stdout_tx_str(" \r\n");
         vstr_clear(MP_STATE_VM(repl_line));
         return PYEXEC_FORCED_EXIT;
     }
@@ -240,7 +240,7 @@ STATIC int pyexec_friendly_repl_process_char(int c) {
             return 0;
         } else if (ret == CHAR_CTRL_B) {
             // reset friendly REPL
-            mp_hal_stdout_tx_str("\r\n");
+            mp_hal_stdout_tx_str(" \r\n");
             //mp_hal_stdout_tx_str("MicroPython " MICROPY_GIT_TAG " on " MICROPY_BUILD_DATE "; " MICROPY_HW_BOARD_NAME " with " MICROPY_HW_MCU_NAME "\r\n");
             #if MICROPY_PY_BUILTINS_HELP
             mp_hal_stdout_tx_str("Type \"help()\" for more information.\r\n");
@@ -248,11 +248,11 @@ STATIC int pyexec_friendly_repl_process_char(int c) {
             goto input_restart;
         } else if (ret == CHAR_CTRL_C) {
             // break
-            mp_hal_stdout_tx_str("\r\n");
+            mp_hal_stdout_tx_str(" \r\n");
             goto input_restart;
         } else if (ret == CHAR_CTRL_D) {
             // exit for a soft reset
-            mp_hal_stdout_tx_str("\r\n");
+            mp_hal_stdout_tx_str(" \r\n");
             vstr_clear(MP_STATE_VM(repl_line));
             return PYEXEC_FORCED_EXIT;
         }
@@ -274,7 +274,7 @@ STATIC int pyexec_friendly_repl_process_char(int c) {
 
         if (ret == CHAR_CTRL_C) {
            // cancel everything
-           mp_hal_stdout_tx_str("\r\n");
+           mp_hal_stdout_tx_str(" \r\n");
            repl.cont_line = false;
            goto input_restart;
         } else if (ret == CHAR_CTRL_D) {
@@ -339,7 +339,7 @@ raw_repl_reset:
                 goto raw_repl_reset;
             } else if (c == CHAR_CTRL_B) {
                 // change to friendly REPL
-                mp_hal_stdout_tx_str("\r\n");
+                mp_hal_stdout_tx_str(" \r\n");
                 vstr_clear(&line);
                 pyexec_mode_kind = PYEXEC_MODE_FRIENDLY_REPL;
                 return 0;
@@ -367,7 +367,7 @@ raw_repl_reset:
 
         if (line.len == 0) {
             // exit for a soft reset
-            mp_hal_stdout_tx_str("\r\n");
+            mp_hal_stdout_tx_str(" \r\n");
             vstr_clear(&line);
             return PYEXEC_FORCED_EXIT;
         }
@@ -443,11 +443,11 @@ friendly_repl_reset:
             return 0;
         } else if (ret == CHAR_CTRL_B) {
             // reset friendly REPL
-            mp_hal_stdout_tx_str("\r\n");
+            mp_hal_stdout_tx_str(" \r\n");
             goto friendly_repl_reset;
         } else if (ret == CHAR_CTRL_C) {
             // break
-            mp_hal_stdout_tx_str("\r\n");
+            mp_hal_stdout_tx_str(" \r\n");
             continue;
         } else if (ret == CHAR_CTRL_D) {
             // exit for a soft reset
@@ -466,7 +466,7 @@ friendly_repl_reset:
                 if (c < 0) continue;
                 if (c == CHAR_CTRL_C) {
                     // cancel everything
-                    mp_hal_stdout_tx_str("\r\n");
+                    mp_hal_stdout_tx_str(" \r\n");
                     goto input_restart;
                 } else if (c == CHAR_CTRL_D) {
                     // end of input
@@ -492,7 +492,7 @@ friendly_repl_reset:
                 ret = readline(&line, "... ");
                 if (ret == CHAR_CTRL_C) {
                     // cancel everything
-                    mp_hal_stdout_tx_str("\r\n");
+                    mp_hal_stdout_tx_str(" \r\n");
                     goto input_restart;
                 } else if (ret == CHAR_CTRL_D) {
                     // stop entering compound statement

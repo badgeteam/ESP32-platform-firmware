@@ -151,7 +151,7 @@ int readline_process_char(int c) {
         #endif
         } else if (c == '\r') {
             // newline
-            mp_hal_stdout_tx_str("\r\n");
+            mp_hal_stdout_tx_str(" \r\n");
             readline_push_history(vstr_null_terminated_str(rl.line) + rl.orig_line_len);
             return 0;
         } else if (c == 27) {
