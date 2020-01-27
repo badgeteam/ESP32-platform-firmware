@@ -1,7 +1,12 @@
 #include <sdkconfig.h>
+#include <esp_log.h>
 #include "driver_i2s.h"
 
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
+
+#ifdef CONFIG_DRIVER_SNDMIXER_DEBUG
+int min_val=0, max_val=0;
+#endif
 
 struct Config {
   uint8_t volume;
@@ -37,7 +42,7 @@ void driver_i2s_sound_start() {
 #endif
 #ifdef CONFIG_DRIVER_SNDMIXER_I2S_DAC_INTERNAL
     .communication_format = I2S_COMM_FORMAT_I2S_MSB,
-#elif defined(CONFIG_DRIVER_SNDMIXER_I2S_DAC_EXTERNAL_MSB) || defined(CONFIG_DRIVER_SNDMIXER_LSBJ_DAC_EXTERNAL)
+#elif defined(CONFIG_DRIVER_SNDMIXER_I2S_DAC_EXTERNAL_MSB)
     .communication_format = I2S_COMM_FORMAT_I2S_MSB | I2S_COMM_FORMAT_I2S,
 #elif defined(CONFIG_DRIVER_SNDMIXER_I2S_DAC_EXTERNAL_LSB)
     .communication_format = I2S_COMM_FORMAT_I2S_LSB | I2S_COMM_FORMAT_I2S,
@@ -49,7 +54,7 @@ void driver_i2s_sound_start() {
     .dma_buf_len      = buffsize / 4
   };
 
-#ifdef DRIVER_SNDMIXER_I2S_PORT1
+#ifdef CONFIG_DRIVER_SNDMIXER_I2S_PORT1
   const i2s_port_t port = 1;
 #else
   const i2s_port_t port = 0;
@@ -74,6 +79,7 @@ void driver_i2s_sound_start() {
                                               .data_out_num = CONFIG_DRIVER_SNDMIXER_PIN_DATA_OUT,
                                               .data_in_num = I2S_PIN_NO_CHANGE};
   i2s_set_pin(port, &pin_config);
+
 #endif
   soundRunning = 1;
 }
@@ -84,7 +90,7 @@ void driver_i2s_sound_stop() {
 
 #define SND_CHUNKSZ 32
 void driver_i2s_sound_push(int16_t *buf, int len, int stereo_input) {
-  uint16_t tmpb[SND_CHUNKSZ * 2];
+  int16_t tmpb[SND_CHUNKSZ * 2];
   int i = 0;
   while (i < len) {
     int plen = len - i;
@@ -99,25 +105,31 @@ void driver_i2s_sound_push(int16_t *buf, int len, int stereo_input) {
       } else {
         s[0] = s[1] = buf[i + sample];
       }
-      // Multiply with volume/volume_max, then offset to [0:UINT16_MAX]
-      s[0]                       = (s[0] * config.volume / 256 - INT16_MIN) & 0xFFFE;
-      s[1]                       = (s[1] * config.volume / 256 - INT16_MIN) & 0xFFFE;
 
-#if defined(CONFIG_DRIVER_SNDMIXER_LSBJ_DAC_EXTERNAL)
-      // Hacky workaround for LSBJ DACs flipping channels immediately after WS changes, instead of next clock.
-      // This way, the sign bit of the next word is always 0. That's bad, but at least better than it being random.
+      // Multiply with volume/volume_max, resulting in signed integers with range [INT16_MIN:INT16_MAX]
+      s[0]                       = (s[0] * config.volume / 255);
+      s[1]                       = (s[1] * config.volume / 255);
 
-      // We need a better solution for this. The ESP32 has registers for delaying the WS switch, but I haven't gotten
-      // it working yet (Tom).
-      s[0] &= 0xFFFE;
-      s[1] &= 0xFFFE;
+#ifdef CONFIG_DRIVER_SNDMIXER_I2S_DATA_FORMAT_UNSIGNED
+      // Offset to [0:UINT16_MAX] store as unsigned integers
+      s[0] -= INT16_MIN;
+      s[1] -= INT16_MIN;
 #endif
-
       tmpb[(i + sample) * 2 + 0] = s[0];
       tmpb[(i + sample) * 2 + 1] = s[1];
+
+#ifdef CONFIG_DRIVER_SNDMIXER_DEBUG
+      min_val = s[0] < min_val ? s[0] : min_val;
+      max_val = s[0] > max_val ? s[0] : max_val;
+
+      if (i == 0 && sample == 0 && rand() < (RAND_MAX/100)) {
+          ESP_LOGW("Sndmixer","[global vol %d]: min %d max %d", config.volume, min_val, max_val);
+      }
+#endif
     }
 
-#ifdef DRIVER_SNDMIXER_I2S_PORT1
+
+#ifdef CONFIG_DRIVER_SNDMIXER_I2S_PORT1
     const i2s_port_t port = 1;
 #else
     const i2s_port_t port = 0;
