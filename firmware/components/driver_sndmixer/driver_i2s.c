@@ -79,7 +79,12 @@ void driver_i2s_sound_start() {
 }
 
 void driver_i2s_sound_stop() {
-  i2s_driver_uninstall(0);
+    #ifdef DRIVER_SNDMIXER_I2S_PORT1
+  const i2s_port_t port = 1;
+#else
+  const i2s_port_t port = 0;
+#endif
+  i2s_driver_uninstall(port);
 }
 
 #define SND_CHUNKSZ 32
@@ -100,8 +105,8 @@ void driver_i2s_sound_push(int16_t *buf, int len, int stereo_input) {
         s[0] = s[1] = buf[i + sample];
       }
       // Multiply with volume/volume_max, then offset to [0:UINT16_MAX]
-      s[0]                       = s[0] * config.volume / 256 - INT16_MIN;
-      s[1]                       = s[1] * config.volume / 256 - INT16_MIN;
+      s[0]                       = s[0] * config.volume / (256*128) - INT16_MIN;
+      s[1]                       = s[1] * config.volume / (256*128) - INT16_MIN;
       tmpb[(i + sample) * 2 + 0] = s[0];
       tmpb[(i + sample) * 2 + 1] = s[1];
     }
