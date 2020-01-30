@@ -5,7 +5,7 @@ _badgeTypes = {
     2000: {"type": b"t", "name":"Techie"},
     5100: {"type": b"f", "name":"Fixer"},
     12000: {"type": b"r", "name":"Rocker"},
-    27000: {"type": b"n", "name":"Nethunter"},
+    27000: {"type": b"n", "name":"Netrunner"},
     100000: {"type": b"c", "name":"Corporate"}
 }
 _voltages    = [830, 1460, 2110, 2710, 3300, 9999]
