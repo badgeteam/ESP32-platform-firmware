@@ -1,12 +1,12 @@
 import voltages as _voltages
 _voltage    = _voltages.identification()
-_names      = ["Techie", "Fixer", "Rocker", "Netrunner", "Corporate"]
+_names      = ["Techie", "Fixer", "Corporate", "Netrunner", "Rocker"]
 _badgeTypes = {
     2000: {"type": b"t", "name":"Techie"},
     5100: {"type": b"f", "name":"Fixer"},
-    12000: {"type": b"r", "name":"Rocker"},
+    12000: {"type": b"c", "name":"Corporate"},
     27000: {"type": b"n", "name":"Netrunner"},
-    100000: {"type": b"c", "name":"Corporate"}
+    100000: {"type": b"r", "name":"Rocker"}
 }
 _voltages    = [830, 1460, 2110, 2710, 3300, 9999]
 
