@@ -66,6 +66,7 @@ TRIGGER_KEYS = [
 ]
 
 TEST = False
+THING = False
 
 class Flasher:
 
@@ -99,8 +100,6 @@ class Flasher:
         esptool_path = "esp-idf/components/esptool_py/esptool/esptool.py"
         firmware_folder = 'firmware/build'
 
-        assert False
-
         """
         # Flash OTA data
         assert subprocess.call([
@@ -126,10 +125,7 @@ class Flasher:
             ' --port ' + port +
             ' --baud 2000000' +
             ' --before default_reset' +
-            ' --after hard_reset erase_flash' +
-            ' -z' +
-            ' --flash_mode dio' +
-            ' --flash_freq 80m'
+            ' --after hard_reset erase_flash'
         ) == 0, "Failed to erase flash"
 
         # Flash Firmware
@@ -192,6 +188,39 @@ class Flasher:
             ' ' + firmware_folder + '/generic_4MB.bin'
         ) == 0, "Failed to flash partition table"
 
+    def flash_badge2(self, port):
+        esptool_path = "esp-idf/components/esptool_py/esptool/esptool.py"
+        firmware_folder = 'firmware/build'
+
+        # Erase Flash
+        assert system(
+            esptool_path +
+            ' --chip esp32' +
+            ' --port ' + port +
+            ' --baud 2000000' +
+            ' --before default_reset' +
+            ' --after hard_reset erase_flash'
+        ) == 0, "Failed to erase flash"
+
+        # Flash Firmware
+        assert system(
+            esptool_path +
+            ' --chip esp32' +
+            ' --port ' + port +
+            ' --baud 2000000' +
+            ' --before default_reset' +
+            ' --after hard_reset write_flash' +
+            ' -z' +
+            ' --flash_mode dio' +
+            ' --flash_freq 80m' +
+            ' --flash_size detect' +
+            ' 0xd000 ' + firmware_folder + '/ota_data_initial.bin' +
+            ' 0x1000 ' + firmware_folder + '/bootloader/bootloader.bin' +
+            ' 0x8000 ' + firmware_folder + '/sha2017_16MB.bin' +
+            ' 0x10000 ' + firmware_folder + '/firmware.bin' +
+            ' 0x191000 initial_files_disobey2020.zip'
+        ) == 0, "Failed to flash badge"
+
     def flash_dummy(self, port, fail=False):
         time.sleep(1)
         if fail:
@@ -205,8 +234,15 @@ class Flasher:
         self.status_texts[port_data["id"]]["header"] = \
             self.header_font.render(str(port_data["id"] + 1), True, (GREEN))
         try:
-            if TEST: self.flash_dummy(port_data["port"], fail=random.choice([True, False]))
-            else: self.flash_thing(port_data["port"])
+            if TEST:
+                self.flash_dummy(
+                    port_data["port"],
+                    fail=random.choice([True, False])
+                )
+            if THING:
+                self.flash_thing(port_data["port"])
+            else:
+                self.flash_badge2(port_data["port"])
         except AssertionError:
             self.status_texts[port_data["id"]]["header"] = \
                 self.header_font.render(str(port_data["id"] + 1), True, (RED))
