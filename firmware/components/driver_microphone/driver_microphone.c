@@ -154,6 +154,11 @@ esp_err_t driver_microphone_start(mic_sampling_rate rate, mic_encoding encoding,
   ESP_LOGD(TAG, "init done");
   return ESP_OK;
 }
+
+void driver_microphone_stop() {
+  i2s_driver_uninstall(0);
+}
+
 #else
 esp_err_t driver_microphone_init() {
   return ESP_OK;

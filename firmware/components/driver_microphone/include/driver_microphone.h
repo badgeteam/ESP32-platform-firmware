@@ -20,7 +20,7 @@ extern esp_err_t driver_microphone_init();
 extern uint32_t driver_microphone_get_sampling_rate();
 extern esp_err_t driver_microphone_start(mic_sampling_rate rate, mic_encoding encoding,
                                          uint16_t frame_size, uint8_t frame_backlog);
-
+extern void driver_microphone_stop();
 __END_DECLS
 
 #endif  // BADGE_MICROPHONE_H

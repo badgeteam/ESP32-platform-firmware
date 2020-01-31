@@ -117,6 +117,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7735/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7789v/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_disobey_samd/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sndmixer
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_microphone/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_mpu6050/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
@@ -210,6 +211,7 @@ SRC_C =  $(addprefix esp32/,\
 	moddisobeysamd.c \
 	modframebuffer.c \
 	modsndmixer.c \
+	modmicrophone.c \
 	modmpu6050.c \
 	modlora.c \
 	)
