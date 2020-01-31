@@ -71,12 +71,9 @@ THING = False
 class Flasher:
 
     def flash_thing(self, port):
-        esptool_path = "esp-idf/components/esptool_py/esptool/esptool.py"
-        firmware_folder = 'firmware/build'
-
         # Erase Flash
         assert system(
-            'python2 ' + esptool_path +
+            'python2 ' + self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 2000000' +
@@ -86,20 +83,17 @@ class Flasher:
 
         # Write Flash
         assert system(
-            'python2 ' + esptool_path +
+            'python2 ' + self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 1000000' +
             ' --before default_reset' +
             ' --after hard_reset write_flash' +
             ' 0x1000' +
-            ' ' + firmware_folder + '/thing_firmware.bin'
+            ' ' + self.firmware_folder + '/thing_firmware.bin'
         ) == 0, "Failed to erase flash"
 
     def flash_badge(self, port):
-        esptool_path = "esp-idf/components/esptool_py/esptool/esptool.py"
-        firmware_folder = 'firmware/build'
-
         """
         # Flash OTA data
         assert subprocess.call([
@@ -120,7 +114,7 @@ class Flasher:
 
         # Erase Flash
         assert system(
-            esptool_path +
+            self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 2000000' +
@@ -130,7 +124,7 @@ class Flasher:
 
         # Flash Firmware
         assert system(
-            esptool_path +
+            self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 2000000' +
@@ -140,12 +134,12 @@ class Flasher:
             ' --flash_mode dio' +
             ' --flash_freq 80m' +
             ' --flash_size detect 0xd000' +
-            ' ' + firmware_folder + '/ota_data_initial.bin'
+            ' ' + self.firmware_folder + '/ota_data_initial.bin'
         ) == 0, "Failed to flash OTA data"
 
         # Flash Firmware
         assert system(
-            esptool_path +
+            self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 2000000' +
@@ -155,12 +149,12 @@ class Flasher:
             ' --flash_mode dio' +
             ' --flash_freq 80m' +
             ' --flash_size detect 0x10000' +
-            ' ' + firmware_folder + '/firmware.bin'
+            ' ' + self.firmware_folder + '/firmware.bin'
         ) == 0, "Failed to flash firmware"
 
         # Flash Bootloader
         assert system(
-            esptool_path +
+            self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 2000000' +
@@ -170,12 +164,12 @@ class Flasher:
             ' --flash_mode dio' +
             ' --flash_freq 80m' +
             ' --flash_size detect 0x1000' +
-            ' ' + firmware_folder + '/bootloader/bootloader.bin'
+            ' ' + self.firmware_folder + '/bootloader/bootloader.bin'
         ) == 0, "Failed to flash Bootloader"
 
         # Flash partition table
         assert system(
-            esptool_path +
+            self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 2000000' +
@@ -185,16 +179,13 @@ class Flasher:
             ' --flash_mode dio' +
             ' --flash_freq 80m' +
             ' --flash_size detect 0x8000' +
-            ' ' + firmware_folder + '/generic_4MB.bin'
+            ' ' + self.firmware_folder + '/generic_4MB.bin'
         ) == 0, "Failed to flash partition table"
 
     def flash_badge2(self, port):
-        esptool_path = "esp-idf/components/esptool_py/esptool/esptool.py"
-        firmware_folder = 'firmware/build'
-
         # Erase Flash
         assert system(
-            esptool_path +
+            self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 2000000' +
@@ -204,7 +195,7 @@ class Flasher:
 
         # Flash Firmware
         assert system(
-            esptool_path +
+            self.esptool_path +
             ' --chip esp32' +
             ' --port ' + port +
             ' --baud 2000000' +
@@ -214,10 +205,10 @@ class Flasher:
             ' --flash_mode dio' +
             ' --flash_freq 80m' +
             ' --flash_size detect' +
-            ' 0xd000 ' + firmware_folder + '/ota_data_initial.bin' +
-            ' 0x1000 ' + firmware_folder + '/bootloader/bootloader.bin' +
-            ' 0x8000 ' + firmware_folder + '/sha2017_16MB.bin' +
-            ' 0x10000 ' + firmware_folder + '/firmware.bin' +
+            ' 0xd000 ' + self.firmware_folder + '/ota_data_initial.bin' +
+            ' 0x1000 ' + self.firmware_folder + '/bootloader/bootloader.bin' +
+            ' 0x8000 ' + self.firmware_folder + '/sha2017_16MB.bin' +
+            ' 0x10000 ' + self.firmware_folder + '/firmware.bin' +
             ' 0x191000 initial_files_disobey2020.zip'
         ) == 0, "Failed to flash badge"
 
@@ -264,7 +255,10 @@ class Flasher:
             x += dx
         pygame.display.update()
 
-    def __init__(self, ports):
+    def __init__(self, ports, firmware_folder='firmware/build', esptool_path="esp-idf/components/esptool_py/esptool/esptool.py"):
+        self.firmware_folder = firmware_folder
+        self.esptool_path = esptool_path
+
         pygame.init()
         WIDTH = 800
         HEIGHT = 600
@@ -314,6 +308,22 @@ if __name__ == '__main__':
         nargs='+',
         help="badge serial devices"
     )
+    parser.add_argument(
+        "firmware_folder",
+        metavar="firmware_folder",
+        type=str,
+        help="path to firmware folder"
+    )
+    parser.add_argument(
+        "esptool_folder",
+        metavar="esptool_folder",
+        type=str,
+        help="path to esptool"
+    )
 
     args = parser.parse_args()
-    f = Flasher(ports=args.ports)
+    f = Flasher(
+        ports=args.ports,
+        firmware_folder=args.firmware_folder,
+        esptool_path=args.esptool_folder
+    )
