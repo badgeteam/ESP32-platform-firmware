@@ -121,6 +121,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_radio_lora/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_board_openaars/include
 
 ifdef CONFIG_MICROPY_USE_BLUETOOTH
 MP_EXTRA_INC += -I$(ESPCOMP)/bt/include
@@ -204,6 +205,7 @@ SRC_C =  $(addprefix esp32/,\
 	modsndmixer.c \
 	modmpu6050.c \
 	modlora.c \
+	modopenaars.c \
 	)
 
 ifdef CONFIG_DRIVER_I2C_ENABLE

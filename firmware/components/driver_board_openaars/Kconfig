@@ -1,0 +1,54 @@
+menu "Driver: Open AARS FPGA board"
+	config DRIVER_OPENAARS_ENABLE
+		depends on DRIVER_VSPI_ENABLE
+		bool "Enable Open Aars communications"
+		default n
+
+  config PIN_NUM_OPENAARS_SCK
+    depends on DRIVER_VSPI_ENABLE
+    int "GPIO pin used for FPGA SPI clock"
+    range 0 39
+    default 18
+
+  config PIN_NUM_OPENAARS_MISO
+    depends on DRIVER_VSPI_ENABLE
+    int "GPIO pin used for FPGA SPI MISO"
+    range 0 39
+    default 19
+
+  config PIN_NUM_OPENAARS_MOSI
+    depends on DRIVER_VSPI_ENABLE
+    int "GPIO pin used for FPGA SPI MOSI"
+    range 0 39
+    default 23
+  
+  config PIN_NUM_OPENAARS_CS
+    depends on DRIVER_VSPI_ENABLE
+    int "GPIO pin used for FPGA SPI CS"
+    range 0 39
+    default 33
+
+  config PIN_NUM_OPENAARS_FPGA_INT
+    depends on DRIVER_VSPI_ENABLE
+    int "GPIO pin used for FPGA to ESP32 Interrupts"
+    range 0 39
+    default 25
+
+  config PIN_NUM_OPENAARS_ADV_INT
+    depends on DRIVER_VSPI_ENABLE
+    int "GPIO pin used for ADV7511 Interrupt events"
+    range 0 39
+    default 35
+
+  config PIN_NUM_OPENAARS_LED0
+    depends on DRIVER_VSPI_ENABLE
+    int "GPIO pin used for LED 0"
+    range 0 39
+    default 21
+
+  config PIN_NUM_OPENAARS_LED1
+    depends on DRIVER_VSPI_ENABLE
+    int "GPIO pin used for LED 1"
+    range 0 39
+    default 22
+endmenu

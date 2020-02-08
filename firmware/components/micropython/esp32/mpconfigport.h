@@ -456,6 +456,13 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_UCRYPTOLIB
 #endif
 
+#ifdef CONFIG_DRIVER_OPENAARS_ENABLE
+extern const struct _mp_obj_module_t openaars_module;
+#define BUILTIN_MODULE_OPENAARS { MP_OBJ_NEW_QSTR(MP_QSTR_openaars), (mp_obj_t)&openaars_module },
+#else
+#define BUILTIN_MODULE_OPENAARS
+#endif
+
 
 #define MICROPY_PORT_BUILTIN_MODULES \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_utime),    (mp_obj_t)&utime_module }, \
@@ -483,6 +490,7 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 	BUILTIN_MODULE_EINK \
 	BUILTIN_MODULE_DISOBEY_SAMD \
 	BUILTIN_MODULE_MPU6050 \
+  BUILTIN_MODULE_OPENAARS \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
