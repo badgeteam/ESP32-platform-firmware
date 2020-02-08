@@ -48,6 +48,7 @@ void driver_openaars_intr_task(void *arg)
     uint32_t loc_interrupt_reg = 0; 
     while (1) {
         // Process the interrupts
+        printf("[openaars_intr_task] wait for trigger...\n");
         if (xSemaphoreTake(driver_openaars_intr_trigger, portMAX_DELAY)) {
             printf("[openaars_intr_task] trigger recv\n");
             // Update the flag register
@@ -188,7 +189,7 @@ esp_err_t driver_openaars_init(void)
 
   // Interrupt pin config
 	gpio_config_t io_conf = (gpio_config_t) {
-		.intr_type    = GPIO_INTR_NEGEDGE,
+		.intr_type    = GPIO_INTR_ANY;//NEGEDGE,
 		.mode         = GPIO_MODE_INPUT,
 		.pin_bit_mask = 1LL << CONFIG_PIN_NUM_OPENAARS_FPGA_INT || 1LL << CONFIG_PIN_NUM_OPENAARS_ADV_INT,
 		.pull_down_en = 0,
