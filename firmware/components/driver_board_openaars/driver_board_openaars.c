@@ -45,30 +45,36 @@ uint32_t interrupt_reg = 0;                           // Interrupt flag register
 // Interrupt task to initiate the interrupt sequence once the semaphore is given
 void driver_openaars_intr_task(void *arg)
 {
-  uint32_t loc_interrupt_reg = 0; 
+    uint32_t loc_interrupt_reg = 0; 
+    while (1) {
+        // Process the interrupts
+        if (xSemaphoreTake(driver_openaars_intr_trigger, portMAX_DELAY)) {
+            printf("[openaars_intr_task] trigger recv\n");
+            // Update the flag register
+            xSemaphoreTake(driver_openaars_intreg, portMAX_DELAY);
+            loc_interrupt_reg = interrupt_reg;
+            xSemaphoreGive(driver_openaars_intreg);
+            printf("[openaars_intr_task] loc_interrupt_reg = %08X\n", loc_interrupt_reg);
 
-	while (1) {
-    // Process the interrupts
-    
-		if (xSemaphoreTake(driver_openaars_intr_trigger, portMAX_DELAY)) {
-      // Update the flag register
-      xSemaphoreTake(driver_openaars_intreg, portMAX_DELAY);
-      loc_interrupt_reg = interrupt_reg;
-      xSemaphoreGive(driver_openaars_intreg);
-
-      // If flag set, call the FPGA routine
-      for (uint32_t int_nr = 0; int_nr < INT_OPENAARS_LAST_NR; int_nr++) {
-        if ((loc_interrupt_reg && (uint32_t)1<<int_nr) != 0) {
-          if(xSemaphoreTake(driver_openaars_mux, portMAX_DELAY)) {
-            driver_openaars_intr_t handler = driver_openaars_handlers[int_nr];
-            void *arg = driver_openaars_arg[int_nr];
-            xSemaphoreGive(driver_openaars_mux);
-            if (handler != NULL) handler(arg, 0);
-          }
+            // If flag set, call the FPGA routine
+            for (uint32_t int_nr = 0; int_nr < INT_OPENAARS_LAST_NR; int_nr++) {
+                if ((loc_interrupt_reg && (uint32_t)1<<int_nr) != 0) {
+                    printf("[openaars_intr_task] int_nr = %02X\n", int_nr);
+                    if (xSemaphoreTake(driver_openaars_mux, portMAX_DELAY)) {
+                        driver_openaars_intr_t handler = driver_openaars_handlers[int_nr];
+                        void *arg = driver_openaars_arg[int_nr];
+                        xSemaphoreGive(driver_openaars_mux);
+                        if (handler != NULL) {
+                            printf("[openaars_intr_task] calling handler!\n");
+                            handler(arg, 0);
+                        } else {
+                            printf("[openaars_intr_task] handler unavailable!\n");
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }
 
 // The interrupt handler that is not allowed to do IO, so we have it release a 

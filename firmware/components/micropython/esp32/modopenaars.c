@@ -69,6 +69,7 @@ static mp_obj_t interrupt_callbacks[2] = {
 static void openaars_event_handler(void *b, bool state)
 {
 	int pin = (uint32_t) b;
+    printf("[modopenaars] openaars_event_handler(%d, %s)\n", pin, state ? "true":"false");
 	if ((pin < 0) || (pin > 1)) return;
 	if(interrupt_callbacks[pin] != mp_const_none){
 		if ((!MP_OBJ_IS_FUN(interrupt_callbacks[pin])) && (!MP_OBJ_IS_METH(interrupt_callbacks[pin]))) {
