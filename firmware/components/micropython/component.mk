@@ -183,6 +183,7 @@ SRC_C =  $(addprefix esp32/,\
 	moduos.c \
 	machine_timer.c \
 	machine_i2c.c \
+	machine_hw_spi.c \
 	machine_pin.c \
 	machine_touchpad.c \
 	machine_adc.c \
@@ -282,6 +283,7 @@ endif
 EXTMOD_SRC_C = $(addprefix extmod/,\
 	modbtree.c \
 	moducryptolib.c \
+	machine_spi.c \
 	)
 
 LIB_SRC_C = $(addprefix lib/,\
