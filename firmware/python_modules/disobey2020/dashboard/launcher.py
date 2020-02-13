@@ -21,6 +21,8 @@ about_icon = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01
 
 nickname_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x03\x00\x00\x00I\xb4\xe8\xb7\x00\x00\x00\x06PLTE\x00\x00\x00\xff\xff\xff\xa5\xd9\x9f\xdd\x00\x00\x00\tpHYs\x00\x00\x16%\x00\x00\x16%\x01IR$\xf0\x00\x00\x00\x19tEXtSoftware\x00www.inkscape.org\x9b\xee<\x1a\x00\x00\x00FIDAT\x08\x99c`@\x03\xec\x0f\x80\x84\xfc\x0f !c\x01$,d\x80\x84\x01\x0f\x0e\x02\xac\x04\xac\x98\xff\x03L/\x1a\xf8\xff\x1f(\xfe\xff\xff\x03\x06\xf6\x06\xc6\x07\x0c\xfc\x0c\x0c\x1f\x18\xf8\x18\x18\n\xb0\x12@#\r\xd0\xb4\x03\x00\xfe}\x11 \x01G-\xe6\x00\x00\x00\x00IEND\xaeB`\x82'
 
+charge_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x00\x00\x00\x00[\x01GY\x00\x00\x00OIDAT\x08\xd7c` \x020\xc3\x08\xe6gu\x0c\x0c\xec\xcf\xea\x1b\x18xX\x18\x81\x04\x0f\xe3\x01 \xc1\xf0\x80\x81G\xa2\xc0\x80\x81G\xfe\x03\x90\xb0O\x00\x12\x16 \x82!\x01(\xc1p\xf0\x00\x88h``\xff9\x1f\xa8\xf7\xe7<\xa01@\xadH\x86\xe2\x05\x005W\x11d\x9d9\x1a\x9f\x00\x00\x00\x00IEND\xaeB`\x82'
+
 def drawMessageBox(text):
 	width = display.getTextWidth(text, "org18")
 	height = display.getTextHeight(text, "org18")
@@ -139,17 +141,18 @@ display.flush()
 term.header(True, "Loading...")
 apps = listApps()
 amountOfUserApps = len(apps)
-apps.append({"path":"dashboard.home",                  "name":"Home",               "icon":home_icon,      "category":"system"})
-apps.append({"path":"dashboard.installer",             "name":"Installer",          "icon":installer_icon, "category":"system"})
+apps.append(  {"path":"dashboard.home",                  "name":"Home",               "icon":home_icon,      "category":"system"})
+apps.append(  {"path":"dashboard.installer",             "name":"Installer",          "icon":installer_icon, "category":"system"})
 if amountOfUserApps > 0:
-	apps.append({"path":"dashboard.tools.uninstall",       "name":"Remove an app",      "icon":trash_icon,     "category":"system"})
-	apps.append({"path":"dashboard.tools.update_apps",     "name":"Update apps",        "icon":installer_icon, "category":"system"})
+  apps.append({"path":"dashboard.tools.uninstall",       "name":"Remove an app",      "icon":trash_icon,     "category":"system"})
+  apps.append({"path":"dashboard.tools.update_apps",     "name":"Update apps",        "icon":installer_icon, "category":"system"})
 if haveSD:
-	apps.append({"path":"dashboard.tools.movetosd",        "name":"Move from/to SD",    "icon":settings_icon, "category":"system"})
-apps.append({"path":"dashboard.tools.update_firmware", "name":"Update firmware",    "icon":installer_icon, "category":"system"})
-apps.append({"path":"dashboard.settings.nickname",     "name":"Configure nickname", "icon":nickname_icon,  "category":"system"})
-apps.append({"path":"dashboard.settings.wifi",         "name":"WiFi setup",         "icon":settings_icon,  "category":"system"})
-apps.append({"path":"dashboard.other.about",           "name":"About",              "icon":about_icon,     "category":"system"})
+  apps.append({"path":"dashboard.tools.movetosd",        "name":"Move from/to SD",    "icon":settings_icon,  "category":"system"})
+apps.append(  {"path":"dashboard.tools.update_firmware", "name":"Update firmware",    "icon":installer_icon, "category":"system"})
+apps.append(  {"path":"dashboard.settings.nickname",     "name":"Configure nickname", "icon":nickname_icon,  "category":"system"})
+apps.append(  {"path":"dashboard.settings.wifi",         "name":"WiFi setup",         "icon":settings_icon,  "category":"system"})
+apps.append(  {"path":"dashboard.tools.battery_monitor", "name":"Voltages",           "icon":charge_icon,    "category":"system"})
+apps.append(  {"path":"dashboard.other.about",           "name":"About",              "icon":about_icon,     "category":"system"})
 
 currentApp = 0
 
