@@ -14,8 +14,6 @@
 #include "driver/i2s.h"
 #include "esp_sleep.h"
 
-#include "opus.h"
-
 #ifdef CONFIG_DRIVER_MICROPHONE_ENABLE
 
 #define TAG "microphone"
@@ -24,13 +22,9 @@
 
 static struct {
   mic_sampling_rate rate;
-  mic_encoding encoding;
   uint32_t frame_size;
   volatile int running;  // Set to 1 when initialized, set to 0 when the recording task should stop
-} g_mic_state = {.rate       = MIC_SAMP_RATE_8_KHZ,
-                 .encoding   = MIC_ENCODING_PCM_8_BIT,
-                 .frame_size = 0,
-                 .running    = 0};
+} g_mic_state = {.rate = MIC_SAMP_RATE_8_KHZ, .frame_size = 0, .running = 0};
 
 static int g_configured = 0;
 static i2s_config_t g_i2s_config;
@@ -56,17 +50,11 @@ uint32_t driver_microphone_get_sampling_rate() {
   }
 }
 
-void *g_task_buffer              = NULL;
-OpusEncoder *g_task_opus_encoder = NULL;
-void *g_task_opus_buffer         = NULL;
+uint16_t *g_task_buffer = NULL;
 
 static void ICS41350_record_task(void *arg) {
-  uint8_t sample_size = 2;
-  if (g_mic_state.encoding == MIC_ENCODING_PCM_8_BIT) {
-    sample_size = 1;
-  }
-
-  uint32_t buffer_size = sample_size * g_mic_state.frame_size;
+  const uint8_t sample_size = 2;
+  uint32_t buffer_size      = sample_size * g_mic_state.frame_size;
 
   g_task_buffer = malloc(buffer_size);
   if (!g_task_buffer) {
@@ -74,45 +62,12 @@ static void ICS41350_record_task(void *arg) {
     return;
   }
 
-  if (g_mic_state.encoding == MIC_ENCODING_OPUS) {
-    int err = 0;
-    g_task_opus_encoder =
-        opus_encoder_create(driver_microphone_get_sampling_rate(), 1, OPUS_APPLICATION_VOIP, &err);
-    if (err != OPUS_OK) {
-      ESP_LOGE(TAG, "Failed to create opus encoder");
-      goto error;
-      return;
-    }
-    g_task_opus_buffer = malloc(g_mic_state.frame_size);
-    if (!g_task_opus_buffer) {
-      ESP_LOGE(TAG, "Failed to allocate opus buffer");
-      goto error;
-      return;
-    }
-  }
-
   while (1) {
     size_t read = 0;
     i2s_read(CONFIG_DRIVER_MICROPHONE_I2S_NUM, (char *)g_task_buffer, buffer_size, &read,
              portMAX_DELAY);
-    if (g_mic_state.encoding == MIC_ENCODING_OPUS) {
-      for (size_t i = 0; i < read; i++) {
-        ((uint16_t *)g_task_buffer)[i] ^= 0x8000;
-      }
-      int ret = opus_encode(g_task_opus_encoder, g_task_buffer, g_mic_state.frame_size,
-                            g_task_opus_buffer, g_mic_state.frame_size);
-      if (ret > 0) {
-        driver_microphone_ring_buffer_put(g_mic_state.encoding, g_task_opus_buffer, ret);
-      }
-    } else {
-      driver_microphone_ring_buffer_put(g_mic_state.encoding, g_task_buffer, read);
-    }
+    driver_microphone_ring_buffer_put(g_task_buffer, read);
   }
-
-error:
-  cleanup_task_allocs();
-  while (1)
-    ;
 }
 
 esp_err_t driver_microphone_init() {
@@ -132,16 +87,16 @@ esp_err_t driver_microphone_init() {
                                 .use_apll             = 0,
                                 .intr_alloc_flags     = 0};
 
-  g_pin_config = (i2s_pin_config_t){
-      .ws_io_num   = 25,
-      .data_in_num = 35,
-  };
+  g_pin_config = (i2s_pin_config_t){.bck_io_num   = I2S_PIN_NO_CHANGE,
+                                    .ws_io_num    = 25,
+                                    .data_in_num  = 35,
+                                    .data_out_num = I2S_PIN_NO_CHANGE};
 
   return ESP_OK;
 }
 
-esp_err_t driver_microphone_start(mic_sampling_rate rate, mic_encoding encoding,
-                                  uint16_t frame_size, uint8_t frame_backlog) {
+esp_err_t driver_microphone_start(mic_sampling_rate rate, uint16_t frame_size,
+                                  uint8_t frame_backlog) {
   esp_err_t rv = ESP_OK;
 
   if (!g_configured || g_mic_state.running) {
@@ -152,6 +107,7 @@ esp_err_t driver_microphone_start(mic_sampling_rate rate, mic_encoding encoding,
   g_mic_state.rate       = rate;
   g_mic_state.frame_size = frame_size;
   g_mic_state.running    = 1;
+  driver_microphone_ring_buffer_init(frame_backlog);
 #define TRY_EXPECT(VALUE, CMD, ...)        \
   if ((rv = CMD(__VA_ARGS__)) != VALUE) {  \
     ESP_LOGE(TAG, #CMD " failed: %d", rv); \
@@ -163,7 +119,7 @@ esp_err_t driver_microphone_start(mic_sampling_rate rate, mic_encoding encoding,
   TRY(i2s_set_pin, CONFIG_DRIVER_MICROPHONE_I2S_NUM, &g_pin_config);
   TRY(i2s_set_clk, CONFIG_DRIVER_MICROPHONE_I2S_NUM, driver_microphone_get_sampling_rate(), 16,
       I2S_CHANNEL_MONO);
-  TRY_EXPECT(1, xTaskCreate, ICS41350_record_task, "ICS41350_whisky_flask", 2048, NULL, 5,
+  TRY_EXPECT(1, xTaskCreate, ICS41350_record_task, "ICS41350_whisky_flask", 1024, NULL, 5,
              &g_task_handle);
 
   ESP_LOGD(TAG, "init done");
@@ -183,14 +139,6 @@ void cleanup_task_allocs() {
   if (g_task_buffer) {
     free(g_task_buffer);
     g_task_buffer = NULL;
-  }
-  if (g_task_opus_encoder) {
-    opus_encoder_destroy(g_task_opus_encoder);
-    g_task_opus_encoder = NULL;
-  }
-  if (g_task_opus_buffer) {
-    free(g_task_opus_buffer);
-    g_task_opus_buffer = NULL;
   }
 }
 

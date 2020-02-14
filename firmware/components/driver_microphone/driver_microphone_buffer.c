@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "esp_err.h"
+#include "esp_log.h"
 
 #include "include/driver_microphone.h"
 #include "include/driver_microphone_internal.h"
@@ -34,10 +35,10 @@ static inline size_t get_free() {
   }
 }
 
-esp_err_t driver_microphone_ring_buffer_put(mic_encoding type, void *buffer, size_t size) {
-  if (get_free() > 0) {
+esp_err_t driver_microphone_ring_buffer_put(void *buffer, size_t size) {
+  size_t empty = get_free();
+  if (empty > 0) {
     size_t head            = g_head;
-    g_data[head].data_type = type;
     g_data[head].data_size = size;
     g_data[head].data      = malloc(size);
     memcpy(g_data[head].data, buffer, size);
@@ -48,7 +49,8 @@ esp_err_t driver_microphone_ring_buffer_put(mic_encoding type, void *buffer, siz
 }
 
 esp_err_t driver_microphone_ring_buffer_get(mic_data *data) {
-  if (get_used()) {
+  size_t full = get_used();
+  if (full) {
     size_t index       = g_tail;
     *data              = g_data[index];
     g_data[index].data = NULL;
@@ -56,6 +58,13 @@ esp_err_t driver_microphone_ring_buffer_get(mic_data *data) {
     return ESP_OK;
   }
   return ESP_ERR_INVALID_STATE;
+}
+
+size_t driver_microphone_ring_buffer_peek_size() {
+  if (get_used()) {
+    return g_data[g_tail].data_size;
+  }
+  return 0;
 }
 
 void driver_microphone_ring_buffer_free() {
@@ -77,4 +86,5 @@ void driver_microphone_ring_buffer_init(size_t size) {
   g_data = calloc(size + 1, sizeof(mic_data));
   g_size = size;
   g_head = g_tail = 0;
+  ESP_LOGD("micbuf", "Init with size %d", size);
 }
