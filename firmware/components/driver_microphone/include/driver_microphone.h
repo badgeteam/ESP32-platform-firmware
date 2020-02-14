@@ -21,6 +21,7 @@ typedef struct {
 
 __BEGIN_DECLS
 extern esp_err_t driver_microphone_init();
+extern int driver_microphone_running();
 extern uint32_t driver_microphone_get_sampling_rate();
 extern esp_err_t driver_microphone_start(mic_sampling_rate rate, uint16_t frame_size,
                                          uint8_t frame_backlog);

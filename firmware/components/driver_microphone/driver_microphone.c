@@ -16,6 +16,8 @@
 
 #ifdef CONFIG_DRIVER_MICROPHONE_ENABLE
 
+extern int MainTaskCore;
+
 #define TAG "microphone"
 
 #define READ_LEN (1024 * 64)
@@ -119,8 +121,8 @@ esp_err_t driver_microphone_start(mic_sampling_rate rate, uint16_t frame_size,
   TRY(i2s_set_pin, CONFIG_DRIVER_MICROPHONE_I2S_NUM, &g_pin_config);
   TRY(i2s_set_clk, CONFIG_DRIVER_MICROPHONE_I2S_NUM, driver_microphone_get_sampling_rate(), 16,
       I2S_CHANNEL_MONO);
-  TRY_EXPECT(1, xTaskCreate, ICS41350_record_task, "ICS41350_whisky_flask", 1024, NULL, 5,
-             &g_task_handle);
+  TRY_EXPECT(1, xTaskCreatePinnedToCore, ICS41350_record_task, "ICS41350_whisky_flask", 1024, NULL,
+             20, &g_task_handle, !!!!MainTaskCore);
 
   ESP_LOGD(TAG, "init done");
   return ESP_OK;
@@ -140,6 +142,10 @@ void cleanup_task_allocs() {
     free(g_task_buffer);
     g_task_buffer = NULL;
   }
+}
+
+int driver_microphone_running() {
+  return g_mic_state.running;
 }
 
 #else

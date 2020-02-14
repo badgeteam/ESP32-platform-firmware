@@ -31,15 +31,15 @@ static mp_obj_t microphone_disable() {
 }
 
 static mp_obj_t microphone_read(mp_uint_t n_args, const mp_obj_t *args) {
-  if(n_args == 0) {
+  if(n_args == 0 && driver_microphone_running()) {
     mic_data data;
-    int rv = driver_microphone_ring_buffer_get(&data);
-    if(ESP_OK == driver_microphone_ring_buffer_get(&data)) {
-      mp_obj_t bytes = mp_obj_new_bytearray(data.data_size, data.data);
-      free(data.data);
-      mp_obj_t rv = mp_obj_new_list(1, &bytes);
-      return rv;
+    while(ESP_OK != driver_microphone_ring_buffer_get(&data)) {
+      ;
     }
+    mp_obj_t bytes = mp_obj_new_bytearray(data.data_size, data.data);
+    free(data.data);
+    mp_obj_t rv = mp_obj_new_list(1, &bytes);
+    return rv;
   } else {
     if(MP_OBJ_IS_INT(args[0])) {
       mp_obj_t rv = mp_obj_new_list(0, NULL);

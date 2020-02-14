@@ -230,8 +230,9 @@ static mp_obj_t libopus_decode(mp_uint_t argc, const mp_obj_t *argv) {
   output_len = output_array->len + output_array->free;
   int ret = opus_decode(dec, input, input_len, output_data, output_len / self->channels / sizeof(int16_t), 0);
   if(ret >= 0) {
-    output_array->len = ret;
-    output_array->free = output_len - ret;
+    int bytes = ret * self->channels * sizeof(int16_t);
+    output_array->len = bytes;
+    output_array->free = output_len - bytes;
   } else {
     ESP_LOGE(TAG, "decoding failed with error %d", -ret);
     output_array->len = 0;
