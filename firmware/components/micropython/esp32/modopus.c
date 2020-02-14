@@ -16,8 +16,6 @@
 #include "py/objstr.h"
 #include "py/obj.h"
 
-
-
 #include "opus.h"
 
 #define TAG "opus"
@@ -26,6 +24,7 @@ typedef struct {
   mp_obj_base_t base;
   OpusEncoder *encoder;
   int channels;
+  int frequency;
 } libopus_encoder_obj_t;
 static mp_obj_t libopus_encoder_init(const mp_obj_type_t *, size_t, size_t, const mp_obj_t *);
 static mp_obj_t libopus_encode(mp_obj_t, mp_obj_t, mp_obj_t);
@@ -95,6 +94,7 @@ static mp_obj_t libopus_encoder_init(const mp_obj_type_t *type,
   self->base.type = &libopus_encoder_type;
   self->encoder = (OpusEncoder*) m_new(uint8_t, opus_encoder_get_size(1 + !!stereo));
   self->channels = 1 + !!stereo;
+  self->frequency = frequency;
   err = opus_encoder_init(self->encoder, frequency, stereo ? 2 : 1, OPUS_APPLICATION_VOIP);
   if(err != OPUS_OK) {
     m_free(self->encoder);
@@ -139,14 +139,18 @@ static mp_obj_t libopus_encode(mp_obj_t _self, mp_obj_t _input, mp_obj_t output_
   output_array = MP_OBJ_TO_PTR(output);
   output_data = output_array->items;
   output_len = output_array->len + output_array->free;
+  ((uint8_t*)output_data)[0] = self->channels;
+  ((uint8_t*)output_data)[1] = self->frequency / 400;
+  int samples = input_len / sizeof(int16_t) / self->channels;
+  ((uint16_t*)output_data)[1] = 5 * samples / (self->frequency / 400) / 2;
   ESP_LOGD(TAG, "Encoding %d samples (%d bytes) to at most %d bytes",
-           input_len / sizeof(int16_t) / self->channels, input_len, output_len);
+           samples, input_len, output_len);
   int ret = opus_encode(enc,
                         input, input_len / sizeof(int16_t) / self->channels,
-                        output_data, output_len);
+                        &((uint8_t*)output_data)[4], output_len - 4);
   if(ret >= 0) {
-    output_array->len = ret;
-    output_array->free = output_len - ret;
+    output_array->len = ret + 4;
+    output_array->free = output_len - ret - 4;
   } else {
     ESP_LOGE(TAG, "encoding failed with error %d", -ret);
     output_array->len = 0;
@@ -159,29 +163,19 @@ static MP_DEFINE_CONST_FUN_OBJ_3          (libopus_encode_obj,             libop
 
 static mp_obj_t libopus_decoder_init(const mp_obj_type_t *type,
                                      size_t argc, size_t kwc, const mp_obj_t *argv) {
-  enum {
-        ARG_freq, ARG_stereo
-  };
   static const mp_arg_t libopus_decoder_allowed_args[] =
     {
-     { MP_QSTR_freq, MP_ARG_INT, {.u_int = 0} },
-     { MP_QSTR_stereo, MP_ARG_INT, {.u_int = 0} }
     };
   mp_arg_val_t args[MP_ARRAY_SIZE(libopus_decoder_allowed_args)];
   mp_arg_parse_all_kw_array(argc, kwc, argv, MP_ARRAY_SIZE(libopus_decoder_allowed_args), libopus_decoder_allowed_args, args);
-  int frequency = args[ARG_freq].u_int;
-  int stereo = args[ARG_stereo].u_int;
-  if(frequency == 0) {
-    mp_raise_ValueError("Invalid frequency, must be 8, 12, 16, 24, or 48 kHz (in Hz)");
-  }
 
   libopus_decoder_obj_t *self = m_new_obj_with_finaliser(libopus_decoder_obj_t);
   int err = 0;
   self->base.type = &libopus_decoder_type;
-  self->decoder = (OpusDecoder*) m_new(uint8_t, opus_encoder_get_size(1 + !!stereo));
-  self->channels = 1 + !!stereo;
-  self->frequency = frequency;
-  err = opus_decoder_init(self->decoder, frequency, stereo ? 2 : 1);
+  self->decoder = (OpusDecoder*) m_new(uint8_t, opus_encoder_get_size(2));
+  self->channels = 0;
+  self->frequency = 0;
+  err = opus_decoder_init(self->decoder, 8000, 1);
   if(err != OPUS_OK) {
     m_free(self->decoder);
     mp_raise_msg(&mp_type_RuntimeError, "Failed to initialize decoder");
@@ -212,6 +206,16 @@ static mp_obj_t libopus_decode(mp_uint_t argc, const mp_obj_t *argv) {
   mp_obj_array_t *output_array = NULL;
   void *output_data = NULL;
   size_t output_len = 0;
+
+  int channels = ((uint8_t*)input)[0];
+  int frequency = 400 * ((uint8_t*)input)[1];
+  if(channels != self->channels || frequency != self->frequency) {
+    self->channels = channels;
+    self->frequency = frequency;
+    opus_decoder_init(self->decoder, frequency, channels);
+  }
+  input = ((char*)input) + 4;
+  input_len -= 4;
 
   if(argc > 2) {
     output = argv[2];
