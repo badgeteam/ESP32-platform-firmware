@@ -297,6 +297,14 @@ extern const struct _mp_obj_module_t mpu6050_module;
 extern const struct _mp_obj_module_t sndmixer_module;
 #endif
 
+#ifdef CONFIG_DRIVER_MICROPHONE_ENABLE
+extern const struct _mp_obj_module_t microphone_module;
+#endif
+
+#ifdef CONFIG_MICROPY_USE_OPUS
+extern const struct _mp_obj_module_t libopus_module;
+#endif
+
 #ifdef CONFIG_DRIVER_HUB75_ENABLE
 extern const struct _mp_obj_module_t hub75_module;
 #endif
@@ -445,6 +453,18 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_SNDMIXER
 #endif
 
+#ifdef CONFIG_DRIVER_MICROPHONE_ENABLE
+#define BUILTIN_MODULE_MICROPHONE { MP_OBJ_NEW_QSTR(MP_QSTR_microphone), (mp_obj_t)&microphone_module },
+#else
+#define BUILTIN_MODULE_MICROPHONE
+#endif
+
+#ifdef CONFIG_MICROPY_USE_OPUS
+#define BUILTIN_MODULE_LIBOPUS { MP_OBJ_NEW_QSTR(MP_QSTR_opus), (mp_obj_t)&libopus_module },
+#else
+#define BUILTIN_MODULE_LIBOPUS
+#endif
+
 #ifdef CONFIG_DRIVER_MPU6050_ENABLE
 #define BUILTIN_MODULE_MPU6050 { MP_OBJ_NEW_QSTR(MP_QSTR_mpu6050), (mp_obj_t)&mpu6050_module },
 #else
@@ -478,6 +498,8 @@ extern const struct _mp_obj_module_t am2320_module;
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_loopback), (mp_obj_t)&loopback_module }, \
 	BUILTIN_MODULE_UCRYPTOLIB \
 	BUILTIN_MODULE_SNDMIXER \
+	BUILTIN_MODULE_MICROPHONE \
+	BUILTIN_MODULE_LIBOPUS \
 	BUILTIN_MODULE_CURL \
 	BUILTIN_MODULE_REQUESTS \
 	BUILTIN_MODULE_BLUETOOTH \

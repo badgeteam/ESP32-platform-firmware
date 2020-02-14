@@ -576,6 +576,12 @@ menu "MicroPython"
 				endchoice
 
 		endmenu
+		config MICROPY_USE_OPUS
+			bool "Use opus module"
+			default y
+			help
+				Include support for encoding/decoding audio via libopus
+
 	endmenu
 	menu "File systems"
 		config MICROPY_FILESYSTEM_TYPE

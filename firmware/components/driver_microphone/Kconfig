@@ -5,5 +5,5 @@ menu "Driver: microphone"
 	config DRIVER_MICROPHONE_I2S_NUM
 		depends on DRIVER_MICROPHONE_ENABLE
 		int "I2S bus"
-		default 1
+		default 0
 endmenu
