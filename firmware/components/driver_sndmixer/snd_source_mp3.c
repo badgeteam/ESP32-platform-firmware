@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include <esp_log.h>
+
 #include "sndmixer.h"
 #include "libhelix-mp3/mp3dec.h"
 
@@ -17,6 +19,8 @@
 #define INTERNAL_BUFFER_SIZE  1024 * 40
 #define INTERNAL_BUFFER_FETCH_WHEN \
   8192  // new data will be fetched when there is less than this amount of data
+
+#define TAG "snd_source_mp3"
 
 typedef struct {
   HMP3Decoder hMP3Decoder;
@@ -77,7 +81,7 @@ int mp3_decode(void *ctx) {
     int ret = MP3Decode(mp3->hMP3Decoder, &mp3->dataCurr, &available, mp3->buffer, 0);
 
     if (ret) {
-      printf("MP3Decode error %d\n", ret);
+      ESP_LOGE(TAG, "MP3Decode error %d\n", ret);
       return 0;
     }
 
@@ -109,7 +113,7 @@ int mp3_init_source(const void *data_start, const void *data_end, int req_sample
   // Start the MP3 library
   mp3->hMP3Decoder = MP3InitDecoder();
   if (!mp3->hMP3Decoder) {
-    printf("Out of memory error! hMP3Decoder is NULL\n");
+    ESP_LOGE(TAG, "Out of memory error! hMP3Decoder is NULL\n");
     goto err;
   }
 
@@ -128,7 +132,7 @@ int mp3_init_source(const void *data_start, const void *data_end, int req_sample
 
   uint32_t length = data_end - data_start + 1;
 
-  printf("MP3 source started, data at %p with size %u!\n", mp3->dataStart, length);
+  ESP_LOGD(TAG, "MP3 source started, data at %p with size %u!\n", mp3->dataStart, length);
 
   *ctx    = (void *)mp3;
   *stereo = (mp3->lastChannels == 2);
@@ -152,7 +156,7 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   // Start the MP3 library
   mp3->hMP3Decoder = MP3InitDecoder();
   if (!mp3->hMP3Decoder) {
-    printf("Out of memory error! hMP3Decoder is NULL\n");
+    ESP_LOGE(TAG, "Out of memory error! hMP3Decoder is NULL\n");
     goto err;
   }
 
@@ -165,7 +169,7 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
 
   mp3->stream_read = (stream_read_type)stream_read_fn;
   mp3->stream      = (void *)stream;
-  printf("COMPARE: stream read fn @ %p and stream at %p\n", mp3->stream_read, mp3->stream);
+  ESP_LOGD(TAG, "stream read fn @ %p and stream at %p\n", mp3->stream_read, mp3->stream);
   mp3->dataPtr   = malloc(INTERNAL_BUFFER_SIZE);
   mp3->dataStart = mp3->dataPtr;
   mp3->dataCurr  = mp3->dataPtr;
@@ -184,8 +188,8 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   if (!tries) {
     goto err;
   }
-  printf("MP3 stream source started, data at %p, %d Hz, %d channels!\n", mp3->dataStart,
-         mp3->lastRate, mp3->lastChannels);
+  ESP_LOGD(TAG, "MP3 stream source started, data at %p, %d Hz, %d channels!\n", mp3->dataStart,
+           mp3->lastRate, mp3->lastChannels);
 
   *stereo = mp3->lastChannels == 2;
   return CHUNK_SIZE;  // Chunk size
@@ -197,7 +201,6 @@ err:
 
 int mp3_get_sample_rate(void *ctx) {
   mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
-  printf("mp3_get_sample_rate called @ %p : %d\n", ctx, mp3->lastRate);
   return mp3->lastRate;
 }
 

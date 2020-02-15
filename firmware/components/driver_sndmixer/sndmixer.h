@@ -71,9 +71,11 @@ int sndmixer_queue_mod(const void *mod_start, const void *mod_end);
  * @return The ID of the queued sound, for use with the other functions.
  */
 int sndmixer_queue_mp3(const void *mp3_start, const void *mp3_end);
+int sndmixer_queue_opus(const void *mp3_start, const void *mp3_end);
 
 typedef ssize_t (*stream_read_type)(void *, void *, size_t);
 int sndmixer_queue_mp3_stream(stream_read_type read_func, void *stream);
+int sndmixer_queue_opus_stream(stream_read_type read_func, void *stream);
 
 /**
  * @brief Set or unset a sound to looping mode
