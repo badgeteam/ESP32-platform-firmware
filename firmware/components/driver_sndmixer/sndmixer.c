@@ -125,7 +125,7 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
   if (chunksz <= 0)
     return 0;  // failed
   channel[ch].source = srcfns;
-  channel[ch].volume = 128;
+  channel[ch].volume = 32;
   channel[ch].buffer =
       malloc(chunksz * sizeof(channel[ch].buffer[0]) * ((stereo && use_stereo) ? 2 : 1));
   if (!channel[ch].buffer) {
