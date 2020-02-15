@@ -6,6 +6,7 @@
 #include "py/mphal.h"
 #include "py/runtime.h"
 #include "py/stream.h"
+#include "py/objarray.h"
 
 #include "sndmixer.h"
 
@@ -15,6 +16,18 @@ bool sndmixer_started = 0;
 int sndmixer_channels = 0;
 
 const char *msg_error_not_started = "sndmixer task not started!";
+
+static uint8_t *mp_obj_to_u8_ptr(mp_obj_t obj, size_t *len) {
+  if (MP_OBJ_IS_TYPE(obj, &mp_type_bytes)) {
+    return (uint8_t *)mp_obj_str_get_data(obj, len);
+  } else if(MP_OBJ_IS_TYPE(obj, &mp_type_bytearray)) {
+    mp_obj_array_t *array = MP_OBJ_TO_PTR(obj);
+    *len = array->len;
+    return array->items;
+  }
+  mp_raise_ValueError("Expected a bytes or bytearray object.");
+  return NULL;
+}
 
 static mp_obj_t modsndmixer_begin(mp_uint_t n_args, const mp_obj_t *args) {
   int channels = (n_args>0) ? mp_obj_get_int(args[0]) : 1;
@@ -143,13 +156,8 @@ static mp_obj_t modsndmixer_mp3(mp_obj_t _data) {
     mp_raise_ValueError(msg_error_not_started);
     return mp_const_none;
   }
-  mp_uint_t len;
-  if (!MP_OBJ_IS_TYPE(_data, &mp_type_bytes)) {
-    mp_raise_ValueError("Expected a bytestring like object.");
-    return mp_const_none;
-  }
-  uint8_t *data = (uint8_t *)mp_obj_str_get_data(_data, &len);
-
+  size_t len;
+  uint8_t *data = mp_obj_to_u8_ptr(_data, &len);
   int id = sndmixer_queue_mp3(data, data + len - 1);
   sndmixer_play(id);
   return mp_obj_new_int(id);
@@ -171,12 +179,7 @@ static mp_obj_t modsndmixer_opus(mp_obj_t _data) {
     return mp_const_none;
   }
   mp_uint_t len;
-  if (!MP_OBJ_IS_TYPE(_data, &mp_type_bytes)) {
-    mp_raise_ValueError("Expected a bytestring like object.");
-    return mp_const_none;
-  }
-  uint8_t *data = (uint8_t *)mp_obj_str_get_data(_data, &len);
-
+  uint8_t *data = mp_obj_to_u8_ptr(_data, &len);
   int id = sndmixer_queue_opus(data, data + len);
   sndmixer_play(id);
   return mp_obj_new_int(id);
