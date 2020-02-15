@@ -14,7 +14,6 @@
 #include "py/stream.h"
 #include "py/objarray.h"
 #include "py/objstr.h"
-#include "py/obj.h"
 
 #include "opus.h"
 
