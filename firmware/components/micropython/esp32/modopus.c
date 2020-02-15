@@ -141,16 +141,14 @@ static mp_obj_t libopus_encode(mp_obj_t _self, mp_obj_t _input, mp_obj_t output_
   output_len = output_array->len + output_array->free;
   ((uint8_t*)output_data)[0] = self->channels;
   ((uint8_t*)output_data)[1] = self->frequency / 400;
-  int samples = input_len / sizeof(int16_t) / self->channels;
-  ((uint16_t*)output_data)[1] = 5 * samples / (self->frequency / 400) / 2;
-  ESP_LOGD(TAG, "Encoding %d samples (%d bytes) to at most %d bytes",
-           samples, input_len, output_len);
   int ret = opus_encode(enc,
                         input, input_len / sizeof(int16_t) / self->channels,
                         &((uint8_t*)output_data)[4], output_len - 4);
   if(ret >= 0) {
+    ((uint16_t*)output_data)[1] = ret;
+    output_array->items = m_realloc(output_data, ret + 4);
     output_array->len = ret + 4;
-    output_array->free = output_len - ret - 4;
+    output_array->free = 0;
   } else {
     ESP_LOGE(TAG, "encoding failed with error %d", -ret);
     output_array->len = 0;
@@ -209,6 +207,10 @@ static mp_obj_t libopus_decode(mp_uint_t argc, const mp_obj_t *argv) {
 
   int channels = ((uint8_t*)input)[0];
   int frequency = 400 * ((uint8_t*)input)[1];
+  int input_size_needed = ((uint16_t*)input)[1];
+  if(input_size_needed > input_len - 4) {
+    mp_raise_ValueError("Input packet truncated");
+  }
   if(channels != self->channels || frequency != self->frequency) {
     self->channels = channels;
     self->frequency = frequency;

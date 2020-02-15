@@ -14,6 +14,7 @@
 #include "snd_source_wav.h"
 #include "snd_source_mod.h"
 #include "snd_source_mp3.h"
+#include "snd_source_opus.h"
 #include "snd_source_synth.h"
 
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
@@ -35,6 +36,8 @@ typedef enum {
   CMD_RESUME_ALL,
   CMD_QUEUE_MP3,
   CMD_QUEUE_MP3_STREAM,
+  CMD_QUEUE_OPUS,
+  CMD_QUEUE_OPUS_STREAM,
   CMD_QUEUE_SYNTH,
   CMD_FREQ,
   CMD_WAVEFORM
@@ -143,7 +146,8 @@ static int init_source(int ch, const sndmixer_source_t *srcfns, const void *data
 
 static void handle_cmd(sndmixer_cmd_t *cmd) {
   if (cmd->cmd == CMD_QUEUE_WAV || cmd->cmd == CMD_QUEUE_MOD || cmd->cmd == CMD_QUEUE_MP3 ||
-      cmd->cmd == CMD_QUEUE_MP3_STREAM || cmd->cmd == CMD_QUEUE_SYNTH) {
+      cmd->cmd == CMD_QUEUE_MP3_STREAM || cmd->cmd == CMD_QUEUE_SYNTH ||
+      cmd->cmd == CMD_QUEUE_OPUS || cmd->cmd == CMD_QUEUE_OPUS_STREAM) {
     int ch = find_free_channel();
     if (ch < 0)
       return;  // no free channels
@@ -156,10 +160,12 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
     } else if (cmd->cmd == CMD_QUEUE_MP3) {
       r = init_source(ch, &sndmixer_source_mp3, cmd->queue_file_start, cmd->queue_file_end);
     } else if (cmd->cmd == CMD_QUEUE_MP3_STREAM) {
-      printf("CMD==CMD_QUEUE_MP3_STREAM\n");
       r = init_source(ch, &sndmixer_source_mp3_stream, cmd->queue_file_start, cmd->queue_file_end);
+    } else if (cmd->cmd == CMD_QUEUE_OPUS) {
+      r = init_source(ch, &sndmixer_source_opus, cmd->queue_file_start, cmd->queue_file_end);
+    } else if (cmd->cmd == CMD_QUEUE_OPUS_STREAM) {
+      r = init_source(ch, &sndmixer_source_opus_stream, cmd->queue_file_start, cmd->queue_file_end);
     } else if (cmd->cmd == CMD_QUEUE_SYNTH) {
-      printf("CMD==CMD_QUEUE_SYNTH\n");
       r = init_source(ch, &sndmixer_source_synth, 0, 0);
     }
     if (!r) {
@@ -235,7 +241,7 @@ static void sndmixer_task(void *arg) {
       int32_t s[2] = {0, 0};
       for (int ch = 0; ch < no_channels; ch++) {
         sndmixer_channel_t *chan = &channel[ch];
-        if (chan->source  && !(chan->flags & CHFL_PAUSED)) {
+        if (chan->source && !(chan->flags & CHFL_PAUSED)) {
           // Channel is active.
           chan->dds_acc += chan->dds_rate;  // select next sample
           // dds_acc>>16 now gives us which sample to get from the buffer.
@@ -248,6 +254,8 @@ static void sndmixer_task(void *arg) {
               clean_up_channel(ch);
               continue;
             }
+            int64_t real_rate = chan->source->get_sample_rate(chan->src_ctx);
+            chan->dds_rate    = (real_rate << 16) / samplerate;
             chan->dds_acc -=
                 (chan->chunksz << 16);  // reset dds acc; we have parsed chunksize samples.
             chan->chunksz = r;          // save new chunksize
@@ -305,7 +313,7 @@ int sndmixer_init(int p_no_channels, int stereo) {
     free(channel);
     return 0;
   }
-  int r = xTaskCreatePinnedToCore(&sndmixer_task, "sndmixer", 2048, NULL, 5, NULL, MY_CORE);
+  int r = xTaskCreatePinnedToCore(&sndmixer_task, "sndmixer", 5 << 10, NULL, 5, NULL, MY_CORE);
   if (!r) {
     free(channel);
     vQueueDelete(cmd_queue);
@@ -351,7 +359,6 @@ int sndmixer_queue_mp3(const void *mp3_start, const void *mp3_end) {
 }
 
 int sndmixer_queue_mp3_stream(stream_read_type read_func, void *stream) {
-  printf("Queue mp3 stream.\n");
   int id             = new_id();
   sndmixer_cmd_t cmd = {.id               = id,
                         .cmd              = CMD_QUEUE_MP3_STREAM,
@@ -362,8 +369,29 @@ int sndmixer_queue_mp3_stream(stream_read_type read_func, void *stream) {
   return id;
 }
 
+int sndmixer_queue_opus(const void *opus_start, const void *opus_end) {
+  int id             = new_id();
+  sndmixer_cmd_t cmd = {.id               = id,
+                        .cmd              = CMD_QUEUE_OPUS,
+                        .queue_file_start = opus_start,
+                        .queue_file_end   = opus_end,
+                        .flags            = CHFL_PAUSED};
+  xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
+  return id;
+}
+
+int sndmixer_queue_opus_stream(stream_read_type read_func, void *stream) {
+  int id             = new_id();
+  sndmixer_cmd_t cmd = {.id               = id,
+                        .cmd              = CMD_QUEUE_OPUS_STREAM,
+                        .queue_file_start = (void *)read_func,
+                        .queue_file_end   = stream,
+                        .flags            = CHFL_PAUSED};
+  xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
+  return id;
+}
+
 int sndmixer_queue_synth() {
-  printf("sndmixer_queue_synth\n");
   int id             = new_id();
   sndmixer_cmd_t cmd = {.id = id, .cmd = CMD_QUEUE_SYNTH, .flags = CHFL_PAUSED};
   xQueueSend(cmd_queue, &cmd, portMAX_DELAY);
