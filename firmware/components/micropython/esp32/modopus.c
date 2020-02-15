@@ -146,8 +146,9 @@ static mp_obj_t libopus_encode(mp_obj_t _self, mp_obj_t _input, mp_obj_t output_
                         &((uint8_t*)output_data)[4], output_len - 4);
   if(ret >= 0) {
     ((uint16_t*)output_data)[1] = ret;
+    output_array->items = m_realloc(output_data, ret + 4);
     output_array->len = ret + 4;
-    output_array->free = output_len - ret - 4;
+    output_array->free = 0;
   } else {
     ESP_LOGE(TAG, "encoding failed with error %d", -ret);
     output_array->len = 0;
