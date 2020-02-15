@@ -122,7 +122,7 @@ esp_err_t driver_microphone_start(mic_sampling_rate rate, uint16_t frame_size,
   TRY(i2s_set_clk, CONFIG_DRIVER_MICROPHONE_I2S_NUM, driver_microphone_get_sampling_rate(), 16,
       I2S_CHANNEL_MONO);
   TRY_EXPECT(1, xTaskCreatePinnedToCore, ICS41350_record_task, "ICS41350_whisky_flask", 1024, NULL,
-             20, &g_task_handle, !!!!MainTaskCore);
+             20, &g_task_handle, !MainTaskCore);
 
   ESP_LOGD(TAG, "init done");
   return ESP_OK;
