@@ -313,7 +313,7 @@ int sndmixer_init(int p_no_channels, int stereo) {
     free(channel);
     return 0;
   }
-  int r = xTaskCreatePinnedToCore(&sndmixer_task, "sndmixer", 4096, NULL, 5, NULL, MY_CORE);
+  int r = xTaskCreatePinnedToCore(&sndmixer_task, "sndmixer", 5 << 10, NULL, 5, NULL, MY_CORE);
   if (!r) {
     free(channel);
     vQueueDelete(cmd_queue);

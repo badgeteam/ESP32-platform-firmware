@@ -106,7 +106,6 @@ int opus_init_source(const void *data_start, const void *data_end, int req_sampl
   if (!ctx)
     goto err;
 
-  // Start the MP3 library
   int err;
   ctx->decoder = opus_decoder_create(8000, 2, &err);
   if (err != OPUS_OK) {
@@ -125,14 +124,16 @@ int opus_init_source(const void *data_start, const void *data_end, int req_sampl
   ctx->stream_read  = NULL;
   ctx->stream       = NULL;
 
-  uint32_t length = data_end - data_start + 1;
+  uint32_t length = data_end - data_start;
 
   ESP_LOGD(TAG, "Started opus source, %d bytes of data at %p", length, ctx->input_start);
 
-  *_ctx = (void *)ctx;
-  ctx_decode(ctx);  // Decode first part
+  if (!ctx_decode(ctx)) {
+    goto err;
+  }
   *stereo = (ctx->channels == 2);
 
+  *_ctx = (void *)ctx;
   return CHUNK_SIZE;  // Chunk size
 
 err:
