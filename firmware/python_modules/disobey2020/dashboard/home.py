@@ -328,6 +328,16 @@ def drawTask(onSleep=False):
 
 		if onSleep:
 			info = 'Sleeping...'
+			owner=machine.nvs_getstr("owner", "name")
+			fontlist=["permanentmarker22","Roboto_Regular18","Roboto_Regular12"]
+			if(owner):
+				display.drawFill(COLOR_BG)
+				for font in fontlist:
+					if font == fontlist[-1]:
+						display.drawText(0, 0,owner, COLOR_FG, font)
+					elif display.getTextWidth(owner, font)<=display.width():
+						display.drawText((display.width()-display.getTextWidth(owner, font))//2, 0,owner, COLOR_FG, font)
+						break
 		#elif not rtc.isSet():
 		#	info = "RTC not available"
 		elif ota_available:

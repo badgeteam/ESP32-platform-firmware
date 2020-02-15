@@ -4,6 +4,7 @@ firmware/sdkconfig.old
 .idea
 cmake-build-debug
 *.pyc
+*.swp
 *qstrdefs.generated.h
 __pycache__
 .vscode
