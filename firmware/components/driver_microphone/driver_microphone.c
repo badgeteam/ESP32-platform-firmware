@@ -68,6 +68,11 @@ static void ICS41350_record_task(void *arg) {
     size_t read = 0;
     i2s_read(CONFIG_DRIVER_MICROPHONE_I2S_NUM, (char *)g_task_buffer, buffer_size, &read,
              portMAX_DELAY);
+
+    for (int i = 0; i < read / 2; i++) {
+      g_task_buffer[i] = g_task_buffer[i] << 3;
+    }
+
     driver_microphone_ring_buffer_put(g_task_buffer, read);
   }
 }
