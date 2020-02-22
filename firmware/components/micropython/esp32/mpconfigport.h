@@ -91,6 +91,7 @@
 #define MICROPY_ENABLE_FINALISER            (0)
 #endif
 #define MICROPY_STACK_CHECK                 (1)
+#define MICROPY_GC_MULTIHEAP                (1)
 #define MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF (1)
 #define MICROPY_KBD_EXCEPTION               (1)
 #define MICROPY_HELPER_REPL                 (1)
