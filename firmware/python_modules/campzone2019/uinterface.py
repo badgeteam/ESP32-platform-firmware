@@ -6,6 +6,7 @@ ACTION_CONFIRM = 2
 ACTION_CANCEL = 4
 
 DEFAULT_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+NUMERIC_CHARSET = "1234567890"
 
 FONT = rgb.FONT_7x5
 FONT_WIDTH = 5
@@ -23,8 +24,9 @@ CONFIRMATION_NO_IMAGE = {
 }
 
 menu_state = {
-    "selected" : 0,
+    "active" : 0,
     "items": [],
+    "selected": [],
     "pressed_button": ACTION_NO_OPERATION
 }
 
@@ -40,17 +42,35 @@ confirm_dialog_action = ACTION_NO_OPERATION
 _menu_user_callback_left = None
 _menu_user_callback_right = None
 
-def menu(items, selected = 0, callback_left=None, callback_right=None):
+def _menu_select_active(pressed):
+    global menu_state
+    if pressed:
+        app_name = menu_state['items'][menu_state['active']]
+        if app_name not in menu_state['selected']:
+            print('Selecting %s' % app_name)
+            menu_state['selected'].append(app_name)
+            _draw_menu_item(menu_state['items'][menu_state['active']])
+
+def _menu_deselect_active(pressed):
+    global menu_state
+    if pressed:
+        app_name = menu_state['items'][menu_state['active']]
+        if app_name in menu_state['selected']:
+            print('Deselecting %s' % app_name)
+            menu_state['selected'] = [name for name in menu_state['selected'] if name != app_name]
+            _draw_menu_item(menu_state['items'][menu_state['active']])
+
+def menu(items, active = 0, selected=None, callback_left=None, callback_right=None):
     global _menu_user_callback_left
     global _menu_user_callback_right
-    _menu_user_callback_left = callback_left
-    _menu_user_callback_right = callback_right
-    state = _menu_init_display_and_state(items, selected)
+    _menu_user_callback_left = _menu_deselect_active if selected is not None else callback_left
+    _menu_user_callback_right = _menu_select_active if selected is not None else callback_right
+    state = _menu_init_display_and_state(items, active, selected)
     while state["pressed_button"] == ACTION_NO_OPERATION:
         time.sleep(0.1)
     _input_exit_routine()
     if state["pressed_button"] == ACTION_CONFIRM:
-        return state["selected"]
+        return state["active"] if selected is None else state['selected']
     else:
         return None
 
@@ -74,7 +94,7 @@ def confirmation_dialog(text):
 
     return (confirm_dialog_action == ACTION_CONFIRM)
 
-def connect_wifi():
+def connect_wifi(duration=None):
     if wifi.status():
         return True
 
@@ -84,7 +104,10 @@ def connect_wifi():
     rgb.gif(data, (12, 0), size, frames)
 
     wifi.connect()
-    wifi.wait()
+    if duration is not None:
+        wifi.wait(duration=duration)
+    else:
+        wifi.wait()
 
     if not wifi.status():
         data, frames = icon_no_wifi
@@ -93,23 +116,28 @@ def connect_wifi():
 
     rgb.clear()
     rgb.framerate(20)
+    del data, size, frames
+    gc.collect()
     return wifi.status()
 
 def loading_text(text):
     data, size, frames = animation_loading
     rgb.gif(data, (1, 1), size, frames)
     rgb.scrolltext(text, pos=(8,0), width=(rgb.PANEL_WIDTH - 8))
+    del data, size, frames
+    gc.collect()
 
-def _menu_init_display_and_state(items, selected):
+def _menu_init_display_and_state(items, active, selected):
     global menu_state
     menu_state["items"] = items
+    menu_state["active"] = active
     menu_state["selected"] = selected
     menu_state["pressed_button"] = ACTION_NO_OPERATION
 
     _initialize_display()
     
     _menu_register_callbacks()
-    _draw_menu_item(items[selected])
+    _draw_menu_item(items[active])
     return menu_state
 
 def _menu_register_callbacks():
@@ -169,39 +197,41 @@ def _input_exit_routine():
 def _menu_up_callback(pressed):
     global menu_state
     if pressed:
-        selected = menu_state["selected"]
+        active = menu_state["active"]
         item_count = len(menu_state["items"])
-        selected -= 1
-        if (selected < 0):
-            selected = item_count - 1
+        active -= 1
+        if (active < 0):
+            active = item_count - 1
 
-        menu_state["selected"] = selected
-        _draw_menu_item(menu_state["items"][selected])
+        menu_state["active"] = active
+        _draw_menu_item(menu_state["items"][active])
 
 def _menu_down_callback(pressed):
     global menu_state
     if pressed:
-        selected = menu_state["selected"]
+        active = menu_state["active"]
         item_count = len(menu_state["items"])
-        selected += 1
-        if (selected >= item_count):
-            selected = 0
+        active += 1
+        if (active >= item_count):
+            active = 0
 
-        menu_state["selected"] = selected
-        _draw_menu_item(menu_state["items"][selected])
+        menu_state["active"] = active
+        _draw_menu_item(menu_state["items"][active])
 
 def _menu_left_callback(pressed):
     global menu_state
     if callable(_menu_user_callback_left):
         _menu_user_callback_left(pressed)
-        _menu_back_callback(pressed)
+        if menu_state['selected'] is None:
+            _menu_back_callback(pressed)
 
 
 def _menu_right_callback(pressed):
     global menu_state
     if callable(_menu_user_callback_right):
         _menu_user_callback_right(pressed)
-        _menu_back_callback(pressed)
+        if menu_state['selected'] is None:
+            _menu_back_callback(pressed)
 
 
 def _menu_back_callback(pressed):
@@ -303,7 +333,9 @@ def _add_action_state(action_state, added_state):
 
 def _draw_menu_item(item):
     rgb.clear()
-    rgb.scrolltext(item)
+    rgb.scrolltext(item, color=((0,255,0)
+                                if (menu_state['selected'] is not None and item in menu_state['selected'])
+                                else (255,255,255)))
 
 def _draw_text_input_state(cursor, text):
     rgb.clear()

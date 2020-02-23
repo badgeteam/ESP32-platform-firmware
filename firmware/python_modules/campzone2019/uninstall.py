@@ -5,7 +5,7 @@ app = machine.nvs_getstr('launcher', 'uninstall_name')
 app_file = machine.nvs_getstr('launcher', 'uninstall_file')
 
 if (not app) or not (app_file):
-	system.home()
+    system.home()
 
 agreed = uinterface.confirmation_dialog('Uninstall \'%s\'?' % app)
 if not agreed:
