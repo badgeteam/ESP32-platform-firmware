@@ -3,7 +3,7 @@ import network, time, machine, consts
 _STA_IF = network.WLAN(network.STA_IF)
 _AP_IF  = network.WLAN(network.AP_IF)
 
-_DEFAULT_TIMEOUT  = machine.nvs_getint("system", "wifi.timeout") or 30
+_DEFAULT_TIMEOUT  = machine.nvs_getint("system", "wifi.timeout") or 10
 _DEFAULT_SSID     = machine.nvs_getstr("system", "wifi.ssid")
 _DEFAULT_PASSWORD = machine.nvs_getstr("system", "wifi.password")
 
