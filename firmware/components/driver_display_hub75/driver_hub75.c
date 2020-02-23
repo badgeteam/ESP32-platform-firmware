@@ -48,7 +48,7 @@ int brightness=CONFIG_HUB75_DEFAULT_BRIGHTNESS;
 int framerate=20;
 Color *hub75_framebuffer = NULL;
 
-bool driver_hub75_active;
+bool driver_hub75_active; // Stops all compositing + DMA buffer updating
 i2s_parallel_buffer_desc_t bufdesc[2][1<<BITPLANE_CNT];
 uint8_t *bitplane[2][BITPLANE_CNT];
 int backbuf_id=0; //which buffer is the backbuffer, as in, which one is not active so we can write to it
@@ -105,9 +105,9 @@ void displayTask(void *pvParameter)
 {
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(driver_hub75_active) {
-		vTaskDelayUntil( &xLastWakeTime, 1.0 / framerate * 1000 / portTICK_PERIOD_MS );
 		if(compositor_status()) composite();
 		render16();
+		vTaskDelayUntil( &xLastWakeTime, 1.0 / framerate * 1000 / portTICK_PERIOD_MS );
 	}
 	vTaskDelete( NULL );
 }
@@ -126,8 +126,7 @@ esp_err_t driver_hub75_init(void)
 	//Change to set the global brightness of the display, range 1-63
 	//Warning when set too high: Do not look into LEDs with remaining eye.
 	#ifndef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-	hub75_framebuffer = malloc(HUB75_BUFFER_SIZE);
-	memset(hub75_framebuffer, 0, HUB75_BUFFER_SIZE);
+	hub75_framebuffer = calloc(HUB75_BUFFER_SIZE, sizeof(uint8_t));
 	#endif
 	
 	for (int i=0; i<BITPLANE_CNT; i++) {
