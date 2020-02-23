@@ -180,7 +180,7 @@ menu "MicroPython"
 				If SPIRAM is not used, heap is allocated from DRAM and setting the heap size too large
 				may result in insuficient heap for C services like mqtt, gsm, curl...
 
-		config MICROPY_TAKE_MOAR_HEAP
+		config MICROPY_TAKE_MORE_HEAP
 		    bool "Enable non-contiguous extra heap space"
 		    default n
 		    help
