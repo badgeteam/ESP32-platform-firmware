@@ -39,6 +39,8 @@ if app and not app == "shell":
 		system.__current_app__ = app
 		if app:
 			__import__(app)
+	except KeyboardInterrupt:
+		system.launcher()
 	except BaseException as e:
 		sys.print_exception(e)
 		if not machine.nvs_get_u8("system", "ignore_crash"):
