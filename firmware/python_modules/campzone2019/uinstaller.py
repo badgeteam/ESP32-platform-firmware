@@ -37,6 +37,7 @@ if system.__current_app__ == 'uinstaller':
     ###
 
     rgb.clear()
+    rgb.framerate(20)
     uinterface.loading_text('Installing %s' % to_install)
     del icon_no_wifi
     gc.collect()
