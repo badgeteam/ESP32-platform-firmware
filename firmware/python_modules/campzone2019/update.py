@@ -44,8 +44,8 @@ def _prompt_user_for_update(name, build):
     int_current = int(current)
     int_to_install = int(to_install)
 
-    short_current = current[8:] if len(current) > 8 else current
-    short_to_install = to_install[8:] if len(to_install) > 8 else to_install
+    short_current = current[6:] if len(current) > 6 else current
+    short_to_install = to_install[6:] if len(to_install) > 6 else to_install
 
     action = 'Downgrade' if int_current > int_to_install else ('Upgrade' if int_current < int_to_install else 'Reinstall')
     text = '%s version %s to %s?' % (action, short_current, short_to_install) if action != 'Reinstall' else \
