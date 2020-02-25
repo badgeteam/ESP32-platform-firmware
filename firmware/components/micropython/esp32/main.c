@@ -119,7 +119,7 @@ void mp_task(void *pvParameter)
     // Initialize the MicroPython heap
     gc_init(mp_task_heap, mp_task_heap + mpy_heap_size);
 
-#ifdef CONFIG_MICROPY_TAKE_MOAR_HEAP
+#ifdef CONFIG_MICROPY_TAKE_MORE_HEAP
     // Reserve the 111KB DRAM block at 0x3FFE4350
 	uint8_t *large_dram = NULL;
     size_t large_heap_size = NULL;
