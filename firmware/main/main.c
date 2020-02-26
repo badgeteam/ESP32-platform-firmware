@@ -36,8 +36,6 @@ void app_main()
 	platform_init();
 
 	if (is_first_boot) {
-		
-		
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 			driver_framebuffer_fill(NULL, COLOR_BLACK);
 			driver_framebuffer_print(NULL, "Extracting ZIP...\n", 0, 0, 1, 1, COLOR_WHITE, &roboto12pt7b);

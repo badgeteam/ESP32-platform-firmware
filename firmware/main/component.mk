@@ -16,4 +16,5 @@ COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver_rtcmem/include \
                             $(PROJECT_PATH)/components/driver_display_st7789v/include \
                             $(PROJECT_PATH)/components/driver_display_nokia6100/include \
                             $(PROJECT_PATH)/components/driver_io_disobey_samd/include \
-                            $(PROJECT_PATH)/components/driver_sensor_am2320/include
+                            $(PROJECT_PATH)/components/driver_sensor_am2320/include \
+                            $(PROJECT_PATH)/components/driver_display_ledmatrix/include

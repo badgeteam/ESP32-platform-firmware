@@ -1,3 +1,6 @@
 [submodule "esp-idf"]
 	path = esp-idf
 	url = https://github.com/espressif/esp-idf.git
+[submodule "firmware/python_modules/micropython-lib"]
+	path = firmware/python_modules/micropython-lib
+	url = https://github.com/micropython/micropython-lib.git
