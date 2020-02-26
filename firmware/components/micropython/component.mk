@@ -118,10 +118,12 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7789v/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ledmatrix/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_disobey_samd/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sndmixer
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_microphone/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_mpu6050/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_radio_lora/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libopus/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 MP_EXTRA_INC += -I$(IDF_PATH)/components/esp_ringbuf/include
 MP_EXTRA_INC += -I$(IDF_PATH)/components/esp_event/include
@@ -183,6 +185,7 @@ SRC_C =  $(addprefix esp32/,\
 	moduos.c \
 	machine_timer.c \
 	machine_i2c.c \
+	machine_hw_spi.c \
 	machine_pin.c \
 	machine_touchpad.c \
 	machine_adc.c \
@@ -211,6 +214,8 @@ SRC_C =  $(addprefix esp32/,\
 	moddisobeysamd.c \
 	modframebuffer.c \
 	modsndmixer.c \
+	modmicrophone.c \
+	modopus.c \
 	modmpu6050.c \
 	modlora.c \
 	)
@@ -273,9 +278,15 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libnmea/src/nmea
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libnmea/src/parsers
 endif
 
+ifdef CONFIG_DRIVER_AM2320_ENABLE
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sensor_am2320/include
+SRC_C += esp32/modam2320.c
+endif
+
 EXTMOD_SRC_C = $(addprefix extmod/,\
 	modbtree.c \
 	moducryptolib.c \
+	machine_spi.c \
 	)
 
 LIB_SRC_C = $(addprefix lib/,\

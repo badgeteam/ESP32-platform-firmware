@@ -78,7 +78,7 @@ By default, the badge.team firmware activates a simple python shell or serial me
 You can use badge.team firmware for your own-designed badge or device. The workflow for this is described below.
 
  * Run `./config.sh`, configure the `Firmware & device configuration` submenu (for the folder option in the `Hardware description` section, think of any name. We will use it later.), and set up the drivers that your hardware will use in the `Components` submenu.
- * If you need to write drivers of your own, take a look at the [driver documentation](DRIVERS.md).
+ * If you need to write drivers of your own, take a look at the [driver documentation](https://docs.badge.team/esp32-firmware-development/adding-support/drivers/).
  * Create a directory with the folder name you configured in the first step in `/firmware/python_modules`, and copy `/firmware/python_modules/generic/*` into it.
  * In this directory, you can write Python code that will be built into the firmware image. The files `_boot.py` and `boot.py` are executed after each other on boot, and from there you can launch your own things.
  * Build and flash, and you're done!

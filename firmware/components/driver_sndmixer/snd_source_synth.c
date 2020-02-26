@@ -124,7 +124,6 @@ int synth_init_source(const void *data_start, const void *data_end, int req_samp
 
 int synth_get_sample_rate(void *ctx) {
   synth_ctx_t *synth = (synth_ctx_t *)ctx;
-  printf("synth_get_sample_rate called @ %p : %d\n", ctx, synth->sampleRate);
   return synth->sampleRate;
 }
 

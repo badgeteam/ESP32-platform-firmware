@@ -66,6 +66,39 @@ esp_err_t driver_i2c_init(void)
 	return ESP_OK;
 }
 
+esp_err_t driver_i2c_read_bytes(uint8_t addr, uint8_t *value, size_t value_len)
+{
+	esp_err_t res;
+	if (xSemaphoreTake(driver_i2c_mux, portMAX_DELAY) != pdTRUE)
+		return ESP_ERR_TIMEOUT;
+
+	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+
+	res = i2c_master_start(cmd);
+	assert( res == ESP_OK );
+	res = i2c_master_write_byte(cmd, ( addr << 1 ) | READ_BIT, ACK_CHECK_EN);
+	assert( res == ESP_OK );
+	if (value_len > 1)
+	{
+		res = i2c_master_read(cmd, value, value_len-1, ACK_VAL);
+		assert( res == ESP_OK );
+	}
+	res = i2c_master_read_byte(cmd, &value[value_len-1], NACK_VAL);
+	assert( res == ESP_OK );
+	res = i2c_master_stop(cmd);
+	assert( res == ESP_OK );
+
+	res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS);
+	i2c_cmd_link_delete(cmd);
+
+	if (xSemaphoreGive(driver_i2c_mux) != pdTRUE)
+	{
+		ESP_LOGE(TAG, "xSemaphoreGive() did not return pdTRUE.");
+	}
+
+	return res;
+}
+
 esp_err_t driver_i2c_read_reg(uint8_t addr, uint8_t reg, uint8_t *value, size_t value_len)
 {
 	esp_err_t res;
