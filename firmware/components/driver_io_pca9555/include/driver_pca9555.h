@@ -29,9 +29,54 @@ extern esp_err_t driver_pca9555_init(void);
 /**
  * Configure interrupt handler for touch events.
  * @param handler the handler to be called on an interrupt.
- * @note It is safe to set the interrupt handler before a call to driver_pca95xx_init().
+ * @note It is safe to set the interrupt handler before a call to driver_pca9555_init().
  */
 extern void driver_pca9555_set_interrupt_handler(uint8_t pin, driver_pca9555_intr_t handler);
+
+/**
+ * Configure the direction of a pin
+ * @param pin the pin-number (0-15)
+ * @param direction 0 is input, 1 is output
+ * @return 0 on success; -1 on error
+ */
+extern int driver_pca9555_set_gpio_direction(int pin, bool direction);
+
+/**
+ * Retrieve the current direction of a pin
+ * @param pin the pin-number (0-15)
+ * @return 0 when input; 1 when output; -1 on error
+ */
+extern int driver_pca9555_get_gpio_direction(int pin);
+
+/**
+ * Configure the polarity of a pin
+ * @param pin the pin-number (0-15)
+ * @param direction 0 is normal, 1 is inverted
+ * @return 0 on success; -1 on error
+ */
+extern int driver_pca9555_set_gpio_polarity(int pin, bool polarity);
+
+/**
+ * Retrieve the current polarity of a pin
+ * @param pin the pin-number (0-15)
+ * @return 0 when normal; 1 when inverted; -1 on error
+ */
+extern int driver_pca9555_get_gpio_polarity(int pin);
+
+/**
+ * Set the state of a GPIO pin
+ * @param pin the pin-number
+ * @param value 0 is low; 1 is high
+ * @return 0 on succes; -1 on error
+ */
+extern int driver_pca9555_set_gpio_value(int pin, bool value);
+
+/**
+ * Retrieve the current state of a GPIO pin
+ * @param pin the pin-number
+ * @return 0 when low; 1 when high; -1 on error
+ */
+extern int driver_pca9555_get_gpio_value(int pin);
 
 __END_DECLS
 

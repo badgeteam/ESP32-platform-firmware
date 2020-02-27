@@ -16,12 +16,12 @@ menu "Driver: PCA9555 I/O port expander"
 	config DRIVER_PCA9555_POLARITY_0
 		depends on DRIVER_PCA9555_ENABLE
 		int "Setting for polarity register of port 0"
-		default 0
+		default 255
 	
 	config DRIVER_PCA9555_POLARITY_1
 		depends on DRIVER_PCA9555_ENABLE
 		int "Setting for polarity register of port 1"
-		default 0
+		default 255
 	
 	choice
 		prompt "Port 0 pin 0 mode"

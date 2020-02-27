@@ -64,6 +64,7 @@ void platform_init()
 	INIT_DRIVER(framebuffer  , "FRAMEBUFFER") //Framebuffer driver with basic drawing routines
 	fbReady = true;                           //Notify the error handler that framebuffer support is now available
 	INIT_DRIVER(mpr121       , "MPR121"     ) //I/O expander with touch inputs as found on the SHA2017 and HackerHotel 2019 badges
+    INIT_DRIVER(pca9555      , "PCA9555"     ) //16-bit I/O expander found on the Troopers 2020 badge
 	INIT_DRIVER(disobey_samd , "SAMD"       ) //I/O via the SAMD co-processor on the Disobey 2019 badge
 	INIT_DRIVER(neopixel     , "NEOPIXEL"   ) //Addressable LEDs as found on the SHA2017 and HackerHotel 2019 badges
 	INIT_DRIVER(microphone   , "MICROPHONE" ) //Microphone driver

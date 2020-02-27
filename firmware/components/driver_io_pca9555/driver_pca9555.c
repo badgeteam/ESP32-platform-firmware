@@ -21,6 +21,9 @@ xSemaphoreHandle driver_pca9555_mux = NULL;          // mutex for accessing driv
 xSemaphoreHandle driver_pca9555_intr_trigger = NULL; // semaphore to trigger PCA95XX interrupt handling
 driver_pca9555_intr_t driver_pca9555_handler[] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }; // Per port interrupt handler
 TaskHandle_t driver_pca9555_intr_task_handle = NULL;
+uint8_t reg_config[2]   = {0xFF, 0xFF};
+uint8_t reg_polarity[2] = {0xFF, 0xFF};
+uint8_t reg_output[2]   = {0xFF, 0xFF};
 
 /* I2C access */
 
@@ -64,7 +67,6 @@ void driver_pca9555_intr_task(void *arg)
 					driver_pca9555_intr_t handler = driver_pca9555_handler[i];
 					xSemaphoreGive(driver_pca9555_mux);
 					if (handler != NULL) handler(i, value);
-					printf("PCA9555 PIN CHANGE %d = %d\n", i, value);
 				}
 			}
 			vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -76,6 +78,110 @@ void driver_pca9555_intr_task(void *arg)
 void driver_pca9555_intr_handler(void *arg)
 { /* in interrupt handler */
 	xSemaphoreGiveFromISR(driver_pca9555_intr_trigger, NULL);
+}
+
+bool pin_configured_as_always_output(int pin) {
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P0_OUTPUT
+		if (pin == 0) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P1_OUTPUT
+		if (pin == 1) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P2_OUTPUT
+		if (pin == 2) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P3_OUTPUT
+		if (pin == 3) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P4_OUTPUT
+		if (pin == 4) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P5_OUTPUT
+		if (pin == 5) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P6_OUTPUT
+		if (pin == 6) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P7_OUTPUT
+		if (pin == 7) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P0_OUTPUT
+		if (pin == 8) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P1_OUTPUT
+		if (pin == 9) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P2_OUTPUT
+		if (pin == 10) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P3_OUTPUT
+		if (pin == 11) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P4_OUTPUT
+		if (pin == 12) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P5_OUTPUT
+		if (pin == 13) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P6_OUTPUT
+		if (pin == 14) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P7_OUTPUT
+		if (pin == 15) return true;
+	#endif
+	return false;
+}
+
+bool pin_configured_as_always_input(int pin) {
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P0_INPUT
+		if (pin == 0) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P1_INPUT
+		if (pin == 1) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P2_INPUT
+		if (pin == 2) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P3_INPUT
+		if (pin == 3) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P4_INPUT
+		if (pin == 4) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P5_INPUT
+		if (pin == 5) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P6_INPUT
+		if (pin == 6) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO0P7_INPUT
+		if (pin == 7) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P0_INPUT
+		if (pin == 8) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P1_INPUT
+		if (pin == 9) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P2_INPUT
+		if (pin == 10) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P3_INPUT
+		if (pin == 11) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P4_INPUT
+		if (pin == 12) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P5_INPUT
+		if (pin == 13) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P6_INPUT
+		if (pin == 14) return true;
+	#endif
+	#ifdef CONFIG_DRIVER_PCA9555_IO1P7_INPUT
+		if (pin == 15) return true;
+	#endif
+	return false;
 }
 
 /* Public functions */
@@ -109,63 +215,21 @@ esp_err_t driver_pca9555_init(void)
 	if (driver_pca9555_intr_trigger == NULL) return ESP_ERR_NO_MEM;
 	
 	//Configure pins
-	uint8_t config[] = {0xFF,0xFF}; // By default set all pins to input
-	#ifdef CONFIG_DRIVER_PCA9555_IO0P0_OUTPUT
-		config[0] &= ~(1 << 0);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO0P1_OUTPUT
-		config[0] &= ~(1 << 1);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO0P2_OUTPUT
-		config[0] &= ~(1 << 2);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO0P3_OUTPUT
-		config[0] &= ~(1 << 3);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO0P4_OUTPUT
-		config[0] &= ~(1 << 4);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO0P5_OUTPUT
-		config[0] &= ~(1 << 5);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO0P6_OUTPUT
-		config[0] &= ~(1 << 6);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO0P7_OUTPUT
-		config[0] &= ~(1 << 7);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO1P0_OUTPUT
-		config[1] &= ~(1 << 0);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO1P1_OUTPUT
-		config[1] &= ~(1 << 1);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO1P2_OUTPUT
-		config[1] &= ~(1 << 2);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO1P3_OUTPUT
-		config[1] &= ~(1 << 3);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO1P4_OUTPUT
-		config[1] &= ~(1 << 4);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO1P5_OUTPUT
-		config[1] &= ~(1 << 5);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO1P6_OUTPUT
-		config[1] &= ~(1 << 6);
-	#endif
-	#ifdef CONFIG_DRIVER_PCA9555_IO1P7_OUTPUT
-		config[1] &= ~(1 << 7);
-	#endif
-	printf("PCA9555 port mode: %02X, %02X\n", config[0], config[1]);
-	res = driver_pca9555_write_reg(PCA9555_REG_CONFIG_0, config, 2); //Writes port mode to both config 0 and config 1 registers
-	//if (res != ESP_OK) return res;
+	reg_config[0] = 0xFF; // By default set all pins to input
+	reg_config[1] = 0xFF;
+
+	for (uint8_t i = 0; i < 8; i++) {
+		if (pin_configured_as_always_output(i))   reg_config[0] &= ~(1 << i);
+		if (pin_configured_as_always_output(i+8)) reg_config[1] &= ~(1 << i);
+	}
 	
-	config[0] = CONFIG_DRIVER_PCA9555_POLARITY_0;
-	config[1] = CONFIG_DRIVER_PCA9555_POLARITY_1;
-	res = driver_pca9555_write_reg(PCA9555_REG_POLARITY_0, config, 2); //Writes port polarity to both port 0 and port 1 registers
-	//if (res != ESP_OK) return res;
+	res = driver_pca9555_write_reg(PCA9555_REG_CONFIG_0, reg_config, 2); //Writes port mode to both config 0 and config 1 registers
+	if (res != ESP_OK) return res;
+	
+	reg_polarity[0] = CONFIG_DRIVER_PCA9555_POLARITY_0;
+	reg_polarity[1] = CONFIG_DRIVER_PCA9555_POLARITY_1;
+	res = driver_pca9555_write_reg(PCA9555_REG_POLARITY_0, reg_polarity, 2); //Writes port polarity to both port 0 and port 1 registers
+	if (res != ESP_OK) return res;
 	
 	//Attach interrupt to interrupt pin (if available)
 	#if CONFIG_PIN_NUM_PCA9555_INT >= 0
@@ -190,6 +254,96 @@ esp_err_t driver_pca9555_init(void)
 	driver_pca9555_init_done = true;
 	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
+}
+
+int driver_pca9555_set_gpio_direction(int pin, bool direction)
+{
+	if ((pin < 0) || (pin > 15)) return -1; //Out of range
+	if (pin_configured_as_always_output(pin)) return -1; //Not allowed to change direction, always output
+	if (pin_configured_as_always_input(pin))  return -1; //Not allowed to change direction, always input
+	uint8_t port = (pin >= 8) ? 1 : 0;
+	uint8_t bit  = pin % 8;
+	bool current_state = ((reg_config[port] >> bit) & 1) ? 0 : 1;
+	if (direction != current_state) {
+		if (direction) {
+			reg_config[port] &= ~(1 << bit); //Set the pin to output
+		} else {
+			reg_config[port] |= (1 << bit); //Set the pin to input
+		}
+	}
+	esp_err_t res = driver_pca9555_write_reg(PCA9555_REG_CONFIG_0, reg_config, 2); 
+	if (res != ESP_OK) return -1;
+	return 0;
+}
+
+int driver_pca9555_get_gpio_direction(int pin)
+{
+	if ((pin < 0) || (pin > 15)) return -1; //Out of range
+	uint8_t port = (pin >= 8) ? 1 : 0;
+	uint8_t bit  = pin % 8;
+	return ((reg_config[port] >> bit) & 1) ? 0 : 1; //Return 0 when the pin is an input and 1 when the pin is output
+}
+
+int driver_pca9555_set_gpio_polarity(int pin, bool polarity)
+{
+	if ((pin < 0) || (pin > 15)) return -1; //Out of range
+	if (pin_configured_as_always_output(pin)) return -1; //Not allowed to change polarity
+	if (pin_configured_as_always_input(pin))  return -1; //Not allowed to change polarity
+	uint8_t port = (pin >= 8) ? 1 : 0;
+	uint8_t bit  = pin % 8;
+	bool current_state = ((reg_polarity[port] >> bit) & 1) ? 0 : 1;
+	if (polarity != current_state) {
+		if (polarity) {
+			reg_polarity[port] &= ~(1 << bit); //Set the pin to output
+		} else {
+			reg_polarity[port] |= (1 << bit); //Set the pin to input
+		}
+	}
+	esp_err_t res = driver_pca9555_write_reg(PCA9555_REG_POLARITY_0, reg_polarity, 2); 
+	if (res != ESP_OK) return -1;
+	return 0;
+}
+
+int driver_pca9555_get_gpio_polarity(int pin)
+{
+	if ((pin < 0) || (pin > 15)) return -1; //Out of range
+	uint8_t port = (pin >= 8) ? 1 : 0;
+	uint8_t bit  = pin % 8;
+	return ((reg_polarity[port] >> bit) & 1) ? 0 : 1; //Return 0 when the pin is in normal mode and 1 when the pin is in inverted mode
+}
+
+int driver_pca9555_set_gpio_value(int pin, bool value)
+{
+	if ((pin < 0) || (pin > 15)) return -1; //Out of range
+	uint8_t port = (pin >= 8) ? 1 : 0;
+	uint8_t bit  = pin % 8;
+	if (!driver_pca9555_get_gpio_direction(pin)) return -1; // Pin is an input
+	if (value) {
+		reg_output[port] |= (1 << bit);
+	} else {
+		reg_output[port] &= ~(1 << bit);
+	}
+	uint8_t reg = port ? PCA9555_REG_OUTPUT_1 : PCA9555_REG_OUTPUT_0;
+	esp_err_t res = driver_pca9555_write_reg(reg, &reg_output[port], 1); 
+	if (res != ESP_OK) return -1;
+	return 0;
+}
+
+int driver_pca9555_get_gpio_value(int pin)
+{
+	if ((pin < 0) || (pin > 15)) return -1; //Out of range
+	uint8_t port = (pin >= 8) ? 1 : 0;
+	uint8_t bit  = pin % 8;
+	uint8_t reg;
+	if (driver_pca9555_get_gpio_direction(pin)) {
+		reg = port ? PCA9555_REG_OUTPUT_1 : PCA9555_REG_OUTPUT_0;
+	} else {
+		reg = port ? PCA9555_REG_INPUT_1 : PCA9555_REG_INPUT_0;
+	}
+	uint8_t reg_value;
+	esp_err_t res = driver_pca9555_read_reg(reg, &reg_value, 1);
+	if (res != ESP_OK) return -1;
+	return (reg_value>>bit)&1;
 }
 
 #else
