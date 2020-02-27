@@ -24,7 +24,7 @@ def drawApp(app, position, amount):
 	if not position >= (amount-1):
 		display.drawText(display.width()-10, display.height()//2-12, ">", 0xFFFFFF, "roboto_regular18")
 	
-	display.flush()
+	display.flush(display.FLAG_LUT_FASTEST)
 
 def onLeft(pressed):
 	global currentApp, apps
@@ -47,7 +47,7 @@ def onA(pressed):
 	if pressed:
 		display.drawFill(0x000000)
 		drawMessageBox("Loading app...")
-		display.flush()
+		display.flush(display.FLAG_LUT_FASTEST)
 		system.start(apps[currentApp]["path"])
 
 def onB(pressed):
@@ -57,7 +57,7 @@ def onB(pressed):
 orientation.default()
 display.drawFill(0x000000)
 drawMessageBox("Loading...")
-display.flush()
+display.flush(display.FLAG_LUT_FASTEST)
 term.header(True, "Loading...")
 apps = []
 apps.append({"path":"dashboard.tools.reset_default",   "name":"Reset homescreen",   "icon":None, "category":"system"})

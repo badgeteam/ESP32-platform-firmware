@@ -8,7 +8,7 @@ __chk_recovery = False
 fc_level = machine.nvs_getint("system", 'factory_checked') or 0
 recovery_button = None
 
-if fc_level < 3:
+if fc_level >= 3:
 	try:
 		import buttons
 		try:

@@ -253,29 +253,20 @@ def drawTask(onSleep=False):
 					currHeight += display.getTextHeight(subtitle, "fairlight12")
 			else:
 				noLine = True
+				textWidth = display.getTextWidth(cfg_nick_text, "ocra22")
+				textHeight = display.getTextHeight(cfg_nick_text, "ocra22")
+				textX = (display.width()-textWidth)//2
+				textY = (display.height()-textHeight)//2
+				display.drawText(textX, textY, cfg_nick_text, COLOR_FG, "ocra22")
 		else:
 			display_app(currHeight)
 
 		if onSleep:
-			info = 'Sleeping...'
-			owner=machine.nvs_getstr("owner", "name")
-			fontlist=["permanentmarker22","Roboto_Regular18","Roboto_Regular12"]
-			if(owner):
-				display.drawFill(COLOR_BG)
-				for font in fontlist:
-					if font == fontlist[-1]:
-						display.drawText(0, 0,owner, COLOR_FG, font)
-					elif display.getTextWidth(owner, font)<=display.width():
-						display.drawText((display.width()-display.getTextWidth(owner, font))//2, 0,owner, COLOR_FG, font)
-						break
-		#elif not rtc.isSet():
-		#	info = "RTC not available"
+			info = 'Zzz...'
 		elif ota_available:
-			info = "Update available!"
-		#elif wifi_status_curr:
-		#	info = "WiFi connected"
+			info = "(Firmware update available!)"
 		else:
-			info = ""#'Press START'
+			info = "" #'Press START to open the menu.'
 		if not noLine:
 			display.drawLine(0, display.height()-16, display.width(), display.height()-16, COLOR_FG)
 		easydraw.disp_string_right_bottom(0, info)
@@ -300,18 +291,18 @@ def ledThread():
 	ledDirection = False
 	global stopThreads
 	while not stopThreads:
-         neopixel.send(bytes([0, 4+ledValue, 0]*5 + [0, 4+24-ledValue, 0]*7))
-        if ledDirection:
-            ledValue -=2
-            if ledValue <= 0:
-                levValue = 0
-                ledDirection = False
-        else:
-            ledValue += 6
-            if ledValue >= 24:
-                levValue = 24
-                ledDirection = True
-		time.sleep_ms(60)
+		neopixel.send(bytes([0, ledValue, 0]*6))
+		if ledDirection:
+			ledValue -=2
+			if ledValue <= 0:
+				levValue = 0
+				ledDirection = False
+		else:
+			ledValue += 6
+			if ledValue >= 24:
+				levValue = 24
+				ledDirection = True
+		time.sleep_ms(100)
 
 led_app = None
 if cfg_led_animation != None:
@@ -324,7 +315,7 @@ if cfg_led_animation != None:
 	except:
 		pass
 else:
-	#_thread.start_new_thread("LED", ledThread, ())
+	_thread.start_new_thread("LED", ledThread, ())
 	pass
 
 # Terminal menu

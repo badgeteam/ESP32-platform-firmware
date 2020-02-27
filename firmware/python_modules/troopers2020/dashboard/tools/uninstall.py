@@ -30,11 +30,11 @@ def drawApp(app, position, amount):
 			else:
 				icon_data = app["icon"]
 		if not icon_data:
-			display.drawPng(48,15,default_icon)
+			display.drawPng(display.width()//2-16,display.height()//2-16,default_icon)
 		else:
 			info = display.pngInfo(icon_data)
 			if info[0] == 32 and info[1] == 32:
-				display.drawPng(48,15,icon_data)
+				display.drawPng(display.width()//2-16,display.height()//2-16,icon_data)
 			else:
 				drawMessageBox("Invalid icon size\nExpected 32x32!")
 	except BaseException as e:
@@ -46,7 +46,7 @@ def drawApp(app, position, amount):
 	if not position >= (amount-1):
 		display.drawText(display.width()-10, display.height()//2-12, ">", 0xFFFFFF, "roboto_regular18")
 	
-	display.flush()
+	display.flush(display.FLAG_LUT_FASTEST)
 
 def loadInfo(folder, name):
 	try:
@@ -109,19 +109,19 @@ def uninstall(path):
 		display.drawRect(0,0,display.width(), 10, True, 0xFFFFFF)
 		display.drawText(2, 0, "UNINSTALL", 0x000000, "org18")
 		drawMessageBox("Removing file...\n{}".format(f))
-		display.flush()
+		display.flush(display.FLAG_LUT_FASTEST)
 		os.remove(path+"/"+f)
 	display.drawFill(0x000000)
 	display.drawRect(0,0,display.width(), 10, True, 0xFFFFFF)
 	display.drawText(2, 0, "UNINSTALL", 0x000000, "org18")
 	drawMessageBox("Removing folder...")
-	display.flush()
+	display.flush(display.FLAG_LUT_FASTEST)
 	os.rmdir(path)
 	display.drawFill(0x000000)
 	display.drawRect(0,0,display.width(), 10, True, 0xFFFFFF)
 	display.drawText(2, 0, "UNINSTALL", 0x000000, "org18")
 	drawMessageBox("App removed!")
-	display.flush()
+	display.flush(display.FLAG_LUT_FASTEST)
 	time.sleep(2)	
 	showMenu()
 
@@ -130,21 +130,21 @@ def onA(pressed):
 	if pressed:
 		display.drawFill(0x000000)
 		drawMessageBox("Removing app...")
-		display.flush()
+		display.flush(display.FLAG_LUT_FASTEST)
 		uninstall(apps[currentApp]["path"])
 
 def onB(pressed):
 	if pressed:
 		display.drawFill(0x000000)
 		drawMessageBox("Starting launcher...")
-		display.flush()
+		display.flush(display.FLAG_LUT_FASTEST)
 		system.launcher()
 
 # Launcher
 orientation.landscape()
 display.drawFill(0x000000)
 drawMessageBox("Loading...")
-display.flush()
+display.flush(display.FLAG_LUT_FASTEST)
 term.header(True, "Loading...")
 
 buttons.attach(buttons.BTN_LEFT,  onLeft)
@@ -165,7 +165,7 @@ def showMenu():
 	else:
 		display.drawFill(0x000000)
 		drawMessageBox("No apps installed!")
-		display.flush()
+		display.flush(display.FLAG_LUT_FASTEST)
 		time.sleep(5)
 		system.launcher()
 

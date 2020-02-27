@@ -1,4 +1,4 @@
-import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os
+import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os, time
 
 haveSD = False
 try:
@@ -47,11 +47,11 @@ def drawApp(app, position, amount):
 			else:
 				icon_data = app["icon"]
 		if not icon_data:
-			display.drawPng(48,15,default_icon)
+			display.drawPng(display.width()//2-16,display.height()//2-16,default_icon)
 		else:
 			info = display.pngInfo(icon_data)
 			if info[0] == 32 and info[1] == 32:
-				display.drawPng(48,15,icon_data)
+				display.drawPng(display.width()//2-16,display.height()//2-16,icon_data)
 			else:
 				drawMessageBox("Invalid icon size\nExpected 32x32!")
 	except BaseException as e:
@@ -63,7 +63,7 @@ def drawApp(app, position, amount):
 	if not position >= (amount-1):
 		display.drawText(display.width()-10, display.height()//2-12, ">", 0xFFFFFF, "roboto_regular18")
 	
-	display.flush()
+	display.flush(display.FLAG_LUT_FASTEST)
 
 def loadInfo(folder, name):
 	try:
@@ -121,14 +121,16 @@ def onA(pressed):
 	if pressed:
 		display.drawFill(0x000000)
 		drawMessageBox("Loading app...")
-		display.flush()
+		display.flush(display.FLAG_LUT_FASTEST)
+		time.sleep(0.1)
 		system.start(apps[currentApp]["path"])
 
 def onB(pressed):
 	if pressed:
 		display.drawFill(0x000000)
 		drawMessageBox("Loading homescreen...")
-		display.flush()
+		display.flush(display.FLAG_LUT_FASTEST)
+		time.sleep(0.1)
 		system.home()
 
 # Launcher

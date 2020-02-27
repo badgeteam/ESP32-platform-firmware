@@ -18,7 +18,7 @@ convert=../fontconvert
 header=../fontheader
 inpath=
 outpath=../../font_
-fonts=(org_01 fairlight dejavusans permanentmarker roboto)
+fonts=(ocra org_01 fairlight dejavusans permanentmarker roboto)
 styles=("" mono bold italic black italic blackitalic)
 sizes=(6 8 9 12 13 16 18 20 22 24 36 42)
 
@@ -32,7 +32,6 @@ do
 		for si in ${sizes[*]}
 		do
 			infile=$inpath$f$st".ttf"
-			#echo $infile
 			if [ -f $infile ] # Does source combination exist?
 			  then
 				$convert $infile $si $dpi > $outpath$f$st$si"pt7b.c"
