@@ -1,4 +1,4 @@
-import os, machine, display, easydraw, time
+import os, machine, display, easydraw, time, neopixel
 
 def configureWakeupSource():
 	machine.RTC().wake_on_ext0(pin = machine.Pin(39), level = 0) # pca9555 interrupt
@@ -9,6 +9,7 @@ def prepareForSleep():
 		os.umountsd()
 	except:
 		pass
+	neopixel.send(bytes([0]*24)) # Turn off LEDs
 	configureWakeupSource()
 
 def prepareForWakeup():
