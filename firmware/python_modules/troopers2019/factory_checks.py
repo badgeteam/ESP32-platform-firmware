@@ -19,5 +19,5 @@ except:
 	import dashboard.resources.png_icons
 
 # We have completed the factory script
-machine.nvs_setint('system', 'factory_checked', 2)
+machine.nvs_setint('system', 'factory_checked', 3)
 system.home()
