@@ -1,10 +1,13 @@
 import machine, display, time, system, consts, easydraw, network
 
+PREV_TGT = 2
+CURR_TGT = 3
+
 # 1) Introduction
 currentState = machine.nvs_getint('system', 'factory_checked') or 0
 
-if currentState >= 2:
-    machine.nvs_setint('system', 'factory_checked', 3)
+if currentState >= PREV_TGT:
+    machine.nvs_setint('system', 'factory_checked', CURR_TGT)
     system.home()
 
 easydraw.messageCentered("FACTORY\n"+consts.INFO_FIRMWARE_NAME+"\nBuild "+str(consts.INFO_FIRMWARE_BUILD), True)
@@ -33,7 +36,7 @@ display.flush()
 import dashboard.resources.png_icons
 
 # 4) Set flag
-machine.nvs_setint('system', 'factory_checked', 2)
+machine.nvs_setint('system', 'factory_checked', CURR_TGT)
 
 # 5) Show message
 easydraw.messageCentered("PASSED", True)
