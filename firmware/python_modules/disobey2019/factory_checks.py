@@ -1,7 +1,12 @@
 import machine, display, time, system, consts, easydraw, network
 
 # 1) Introduction
-currentState = machine.nvs_getint('system', 'factory_checked')
+currentState = machine.nvs_getint('system', 'factory_checked') or 0
+
+if currentState >= 2:
+    machine.nvs_setint('system', 'factory_checked', 3)
+    system.home()
+
 easydraw.messageCentered("FACTORY\n"+consts.INFO_FIRMWARE_NAME+"\nBuild "+str(consts.INFO_FIRMWARE_BUILD), True)
 display.flush()
 time.sleep(2)
