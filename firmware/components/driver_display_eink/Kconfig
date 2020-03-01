@@ -31,16 +31,6 @@ menu "Driver: E-ink display"
 		int "GPIO pin used for e-ink busy"
 		default 22
 	
-	config PIN_NUM_EPD_MOSI
-		depends on DRIVER_EINK_ENABLE
-		int "GPIO pin used for e-ink MOSI"
-		default 5
-	
-	config PIN_NUM_EPD_CLK
-		depends on DRIVER_EINK_ENABLE
-		int "GPIO pin used for e-ink CLK"
-		default 18
-	
 	config PIN_NUM_EPD_CS
 		depends on DRIVER_EINK_ENABLE
 		int "GPIO pin used for e-ink CS"
@@ -48,7 +38,7 @@ menu "Driver: E-ink display"
 	
 	config PIN_NUM_EPD_DATA
 		depends on DRIVER_EINK_ENABLE
-		int "GPIO pin used for e-ink DATA"
+		int "GPIO pin used for e-ink DC"
 		default 21
 		
 	config DRIVER_EINK_FORCE_1BPP

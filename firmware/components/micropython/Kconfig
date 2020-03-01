@@ -180,6 +180,13 @@ menu "MicroPython"
 				If SPIRAM is not used, heap is allocated from DRAM and setting the heap size too large
 				may result in insuficient heap for C services like mqtt, gsm, curl...
 
+		config MICROPY_TAKE_MORE_HEAP
+		    bool "Enable non-contiguous extra heap space"
+		    default n
+		    help
+		        Allocates additional (non-contiguous) blocks of DRAM
+		        for the MicroPython heap.
+
 		config MICROPY_THREAD_MAX_THREADS
 			int "Maximum number of threads"
 			range 1 16
@@ -576,6 +583,12 @@ menu "MicroPython"
 				endchoice
 
 		endmenu
+		config MICROPY_USE_OPUS
+			bool "Use opus module"
+			default y
+			help
+				Include support for encoding/decoding audio via libopus
+
 	endmenu
 	menu "File systems"
 		config MICROPY_FILESYSTEM_TYPE

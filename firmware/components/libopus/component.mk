@@ -1,0 +1,4 @@
+COMPONENT_SRCDIRS := src celt silk silk/fixed
+COMPONENT_ADD_INCLUDEDIRS := include
+COMPONENT_PRIV_INCLUDEDIRS := celt silk silk/fixed
+CFLAGS+=-DHAVE_CONFIG_H -DVAR_ARRAYS

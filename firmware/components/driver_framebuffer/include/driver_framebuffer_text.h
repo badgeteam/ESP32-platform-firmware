@@ -19,6 +19,8 @@ extern const GFXfont roboto18pt7b;
 extern const GFXfont roboto22pt7b;
 extern const GFXfont weather42pt8b;
 extern const GFXfont ipane7x5;
+extern const GFXfont ocra16pt7b;
+extern const GFXfont ocra22pt7b;
 
 /* Functions */
 

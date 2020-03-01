@@ -18,6 +18,7 @@
 #include "driver_st7789v.h"
 #include "driver_nokia6100.h"
 #include "driver_disobey_samd.h"
+#include "driver_ledmatrix.h"
 
 /* E-INK display as used on the SHA2017 and HackerHotel 2019 badges */
 #if defined(CONFIG_DRIVER_EINK_ENABLE)
@@ -156,6 +157,16 @@
 	#define FB_TYPE_16BPP //HACK use 12-bit color depth when this mode is ready for use
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_nokia6100_write_partial(buffer, x0, y0, x1, y1)
 	#define FB_SET_BACKLIGHT(brightness) driver_nokia6100_set_backlight(brightness > 127)
+	#define COLOR_FILL_DEFAULT 0x000000
+	#define COLOR_TEXT_DEFAULT 0xFFFFFF
+
+/* LED matrix*/
+#elif defined(CONFIG_DRIVER_LEDMATRIX_ENABLE)
+	#define FB_SIZE LEDMATRIX_BUFFER_SIZE
+	#define FB_WIDTH LEDMATRIX_WIDTH
+	#define FB_HEIGHT LEDMATRIX_HEIGHT
+	#define FB_TYPE_8BPP
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_ledmatrix_set_buffer(buffer);
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 #else

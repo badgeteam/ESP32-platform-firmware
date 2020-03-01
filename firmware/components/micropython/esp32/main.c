@@ -116,8 +116,38 @@ void mp_task(void *pvParameter)
 	mp_stack_set_top((void *)sp);
 	mp_stack_set_limit(mp_task_stack_len - 1024);
 
-	// Initialize the MicroPython heap
-	gc_init(mp_task_heap, mp_task_heap + mpy_heap_size);
+    // Initialize the MicroPython heap
+    gc_init(mp_task_heap, mp_task_heap + mpy_heap_size);
+
+#ifdef CONFIG_MICROPY_TAKE_MORE_HEAP
+    // Reserve the 111KB DRAM block at 0x3FFE4350
+	uint8_t *large_dram = NULL;
+    size_t large_heap_size = NULL;
+	for (large_heap_size = 520 * 1024; large_heap_size >= 8 * 1024; large_heap_size -= 1024) {
+	    // Find the maximally allocatable space
+        large_dram = malloc(large_heap_size);
+		if (large_dram != NULL) {
+            break;
+		}
+	}
+
+	// Now take the 14KB block at 0x3FFE0440
+    uint8_t *dram_14k = NULL;
+    for (size_t heap_size = 16 * 1024; heap_size >= 8 * 1024; heap_size -= 1024) {
+        // Find the maximally allocatable space
+        dram_14k = malloc(heap_size);
+        if (dram_14k != NULL) {
+            gc_add(dram_14k, dram_14k + heap_size);
+            break;
+        }
+    }
+
+    // There's also ~9KB remaining at 0x3FFBB190, but taking it
+    // seems to break TLS on WiFi.
+
+    // Finally we free the reserved 111KB block, leaving it in full for WiFi. (needed)
+    free(large_dram);
+#endif
 
 	// Initialize MicroPython environment
 	mp_init();
@@ -227,7 +257,7 @@ void micropython_entry(void)
 		.rx_flow_ctrl_thresh = 0,
 		.use_ref_tick = true
 	};
-	
+
 	uart_param_config(UART_NUM_0, &uartcfg);
 	uart_set_baudrate(UART_NUM_0, CONFIG_CONSOLE_UART_BAUDRATE);
 
@@ -275,7 +305,7 @@ void micropython_entry(void)
 	}
 
 	nvs_flash_init();
-	
+
 	ESP_LOGD("MicroPython","Configure stack");
 	mp_task_stack_len = MPY_DEFAULT_STACK_SIZE;
 
@@ -285,7 +315,7 @@ void micropython_entry(void)
 		mpy_nvs_handle = 0;
 		ESP_LOGE("MicroPython","Error while opening MicroPython NVS name space");
 	}
-	
+
 	if (mpy_nvs_handle != 0) {
 		// Get stack size from NVS
 		if (ESP_ERR_NVS_NOT_FOUND != nvs_get_i32(mpy_nvs_handle, "MPY_StackSize", &mp_task_stack_len)) {
@@ -330,7 +360,7 @@ void micropython_entry(void)
 			}
 		}
 	}
-	
+
 	mpy_heap_size &= 0x7FFFFFF0;
 
 	if (mpy_use_spiram) {

@@ -1,7 +1,15 @@
 import machine, display, time, system, consts, easydraw, network, neopixel, mpr121, sndmixer, identification
 
+PREV_TGT = 2
+CURR_TGT = 3
+
 # 1) Introduction
-currentState = machine.nvs_getint('system', 'factory_checked')
+currentState = machine.nvs_getint('system', 'factory_checked') or 0
+
+if currentState >= PREV_TGT:
+    machine.nvs_setint('system', 'factory_checked', CURR_TGT)
+    system.home()
+
 easydraw.messageCentered("FACTORY\n"+consts.INFO_FIRMWARE_NAME+"\nBuild "+str(consts.INFO_FIRMWARE_BUILD), True)
 display.flush()
 time.sleep(1.5)
@@ -38,7 +46,7 @@ import dashboard.resources.png_icons as icons
 icons.install()
 
 # 6) Set flag
-machine.nvs_setint('system', 'factory_checked', 2)
+machine.nvs_setint('system', 'factory_checked', CURR_TGT)
 machine.nvs_setint('system', 'force_sponsors', 1)
 
 # 7) Show message

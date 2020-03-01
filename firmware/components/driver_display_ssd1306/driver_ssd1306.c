@@ -65,7 +65,7 @@ esp_err_t driver_ssd1306_init(void)
 	if (res != ESP_OK) return res;
 	res=i2c_command(0xd5); // SSD1306_SETDISPLAYCLOCKDIV
 	if (res != ESP_OK) return res;
-	i2c_command(0x80); // Suggested value 0x80
+	i2c_command(0xf0); // Sets frequency to highest value and divider to 1 for less flicker
 	if (res != ESP_OK) return res;
 	i2c_command(0xa8); // SSD1306_SETMULTIPLEX
 	if (res != ESP_OK) return res;

@@ -12,6 +12,7 @@ _vusb.atten(machine.ADC.ATTN_11DB)
 
 _vident = machine.ADC(PIN_VIDENT)
 _vident.atten(machine.ADC.ATTN_11DB)
+_vident.width(machine.ADC.WIDTH_12BIT)
 
 def usb():
 	'''
@@ -32,4 +33,4 @@ def identification():
 	Read identification voltage
 	:return: integer, voltage in mV
 	'''
-	return int(_vident.read()*1.94)
+	return _vident.read()

@@ -1,4 +1,4 @@
-import machine, sys, system, time, os
+import machine, sys, system, time, os, buttons
 import _device as device
 
 rtc = machine.RTC()
@@ -8,25 +8,20 @@ rtc.write(1,0)
 device.prepareForWakeup()
 
 __chk_recovery = False
+__chk_develop  = False
 
-if machine.nvs_getint("system", 'factory_checked'):
+if machine.wake_reason() == (7, 0) and machine.nvs_getint("system", 'factory_checked'):
 	try:
-		import buttons
-		try:
-			#Use the START button if available
-			recovery_button = buttons.BTN_START
-		except:
-			#Else use the B button
-			recovery_button = buttons.BTN_B
-		__chk_recovery = machine.wake_reason() == (7, 0) and buttons.value(recovery_button)
+		recovery_button = buttons.BTN_START #Use the START button if available
 	except:
-		pass
+		recovery_button = buttons.BTN_B #Else use the B button
+	__chk_recovery = buttons.value(recovery_button)
+	__chk_develop = buttons.value(buttons.BTN_LEFT)
 
 if __chk_recovery:
 	app = "dashboard.recovery"
-elif machine.nvs_getint('system', 'force_sponsors'):
-	machine.nvs_setint('system', 'force_sponsors', 0)
-	app = "sponsors_disobey_2020"
+elif __chk_develop:
+	app = "dev"
 else:
 	app = rtc.read_string()
 	if not app:
@@ -37,7 +32,7 @@ else:
 			if not app:
 				app = 'dashboard.home'
 
-if app and not app == "shell":
+if app and not (app == "shell" or app == "dev"):
 	try:
 		print("Starting app '%s'..." % app)
 		system.__current_app__ = app

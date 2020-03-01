@@ -15,6 +15,12 @@ struct Config {
 static QueueHandle_t soundQueue;
 static int soundRunning = 0;
 
+#ifdef CONFIG_DRIVER_SNDMIXER_I2S_PORT1
+static const i2s_port_t g_i2s_port = 1;
+#else
+static const i2s_port_t g_i2s_port = 0;
+#endif
+
 void driver_i2s_sound_start() {
   config.volume = 255;
 
@@ -54,16 +60,10 @@ void driver_i2s_sound_start() {
     .dma_buf_len      = buffsize / 4
   };
 
-#ifdef CONFIG_DRIVER_SNDMIXER_I2S_PORT1
-  const i2s_port_t port = 1;
-#else
-  const i2s_port_t port = 0;
-#endif
-
-  i2s_driver_install(port, &cfg, 4, &soundQueue);
-  i2s_set_sample_rates(port, cfg.sample_rate);
+  i2s_driver_install(g_i2s_port, &cfg, 4, &soundQueue);
+  i2s_set_sample_rates(g_i2s_port, cfg.sample_rate);
 #ifdef CONFIG_DRIVER_SNDMIXER_I2S_DAC_INTERNAL
-  i2s_set_pin(port, NULL);
+  i2s_set_pin(g_i2s_port, NULL);
 #ifdef CONFIG_DRIVER_SNDMIXER_I2S_INTERNAL_DAC_BOTH
   i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
 #elif defined(CONFIG_DRIVER_SNDMIXER_I2S_INTERNAL_DAC_RIGHT)
@@ -74,18 +74,17 @@ void driver_i2s_sound_start() {
   i2s_set_dac_mode(I2S_DAC_CHANNEL_DISABLE);
 #endif
 #else
-  static const i2s_pin_config_t pin_config = {.bck_io_num = CONFIG_DRIVER_SNDMIXER_PIN_BCK,
-                                              .ws_io_num = CONFIG_DRIVER_SNDMIXER_PIN_WS,
+  static const i2s_pin_config_t pin_config = {.bck_io_num   = CONFIG_DRIVER_SNDMIXER_PIN_BCK,
+                                              .ws_io_num    = CONFIG_DRIVER_SNDMIXER_PIN_WS,
                                               .data_out_num = CONFIG_DRIVER_SNDMIXER_PIN_DATA_OUT,
-                                              .data_in_num = I2S_PIN_NO_CHANGE};
-  i2s_set_pin(port, &pin_config);
-
+                                              .data_in_num  = I2S_PIN_NO_CHANGE};
+  i2s_set_pin(g_i2s_port, &pin_config);
 #endif
   soundRunning = 1;
 }
 
 void driver_i2s_sound_stop() {
-  i2s_driver_uninstall(0);
+  i2s_driver_uninstall(g_i2s_port);
 }
 
 #define SND_CHUNKSZ 32
@@ -128,14 +127,7 @@ void driver_i2s_sound_push(int16_t *buf, int len, int stereo_input) {
 #endif
     }
 
-
-#ifdef CONFIG_DRIVER_SNDMIXER_I2S_PORT1
-    const i2s_port_t port = 1;
-#else
-    const i2s_port_t port = 0;
-#endif
-
-    i2s_write_bytes(port, (char *)tmpb, plen * 2 * sizeof(tmpb[0]), portMAX_DELAY);
+    i2s_write_bytes(g_i2s_port, (char *)tmpb, plen * 2 * sizeof(tmpb[0]), portMAX_DELAY);
     i += plen;
   }
 }
