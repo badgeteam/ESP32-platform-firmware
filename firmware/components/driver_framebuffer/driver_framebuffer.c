@@ -22,33 +22,53 @@ uint8_t* framebuffer;
 
 inline uint16_t convert24to16(uint32_t in) //RGB24 to 565
 {
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+	uint8_t b = (in>>16)&0xFF;
+	uint8_t r = in&0xFF;
+#else
 	uint8_t r = (in>>16)&0xFF;
+	uint8_t b = in&0xFF;    
+#endif
 	uint8_t g = (in>>8)&0xFF;
-	uint8_t b = in&0xFF;
 	return ((b & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (r >> 3);
 }
 
 inline uint8_t convert24to8C(uint32_t in) //RGB24 to 256-color
 {
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_SWAP_R_AND_B
 	uint8_t r = ((in>>16)&0xFF) >> 5;
-	uint8_t g = ((in>> 8)&0xFF) >> 5;
 	uint8_t b = ( in     &0xFF) >> 6;
+#else
+	uint8_t b = ((in>>16)&0xFF) >> 5;
+	uint8_t r = ( in     &0xFF) >> 6;
+#endif
+	uint8_t g = ((in>> 8)&0xFF) >> 5;
 	return r | (g<<3) | (b<<6);
 }
 
 inline uint32_t convert8Cto24(uint8_t in) //256-color to RGB24
 {
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+	uint8_t b = in & 0x07;
+	uint8_t r = in >> 6;
+#else
 	uint8_t r = in & 0x07;
-	uint8_t g = (in>>3) & 0x07;
 	uint8_t b = in >> 6;
+#endif
+	uint8_t g = (in>>3) & 0x07;
 	return b | (g << 8) | (r << 16);
 }
 
 inline uint8_t convert24to8(uint32_t in) //RGB24 to 8-bit greyscale
 {
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+	uint8_t b = (in>>16)&0xFF;
+	uint8_t r = in&0xFF;
+#else
 	uint8_t r = (in>>16)&0xFF;
-	uint8_t g = (in>>8)&0xFF;
 	uint8_t b = in&0xFF;
+#endif
+	uint8_t g = (in>>8)&0xFF;
 	return ( r + g + b + 1 ) / 3;
 }
 
@@ -137,9 +157,14 @@ void driver_framebuffer_fill(Window* window, uint32_t value)
 	#elif defined(FB_TYPE_8BPP)
 		memset(buffer, convert24to8(value), width*height);
 	#elif defined(FB_TYPE_12BPP)
-		uint8_t r = (value >> 20) &0x0F;
+		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+			uint8_t r = (value >> 20) &0x0F;
+			uint8_t b = (value >> 04) &0x0F;
+		#else
+			uint8_t b = (value >> 20) &0x0F;
+			uint8_t r = (value >> 04) &0x0F;
+		#endif
 		uint8_t g = (value >> 12) &0x0F;
-		uint8_t b = (value >> 04) &0x0F;
 		for (uint32_t position = 0; position < width*height; position++) {
 			#elif defined(FB_TYPE_12BPP)
 			uint32_t positionBits = (x+(y*width))*12;
@@ -172,19 +197,29 @@ void driver_framebuffer_fill(Window* window, uint32_t value)
 			buffer[i] = value;
 		}
 	#elif defined(FB_TYPE_24BPP)
-		uint8_t r = (value>>16)&0xFF;
+		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+			uint8_t b = (value>>16)&0xFF;
+			uint8_t r = value&0xFF;
+		#else
+			uint8_t r = (value>>16)&0xFF;
+			uint8_t b = value&0xFF;
+		#endif
 		uint8_t g = (value>>8)&0xFF;
-		uint8_t b = value&0xFF;
 		for (uint32_t i = 0; i < width*height*3; i+=3) {
 			buffer[i + 0] = r;
 			buffer[i + 1] = g;
 			buffer[i + 2] = b;
 		}
 	#elif defined(FB_TYPE_32BPP)
-		uint8_t a = (value>>24)&0xFF;
-		uint8_t r = (value>>16)&0xFF;
+		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+			uint8_t b = (value>>16)&0xFF;
+			uint8_t r = value&0xFF;
+		#else
+			uint8_t r = (value>>16)&0xFF;
+			uint8_t b = value&0xFF;
+		#endif
 		uint8_t g = (value>>8)&0xFF;
-		uint8_t b = value&0xFF;
+		uint8_t a = (value>>24)&0xFF;
 		for (uint32_t i = 0; i < width*height*4; i+=4) {
 			buffer[i + 0] = a;
 			buffer[i + 1] = b;
