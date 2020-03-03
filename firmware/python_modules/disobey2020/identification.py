@@ -1,70 +1,38 @@
+# Badge variant identification for the Disobey 2020 badge
 import voltages as _voltages
-_voltage    = _voltages.identification()
-_names      = ["Techie", "Fixer", "Corporate", "Netrunner", "Rocker"]
-_badgeTypes = {
+
+# Types
+_badge_types = {
     2000: {"type": b"t", "name":"Techie"},
     5100: {"type": b"f", "name":"Fixer"},
     12000: {"type": b"c", "name":"Corporate"},
     27000: {"type": b"n", "name":"Netrunner"},
     100000: {"type": b"r", "name":"Rocker"}
 }
-_voltages    = [830, 1460, 2110, 2710, 3300, 9999]
 
+# Determine badge type
+_voltage = _voltages.identification()
 _r1 = 10000
+_v_div = 3300
+_r2 = int((_r1 * _voltage) / (_v_div - _voltage))
 
-_adcRef = 3.9
-_v_div = 3.3
-_adcResolution = 4096
+if _r2 > 0 and _r2 < 1000000:
+    _closest_match = min(_badge_types, key=lambda x:abs(x - _r2))
+    _badge_type = _badge_types[_closest_match]
+else:
+    _badge_type = {"type": b"u", "name":"Unknown"}
 
-
-def getVoltage():
-	return _voltage
-
-def takeClosest(myList, myNumber):
-    """
-    Assumes myList is sorted. Returns closest value to myNumber.
-
-    If two numbers are equally close, return the smallest number.
-    """
-    pos = bisect_left(myList, myNumber)
-    if pos == 0:
-        return myList[0]
-    if pos == len(myList):
-        return myList[-1]
-    before = myList[pos - 1]
-    after = myList[pos]
-    if after - myNumber < myNumber - before:
-        return after
-    else:
-        return before
-
-def measure_resistor():
-    """
-    Reads ADC value on type-detection pin
-
-    Returns measured resistance as integer
-    """
-    meas = getVoltage()
-    adc_voltage = (meas / _adcResolution) * _adcRef
-    r2 = int((_r1 * adc_voltage) / (_v_div - adc_voltage))
-    return r2
-
-def detect_type():
-    """
-    Takes measured resistance and matches it to key LUT
-
-    Returns badge type from LUT.
-    If detection fails, returns False
-    """
-    res = measure_resistor()
-    if res > 0 and res < 1000000:
-        closest_match = min(_badgeTypes, key=lambda x:abs(x - res))
-        return _badgeTypes[closest_match]
-    else:
-    	return False
-
+# Public functions
 def getName():
-	return detect_type()["name"]
+    '''
+    Get the human readable name of the current badge type
+    :return: string, full type name
+    '''
+    return _badge_type["name"]
 
 def getType():
-	return detect_type()["type"]
+    '''
+    Get the machine readable identifier of the current badge type
+    :return: bytestring, identifier
+    '''
+    return _badge_type["type"]
