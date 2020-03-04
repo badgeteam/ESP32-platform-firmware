@@ -3,7 +3,7 @@ import network, time, machine, consts
 _STA_IF = network.WLAN(network.STA_IF)
 _AP_IF  = network.WLAN(network.AP_IF)
 
-_DEFAULT_TIMEOUT  = machine.nvs_getint("system", "wifi.timeout") or 30
+_DEFAULT_TIMEOUT  = machine.nvs_getint("system", "wifi.timeout") or 20
 _DEFAULT_SSID     = machine.nvs_getstr("system", "wifi.ssid")
 _DEFAULT_PASSWORD = machine.nvs_getstr("system", "wifi.password")
 
@@ -35,20 +35,27 @@ def connect(*args):
 
 def disconnect():
 	'''
-	Disconnect from a WiFi network
+	Disconnect from the WiFi network
 	'''
 	_STA_IF.disconnect()
 
+def stop():
+	'''
+	Disconnect from the WiFi network and disable the station interface
+	'''
+	_STA_IF.disconnect()
+	_STA_IF.active(False)
+
 def status():
 	'''
-	Connection status
+	Connection status of the station interface
 	:return: boolean, connected
 	'''
 	return _STA_IF.isconnected()
 
-def wait(duration=_DEFAULT_TIMEOUT, UNUSED_LEGACY_PARAMETER=None):
+def wait(duration=_DEFAULT_TIMEOUT):
 	'''
-	Wait until connection has been made
+	Wait until connection has been made to a network using the station interface
 	:return: boolean, connected
 	'''
 	t = int(duration*10)
@@ -58,6 +65,67 @@ def wait(duration=_DEFAULT_TIMEOUT, UNUSED_LEGACY_PARAMETER=None):
 		t -= 1
 		time.sleep(0.1)
 	return status()
+
+def scan():
+	'''
+	Scan for WiFi networks
+	:return: list, wifi networks [SSID, BSSID, CHANNEL, RSSI, AUTHMODE1, AUTHMODE2, HIDDEN]
+	'''
+	_STA_IF.active(True)
+	return _STA_IF.scan()
+
+def ifconfig(newConfig=None):
+	'''
+	Get or set the interface configuration of the station interface
+	:return: tuple, (ip, subnet, gateway, dns)
+	'''
+	if newConfig:
+		return _AP_IF.ifconfig(newConfig)
+	else:
+		return _AP_IF.ifconfig()
+
+# ACCESS POINT MODE
+# -----------------
+
+def accesspoint_start(ssid, password=None):
+	'''
+	Create a WiFi access point
+	:param ssid: SSID of the network
+	:param password: Password of the network (optional)
+	'''
+	if len(password) < 8:
+		raise Exception("Password too short: must be at least 8 characters long")
+	_AP_IF.active(True)
+	if password:
+		_AP_IF.config(essid=ssid, authmode=network.AUTH_WPA2_PSK, password=password)
+	else:
+		_AP_IF.config(essid=ssid, authmode=network.AUTH_OPEN)
+
+def accesspoint_status():
+	'''
+	Accesspoint status
+	:return: boolean, active
+	'''
+	return _AP_IF.active()
+
+def accesspoint_stop():
+	'''
+	Disable the accesspoint
+	'''
+	_AP_IF.active(False)
+
+def accesspoint_ifconfig(newConfig=None):
+	'''
+	Get or set the interface configuration of the accesspoint interface
+	:return: tuple, (ip, subnet, gateway, dns)
+	'''
+	if newConfig:
+		return _AP_IF.ifconfig(newConfig)
+	else:
+		return _AP_IF.ifconfig()
+
+# EXTRAS
+# -----------------
 
 def ntp(onlyIfNeeded=True, server='pool.ntp.org'):
 	'''
@@ -70,30 +138,3 @@ def ntp(onlyIfNeeded=True, server='pool.ntp.org'):
 	if not status():
 		return False # Not connected to a WiFi network
 	return rtc.ntp_sync(server)
-
-def scan():
-	'''
-	Scan for WiFi networks
-	:return: list, wifi networks [SSID, BSSID, CHANNEL, RSSI, AUTHMODE1, AUTHMODE2, HIDDEN]
-	'''
-	return _STA_IF.scan()
-
-# ACCESS POINT MODE
-# -----------------
-def accesspoint_start(ssid, password=None):
-	'''
-	Create a WiFi access point
-	:param ssid: SSID of the network
-	:param password: Password of the network (optional)
-	'''
-	if password:
-		_AP_IF.config(essid=ssid, authmode=network.AUTH_WPA2_PSK, password=password)
-	else:
-		_AP_IF.config(essid=ssid, authmode=network.AUTH_OPEN)
-	_AP_IF.active(True)
-
-def accesspoint_status():
-	return _AP_IF.active()
-
-def accesspoint_stop():
-	_AP_IF.active(False)
