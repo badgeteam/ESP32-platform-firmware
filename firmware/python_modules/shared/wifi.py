@@ -80,9 +80,9 @@ def ifconfig(newConfig=None):
 	:return: tuple, (ip, subnet, gateway, dns)
 	'''
 	if newConfig:
-		return _AP_IF.ifconfig(newConfig)
+		return _STA_IF.ifconfig(newConfig)
 	else:
-		return _AP_IF.ifconfig()
+		return _STA_IF.ifconfig()
 
 # ACCESS POINT MODE
 # -----------------
