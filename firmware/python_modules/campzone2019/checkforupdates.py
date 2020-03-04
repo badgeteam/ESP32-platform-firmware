@@ -8,8 +8,6 @@ print("Checking for updates...")
 print("")
 print("Currently installed:",current_name,"(Build "+str(current_build)+")")
 
-print("Current version:", "Update check", True)
-print(str(current_build)+") "+current_name)
 available = 0
 
 machine.nvs_setint('badge','OTA.ready', 0)

@@ -192,12 +192,12 @@ void i2sparallel_init(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_desc
     hw.timing.val=0;
 
     //Allocate DMA descriptors
-    i2s_state[i2snum()]=(i2s_parallel_state_t *) malloc(sizeof(i2s_parallel_state_t));
+    i2s_state[i2snum()]=(i2s_parallel_state_t *) calloc(1, sizeof(i2s_parallel_state_t));
     i2s_parallel_state_t *st=i2s_state[i2snum()];
     st->desccount_a=calc_needed_dma_descs_for(bufa);
     st->desccount_b=calc_needed_dma_descs_for(bufb);
-    st->dmadesc_a=(volatile lldesc_t *) heap_caps_malloc(st->desccount_a*sizeof(lldesc_t), MALLOC_CAP_DMA);
-    st->dmadesc_b=(volatile lldesc_t *) heap_caps_malloc(st->desccount_b*sizeof(lldesc_t), MALLOC_CAP_DMA);
+    st->dmadesc_a=(volatile lldesc_t *) heap_caps_calloc(st->desccount_a, sizeof(lldesc_t), MALLOC_CAP_DMA);
+    st->dmadesc_b=(volatile lldesc_t *) heap_caps_calloc(st->desccount_b, sizeof(lldesc_t), MALLOC_CAP_DMA);
 
     //and fill them
     fill_dma_desc(st->dmadesc_a, bufa);
