@@ -93,7 +93,7 @@ def accesspoint_start(ssid, password=None):
 	:param ssid: SSID of the network
 	:param password: Password of the network (optional)
 	'''
-	if len(password) < 8:
+	if password and len(password) < 8:
 		raise Exception("Password too short: must be at least 8 characters long")
 	_AP_IF.active(True)
 	if password:
