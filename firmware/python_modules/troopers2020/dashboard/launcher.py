@@ -1,4 +1,4 @@
-import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os, time
+import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os, time, _device as device
 
 haveSD = False
 try:
@@ -119,18 +119,12 @@ def onRight(pressed):
 def onA(pressed):
 	global currentApp, apps
 	if pressed:
-		display.drawFill(0x000000)
-		drawMessageBox("Loading app...")
-		display.flush(display.FLAG_LUT_FASTEST)
-		time.sleep(0.1)
+		device.showLoadingScreen(apps[currentApp]["name"])
 		system.start(apps[currentApp]["path"])
 
 def onB(pressed):
 	if pressed:
-		display.drawFill(0x000000)
-		drawMessageBox("Loading homescreen...")
-		display.flush(display.FLAG_LUT_FASTEST)
-		time.sleep(0.1)
+		device.showLoadingScreen("Homescreen")
 		system.home()
 
 # Launcher

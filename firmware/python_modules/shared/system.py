@@ -2,6 +2,7 @@ import machine, time, os, term
 import _device as device
 
 def reboot():
+	device.prepareForSleep()
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):

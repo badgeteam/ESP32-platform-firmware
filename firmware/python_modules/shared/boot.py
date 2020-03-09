@@ -1,8 +1,11 @@
 import machine, sys, system, time
+import _device as device
 
 rtc = machine.RTC()
 rtc.write(0,0)
 rtc.write(1,0)
+
+device.prepareForWakeup()
 
 __chk_recovery = False
 fc_level = machine.nvs_getint("system", 'factory_checked') or 0
