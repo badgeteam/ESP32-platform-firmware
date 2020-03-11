@@ -217,7 +217,7 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
         const byte *cert = (const byte*)mp_obj_str_get_data(args->cert.u_obj, &cert_len);
         
         if (!MP_OBJ_IS_TYPE(args->cert.u_obj, &mp_type_bytes)) { //Not a bytes() object
-            printf("Parsing supplied certificate as ASCII string.\n");
+            //printf("Parsing supplied certificate as ASCII string.\n");
             // len should include terminating null
             ret = mbedtls_x509_crt_parse(&o->cacert, cert, cert_len + 1); //(this parses normal ASCII certificates)
             if(ret < 0) {
@@ -226,7 +226,7 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
                 goto cleanup;
             }
         } else { // bytes() object
-            printf("Parsing supplied certificate as BINARY.\n");
+            //printf("Parsing supplied certificate as BINARY.\n");
             ret = mbedtls_x509_crt_parse_der(&o->cacert, cert, cert_len + 1); //(the DER encoding is a binary encoding)
             if(ret < 0) {
                 printf("Unable to parse the supplied DER certificate. Error 0x%d!\n", ret);
@@ -411,12 +411,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_ssl_wrap_socket_obj, 1, mod_ssl_wrap_socke
 
 static mp_obj_t mod_ssl_verify_letsencrypt(mp_obj_t obj_state) {
     global_load_letsencrypt_root = mp_obj_get_int(obj_state);
+    return mp_const_none;
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_ssl_verify_letsencrypt_obj, mod_ssl_verify_letsencrypt);
 
 static mp_obj_t mod_ssl_disable_warning(mp_obj_t obj_state) {
     global_no_cert_warning_disabled = mp_obj_get_int(obj_state);
+    return mp_const_none;
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_ssl_disable_warning_obj, mod_ssl_disable_warning);
@@ -427,9 +429,10 @@ static mp_obj_t mod_ssl_debug_level(mp_obj_t obj_state) {
         mp_raise_ValueError("Valid range is 0 to 4.");
     }
     global_debug_level = level;
+    return mp_const_none;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_ssl_disable_warning_obj, mod_ssl_disable_warning);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_ssl_debug_level_obj, mod_ssl_debug_level);
 
 STATIC const mp_rom_map_elem_t mp_module_ssl_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ussl) },
