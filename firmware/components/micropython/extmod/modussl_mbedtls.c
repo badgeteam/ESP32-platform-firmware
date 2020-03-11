@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2016 Linaro Ltd.
  * Copyright (c) 2018 LoBo (https://github.com/loboris)
+ * Copyright (c) 2020 Renze (https://badge.team)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -146,12 +147,12 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
     mbedtls_ctr_drbg_init(&o->ctr_drbg);
     #ifdef CONFIG_MBEDTLS_DEBUG
     // Debug level (0-4)
-    mbedtls_debug_set_threshold(0);
+    mbedtls_debug_set_threshold(4);
     #endif
 
     mbedtls_entropy_init(&o->entropy);
     const byte seed[] = "upy";
-    ret = mbedtls_ctr_drbg_seed(&o->ctr_drbg, null_entropy_func/*mbedtls_entropy_func*/, &o->entropy, seed, sizeof(seed));
+    ret = mbedtls_ctr_drbg_seed(&o->ctr_drbg, mbedtls_entropy_func, &o->entropy, seed, sizeof(seed));
     if (ret != 0) {
         goto cleanup;
     }
@@ -164,6 +165,7 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
         goto cleanup;
     }
 
+    
     mbedtls_ssl_conf_authmode(&o->conf, MBEDTLS_SSL_VERIFY_NONE);
     mbedtls_ssl_conf_rng(&o->conf, mbedtls_ctr_drbg_random, &o->ctr_drbg);
     #ifdef CONFIG_MBEDTLS_DEBUG
@@ -201,14 +203,17 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
 
         ret = mbedtls_ssl_conf_own_cert(&o->conf, &o->cert, &o->pkey);
         assert(ret == 0);
+		printf("USING AVAILABLE KEY");
     } else {
 		//Letsencrypt
-		//printf("USING LETSENCRYPT\n");
+		printf("USING LETSENCRYPT\n");
+                mbedtls_ssl_conf_authmode(&o->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
 		ret = mbedtls_x509_crt_parse_der(&o->cacert, letsencrypt, LETSENCRYPT_LENGTH);
         if(ret < 0) {
 			ESP_LOGE(TAG, "mbedtls_x509_crt_parse_der(): error %d!", -ret);
             mp_raise_OSError(MP_EIO);
 		}
+		mbedtls_ssl_conf_ca_chain(&o->conf, &o->cacert, NULL);
 	}
 
     while ((ret = mbedtls_ssl_handshake(&o->ssl)) != 0) {
