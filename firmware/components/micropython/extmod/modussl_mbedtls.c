@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2016 Linaro Ltd.
  * Copyright (c) 2018 LoBo (https://github.com/loboris)
+ * Copyright (c) 2020 BADGE.TEAM (https://badge.team)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,9 +72,14 @@ typedef struct _mp_obj_ssl_socket_t {
 struct ssl_args {
     mp_arg_val_t key;
     mp_arg_val_t cert;
+    mp_arg_val_t cacert;
     mp_arg_val_t server_side;
     mp_arg_val_t server_hostname;
 };
+
+bool global_load_letsencrypt_root = false;
+bool global_no_cert_warning_disabled = false;
+uint8_t global_debug_level = 0;
 
 STATIC const mp_obj_type_t ussl_socket_type;
 
@@ -81,18 +87,9 @@ STATIC const mp_obj_type_t ussl_socket_type;
 STATIC void mbedtls_debug(void *ctx, int level, const char *file, int line, const char *str) {
     (void)ctx;
     (void)level;
-    printf("DBG:%s:%04d: %s\n", file, line, str);
+    printf("[mbedtls] %s:%04d: %s\n", file, line, str);
 }
 #endif
-
-// TODO: FIXME!
-STATIC int null_entropy_func(void *data, unsigned char *output, size_t len) {
-    (void)data;
-    (void)output;
-    (void)len;
-    // enjoy random bytes
-    return 0;
-}
 
 STATIC int _mbedtls_ssl_send(void *ctx, const byte *buf, size_t len) {
     mp_obj_t sock = *(mp_obj_t*)ctx;
@@ -146,12 +143,12 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
     mbedtls_ctr_drbg_init(&o->ctr_drbg);
     #ifdef CONFIG_MBEDTLS_DEBUG
     // Debug level (0-4)
-    mbedtls_debug_set_threshold(0);
+    mbedtls_debug_set_threshold(global_debug_level);
     #endif
 
     mbedtls_entropy_init(&o->entropy);
     const byte seed[] = "upy";
-    ret = mbedtls_ctr_drbg_seed(&o->ctr_drbg, null_entropy_func/*mbedtls_entropy_func*/, &o->entropy, seed, sizeof(seed));
+    ret = mbedtls_ctr_drbg_seed(&o->ctr_drbg, mbedtls_entropy_func, &o->entropy, seed, sizeof(seed));
     if (ret != 0) {
         goto cleanup;
     }
@@ -164,6 +161,7 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
         goto cleanup;
     }
 
+    
     mbedtls_ssl_conf_authmode(&o->conf, MBEDTLS_SSL_VERIFY_NONE);
     mbedtls_ssl_conf_rng(&o->conf, mbedtls_ctr_drbg_random, &o->ctr_drbg);
     #ifdef CONFIG_MBEDTLS_DEBUG
@@ -187,29 +185,74 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
     mbedtls_ssl_set_bio(&o->ssl, &o->sock, _mbedtls_ssl_send, _mbedtls_ssl_recv, NULL);
 
     if (args->key.u_obj != MP_OBJ_NULL) {
+        // The key argument was supplied, running in server mode
         size_t key_len;
         const byte *key = (const byte*)mp_obj_str_get_data(args->key.u_obj, &key_len);
         // len should include terminating null
         ret = mbedtls_pk_parse_key(&o->pkey, key, key_len + 1, NULL, 0);
-        assert(ret == 0);
+        if(ret < 0) {
+            printf("Unable to parse the supplied key. Error 0x%d!\n", ret);
+            mp_raise_OSError(MP_EIO);
+            goto cleanup;
+        }
 
         size_t cert_len;
         const byte *cert = (const byte*)mp_obj_str_get_data(args->cert.u_obj, &cert_len);
         // len should include terminating null
         ret = mbedtls_x509_crt_parse(&o->cert, cert, cert_len + 1);
-        assert(ret == 0);
+        if(ret < 0) {
+            printf("Unable to parse the supplied certificate. Error 0x%d!\n", ret);
+            mp_raise_OSError(MP_EIO);
+            goto cleanup;
+        }
 
         ret = mbedtls_ssl_conf_own_cert(&o->conf, &o->cert, &o->pkey);
-        assert(ret == 0);
-    } else {
-		//Letsencrypt
-		//printf("USING LETSENCRYPT\n");
-		ret = mbedtls_x509_crt_parse_der(&o->cacert, letsencrypt, LETSENCRYPT_LENGTH);
         if(ret < 0) {
-			ESP_LOGE(TAG, "mbedtls_x509_crt_parse_der(): error %d!", -ret);
+            printf("Unable to configure the supplied certificate. Error 0x%d!\n", ret);
             mp_raise_OSError(MP_EIO);
-		}
-	}
+            goto cleanup;
+        }
+    } else if (args->cacert.u_obj != MP_OBJ_NULL) {
+        // A CA certificate was supplied, running in client mode with custom certificate
+        size_t cert_len;
+        const byte *cert = (const byte*)mp_obj_str_get_data(args->cacert.u_obj, &cert_len);
+        
+        if (!MP_OBJ_IS_TYPE(args->cacert.u_obj, &mp_type_bytes)) { //Not a bytes() object
+            //printf("Parsing supplied certificate as ASCII string.\n");
+            // len should include terminating null
+            ret = mbedtls_x509_crt_parse(&o->cacert, cert, cert_len + 1); //(this parses normal ASCII certificates)
+            if(ret < 0) {
+                printf("Unable to parse the supplied certificate. Error 0x%d!\n", ret);
+                mp_raise_OSError(MP_EIO);
+                goto cleanup;
+            }
+        } else { // bytes() object
+            //printf("Parsing supplied certificate as BINARY.\n");
+            ret = mbedtls_x509_crt_parse_der(&o->cacert, cert, cert_len + 1); //(the DER encoding is a binary encoding)
+            if(ret < 0) {
+                printf("Unable to parse the supplied DER certificate. Error 0x%d!\n", ret);
+                mp_raise_OSError(MP_EIO);
+                goto cleanup;
+            }
+        }
+        mbedtls_ssl_conf_ca_chain(&o->conf, &o->cacert, NULL);
+        mbedtls_ssl_conf_authmode(&o->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+    } else if (global_load_letsencrypt_root) {
+        // Client mode with Letsencrypt certificate verification enabled
+        ret = mbedtls_x509_crt_parse_der(&o->cacert, letsencrypt, LETSENCRYPT_LENGTH); //(the DER encoding is a binary encoding)
+        if(ret < 0) {
+            printf("Unable to parse the built-in Letsencrypt certificate!\nmbedtls_x509_crt_parse_der(): error 0x%d!\n", ret);
+            mp_raise_OSError(MP_EIO);
+            goto cleanup;
+        }
+        mbedtls_ssl_conf_ca_chain(&o->conf, &o->cacert, NULL);
+        mbedtls_ssl_conf_authmode(&o->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+    } else if (global_no_cert_warning_disabled) {
+        // Client mode without certificate verification enabled, but with the warning actively disabled. So we do nothing.
+    } else {
+        // Client mode without certificate verification enabled
+        printf("\nWarning: TLS certificate will not be verified because a root certificate is not available.\nPlease visit https://docs.badge.team for more information.\n\n");
+    }
 
     while ((ret = mbedtls_ssl_handshake(&o->ssl)) != 0) {
         if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
@@ -352,6 +395,7 @@ STATIC mp_obj_t mod_ssl_wrap_socket(size_t n_args, const mp_obj_t *pos_args, mp_
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_key, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_cert, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_cacert, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_server_side, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_server_hostname, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
     };
@@ -367,9 +411,37 @@ STATIC mp_obj_t mod_ssl_wrap_socket(size_t n_args, const mp_obj_t *pos_args, mp_
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_ssl_wrap_socket_obj, 1, mod_ssl_wrap_socket);
 
+static mp_obj_t mod_ssl_verify_letsencrypt(mp_obj_t obj_state) {
+    global_load_letsencrypt_root = mp_obj_get_int(obj_state);
+    return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_ssl_verify_letsencrypt_obj, mod_ssl_verify_letsencrypt);
+
+static mp_obj_t mod_ssl_disable_warning(mp_obj_t obj_state) {
+    global_no_cert_warning_disabled = mp_obj_get_int(obj_state);
+    return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_ssl_disable_warning_obj, mod_ssl_disable_warning);
+
+static mp_obj_t mod_ssl_debug_level(mp_obj_t obj_state) {
+    int level = mp_obj_get_int(obj_state);
+    if (level < 0 || level > 4) {
+        mp_raise_ValueError("Valid range is 0 to 4.");
+    }
+    global_debug_level = level;
+    return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_ssl_debug_level_obj, mod_ssl_debug_level);
+
 STATIC const mp_rom_map_elem_t mp_module_ssl_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ussl) },
     { MP_ROM_QSTR(MP_QSTR_wrap_socket), MP_ROM_PTR(&mod_ssl_wrap_socket_obj) },
+    { MP_ROM_QSTR(MP_QSTR_verify_letsencrypt), MP_ROM_PTR(&mod_ssl_verify_letsencrypt_obj) },
+    { MP_ROM_QSTR(MP_QSTR_disable_warning), MP_ROM_PTR(&mod_ssl_disable_warning_obj) },
+    { MP_ROM_QSTR(MP_QSTR_debug_level), MP_ROM_PTR(&mod_ssl_debug_level_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_ssl_globals, mp_module_ssl_globals_table);
