@@ -53,6 +53,8 @@
 
 #include "driver_rtcmem.h"
 
+#define TAG "modesp"
+
 STATIC mp_obj_t badge_raminfo_() {
     size_t free_8           = heap_caps_get_free_size(MALLOC_CAP_8BIT  | MALLOC_CAP_INTERNAL);
     size_t free_32          = heap_caps_get_free_size(MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
@@ -428,6 +430,85 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(esp_sdcard_sect_size_obj, esp_sdcard_sect_size)
 
 #endif  // MICROPY_SDMMC_USE_DRIVER
 
+// Partition table upgrade code for sha2017 and disobey 2019 badges
+
+#ifdef CONFIG_FW_ENABLE_SHA2017_DISOBEY2019_PARTITION_TABLE_UPGRADE
+#define PARTITIONS_16MB_BIN_LEN 192
+#define PARTITIONS_LOCATION 0x8000
+#define PARTITIONS_SECTOR PARTITIONS_LOCATION/SPI_FLASH_SEC_SIZE
+static mp_obj_t esp_update_partition_table(void) {
+    unsigned char check[PARTITIONS_16MB_BIN_LEN];
+    // This is the new sha2017 16MB partition table
+    unsigned char partitions_16MB_bin[PARTITIONS_16MB_BIN_LEN] = {
+        0xaa, 0x50, 0x01, 0x02, 0x00, 0x90, 0x00, 0x00,
+        0x00, 0x40, 0x00, 0x00, 0x6e, 0x76, 0x73, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xaa, 0x50, 0x01, 0x00, 0x00, 0xd0, 0x00, 0x00,
+        0x00, 0x20, 0x00, 0x00, 0x6f, 0x74, 0x61, 0x64,
+        0x61, 0x74, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xaa, 0x50, 0x01, 0x01, 0x00, 0xf0, 0x00, 0x00,
+        0x00, 0x10, 0x00, 0x00, 0x70, 0x68, 0x79, 0x5f,
+        0x69, 0x6e, 0x69, 0x74, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xaa, 0x50, 0x00, 0x10, 0x00, 0x00, 0x01, 0x00,
+        0x00, 0x00, 0x18, 0x00, 0x6f, 0x74, 0x61, 0x5f,
+        0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xaa, 0x50, 0x00, 0x11, 0x00, 0x00, 0x19, 0x00,
+        0x00, 0x00, 0x18, 0x00, 0x6f, 0x74, 0x61, 0x5f,
+        0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xaa, 0x50, 0x01, 0x81, 0x00, 0x00, 0x31, 0x00,
+        0x00, 0x00, 0xcf, 0x00, 0x6c, 0x6f, 0x63, 0x66, 
+        0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+    esp_err_t err = spi_flash_read(PARTITIONS_LOCATION, check, PARTITIONS_16MB_BIN_LEN);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error while reading old partition table! (0x%02x)", err);
+        return mp_obj_new_bool(false);
+    }
+    
+    if (memcmp(check, partitions_16MB_bin, PARTITIONS_16MB_BIN_LEN)==0) {
+        ESP_LOGW(TAG, "Partition table already up-to-date!");
+        return mp_obj_new_bool(true);
+    }
+    
+    err = spi_flash_erase_sector(PARTITIONS_SECTOR);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Could not erase the old partition table! (0x%02x)", err);
+    } else {
+        err = spi_flash_write(PARTITIONS_LOCATION, partitions_16MB_bin, PARTITIONS_16MB_BIN_LEN);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Could not write the partition table! (0x%02x)", err);
+        }
+    }
+    
+    err = spi_flash_read(PARTITIONS_LOCATION, check, PARTITIONS_16MB_BIN_LEN);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error while reading back the new partition table! (0x%02x)", err);
+        return mp_obj_new_bool(false);
+    }
+
+    if (memcmp(check, partitions_16MB_bin, PARTITIONS_16MB_BIN_LEN)==0) {
+        return mp_obj_new_bool(true);
+    } else {
+        ESP_LOGE(TAG, "Error while verifying new partition table!");
+        for (uint16_t i = 0; i < PARTITIONS_16MB_BIN_LEN; i++) {
+            if (check[i]!=partitions_16MB_bin[i]) {
+                ESP_LOGE(TAG, "Expected %02X at %02X, read %02X", partitions_16MB_bin[i], i, check[i]);
+            }
+        }
+    }
+    return mp_obj_new_bool(false);
+}
+
+static MP_DEFINE_CONST_FUN_OBJ_0(esp_update_partition_table_obj, esp_update_partition_table);
+
+#endif
+
 STATIC const mp_rom_map_elem_t esp_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_esp)},
     
@@ -464,6 +545,9 @@ STATIC const mp_rom_map_elem_t esp_module_globals_table[] = {
     // { MP_ROM_QSTR(MP_QSTR_SD_4LINE), MP_ROM_INT(4) },
     #endif*/
 
+    #ifdef CONFIG_FW_ENABLE_SHA2017_DISOBEY2019_PARTITION_TABLE_UPGRADE
+    { MP_ROM_QSTR(MP_QSTR_update_partition_table), MP_ROM_PTR(&esp_update_partition_table_obj) },
+    #endif
 };
 
 STATIC MP_DEFINE_CONST_DICT(esp_module_globals, esp_module_globals_table);
