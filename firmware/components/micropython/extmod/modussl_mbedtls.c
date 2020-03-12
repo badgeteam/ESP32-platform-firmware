@@ -72,6 +72,7 @@ typedef struct _mp_obj_ssl_socket_t {
 struct ssl_args {
     mp_arg_val_t key;
     mp_arg_val_t cert;
+    mp_arg_val_t cacert;
     mp_arg_val_t server_side;
     mp_arg_val_t server_hostname;
 };
@@ -211,12 +212,12 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
             mp_raise_OSError(MP_EIO);
             goto cleanup;
         }
-    } else if (args->cert.u_obj != MP_OBJ_NULL) {
-        // A certificate was supplied, running in client mode with custom certificate
+    } else if (args->cacert.u_obj != MP_OBJ_NULL) {
+        // A CA certificate was supplied, running in client mode with custom certificate
         size_t cert_len;
-        const byte *cert = (const byte*)mp_obj_str_get_data(args->cert.u_obj, &cert_len);
+        const byte *cert = (const byte*)mp_obj_str_get_data(args->cacert.u_obj, &cert_len);
         
-        if (!MP_OBJ_IS_TYPE(args->cert.u_obj, &mp_type_bytes)) { //Not a bytes() object
+        if (!MP_OBJ_IS_TYPE(args->cacert.u_obj, &mp_type_bytes)) { //Not a bytes() object
             //printf("Parsing supplied certificate as ASCII string.\n");
             // len should include terminating null
             ret = mbedtls_x509_crt_parse(&o->cacert, cert, cert_len + 1); //(this parses normal ASCII certificates)
@@ -394,6 +395,7 @@ STATIC mp_obj_t mod_ssl_wrap_socket(size_t n_args, const mp_obj_t *pos_args, mp_
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_key, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_cert, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
+        { MP_QSTR_cacert, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = MP_OBJ_NULL} },
         { MP_QSTR_server_side, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_server_hostname, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_obj = mp_const_none} },
     };
