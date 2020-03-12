@@ -34,7 +34,7 @@ class Response:
         return ujson.loads(self.content)
 
 
-def request(method, url, data=None, json=None, headers={}, stream=None, cert=None):
+def request(method, url, data=None, json=None, headers={}, stream=None, cacert=None):
     try:
         proto, dummy, host, path = url.split("/", 3)
     except ValueError:
@@ -59,8 +59,8 @@ def request(method, url, data=None, json=None, headers={}, stream=None, cert=Non
     try:
         s.connect(ai[-1])
         if proto == "https:":
-            if cert:
-                s = ussl.wrap_socket(s, server_hostname=host, cert=cert)
+            if cacert:
+                s = ussl.wrap_socket(s, server_hostname=host, cacert=cacert)
             else:
                 s = ussl.wrap_socket(s, server_hostname=host)
         s.write(b"%s /%s HTTP/1.0\r\n" % (method, path))

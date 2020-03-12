@@ -5,6 +5,7 @@ import uerrno as errno
 import ujson as json
 import uzlib
 import upip_utarfile as tarfile
+import consts
 gc.collect()
 
 debug = False
@@ -106,6 +107,9 @@ import usocket
 def url_open(url):
     if debug:
         print(url)
+    
+    # Enforce Letsencrypt certificate checking
+    ussl.verify_letsencrypt(True)
 
     proto, _, host, urlpath = url.split('/', 3)
     try:
@@ -147,21 +151,21 @@ def url_open(url):
 
 
 def get_pkg_metadata(name):
-    f = url_open("https://badge.team/eggs/get/%s/json" % name)
+    f = url_open("https://{}/eggs/get/{}/json".format(consts.WOEZEL_WEB_SERVER, name))
     try:
         return json.load(f)
     finally:
         f.close()
 
 def get_pkg_list():
-    f = url_open("https://badge.team/basket/hackerhotel2019/list/json")
+    f = url_open("https://{}/basket/{}/list/json".format(consts.WOEZEL_WEB_SERVER, consts.INFO_HARDWARE_WOEZEL_NAME))
     try:
         return json.load(f)
     finally:
         f.close()
 
 def search_pkg_list(query):
-    f = url_open("https://badge.team/basket/hackerhotel2019/search/%s/json" % query)
+    f = url_open("https://{}/basket/{}/search/{}/json".format(consts.WOEZEL_WEB_SERVER, consts.INFO_HARDWARE_WOEZEL_NAME, query))
     try:
         return json.load(f)
     finally:
@@ -294,25 +298,6 @@ def cleanup():
             os.unlink(fname)
         except OSError:
             print("Warning: Cannot delete " + fname)
-
-def help():
-    print("""\
-woezel - Clone of the Simple PyPI package manager for MicroPython
-Usage: micropython -m woezel install [-p <path>] <package>... | -r <requirements.txt>
-
-import woezel
-woezel.install(package_or_list, [<path>])
-woezel.search([query])
-
-If <path> is not given, packages will be installed into sys.path[1]
-(can be set from MICROPYPATH environment variable, if current system
-supports that).""")
-    print("Current value of sys.path[1]:", sys.path[1])
-    print("""\
-
-Note: only MicroPython packages are supported for installation,
-woezel, like upip does not support arbitrary code in setup.py.
-""")
 
 def main():
     global debug
