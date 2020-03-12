@@ -206,6 +206,14 @@ void driver_eink_update(const uint32_t *buf, const struct driver_eink_update *up
 	driver_eink_have_oldbuf = true;
 }
 
+uint16_t minimal_update_height = DISP_SIZE_Y;
+
+void driver_eink_set_minimal_update_height(uint16_t height)
+{
+	if (height > DISP_SIZE_Y) height = DISP_SIZE_Y;
+	minimal_update_height = height;
+}
+
 void driver_eink_display_part(const uint8_t *img, driver_eink_flags_t flags, uint16_t y_start, uint16_t y_end)
 {
 	int lut_mode = (flags >> DISPLAY_FLAG_LUT_BIT) & ((1 << DISPLAY_FLAG_LUT_SIZE)-1);
@@ -229,7 +237,22 @@ void driver_eink_display_part(const uint8_t *img, driver_eink_flags_t flags, uin
 		// old image is known; prefer to do a partial update
 		lut_flags |= LUT_FLAG_PARTIAL;
 	}
-
+	
+	/*
+	This piece of code makes the height of the updated area at least a certain
+	size wide. This is done to make sure the pixels involved change enough to be
+	noticable and it is a big workaround. The default minimum area is the height
+	of the display, resulting in full updates.
+	 */
+	
+	if (y_end-y_start+1 < minimal_update_height) {
+		y_end += minimal_update_height+y_start-y_end;
+		if (y_end >= DISP_SIZE_Y) {
+			y_start -= y_end % DISP_SIZE_Y;
+			y_end -= y_end % DISP_SIZE_Y;
+		}
+	}
+	
 	struct driver_eink_update eink_upd = {
 		.lut       = lut_mode > 0 ? lut_mode - 1 : DRIVER_EINK_LUT_DEFAULT,
 		.lut_flags = lut_flags,

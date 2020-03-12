@@ -1,5 +1,5 @@
 #include "../include/driver_framebuffer.h"
-const uint8_t weather42pt8bBitmaps[] = {
+const uint8_t weather_42pt8bBitmaps[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00,
@@ -3734,7 +3734,7 @@ const uint8_t weather42pt8bBitmaps[] = {
   0x1F, 0x9F, 0xFF, 0xE0, 0x00, 0x00, 0x00, 0x0F, 0xC7, 0xFF, 0xF8, 0x00,
   0x00, 0x00, 0x03, 0xF1, 0xFF, 0xFE };
 
-const GFXglyph weather42pt8bGlyphs[] = {
+const GFXglyph weather_42pt8bGlyphs[] = {
   {     0,  72,  60,  72,    0,  -50 },   // 0xF000
   {   540,  72,  60,  71,    0,  -51 },   // 0xF001
   {  1080,  66,  51,  66,    0,  -50 },   // 0xF002
@@ -3932,9 +3932,9 @@ const GFXglyph weather42pt8bGlyphs[] = {
   { 44245,  51,  40,  51,    0,  -39 },   // 0xF0C2
   { 44500,  58,  40,  59,    0,  -39 } }; // 0xF0C3
 
-const GFXfont weather42pt8b = {
-  (uint8_t  *)weather42pt8bBitmaps,
-  (GFXglyph *)weather42pt8bGlyphs,
+const GFXfont weather_42pt8b = {
+  (uint8_t  *)weather_42pt8bBitmaps,
+  (GFXglyph *)weather_42pt8bGlyphs,
   0x01, 0xC4, 42 };//B
 
 // Approx. 46169 bytes

@@ -7,6 +7,7 @@ NTP_DELTA = 2208988800
 NTP_HOST = "pool.ntp.org"
 NTP_PORT = 123
 
+
 def get_NTP_time():
 	NTP_QUERY = bytearray(48)
 	NTP_QUERY[0] = 0x1b
@@ -32,6 +33,7 @@ def get_NTP_time():
 	val = struct.unpack("!I", msg[40:44])[0]
 	return val - NTP_DELTA
 
+
 def set_NTP_time():
 	import time
 	from machine import RTC
@@ -56,3 +58,11 @@ def set_NTP_time():
 	#rtc.datetime(tm)
 
 	return True
+
+
+def local_time_available():
+	import time
+	current = time.localtime()
+	# If the time has been synced via NTP already,
+	# the year is no longer set to 1970 like it is after cold boot.
+	return current[0] != 1970

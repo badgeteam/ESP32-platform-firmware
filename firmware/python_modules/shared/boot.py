@@ -1,12 +1,17 @@
 import machine, sys, system, time
+import _device as device
 
 rtc = machine.RTC()
 rtc.write(0,0)
 rtc.write(1,0)
 
-__chk_recovery = False
+device.prepareForWakeup()
 
-if machine.nvs_getint("system", 'factory_checked'):
+__chk_recovery = False
+fc_level = machine.nvs_getint("system", 'factory_checked') or 0
+recovery_button = None
+
+if fc_level >= 3:
 	try:
 		import buttons
 		try:
@@ -19,19 +24,23 @@ if machine.nvs_getint("system", 'factory_checked'):
 	except:
 		pass
 
-
 #Application starting
 if __chk_recovery:
 	app = "dashboard.recovery"
 else:
 	app = rtc.read_string()
 	if not app:
-		if not machine.nvs_getint("system", 'factory_checked') == 2:
+		if fc_level < 3:
 			app = "factory_checks"
 		else:
 			app = machine.nvs_getstr("system", 'default_app')
 			if not app:
 				app = 'dashboard.home'
+        del fc_level
+
+del __chk_recovery
+del rtc
+del recovery_button
 
 if app and not app == "shell":
 	try:
@@ -39,6 +48,8 @@ if app and not app == "shell":
 		system.__current_app__ = app
 		if app:
 			__import__(app)
+	except KeyboardInterrupt:
+		system.launcher()
 	except BaseException as e:
 		sys.print_exception(e)
 		if not machine.nvs_get_u8("system", "ignore_crash"):
@@ -46,6 +57,3 @@ if app and not app == "shell":
 			system.crashedWarning()
 			time.sleep(3)
 			system.launcher()
-
-if app and app == "shell":
-	print("\nWelcome to the python shell of your badge!\nCheck out https://wiki.badge.team/ for instructions.")

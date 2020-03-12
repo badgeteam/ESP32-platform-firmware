@@ -1,4 +1,6 @@
-import time, machine, gc, easydraw, term, uos, json, urequests, gc, sys, wifi, consts
+import time, machine, gc, easydraw, term, uos, json, urequests, gc, sys, wifi, consts, ussl
+
+ussl.verify_letsencrypt(True) # Use Letsencrypt for the HTTPS connection
 
 path = "/cache/woezel"
 categories = []
@@ -44,7 +46,7 @@ def update():
 			return False
 	_showProgress("Downloading categories...")
 	try:
-		request = urequests.get("https://badge.team/basket/{}/categories/json".format(consts.INFO_HARDWARE_WOEZEL_NAME), timeout=30)
+		request = urequests.get("https://{}/basket/{}/categories/json".format(consts.WOEZEL_WEB_SERVER, consts.INFO_HARDWARE_WOEZEL_NAME), timeout=30)
 		_showProgress("Saving categories...")
 		categories_file = open(path+'/categories.json', 'w')
 		categories_file.write(request.text)
@@ -55,7 +57,7 @@ def update():
 			gc.collect()
 			slug = category["slug"]
 			_showProgress("Downloading '"+category["name"]+"'...")
-			f = urequests.get("https://badge.team/basket/{}/category/{}/json".format(consts.INFO_HARDWARE_WOEZEL_NAME, slug), timeout=30)
+			f = urequests.get("https://{}/basket/{}/category/{}/json".format(consts.WOEZEL_WEB_SERVER, consts.INFO_HARDWARE_WOEZEL_NAME, slug), timeout=30)
 			f_file = open(path+'/'+slug+'.json', 'w')
 			f_file.write(f.text)
 			f_file.close()

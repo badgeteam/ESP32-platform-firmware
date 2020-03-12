@@ -2,7 +2,7 @@ import sys, uos as os, time, ujson, gc, term, deepsleep
 import machine, system, term_menu, virtualtimers, tasks.powermanagement as pm, buttons, defines, woezel
 import rgb, uinterface, uinstaller
 from default_icons import icon_snake, icon_clock, icon_settings, icon_appstore, icon_activities, icon_nickname, \
-                            icon_unknown
+                            icon_slider, icon_unknown
 
 # Application list
 
@@ -61,8 +61,10 @@ def populate_apps():
     # add_app("activities", {"name": "Activities", "category": "system", "icon": icon_activities})
     add_app("clock", {"name": "Clock", "category": "system", "icon": icon_clock})
     add_app("nickname", {"name": "Nickname", "category": "system", "icon": icon_nickname})
+    add_app("slider", {"name": "Slider", "category": "system", "icon": icon_slider})
     add_app("appstore", {"name": "App store", "category": "system", "icon": icon_appstore})
     add_app("setupwifi", {"name": "Set up wifi", "category": "system", "icon": icon_settings})
+    add_app("slider_config", {"name": "Slider settings", "category": "system", "icon": icon_settings})
     add_app("update", {"name": "Firmware update", "category": "system", "icon": icon_settings})
     add_app("updateapps", {"name": "App updates", "category": "system", "icon": icon_settings})
 
@@ -243,22 +245,23 @@ start()
 init_power_management()
 
 # Install CZ countdown app to replace activities app
-if not machine.nvs_getint('system', 'czcount_inst'):
-    if woezel.is_installed('campzone_2020_countdown'):
-        machine.nvs_setint('system', 'czcount_inst', 1)
-    else:
-        if uinterface.connect_wifi():
-            uinstaller.install('campzone_2020_countdown')
-
-    render_current_app()
+# if not machine.nvs_getint('system', 'czcount_inst'):
+#     if woezel.is_installed('campzone_2020_countdown'):
+#         machine.nvs_setint('system', 'czcount_inst', 1)
+#     else:
+#         if uinterface.connect_wifi():
+#             uinstaller.install('campzone_2020_countdown')
+#
+#     render_current_app()
 
 cfg_term_menu = machine.nvs_get_u8('splash', 'term_menu')
 if cfg_term_menu == None:
         cfg_term_menu = True
 
 if cfg_term_menu:
-	menu = term_menu.UartMenu(deepsleep.start_sleeping, pm)
-	menu.main()
+    menu = term_menu.UartMenu(deepsleep.start_sleeping, pm)
+    print(gc.mem_free())
+    menu.main()
 else:
         print("Welcome!")
         print("Press CTRL+C to reboot directly to a Python prompt.")

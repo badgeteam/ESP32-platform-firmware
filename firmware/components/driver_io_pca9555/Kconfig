@@ -1,0 +1,217 @@
+menu "Driver: PCA9555 I/O port expander"
+	config DRIVER_PCA9555_ENABLE
+		depends on DRIVER_I2C_ENABLE
+		bool "Enable the PCA9555 driver"
+		default n
+	
+	config I2C_ADDR_PCA9555
+		depends on DRIVER_PCA9555_ENABLE
+		int "PCA9555 I2C address"
+		default 32
+
+	config PIN_NUM_PCA9555_INT
+		depends on DRIVER_PCA9555_ENABLE
+		int "GPIO pin used for PCA9555 interrupt"
+	
+	config DRIVER_PCA9555_POLARITY_0
+		depends on DRIVER_PCA9555_ENABLE
+		int "Setting for polarity register of port 0"
+		default 255
+	
+	config DRIVER_PCA9555_POLARITY_1
+		depends on DRIVER_PCA9555_ENABLE
+		int "Setting for polarity register of port 1"
+		default 255
+	
+	choice
+		prompt "Port 0 pin 0 mode"
+		default DRIVER_PCA9555_IO0P0_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO0P0_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO0P0_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO0P0_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 0 pin 1 mode"
+		default DRIVER_PCA9555_IO0P1_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO0P1_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO0P1_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO0P1_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 0 pin 2 mode"
+		default DRIVER_PCA9555_IO0P2_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO0P2_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO0P2_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO0P2_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 0 pin 3 mode"
+		default DRIVER_PCA9555_IO0P3_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO0P3_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO0P3_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO0P3_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 0 pin 4 mode"
+		default DRIVER_PCA9555_IO0P4_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO0P4_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO0P4_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO0P4_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 0 pin 5 mode"
+		default DRIVER_PCA9555_IO0P5_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO0P5_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO0P5_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO0P5_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 0 pin 6 mode"
+		default DRIVER_PCA9555_IO0P6_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO0P6_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO0P6_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO0P6_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 0 pin 7 mode"
+		default DRIVER_PCA9555_IO0P7_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO0P7_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO0P7_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO0P7_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 1 pin 0 mode"
+		default DRIVER_PCA9555_IO1P0_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO1P0_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO1P0_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO1P0_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 1 pin 1 mode"
+		default DRIVER_PCA9555_IO1P1_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO1P1_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO1P1_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO1P1_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 1 pin 2 mode"
+		default DRIVER_PCA9555_IO1P2_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO1P2_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO1P2_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO1P2_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 1 pin 3 mode"
+		default DRIVER_PCA9555_IO1P3_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO1P3_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO1P3_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO1P3_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 1 pin 4 mode"
+		default DRIVER_PCA9555_IO1P4_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO1P4_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO1P4_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO1P4_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 1 pin 5 mode"
+		default DRIVER_PCA9555_IO1P5_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO1P5_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO1P5_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO1P5_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 1 pin 6 mode"
+		default DRIVER_PCA9555_IO1P6_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO1P6_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO1P6_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO1P6_OUTPUT
+		bool "Output"
+	endchoice
+	
+	choice
+		prompt "Port 1 pin 7 mode"
+		default DRIVER_PCA9555_IO1P7_USER
+		depends on DRIVER_PCA9555_ENABLE
+	config DRIVER_PCA9555_IO1P7_USER
+		bool "Controlled by user"
+	config DRIVER_PCA9555_IO1P7_INPUT
+		bool "Input"
+	config DRIVER_PCA9555_IO1P7_OUTPUT
+		bool "Output"
+	endchoice
+endmenu

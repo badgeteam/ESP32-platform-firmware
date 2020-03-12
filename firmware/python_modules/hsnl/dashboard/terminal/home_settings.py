@@ -1,0 +1,1 @@
+../../../shared/dashboard/terminal/home_settings.py

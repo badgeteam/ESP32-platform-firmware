@@ -3,33 +3,41 @@ from default_icons import animation_connecting_wifi, icon_no_wifi
 
 direction = 0
 
-if not wifi.status():
-    data, size, frames = animation_connecting_wifi
-    rgb.clear()
-    rgb.framerate(3)
-    rgb.gif(data, (12, 0), size, frames)
-    wifi.connect()
-    if wifi.wait():
+if not ntp.local_time_available():
+    if not wifi.status():
+        data, size, frames = animation_connecting_wifi
         rgb.clear()
-        rgb.framerate(20)
-    else:
-        print('No wifi')
-        rgb.clear()
-        rgb.framerate(20)
-        data, frames = icon_no_wifi
-        rgb.image(data, (12, 0), (8,8))
-        time.sleep(3)
-        rgb.clear()
+        rgb.framerate(3)
+        rgb.gif(data, (12, 0), size, frames)
+        wifi.connect()
+        if wifi.wait():
+            rgb.clear()
+            rgb.framerate(20)
+        else:
+            print('No wifi')
+            rgb.clear()
+            rgb.framerate(20)
+            data, frames = icon_no_wifi
+            rgb.image(data, (12, 0), (8,8))
+            time.sleep(3)
+            rgb.clear()
+            print("Error connecting to wifi")
+            system.reboot()
 
-if not wifi.status():
-    print("Error connecting to wifi")
-    system.reboot()
-
-if not ntp.set_NTP_time():
-    print("Error setting time")
-    system.reboot()
+    if not ntp.set_NTP_time():
+        print("Error setting time")
+        system.reboot()
 
 wifi.disconnect()
+
+## Taken from Bas' PrettyClock.
+## Get your timezone from
+## https://remotemonitoringsystems.ca/time-zone-abbreviations.php
+rtc=machine.RTC()
+timezone = machine.nvs_getstr('system', 'timezone')
+if timezone is None:
+    timezone = 'CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00'
+machine.RTC().timezone(timezone)
 
 def input_B(pressed):
     global direction
@@ -45,8 +53,8 @@ rgb.clear()
 rgb.framerate(1)
 
 while direction != defines.BTN_B:
-    th = time.strftime("%H")
-    tm = time.strftime("%M")
+    th = '%02d' % rtc.now()[3]
+    tm = '%02d' % rtc.now()[4]
     if tm != tmold:
         rgb.clear()
         rgb.text(th, (255, 255, 255), (3, 0))

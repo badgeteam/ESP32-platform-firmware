@@ -27,10 +27,10 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/error.h"
-#include "mbedtls/esp_debug.h"
 #include "mbedtls/net.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/ssl.h"
+#include "mbedtls/esp_debug.h"
 
 #include "letsencrypt.h"
 
@@ -67,24 +67,24 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				if (force || percentage == 0 || (percentage>=lastShownPercentage+10)) {
 					if (showPercentage) lastShownPercentage = percentage;
 					driver_framebuffer_fill(NULL, COLOR_WHITE);
-					uint16_t y = driver_framebuffer_print(NULL, "Firmware update\n", 0, 4, 1, 1, COLOR_BLACK, &roboto12pt7b);
-					driver_framebuffer_print(NULL, text, 0, y, 1, 1, COLOR_BLACK, &roboto12pt7b);
+					uint16_t y = driver_framebuffer_print(NULL, "Firmware update\n", 0, 4, 1, 1, COLOR_BLACK, &roboto_12pt7b);
+					driver_framebuffer_print(NULL, text, 0, y, 1, 1, COLOR_BLACK, &roboto_12pt7b);
 					if (showPercentage) {
 						char buffer[16];
 						snprintf(buffer, 16, "%*u%%", 3, percentage);
-						driver_framebuffer_print(NULL, buffer, driver_framebuffer_getWidth(NULL)-100, driver_framebuffer_getHeight(NULL)-50, 2, 2, COLOR_BLACK, &roboto12pt7b);
+						driver_framebuffer_print(NULL, buffer, driver_framebuffer_getWidth(NULL)-100, driver_framebuffer_getHeight(NULL)-50, 2, 2, COLOR_BLACK, &roboto_12pt7b);
 					}
-					driver_framebuffer_print(NULL, "BADGE.TEAM", 0, driver_framebuffer_getHeight(NULL)-15, 1, 1, COLOR_BLACK, &fairlight8pt7b);
+					driver_framebuffer_print(NULL, "BADGE.TEAM", 0, driver_framebuffer_getHeight(NULL)-15, 1, 1, COLOR_BLACK, &fairlight_8pt7b);
 					driver_framebuffer_flush(force ? FB_FLAG_FORCE+FB_FLAG_FULL+FB_FLAG_LUT_NORMAL : FB_FLAG_LUT_FAST);
 				}
 			#endif
 			#if defined(CONFIG_DRIVER_SSD1306_ENABLE) || defined(CONFIG_DRIVER_ERC12864_ENABLE)
 				driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT);
-				driver_framebuffer_print(NULL, "OTA update", 0, 0, 1, 1, COLOR_TEXT_DEFAULT, &roboto12pt7b);
-				driver_framebuffer_print(NULL, text, 0, 15, 1, 1, COLOR_TEXT_DEFAULT, &roboto12pt7b);
+				driver_framebuffer_print(NULL, "OTA update", 0, 0, 1, 1, COLOR_TEXT_DEFAULT, &roboto_12pt7b);
+				driver_framebuffer_print(NULL, text, 0, 15, 1, 1, COLOR_TEXT_DEFAULT, &roboto_12pt7b);
 				char buffer[16];
 				snprintf(buffer, 16, "%*u%%", 3, percentage);
-				driver_framebuffer_print(NULL, buffer, 0,30, 1, 1, COLOR_FILL_DEFAULT, &roboto12pt7b);
+				driver_framebuffer_print(NULL, buffer, 0,30, 1, 1, COLOR_FILL_DEFAULT, &roboto_12pt7b);
 				
 				uint16_t progressPosition = (percentage*(FB_WIDTH-17))/100;
 				
