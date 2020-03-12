@@ -18,8 +18,8 @@ convert=../fontconvert
 header=../fontheader
 inpath=
 outpath=../../font_
-fonts=(ocra org_01 fairlight dejavusans permanentmarker roboto)
-styles=("" mono bold italic black italic blackitalic)
+fonts=("ocra" "org_01" "fairlight" "dejavusans" "permanentmarker" "roboto" "Exo2")
+styles=("" "-Mono" "-Bold" "-BoldItalic" "-ExtraBold" "-ExtraBoldItalic" "-Italic" "-Black" "-Italic" "-BlackItalic" "-ExtraLight" "-ExtraLightItalic" "-Light" "-LightItalic" "-Medium" "-MediumItalic" "-Regular" "-SemiBold" "-SemiBoldItalic" "-Thin" "-ThinItalic")
 sizes=(6 8 9 12 13 16 18 20 22 24 36 42)
 
 dpi=80
@@ -34,10 +34,12 @@ do
 			infile=$inpath$f$st".ttf"
 			if [ -f $infile ] # Does source combination exist?
 			  then
-				$convert $infile $si $dpi > $outpath$f$st$si"pt7b.c"
+				$convert $infile $si $dpi > $outpath$f$st"_"$si"pt7b.c"
 			fi
 		done
 	done
 done
 
 $convert weather.ttf 42 $dpi 61440 61635 -61439 > ../../font_weather42pt8b.c
+
+cp ../handmade_fonts/* ../../

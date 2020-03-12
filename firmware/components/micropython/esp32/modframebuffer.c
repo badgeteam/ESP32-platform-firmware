@@ -15,6 +15,10 @@
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
+const GFXfont * defaultFont = &roboto_12pt7b;
+uint32_t defaultTextColor = COLOR_TEXT_DEFAULT;
+uint32_t defaultFillColor = COLOR_FILL_DEFAULT;
+
 static mp_obj_t framebuffer_flush(mp_uint_t n_args, const mp_obj_t *args)
 {
 	uint32_t flags = 0;
@@ -235,12 +239,12 @@ static mp_obj_t framebuffer_window_resize(mp_uint_t n_args, const mp_obj_t *args
 {
 	printf("FIXME\n");
 	/*
-	 * Approach:
-	 *  - Create new window
-	 *  - Copy old window to new window
-	 *  - Delete old window
-	 *  - Rename new window to match old window
-	 */
+	* Approach:
+	*  - Create new window
+	*  - Copy old window to new window
+	*  - Delete old window
+	*  - Rename new window to match old window
+	*/
 	return mp_const_none;
 }
 
@@ -263,7 +267,7 @@ static mp_obj_t framebuffer_window_transparency(mp_uint_t n_args, const mp_obj_t
 	if (n_args > 1) {
 		window->enableTransparentColor = mp_obj_get_int(args[1]);
 		if (n_args > 2) {
-			window->transparentColor = mp_obj_get_int64(args[2]);
+			window->transparentColor = mp_obj_get_int(args[2]);
 		}
 		return mp_const_none;
 	}
@@ -300,7 +304,7 @@ static mp_obj_t framebuffer_draw_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	
 	int x = mp_obj_get_int(args[n_args-3]);
 	int y = mp_obj_get_int(args[n_args-2]);
-	uint32_t color = mp_obj_get_int64(args[n_args-1]);
+	uint32_t color = mp_obj_get_int(args[n_args-1]);
 	
 	driver_framebuffer_setPixel(window, x, y, color);
 	return mp_const_none;
@@ -309,7 +313,7 @@ static mp_obj_t framebuffer_draw_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 static mp_obj_t framebuffer_draw_fill(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	uint32_t color = COLOR_FILL_DEFAULT;
+	uint32_t color = defaultFillColor;
 	
 	if ((n_args > 0) && (!(MP_OBJ_IS_STR(args[0]) || MP_OBJ_IS_INT(args[0])))) {
 		//First argument is not a string or integer, return error message.
@@ -333,7 +337,7 @@ static mp_obj_t framebuffer_draw_fill(mp_uint_t n_args, const mp_obj_t *args)
 	
 	if ((n_args > 0) && (MP_OBJ_IS_INT(args[n_args-1]))) {
 		//Last argument is the color as an integer
-		color = mp_obj_get_int64(args[n_args-1]);
+		color = mp_obj_get_int(args[n_args-1]);
 	}
 	
 	driver_framebuffer_fill(window, color);
@@ -358,7 +362,7 @@ static mp_obj_t framebuffer_draw_line(mp_uint_t n_args, const mp_obj_t *args)
 	int y0 = mp_obj_get_int(args[n_args-4]);
 	int x1 = mp_obj_get_int(args[n_args-3]);
 	int y1 = mp_obj_get_int(args[n_args-2]);
-	uint32_t color = mp_obj_get_int64(args[n_args-1]);
+	uint32_t color = mp_obj_get_int(args[n_args-1]);
 	driver_framebuffer_line(window, x0, y0, x1, y1, color);
 	return mp_const_none;
 }
@@ -382,7 +386,7 @@ static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 	int w = mp_obj_get_int(args[n_args-4]);
 	int h = mp_obj_get_int(args[n_args-3]);
 	int fill = mp_obj_get_int(args[n_args-2]);
-	uint32_t color = mp_obj_get_int64(args[n_args-1]);
+	uint32_t color = mp_obj_get_int(args[n_args-1]);
 	driver_framebuffer_rect(window, x, y, w, h, fill, color);
 	return mp_const_none;
 }
@@ -407,7 +411,7 @@ static mp_obj_t framebuffer_draw_circle(mp_uint_t n_args, const mp_obj_t *args)
 	int a0    = mp_obj_get_int(args[n_args-4]);
 	int a1    = mp_obj_get_int(args[n_args-3]);
 	int fill  = mp_obj_get_int(args[n_args-2]);
-	uint32_t color = mp_obj_get_int64(args[n_args-1]);
+	uint32_t color = mp_obj_get_int(args[n_args-1]);
 	driver_framebuffer_circle(window, x, y, r, a0, a1, fill, color);
 	return mp_const_none;
 }
@@ -432,10 +436,10 @@ STATIC mp_obj_t framebuffer_draw_text(mp_uint_t n_args, const mp_obj_t *args) {
 	
 	int textArg = argOffset++;
 	
-	uint32_t color = COLOR_TEXT_DEFAULT;
-	if (n_args>argOffset) color = mp_obj_get_int64(args[argOffset++]);
+	uint32_t color = defaultTextColor;
+	if (n_args>argOffset) color = mp_obj_get_int(args[argOffset++]);
 	
-	const GFXfont *font = &roboto12pt7b;
+	const GFXfont *font = defaultFont;
 	if (n_args>argOffset) font = driver_framebuffer_findFontByName(mp_obj_str_get_str(args[argOffset++]));
 	
 	if (!font) {
@@ -463,7 +467,7 @@ STATIC mp_obj_t framebuffer_draw_text(mp_uint_t n_args, const mp_obj_t *args) {
 
 static mp_obj_t framebuffer_get_text_width(mp_uint_t n_args, const mp_obj_t *args) {
 	const char *text = mp_obj_str_get_str(args[0]);
-	const GFXfont *font = &roboto12pt7b;
+	const GFXfont *font = defaultFont;
 	if (n_args>1) font = driver_framebuffer_findFontByName(mp_obj_str_get_str(args[1]));
 	if (!font) {
 		mp_raise_ValueError("Font not found");
@@ -475,7 +479,7 @@ static mp_obj_t framebuffer_get_text_width(mp_uint_t n_args, const mp_obj_t *arg
 
 static mp_obj_t framebuffer_get_text_height(mp_uint_t n_args, const mp_obj_t *args) {
 	const char *text = mp_obj_str_get_str(args[0]);
-	const GFXfont *font = &roboto12pt7b;
+	const GFXfont *font = defaultFont;
 	if (n_args>1) font = driver_framebuffer_findFontByName(mp_obj_str_get_str(args[1]));
 	if (!font) {
 		mp_raise_ValueError("Font not found");
@@ -631,6 +635,58 @@ static mp_obj_t framebuffer_backlight(mp_uint_t n_args, const mp_obj_t *args)
 	}
 }
 
+extern const char* fontNames[];
+
+static mp_obj_t framebuffer_list_fonts(mp_uint_t n_args, const mp_obj_t *args)
+{
+	uint16_t amount = 0;
+	while (fontNames[amount] != NULL) amount++;
+	
+	mp_obj_t* tuple = calloc(amount, sizeof(mp_obj_t));
+	if (!tuple) {
+		mp_raise_ValueError("Out of memory");
+		return mp_const_none;
+	}
+	for (uint16_t i = 0; i < amount; i++) {
+		tuple[i] = mp_obj_new_str(fontNames[i], strlen(fontNames[i]));
+	}
+	
+	return mp_obj_new_tuple(amount, tuple);
+}
+
+static mp_obj_t framebuffer_set_default_font(mp_uint_t n_args, const mp_obj_t *args)
+{
+	const GFXfont* font = driver_framebuffer_findFontByName(mp_obj_str_get_str(args[0]));
+	if (!font) {
+		mp_raise_ValueError("Font not found");
+		return mp_const_none;
+	}
+	defaultFont = font;
+	return mp_const_none;
+}
+
+static mp_obj_t framebuffer_default_text_color(mp_uint_t n_args, const mp_obj_t *args)
+{
+	if (n_args > 0) {
+		defaultTextColor = mp_obj_get_int(args[0]);
+		return mp_const_none;
+	} else {
+		return mp_obj_new_int(defaultTextColor);
+	}
+}
+
+static mp_obj_t framebuffer_default_fill_color(mp_uint_t n_args, const mp_obj_t *args)
+{
+	if (n_args > 0) {
+		defaultFillColor = mp_obj_get_int(args[0]);
+		return mp_const_none;
+	} else {
+		return mp_obj_new_int(defaultFillColor);
+	}
+}
+
+
+
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_flush_obj,                0, 1, framebuffer_flush      );
 /* Flush the framebuffer to the display. Arguments: flags (optional) */
 
@@ -715,6 +771,18 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_draw_png_obj,            
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_backlight_obj,             0, 1, framebuffer_backlight);
 /* Set or get the backlight brightness level. Arguments: level (0-255) (optional) */
 
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_list_fonts_obj,            0, 0, framebuffer_list_fonts);
+/* Query list of available fonts */
+
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_set_default_font_obj,      1, 1, framebuffer_set_default_font);
+/* Set default font */
+
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_default_text_color_obj,    0, 1, framebuffer_default_text_color);
+/* Set or get the default text color */
+
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(framebuffer_default_fill_color_obj,    0, 1, framebuffer_default_fill_color);
+/* Set or get the default fill color */
+
 static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	/* Constants */
 	{MP_ROM_QSTR( MP_QSTR_FLAG_FORCE                    ), MP_ROM_INT( FB_FLAG_FORCE                         )}, //Refresh even when not dirty
@@ -723,21 +791,56 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_FLAG_LUT_NORMAL               ), MP_ROM_INT( FB_FLAG_LUT_NORMAL                    )}, //E-ink display: use normal LUT
 	{MP_ROM_QSTR( MP_QSTR_FLAG_LUT_FAST                 ), MP_ROM_INT( FB_FLAG_LUT_FAST                      )}, //E-ink display: use fast LUT
 	{MP_ROM_QSTR( MP_QSTR_FLAG_LUT_FASTEST              ), MP_ROM_INT( FB_FLAG_LUT_FASTEST                   )}, //E-ink display: use fastest LUT
+	
 	{MP_ROM_QSTR( MP_QSTR_ORIENTATION_LANDSCAPE         ), MP_ROM_INT( 0                                     )}, //Orientation: landscape
 	{MP_ROM_QSTR( MP_QSTR_ORIENTATION_PORTRAIT          ), MP_ROM_INT( 90                                    )}, //Orientation: portrait
 	{MP_ROM_QSTR( MP_QSTR_ORIENTATION_REVERSE_LANDSCAPE ), MP_ROM_INT( 180                                   )}, //Orientation: reverse landscape
 	{MP_ROM_QSTR( MP_QSTR_ORIENTATION_REVERSE_PORTRAIT  ), MP_ROM_INT( 270                                   )}, //Orientation: reverse portrait
 	
-	/* Functions: general */
+	{MP_ROM_QSTR( MP_QSTR_WHITE                         ), MP_ROM_INT( 0xFFFFFF                              )}, //Color: white
+	{MP_ROM_QSTR( MP_QSTR_BLACK                         ), MP_ROM_INT( 0x000000                              )}, //Color: black
+	
+	{MP_ROM_QSTR( MP_QSTR_RED                           ), MP_ROM_INT( 0xFF0000                              )}, //Color: red
+	{MP_ROM_QSTR( MP_QSTR_GREEN                         ), MP_ROM_INT( 0x00FF00                              )}, //Color: green
+	{MP_ROM_QSTR( MP_QSTR_BLUE                          ), MP_ROM_INT( 0x0000FF                              )}, //Color: blue
+	
+	{MP_ROM_QSTR( MP_QSTR_YELLOW                        ), MP_ROM_INT( 0xFFFF00                              )}, //Color: yellow
+	{MP_ROM_QSTR( MP_QSTR_MAGENTA                       ), MP_ROM_INT( 0xFF00FF                              )}, //Color: magenta
+	{MP_ROM_QSTR( MP_QSTR_CYAN                          ), MP_ROM_INT( 0x00FFFF                              )}, //Color: cyan
+	
+	/* Funcitons: color */
+	{MP_ROM_QSTR( MP_QSTR_defaultFillColor              ), MP_ROM_PTR( &framebuffer_default_fill_color_obj   )}, //Set the default fill color
+	{MP_ROM_QSTR( MP_QSTR_defaultTextColor              ), MP_ROM_PTR( &framebuffer_default_text_color_obj   )}, //Set the default text color
+	
+	/* Functions: hardware */
 	{MP_ROM_QSTR( MP_QSTR_flush                         ), MP_ROM_PTR( &framebuffer_flush_obj                )}, //Flush the buffer to the display
 	{MP_ROM_QSTR( MP_QSTR_size                          ), MP_ROM_PTR( &framebuffer_size_obj                 )}, //Get the size (width and height) of the framebuffer or a window
 	{MP_ROM_QSTR( MP_QSTR_width                         ), MP_ROM_PTR( &framebuffer_width_obj                )}, //Get the width of the framebuffer or a window
 	{MP_ROM_QSTR( MP_QSTR_height                        ), MP_ROM_PTR( &framebuffer_height_obj               )}, //Get the height of the framebuffer or a window
+	{MP_ROM_QSTR( MP_QSTR_backlight                     ), MP_ROM_PTR( &framebuffer_backlight_obj            )}, //Get or set the backlight brightness level
+	
+	/* Functions: orientation */
 	{MP_ROM_QSTR( MP_QSTR_orientation                   ), MP_ROM_PTR( &framebuffer_orientation_obj          )}, //Get or set the orientation
-	{MP_ROM_QSTR( MP_QSTR_pngInfo                       ), MP_ROM_PTR( &framebuffer_png_info_obj             )}, //Get information about a PNG image
+	
+	/* Functions: text */
 	{MP_ROM_QSTR( MP_QSTR_getTextWidth                  ), MP_ROM_PTR( &framebuffer_get_text_width_obj       )}, //Get the width a string would take
 	{MP_ROM_QSTR( MP_QSTR_getTextHeight                 ), MP_ROM_PTR( &framebuffer_get_text_height_obj      )}, //Get the height a string would take
-	{MP_ROM_QSTR( MP_QSTR_backlight                     ), MP_ROM_PTR( &framebuffer_backlight_obj            )}, //Get or set the backlight brightness level
+	{MP_ROM_QSTR( MP_QSTR_drawText                      ), MP_ROM_PTR( &framebuffer_draw_text_obj            )}, //Draw text
+	{MP_ROM_QSTR( MP_QSTR_listFonts                     ), MP_ROM_PTR( &framebuffer_list_fonts_obj           )}, //List fonts
+	{MP_ROM_QSTR( MP_QSTR_setDefaultFont                ), MP_ROM_PTR( &framebuffer_set_default_font_obj     )}, //Set default font
+	
+	/* Functions: PNG images */
+	{MP_ROM_QSTR( MP_QSTR_pngInfo                       ), MP_ROM_PTR( &framebuffer_png_info_obj             )}, //Get information about a PNG image
+	{MP_ROM_QSTR( MP_QSTR_drawPng                       ), MP_ROM_PTR( &framebuffer_draw_png_obj             )}, //Display a PNG image
+	
+	/* Functions: drawing */
+	{MP_ROM_QSTR( MP_QSTR_getPixel                      ), MP_ROM_PTR( &framebuffer_get_pixel_obj            )}, //Get the color of a pixel
+	{MP_ROM_QSTR( MP_QSTR_drawPixel                     ), MP_ROM_PTR( &framebuffer_draw_pixel_obj           )}, //Set the color of a pixel
+	{MP_ROM_QSTR( MP_QSTR_drawFill                      ), MP_ROM_PTR( &framebuffer_draw_fill_obj            )}, //Fill the framebuffer or a window
+	{MP_ROM_QSTR( MP_QSTR_drawLine                      ), MP_ROM_PTR( &framebuffer_draw_line_obj            )}, //Draw a line
+	{MP_ROM_QSTR( MP_QSTR_drawRect                      ), MP_ROM_PTR( &framebuffer_draw_rect_obj            )}, //Draw a rectangle
+	{MP_ROM_QSTR( MP_QSTR_drawCircle                    ), MP_ROM_PTR( &framebuffer_draw_circle_obj          )}, //Draw a circle
+	{MP_ROM_QSTR( MP_QSTR_drawRaw                       ), MP_ROM_PTR( &framebuffer_draw_raw_obj             )}, //Write raw data to the buffer
 	
 	/* Functions: compositor windows */
 	{MP_ROM_QSTR( MP_QSTR_windowCreate                  ), MP_ROM_PTR( &framebuffer_window_create_obj        )}, //Create a new window
@@ -749,17 +852,6 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_windowFocus                   ), MP_ROM_PTR( &framebuffer_window_focus_obj         )}, //Bring a window to the front
 	{MP_ROM_QSTR( MP_QSTR_windowResize                  ), MP_ROM_PTR( &framebuffer_window_resize_obj        )}, //Resize a window
 	{MP_ROM_QSTR( MP_QSTR_windowList                    ), MP_ROM_PTR( &framebuffer_window_list_obj          )}, //List all windows
-	
-	/* Functions: drawing */
-	{MP_ROM_QSTR( MP_QSTR_getPixel                      ), MP_ROM_PTR( &framebuffer_get_pixel_obj            )}, //Get the color of a pixel
-	{MP_ROM_QSTR( MP_QSTR_drawPixel                     ), MP_ROM_PTR( &framebuffer_draw_pixel_obj           )}, //Set the color of a pixel
-	{MP_ROM_QSTR( MP_QSTR_drawFill                      ), MP_ROM_PTR( &framebuffer_draw_fill_obj            )}, //Fill the framebuffer or a window
-	{MP_ROM_QSTR( MP_QSTR_drawLine                      ), MP_ROM_PTR( &framebuffer_draw_line_obj            )}, //Draw a line
-	{MP_ROM_QSTR( MP_QSTR_drawRect                      ), MP_ROM_PTR( &framebuffer_draw_rect_obj            )}, //Draw a rectangle
-	{MP_ROM_QSTR( MP_QSTR_drawCircle                    ), MP_ROM_PTR( &framebuffer_draw_circle_obj          )}, //Draw a circle
-	{MP_ROM_QSTR( MP_QSTR_drawText                      ), MP_ROM_PTR( &framebuffer_draw_text_obj            )}, //Draw text
-	{MP_ROM_QSTR( MP_QSTR_drawPng                       ), MP_ROM_PTR( &framebuffer_draw_png_obj             )}, //Display a PNG image
-	{MP_ROM_QSTR( MP_QSTR_drawRaw                       ), MP_ROM_PTR( &framebuffer_draw_raw_obj             )}, //Write raw data to the buffer
 };
 
 static MP_DEFINE_CONST_DICT(framebuffer_module_globals, framebuffer_module_globals_table);

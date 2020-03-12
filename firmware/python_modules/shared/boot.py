@@ -1,8 +1,11 @@
 import machine, sys, system, time
+import _device as device
 
 rtc = machine.RTC()
 rtc.write(0,0)
 rtc.write(1,0)
+
+device.prepareForWakeup()
 
 __chk_recovery = False
 fc_level = machine.nvs_getint("system", 'factory_checked') or 0
@@ -45,6 +48,8 @@ if app and not app == "shell":
 		system.__current_app__ = app
 		if app:
 			__import__(app)
+	except KeyboardInterrupt:
+		system.launcher()
 	except BaseException as e:
 		sys.print_exception(e)
 		if not machine.nvs_get_u8("system", "ignore_crash"):

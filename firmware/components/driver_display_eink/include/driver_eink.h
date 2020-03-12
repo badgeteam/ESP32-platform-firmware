@@ -112,6 +112,11 @@ extern void driver_eink_deep_sleep(void);
  */
 extern void driver_eink_wakeup(void);
 
+/**
+ * Set minimal height to be updated (0-296)
+ */
+extern void driver_eink_set_minimal_update_height(uint16_t height);
+
 __END_DECLS
 
 #endif // DRIVER_EINK_H

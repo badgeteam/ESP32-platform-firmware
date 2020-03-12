@@ -19,7 +19,7 @@ def download_info():
 	checking_for_update_message()
 	result = None
 	try:
-		url = 'https://%s:%s/version-%s' % (consts.OTA_WEB_SERVER, consts.OTA_WEB_PORT.replace('"', ''), consts.INFO_HARDWARE_WOEZEL_NAME)
+		url = 'https://' + consts.OTA_WEB_SERVER + ':' + consts.OTA_WEB_PORT.replace('"', '') + '/' + consts.OTA_WEB_VERSION_PATH
 		print(url)
 		data = requests.get(url)
 		result = data.json()

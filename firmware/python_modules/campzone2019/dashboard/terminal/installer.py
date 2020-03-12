@@ -60,14 +60,6 @@ def install_app(i,fromcat):
 	global category
 	slug = category[i]["slug"]
 	category = None
-	gc.collect()
-	if not wifi.status():
-		wifi.connect()
-		wifi.wait()
-		if not wifi.status():
-			showMessage("Unable to connect to WiFi.")
-			time.sleep(2)
-			show_category(fromcat)
 	showMessage("Installing "+slug+"...")
 	uinstaller.install(slug)
 
