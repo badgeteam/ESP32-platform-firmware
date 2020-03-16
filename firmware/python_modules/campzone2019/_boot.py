@@ -17,7 +17,7 @@ orig_start = system.start
 def hijacked_start(app, status=True):
     import rgb, time
     rgb.clear()
-    time.sleep(1 / 20  * 1.1)  # 110% of the time of one render frame
+    time.sleep(0.1)
     orig_start(app, status)
 system.start = hijacked_start
 

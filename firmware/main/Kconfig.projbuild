@@ -67,6 +67,10 @@ menu "Firmware & device configuration"
 	config DEFAULT_DISPLAY_ORIENTATION_REVERSE_PORTRAIT
 		bool "Reverse portrait (270 degrees)"
 	endchoice
+	
+	config FW_ENABLE_SHA2017_DISOBEY2019_PARTITION_TABLE_UPGRADE
+		bool "Enable partition table upgrade function for SHA2017 and Disobey 2019 badges"
+		default n
 endmenu
 
 #menu "Drivers"

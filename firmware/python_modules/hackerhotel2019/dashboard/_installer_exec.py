@@ -1,1 +1,1 @@
-../../sha2017/dashboard/_installer_exec.py
+../../shared/dashboard/_installer_exec.py

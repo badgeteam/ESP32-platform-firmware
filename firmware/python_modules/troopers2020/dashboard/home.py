@@ -43,6 +43,7 @@ def cbStartLauncher(pressed):
 	if pressed:
 		global stopThreads
 		stopThreads = True
+		neopixel.send(bytes([0x00]*3*12))
 		system.launcher(False)
 
 def cbFeedPowerManagement(pressed):
@@ -63,8 +64,7 @@ virtualtimers.activate(100)
 # Power management
 def cbSleep(idleTime=None):
 	global stopThreads
-	if neopixel:
-		neopixel.send(bytes([0x00]*3*12))
+	neopixel.send(bytes([0x00]*3*12))
 	if idleTime == None:
 		idleTime = virtualtimers.idle_time()
 	gui_redraw = True

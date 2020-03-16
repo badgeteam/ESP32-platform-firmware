@@ -14,8 +14,8 @@ def main():
             system.ota()
         else:
             uinterface.skippabletext("Cancelled OTA update")
-
     except Exception as e:
+        rgb.clear()
         uinterface.skippabletext(str(e))
 
 def _retrieve_latest_update():
@@ -24,7 +24,7 @@ def _retrieve_latest_update():
     try:
         _show_progress("Checking for updates")
         gc.collect()
-        ota_version_url = 'https://' + consts.OTA_WEB_SERVER + ':' + consts.OTA_WEB_PORT.replace('"', '') + '/version-' + consts.INFO_HARDWARE_WOEZEL_NAME
+        ota_version_url = 'https://' + consts.OTA_WEB_SERVER + ':' + consts.OTA_WEB_PORT.replace('"', '') + '/' + consts.OTA_WEB_VERSION_PATH
         request = requests.get(ota_version_url, timeout=10)
         result = request.json()
         request.close()
@@ -38,10 +38,17 @@ def _retrieve_latest_update():
 
 def _prompt_user_for_update(name, build):
 
-    current = int(consts.INFO_FIRMWARE_BUILD)
-    to_install = int(build)
-    action = 'Downgrade' if current > to_install else ('Upgrade' if current < to_install else 'Reinstall')
-    text = '%s version %s to %s?' % (action, current, to_install) if action != 'Reinstall' else \
+    current = str(consts.INFO_FIRMWARE_BUILD)
+    to_install = str(build)
+
+    int_current = int(current)
+    int_to_install = int(to_install)
+
+    short_current = current[6:] if len(current) > 6 else current
+    short_to_install = to_install[6:] if len(to_install) > 6 else to_install
+
+    action = 'Downgrade' if int_current > int_to_install else ('Upgrade' if int_current < int_to_install else 'Reinstall')
+    text = '%s version %s to %s?' % (action, short_current, short_to_install) if action != 'Reinstall' else \
         'No newer update available, reinstall existing firmware?'
 
     return _confirm_ota(text)

@@ -62,12 +62,22 @@ static mp_obj_t eink_display_raw(mp_obj_t obj_img, mp_obj_t obj_flags)
 }
 static MP_DEFINE_CONST_FUN_OBJ_2(eink_display_raw_obj, eink_display_raw);
 
+
+static mp_obj_t eink_set_minimal_update_height(mp_obj_t height_obj)
+{
+	driver_eink_set_minimal_update_height(mp_obj_get_int(height_obj));
+	return mp_const_none;
+}
+
+static MP_DEFINE_CONST_FUN_OBJ_1(eink_set_minimal_update_height_obj, eink_set_minimal_update_height);
+
 static const mp_rom_map_elem_t eink_module_globals_table[] = {
 	{MP_ROM_QSTR(MP_QSTR_deep_sleep), MP_ROM_PTR(&eink_deep_sleep_obj)},
 	{MP_ROM_QSTR(MP_QSTR_wakeup), MP_ROM_PTR(&eink_wakeup_obj)},
 	{MP_ROM_QSTR(MP_QSTR_busy), MP_ROM_PTR(&eink_busy_obj)},
 	{MP_ROM_QSTR(MP_QSTR_busy_wait), MP_ROM_PTR(&eink_busy_wait_obj)},
 	{MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&eink_display_raw_obj)},
+	{MP_ROM_QSTR(MP_QSTR_setMinimalUpdateHeight), MP_ROM_PTR(&eink_set_minimal_update_height_obj)},
 };
 
 static MP_DEFINE_CONST_DICT(eink_module_globals, eink_module_globals_table);

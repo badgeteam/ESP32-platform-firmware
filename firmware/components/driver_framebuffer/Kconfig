@@ -2,12 +2,11 @@ menu "Driver: framebuffer support"
 	config DRIVER_FRAMEBUFFER_ENABLE
 		bool "Enable the framebuffer driver"
 		default n
-	config DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
-		depends on DRIVER_FRAMEBUFFER_ENABLE
-		bool "Double buffered"
-		default n
 	config DRIVER_FRAMEBUFFER_FLIP
 		depends on DRIVER_FRAMEBUFFER_ENABLE
 		bool "Flip by 180 degrees"
 		default n
+    config DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+        bool "Swap red and blue"
+        default n
 endmenu

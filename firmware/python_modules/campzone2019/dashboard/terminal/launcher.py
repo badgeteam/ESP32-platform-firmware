@@ -1,4 +1,5 @@
 import term, system, sys, uos as os, ujson
+import woezel
 
 system.serialWarning()
 
@@ -27,6 +28,12 @@ def populate_apps():
     for app in userApps:
         add_app(app,read_metadata(app))
 
+    add_app("snake", {"name": "Snake", "category": "system"})
+    add_app("clock", {"name": "Clock", "category": "system"})
+    add_app("nickname", {"name": "Nickname", "category": "system"})
+    add_app("slider", {"name": "Slider", "category": "system"})
+    add_app("appstore", {"name": "App store", "category": "system"})
+
 currentListTitles = []
 currentListTargets = []
 
@@ -43,7 +50,7 @@ def populate_category(category="",system=True):
             
 def read_metadata(app):
     try:
-        install_path = get_install_path()
+        install_path = woezel.get_install_path()
         info_file = "%s/%s/metadata.json" % (install_path, app)
         print("Reading "+info_file+"...")
         with open(info_file) as f:
@@ -60,16 +67,6 @@ def expandhome(s):
         h = os.getenv("HOME")
         s = s.replace("~/", h + "/")
     return s
-
-def get_install_path():
-    global install_path
-    if install_path is None:
-        # sys.path[0] is current module's path
-        install_path = sys.path[1]
-    install_path = expandhome(install_path)
-    return install_path
-
-install_path = None
 
 term.empty_lines()
 term.header("Loading application list...")

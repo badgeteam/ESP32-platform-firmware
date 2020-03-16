@@ -2,6 +2,7 @@ import machine, time, os, term
 import _device as device
 
 def reboot():
+	device.prepareForSleep()
 	machine.deepsleep(2)
 
 def sleep(duration=0, status=False):
@@ -16,7 +17,7 @@ def sleep(duration=0, status=False):
 			term.header(True, "Sleeping until a touch button is pressed!")
 		else:
 			term.header(True, "Sleeping for "+str(duration)+"ms...")
-	time.sleep(0.05) #Wait for UART output to be flushed
+	device.prepareForSleep()
 	machine.deepsleep(duration)
 
 def start(app, status=False):
@@ -47,6 +48,7 @@ def ota(status=False):
 	rtc = machine.RTC()
 	rtc.write(0,1) # Boot mode selection magic
 	rtc.write(1,254)
+	device.prepareForSleep()
 	reboot()
 
 def serialWarning():

@@ -1,5 +1,4 @@
-#ifndef _DRIVER_FRAMEBUFFER_ORIENTATION_INTERNAL_
-#define _DRIVER_FRAMEBUFFER_ORIENTATION_INTERNAL_
+#pragma once
 
 enum Orientation {
 	landscape,
@@ -7,5 +6,3 @@ enum Orientation {
 	reverse_landscape,
 	reverse_portrait
 };
-
-#endif //_DRIVER_FRAMEBUFFER_ORIENTATION_INTERNAL_
