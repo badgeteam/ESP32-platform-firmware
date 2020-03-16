@@ -1,4 +1,4 @@
-# Extended to allow for supplying a certificate by BADGE.TEAM
+# Note: different from upstream, this version has been extended to allow for supplying a certificate, supplying a timeout and implementing redirects.
 
 import usocket
 
@@ -34,7 +34,7 @@ class Response:
         return ujson.loads(self.content)
 
 
-def request(method, url, data=None, json=None, headers={}, stream=None, cacert=None):
+def request(method, url, data=None, json=None, headers={}, stream=None, cacert=None, timeout=None, redirect=5):
     try:
         proto, dummy, host, path = url.split("/", 3)
     except ValueError:
@@ -52,12 +52,14 @@ def request(method, url, data=None, json=None, headers={}, stream=None, cacert=N
         host, port = host.split(":", 1)
         port = int(port)
 
-    ai = usocket.getaddrinfo(host, port, 0, usocket.SOCK_STREAM)
-    ai = ai[0]
+    ai = usocket.getaddrinfo(host, port, 0, usocket.SOCK_STREAM)[0]
+    addr = ai[-1]
 
     s = usocket.socket(ai[0], ai[1], ai[2])
+    if timeout:
+        s.settimeout(timeout)
     try:
-        s.connect(ai[-1])
+        s.connect(addr)
         if proto == "https:":
             if cacert:
                 s = ussl.wrap_socket(s, server_hostname=host, cacert=cacert)
@@ -94,12 +96,15 @@ def request(method, url, data=None, json=None, headers={}, stream=None, cacert=N
             l = s.readline()
             if not l or l == b"\r\n":
                 break
-            #print(l)
-            if l.startswith(b"Transfer-Encoding:"):
+            if l.lower().startswith(b"transfer-encoding:"):
                 if b"chunked" in l:
                     raise ValueError("Unsupported " + l)
-            elif l.startswith(b"Location:") and not 200 <= status <= 299:
-                raise NotImplementedError("Redirects not yet supported")
+            elif l.lower().startswith(b"location:") and not 200 <= status <= 299:
+                s.close()
+                if redirect <= 0:
+                    raise ValueError("Too many redirects")
+                else:
+                    return request(method, l[9:len(l)].decode().strip(), data, json, headers, stream, cacert, timeout, redirect-1)
     except OSError:
         s.close()
         raise
