@@ -5,11 +5,12 @@
  */
 
 #include "sdkconfig.h"
+
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 #include "include/driver_framebuffer_internal.h"
 
 #define TAG "fb"
 
-#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 uint8_t* framebuffer1;
