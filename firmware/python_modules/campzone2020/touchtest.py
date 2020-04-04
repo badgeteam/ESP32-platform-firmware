@@ -23,18 +23,20 @@ sndmixer.waveform(synth, 0)
 
 try:
     while True:
-        rows = [Pin(16, Pin.OUT), Pin(17, Pin.OUT), Pin(21, Pin.OUT), Pin(22, Pin.OUT)]
-        cols = [Pin(36, Pin.IN), Pin(39, Pin.IN), Pin(35, Pin.IN), Pin(34, Pin.IN)]
-        frequency = 0
-        for row_index, row in enumerate(rows):
-            row.value(1)
-            for col_index, col in enumerate(cols):
-                val = col.value()
-                touchstate[row_index * 4 + col_index] = val
-                if val:
-                    number = row_index * 4 + col_index
-                    frequency = 440 * (2**(number/12))
-            row.value(0)
+        # rows = [Pin(16, Pin.OUT), Pin(17, Pin.OUT), Pin(21, Pin.OUT), Pin(22, Pin.OUT)]
+        # cols = [Pin(36, Pin.IN), Pin(39, Pin.IN), Pin(35, Pin.IN), Pin(34, Pin.IN)]
+        # frequency = 0
+        # for row_index, row in enumerate(rows):
+        #     row.value(1)
+        #     for col_index, col in enumerate(cols):
+        #         val = col.value()
+        #         touchstate[row_index * 4 + col_index] = val
+        #         if val:
+        #             number = row_index * 4 + col_index
+        #             frequency = 440 * (2**(number/12))
+        #     row.value(0)
+
+        frequency = 440
 
         if frequency:
             sndmixer.volume(synth, vol)
