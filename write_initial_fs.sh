@@ -16,7 +16,7 @@ cd ../../../../
 
 # Flash image to ESP32
 #python2 esp-idf/components/esptool_py/esptool/esptool.py --port \
-#  `ls /dev/tty{USB0,.wchusbserial*,.SLAB_USBtoUART,ACMx} 2>/dev/null` \
+#  $(bash -c 'ls /dev/tty{USB0,.wchusbserial*,.usbmodem*,.SLAB_USBtoUART,ACMx} 2>/dev/null') \
 #  write_flash $OFFSET initial_fs.img
 
 # And clean up again
