@@ -16,7 +16,7 @@
 
 #define MAX_SAMPLES_PER_FRAME (1152 * 2)
 #define CHUNK_SIZE            32
-#define INTERNAL_BUFFER_SIZE  1024 * 40
+#define INTERNAL_BUFFER_SIZE  1024 * 20
 #define INTERNAL_BUFFER_FETCH_WHEN \
   8192  // new data will be fetched when there is less than this amount of data
 
