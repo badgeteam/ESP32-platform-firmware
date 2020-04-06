@@ -56,5 +56,5 @@ esp_err_t driver_i2c_display_write(const uint8_t *buffer)
 	return res;
 }
 #else
-esp_err_t driver_display_generic_i2c_init(void) { return ESP_OK; } //Dummy function.
+esp_err_t driver_i2c_display_init(void) { return ESP_OK; } //Dummy function.
 #endif // CONFIG_DRIVER_DISPLAY_I2C_ENABLE
