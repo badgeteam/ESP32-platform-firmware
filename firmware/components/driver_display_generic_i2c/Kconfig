@@ -1,0 +1,31 @@
+menu "Driver: Generic i2c display"
+	config DRIVER_DISPLAY_I2C_ENABLE
+		depends on DRIVER_I2C_ENABLE
+		bool "Enable the generic i2c display driver"
+		default n
+
+	config DISPLAY_I2C_WIDTH
+		depends on DRIVER_DISPLAY_I2C_ENABLE
+		int "Display width"
+		default 4
+
+	config DISPLAY_I2C_HEIGHT
+		depends on DRIVER_DISPLAY_I2C_ENABLE
+		int "Display height"
+		default 4
+	
+	config DISPLAY_I2C_ADDR
+		depends on DRIVER_DISPLAY_I2C_ENABLE
+		int "Display framebuffer I2C address"
+		default 25
+
+	config DISPLAY_I2C_FRAMEBUF_REG
+		depends on DRIVER_DISPLAY_I2C_ENABLE
+		int "Display framebuffer register offset"
+		default 10
+
+	config DISPLAY_I2C_DIRTYBYTE_REG
+		depends on DRIVER_DISPLAY_I2C_ENABLE
+		int "Display dirty byte register offset (redraws display)"
+		default 58
+endmenu

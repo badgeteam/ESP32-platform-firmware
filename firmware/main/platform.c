@@ -60,7 +60,8 @@ void platform_init()
 	INIT_DRIVER(fri3d        , "FRI3D"      ) //LEDs on the Fri3d camp 2018 badge
 	INIT_DRIVER(st7735       , "ST7735"     ) //Color display
 	INIT_DRIVER(st7789v      , "ST7789V"    ) //Color display
-	INIT_DRIVER(ledmatrix    , "LEDMATRIX"  ) //Ledmatrix display
+    INIT_DRIVER(ledmatrix    , "LEDMATRIX"  ) //Ledmatrix display
+    INIT_DRIVER(i2c_display  , "I2C DISPLAY") //Ledmatrix display
 	INIT_DRIVER(framebuffer  , "FRAMEBUFFER") //Framebuffer driver with basic drawing routines
 	fbReady = true;                           //Notify the error handler that framebuffer support is now available
 	INIT_DRIVER(mpr121       , "MPR121"     ) //I/O expander with touch inputs as found on the SHA2017 and HackerHotel 2019 badges

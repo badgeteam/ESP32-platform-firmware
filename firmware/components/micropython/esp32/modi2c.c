@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <esp_log.h>
+
 
 #include "py/mperrno.h"
 #include "py/mphal.h"
@@ -32,6 +34,7 @@ STATIC mp_obj_t i2c_read_reg_(mp_obj_t _addr, mp_obj_t _reg, mp_obj_t _len) {
 
 	esp_err_t res = driver_i2c_read_reg(addr, reg, (uint8_t *) vstr.buf, len);
 	if (res != ESP_OK) {
+	    ESP_LOGE("modi2c", "Failed to read reg: %d", res);
 		mp_raise_OSError(MP_EIO);
 	}
 

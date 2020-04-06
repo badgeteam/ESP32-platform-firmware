@@ -10,6 +10,7 @@
 #include "driver_eink.h"
 #include "driver_ili9341.h"
 #include "driver_hub75.h"
+#include "driver_i2c_display.h"
 #include "driver_gxgde0213b1.h"
 #include "driver_fri3d.h"
 #include "driver_flipdotter.h"
@@ -168,6 +169,16 @@
 	#define FB_HEIGHT LEDMATRIX_HEIGHT
 	#define FB_TYPE_8BPP
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_ledmatrix_set_buffer(buffer);
+	#define COLOR_FILL_DEFAULT 0x000000
+	#define COLOR_TEXT_DEFAULT 0xFFFFFF
+
+/* Generic i2c display*/
+#elif defined(CONFIG_DRIVER_DISPLAY_I2C_ENABLE)
+	#define FB_SIZE I2C_DISPLAY_BUFFER_SIZE
+	#define FB_WIDTH I2C_DISPLAY_WIDTH
+	#define FB_HEIGHT I2C_DISPLAY_HEIGHT
+	#define FB_TYPE_24BPP
+	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_i2c_display_write(buffer);
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 #else

@@ -116,6 +116,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7735/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7789v/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_ledmatrix/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_generic_i2c/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_disobey_samd/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sndmixer
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_microphone/include

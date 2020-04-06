@@ -119,7 +119,7 @@ esp_err_t driver_framebuffer_init()
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //1st framebuffer
 
 	#ifdef CONFIG_DRIVER_HUB75_ENABLE
-		driver_hub75_switch_buffer(framebuffer); //Needed to make the legacy compositor work.
+		driver_hub75_switch_buffer((uint8_t*)framebuffer); //Needed to make the legacy compositor work.
 	#endif
 
 	//driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
