@@ -204,6 +204,13 @@ int mp3_get_sample_rate(void *ctx) {
   return mp3->lastRate;
 }
 
+void mp3_reset_buffer(void *ctx) {
+  mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
+  mp3->dataCurr = mp3->dataStart;
+  mp3->bufferValid  = 0;
+  mp3->bufferOffset = 0;
+}
+
 int mp3_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
   mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
   if (mp3->bufferValid <= 0)
@@ -243,6 +250,7 @@ void mp3_deinit_source(void *ctx) {
 const sndmixer_source_t sndmixer_source_mp3 = {.init_source     = mp3_init_source,
                                                .get_sample_rate = mp3_get_sample_rate,
                                                .fill_buffer     = mp3_fill_buffer,
+                                               .reset_buffer    = mp3_reset_buffer,
                                                .deinit_source   = mp3_deinit_source};
 
 const sndmixer_source_t sndmixer_source_mp3_stream = {.init_source     = mp3_init_source_stream,

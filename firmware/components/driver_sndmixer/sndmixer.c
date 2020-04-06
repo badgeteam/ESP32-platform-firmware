@@ -249,9 +249,15 @@ static void sndmixer_task(void *arg) {
             // That value is outside the channels chunk buffer. Refill that first.
             int r = chan->source->fill_buffer(chan->src_ctx, chan->buffer, use_stereo);
             if (r == 0) {
+              if (chan->flags & CHFL_LOOP) {
+                printf("I should be looping now\n");
+                chan->source->reset_buffer(chan->src_ctx);
+                r = chan->source->fill_buffer(chan->src_ctx, chan->buffer, use_stereo);
+              } else {
               // Source is done.
-              printf("Sndmixer: %d: cleaning up source because of EOF\n", chan->id);
-              clean_up_channel(ch);
+                printf("Sndmixer: %d: cleaning up source because of EOF\n", chan->id);  
+                clean_up_channel(ch);
+              }
               continue;
             }
             int64_t real_rate = chan->source->get_sample_rate(chan->src_ctx);

@@ -17,6 +17,8 @@ typedef struct {
   /*! Decode a bufferful of data. Returns 0 when file ended or something went wrong. Returns amount
    * of bytes in buffer (normally what init_source returned) otherwise. */
   int (*fill_buffer)(void *ctx, int16_t *buffer, int stereo);
+  /*! Reset buffer, loop sample */
+  void (*reset_buffer)(void *ctx);
   /*! Destroy source, free resources */
   void (*deinit_source)(void *ctx);
   /*! Set frequency of synthesizer */
