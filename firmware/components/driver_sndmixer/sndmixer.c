@@ -269,14 +269,14 @@ static void sndmixer_task(void *arg) {
           if (!chan->source) {
             continue;
           }
-          // Multiply by volume, add to cumulative sample. Limit volume to 1/2 maximum.
+          // Multiply by volume, add to cumulative sample.
           uint32_t acc = chan->dds_acc >> 16;
           if (chan->flags & CHFL_STEREO) {
-            s[0] += (int32_t)(chan->buffer[acc * 2 + 0]) * chan->volume / 2;
-            s[1] += (int32_t)(chan->buffer[acc * 2 + 1]) * chan->volume / 2;
+            s[0] += (int32_t)(chan->buffer[acc * 2 + 0]) * chan->volume;
+            s[1] += (int32_t)(chan->buffer[acc * 2 + 1]) * chan->volume;
           } else {
-            s[0] += (int32_t)(chan->buffer[acc]) * chan->volume / 2;
-            s[1] += (int32_t)(chan->buffer[acc]) * chan->volume / 2;
+            s[0] += (int32_t)(chan->buffer[acc]) * chan->volume;
+            s[1] += (int32_t)(chan->buffer[acc]) * chan->volume;
           }
         }
       }
