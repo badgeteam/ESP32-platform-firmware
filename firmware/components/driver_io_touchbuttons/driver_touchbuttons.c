@@ -159,7 +159,7 @@ esp_err_t driver_touchbuttons_init(void)
 #endif
 
     TaskHandle_t handle = NULL;
-    xTaskCreate( triggered, "touchbuttons", 1024, NULL, 0, &handle );
+    xTaskCreate( triggered, "touchbuttons", 2048, NULL, 0, &handle );
 
     initialised = true;
 	ESP_LOGD(TAG, "init done");
