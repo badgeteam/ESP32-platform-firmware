@@ -61,7 +61,7 @@ void platform_init()
 	INIT_DRIVER(st7735       , "ST7735"     ) //Color display
 	INIT_DRIVER(st7789v      , "ST7789V"    ) //Color display
     INIT_DRIVER(ledmatrix    , "LEDMATRIX"  ) //Ledmatrix display
-    INIT_DRIVER(i2c_display  , "I2C DISPLAY") //Ledmatrix display
+    INIT_DRIVER(i2c_display  , "I2C DISPLAY") //Generic i2c display
 	INIT_DRIVER(framebuffer  , "FRAMEBUFFER") //Framebuffer driver with basic drawing routines
 	fbReady = true;                           //Notify the error handler that framebuffer support is now available
 	INIT_DRIVER(mpr121       , "MPR121"     ) //I/O expander with touch inputs as found on the SHA2017 and HackerHotel 2019 badges
@@ -73,6 +73,7 @@ void platform_init()
 	INIT_DRIVER(sdcard       , "SDCARD"     ) //SD card driver
 	INIT_DRIVER(lora         , "LORA"       ) //LoRa modem driver
 	INIT_DRIVER(am2320       , "AM2320"     ) //AM2320 sensor driver
+	INIT_DRIVER(touchbuttons , "TOUCHBUTTONS"     ) //ESP32 touchbuttons driver
 	fflush(stdout);
 	vTaskDelay(100 / portTICK_PERIOD_MS); //Give things time to settle.
 }

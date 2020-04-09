@@ -486,6 +486,13 @@ extern const struct _mp_obj_module_t pca9555_module;
 #define BUILTIN_MODULE_PCA9555
 #endif
 
+#ifdef CONFIG_DRIVER_IO_TOUCHBUTTONS_ENABLE
+extern const struct _mp_obj_module_t touchbuttons_module;
+#define BUILTIN_MODULE_TOUCHBUTTONS { MP_OBJ_NEW_QSTR(MP_QSTR_touchbuttons), (mp_obj_t)&touchbuttons_module },
+#else
+#define BUILTIN_MODULE_PCA9555
+#endif
+
 #if MICROPY_PY_UCRYPTOLIB
 #define BUILTIN_MODULE_UCRYPTOLIB { MP_OBJ_NEW_QSTR(MP_QSTR_ucryptolib), (mp_obj_t)&mp_module_ucryptolib },
 #else
@@ -524,6 +531,7 @@ extern const struct _mp_obj_module_t pca9555_module;
 	BUILTIN_MODULE_MPU6050 \
 	BUILTIN_MODULE_AM2320 \
 	BUILTIN_MODULE_PCA9555 \
+	BUILTIN_MODULE_TOUCHBUTTONS \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \

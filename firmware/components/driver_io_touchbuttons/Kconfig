@@ -1,0 +1,60 @@
+menu "Driver: ESP32-native touchbuttons"
+	config DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the driver for native ESP32 touchbuttons"
+		default n
+
+	config TOUCH_WAKEUP_SOURCE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the wake-up from deepsleep on touch button press"
+		default y
+
+	config TOUCH0_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 1st touch button (GPIO 4)"
+		default n
+
+	config TOUCH1_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 2nd touch button (GPIO 0)"
+		default n
+
+	config TOUCH2_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 3rd touch button (GPIO 2)"
+		default n
+
+	config TOUCH3_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 4th touch button (GPIO 15)"
+		default n
+
+	config TOUCH4_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 5th touch button (GPIO 13)"
+		default n
+
+	config TOUCH5_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 6th touch button (GPIO 12)"
+		default n
+
+	config TOUCH6_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 7th touch button (GPIO 14)"
+		default n
+
+	config TOUCH7_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 8th touch button (GPIO 27)"
+		default n
+
+	config TOUCH8_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 9th touch button (GPIO 33)"
+		default n
+
+	config TOUCH9_ENABLE
+		depends on DRIVER_IO_TOUCHBUTTONS_ENABLE
+		bool "Enable the 10th touch button (GPIO 32)"
+		default n
+endmenu
