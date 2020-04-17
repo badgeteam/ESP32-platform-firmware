@@ -23,4 +23,8 @@ menu "Driver: Flipdot display (Otter)"
 	config FLIPDOTTER_MODULES
 		depends on DRIVER_FLIPDOTTER_ENABLE
 		int "Number of modules"
+
+	config PIN_NUM_FLIPDOTTER_BACKLIGHT
+		depends on DRIVER_FLIPDOTTER_ENABLE
+		int "GPIO pin used for backlight"
 endmenu

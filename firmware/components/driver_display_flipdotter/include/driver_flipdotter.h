@@ -12,6 +12,7 @@ __BEGIN_DECLS
 
 extern esp_err_t driver_flipdotter_init(void);
 extern esp_err_t driver_flipdotter_write(const uint8_t *buffer);
+extern esp_err_t driver_flipdotter_set_backlight(uint8_t brightness);
 
 __END_DECLS
 
