@@ -1,4 +1,4 @@
 import system
 
 # Application list
-system.start('touchtest')
+system.start('soundtest')

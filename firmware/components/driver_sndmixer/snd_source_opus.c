@@ -237,14 +237,21 @@ static void opus_deinit_source(void *_ctx) {
   }
 }
 
+int opus_reset_buffer(void *ctx) {
+  printf("Not implemented yet!");
+  return -1;
+}
+
 const sndmixer_source_t sndmixer_source_opus = {.init_source     = opus_init_source,
                                                 .get_sample_rate = opus_get_sample_rate,
                                                 .fill_buffer     = opus_fill_buffer,
+                                                .reset_buffer    = opus_reset_buffer,
                                                 .deinit_source   = opus_deinit_source};
 
 const sndmixer_source_t sndmixer_source_opus_stream = {.init_source     = opus_init_source_stream,
                                                        .get_sample_rate = opus_get_sample_rate,
                                                        .fill_buffer     = opus_fill_buffer,
+                                                       .reset_buffer    = opus_reset_buffer,
                                                        .deinit_source   = opus_deinit_source};
 
 #endif

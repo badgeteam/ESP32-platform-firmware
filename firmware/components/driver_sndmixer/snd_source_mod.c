@@ -73,9 +73,15 @@ void mod_deinit_source(void *ctx) {
   free(mod);
 }
 
+int mod_reset_buffer(void *ctx) {
+  printf("Not implemented yet!");
+  return -1;
+}
+
 const sndmixer_source_t sndmixer_source_mod = {.init_source     = mod_init_source,
                                                .get_sample_rate = mod_get_sample_rate,
                                                .fill_buffer     = mod_fill_buffer,
+                                               .reset_buffer    = mod_reset_buffer,
                                                .deinit_source   = mod_deinit_source};
 
 #endif

@@ -134,6 +134,13 @@ int wav_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
   return CHUNK_SIZE;
 }
 
+int wav_reset_buffer(void *ctx) {
+    wav_ctx_t *wav = (wav_ctx_t *)ctx;
+    wav->pos = 0;
+    return 0;
+}
+
+
 void wav_deinit_source(void *ctx) {
   wav_ctx_t *wav = (wav_ctx_t *)ctx;
   free(wav);
@@ -142,6 +149,7 @@ void wav_deinit_source(void *ctx) {
 const sndmixer_source_t sndmixer_source_wav = {.init_source     = wav_init_source,
                                                .get_sample_rate = wav_get_sample_rate,
                                                .fill_buffer     = wav_fill_buffer,
+                                               .reset_buffer    = wav_reset_buffer,
                                                .deinit_source   = wav_deinit_source};
 
 #endif
