@@ -1,0 +1,15 @@
+menu "Driver: Flipdot display (Sebastius)"
+	config DRIVER_DOTFLIPPER_ENABLE
+		depends on DRIVER_I2C_ENABLE
+		bool "Enable the dotflipper driver"
+		default n
+	
+	config DOTFLIPPER_WIDTH
+		depends on DRIVER_DOTFLIPPER_ENABLE
+		int "Number of panels horizontal"
+	
+	config DOTFLIPPER_HEIGHT
+		depends on DRIVER_DOTFLIPPER_ENABLE
+		int "Number of panels vertical"
+	
+endmenu

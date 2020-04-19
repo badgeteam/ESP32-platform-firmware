@@ -55,6 +55,7 @@ void platform_init()
 	INIT_DRIVER(eink         , "E-INK"      ) //296x128 e-ink display as found on the SHA2017 and HackerHotel 2019 badges
 	INIT_DRIVER(gxgde0213b1  , "GXGDE0213B1") //E-ink on OHS badge
 	INIT_DRIVER(nokia6100    , "NOKIA6100"  ) //Nokia 6100 LCD
+  INIT_DRIVER(dotflipper   , "DOTFLIPPER" ) //Sebastius flipdot display
 	INIT_DRIVER(flipdotter   , "FLIPDOTTER" ) //Otter flipdot display
 	INIT_DRIVER(ili9341      , "ILI9341"    ) //LCD display on wrover kit
 	INIT_DRIVER(fri3d        , "FRI3D"      ) //LEDs on the Fri3d camp 2018 badge

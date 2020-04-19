@@ -109,6 +109,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_gxgde0213b1/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_fri3d/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_nokia6100/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_flipdotter/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_dotflipper/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/png
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
