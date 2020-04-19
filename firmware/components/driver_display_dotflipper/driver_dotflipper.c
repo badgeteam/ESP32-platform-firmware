@@ -8,8 +8,11 @@
 #include <esp_log.h>
 #include <esp_err.h>
 
-#include <driver/i2c.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include <freertos/task.h>
+
+#include <driver_i2c.h>
 
 #include "include/driver_dotflipper.h"
 
