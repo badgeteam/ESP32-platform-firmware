@@ -410,11 +410,18 @@ static void sndmixer_task(void *arg) {
           }
         }
       }
-      // Correct for the number of <active> channels and the multiplication by the volume
-      if(active_channels) {
-          s[0] /= active_channels * 256;
-          s[1] /= active_channels * 256;
-      }
+
+      /***
+       * Divide by the max volume of a channel to return to INT16 ranges.
+       * Note that before, we divided by the number of active channels here as well,
+       * seemingly to prevent clipping. However, channels are mixed additively in music.
+       * Dividing by active channels will audibly lower the volume when new channels are started
+       * whilst others are playing. Adding a few channels together will not cause clipping for
+       * most normal samples, and sound natural. For scenarios where clipping could occur, such as
+       * multiple synthesizers at full volume, lower the channel volumes from the app.
+       */
+      s[0] /= 255;
+      s[1] /= 255;
 
       // Saturate
 #define SAT(x, min, max) ((x > max) ? max : (x < min) ? min : x)
