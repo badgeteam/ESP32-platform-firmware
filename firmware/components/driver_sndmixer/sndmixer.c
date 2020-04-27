@@ -337,7 +337,7 @@ static void sndmixer_task(void *arg) {
         beat_sync_count = (beat_sync_count + 1) % (SYNC_COUNT_BARS * SYNC_NOTE_DIVISOR);
         beat_sync_last_tick = current_ticks;
         if (beat_sync_count % 2 == 0) {
-          ESP_LOGI(TAG, "beat %d", (beat_sync_count / 2) % 4);
+          ESP_LOGV(TAG, "beat %d", (beat_sync_count / 2) % 4);
         }
       }
     }
@@ -352,7 +352,7 @@ static void sndmixer_task(void *arg) {
     for (int i = 0; i < CHUNK_SIZE; i++) {
       uint8_t active_channels = 0;
 
-      // current sample value, multiplied by 256 (because of multiplies by channel volume)
+      // current sample value, multiplied by 255 (because of multiplies by channel volume)
       int32_t s[2] = {0, 0};
       for (int ch = 0; ch < no_channels; ch++) {
         sndmixer_channel_t *chan = &channel[ch];
@@ -368,7 +368,6 @@ static void sndmixer_task(void *arg) {
           active_channels++;
           chan->dds_acc += chan->dds_rate;  // select next sample
           // dds_acc>>16 now gives us which sample to get from the buffer.
-//          ESP_LOGI(TAG, "@%d", chan->dds_acc>>16);
           while ((chan->dds_acc >> 16) >= chan->chunksz && chan->source) {
             // That value is outside the channels chunk buffer. Refill that first.
             int r = chan->source->fill_buffer(chan->src_ctx, chan->buffer, use_stereo);
@@ -393,7 +392,6 @@ static void sndmixer_task(void *arg) {
             }
             int64_t real_rate = chan->source->get_sample_rate(chan->src_ctx);
             chan->dds_rate    = (real_rate << 16) / samplerate;
-//            ESP_LOGI(TAG, "acc %d, rate %d, real rate %d", (chan->dds_acc >> 16), chan->dds_rate, (uint32_t)real_rate);
             chan->dds_acc -=
                 (chan->chunksz << 16);  // reset dds acc; we have parsed chunksize samples.
             chan->chunksz = r;          // save new chunksize

@@ -44,6 +44,7 @@ for i, state in enumerate(ledstate):
 
 display.flush()
 sndmixer.begin(16, True)
+sndmixer.beat_sync_start(120)
 file_handles = {}
 
 released = True
@@ -71,8 +72,9 @@ while True:
             continue
         file_handles[player] = file_handle
         sndmixer.on_finished(player, lambda _: file_handles[player].close())
-        sndmixer.volume(player, vol)
-        sndmixer.start_at_next(player, 2)
+        sndmixer.volume(player, 255)
+        # sndmixer.loop(player, True)
+        sndmixer.start_at_next(player, 4)
         number = -1
 
     time.sleep(0.01)
