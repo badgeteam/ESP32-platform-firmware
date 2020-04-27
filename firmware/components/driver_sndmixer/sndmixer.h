@@ -5,6 +5,10 @@
 extern "C" {
 #endif
 
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
+
 /**
  * @brief Structure describing a sound source
  */
@@ -28,6 +32,9 @@ typedef struct {
   void (*set_waveform)(void *ctx, uint8_t waveform);
 } sndmixer_source_t;
 
+typedef ssize_t (*stream_read_type)(void *, void *, size_t);
+typedef ssize_t (*stream_seek_type)(void *, size_t, size_t);
+
 /**
  * @brief Initialize the sound mixer
  *
@@ -50,6 +57,7 @@ int sndmixer_init(int no_channels, int stereo);
  * @return The ID of the queued sound, for use with the other functions.
  */
 int sndmixer_queue_wav(const void *wav_start, const void *wav_end, int evictable);
+int sndmixer_queue_wav_stream(stream_read_type read_func, stream_seek_type seek_func, void *stream);
 
 /**
  * @brief Queue the data of a .mod/.xm/.s3m file to be played
@@ -75,9 +83,6 @@ int sndmixer_queue_mod(const void *mod_start, const void *mod_end);
  */
 int sndmixer_queue_mp3(const void *mp3_start, const void *mp3_end);
 int sndmixer_queue_opus(const void *mp3_start, const void *mp3_end);
-
-typedef ssize_t (*stream_read_type)(void *, void *, size_t);
-typedef ssize_t (*stream_seek_type)(void *, size_t, size_t);
 int sndmixer_queue_mp3_stream(stream_read_type read_func, stream_seek_type seek_func, void *stream);
 int sndmixer_queue_opus_stream(stream_read_type read_func, void *stream);
 
