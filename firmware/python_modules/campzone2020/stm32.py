@@ -96,7 +96,7 @@ def remove_interrupt_handler(type, handler):
 def _get_interrupt_mask():
     global interrupt_mask
     response = i2c_read_reg(_OFFSET_I2C_INTERRUPT_REASON, 1)
-    interrupt_mask = bin(int.from_bytes(response, 'little'))[2:]
+    interrupt_mask = int.from_bytes(response, 'little')
 
 def _interrupt_callback(_):
     global keypad_state

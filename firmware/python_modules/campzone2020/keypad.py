@@ -27,10 +27,10 @@ def _get_key_state():
     state.reverse()
     return state
 
-def _keypad_interrupt_handler(_):
+def _keypad_interrupt_handler():
     global keypad_state
     new_touch_state = _get_key_state()
-    for index, new_state in new_touch_state:
+    for index, new_state in enumerate(new_touch_state):
         if keypad_state[index] != new_state:
             for handler in keypad_handlers:
                 try:
