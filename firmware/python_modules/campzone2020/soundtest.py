@@ -73,7 +73,7 @@ while True:
         file_handles[player] = file_handle
         sndmixer.on_finished(player, lambda _: file_handles[player].close())
         sndmixer.volume(player, 255)
-        # sndmixer.loop(player, True)
+        sndmixer.loop(player, True)
         sndmixer.start_at_next(player, 4)
         number = -1
 

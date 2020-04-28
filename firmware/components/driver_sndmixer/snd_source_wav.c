@@ -243,6 +243,13 @@ int wav_reset_buffer(void *ctx) {
     return 0;
 }
 
+int wav_stream_reset_buffer(void *ctx) {
+  wav_ctx_t *wav = (wav_ctx_t *)ctx;
+  wav->seek_func(wav->stream, wav->data_start_offset, 0);
+  wav->pos = 0;
+  return 0;
+}
+
 
 void wav_deinit_source(void *ctx) {
   wav_ctx_t *wav = (wav_ctx_t *)ctx;
@@ -258,7 +265,7 @@ const sndmixer_source_t sndmixer_source_wav = {.init_source     = wav_init_sourc
 const sndmixer_source_t sndmixer_source_wav_stream = {.init_source     = wav_init_source_stream,
   .get_sample_rate = wav_get_sample_rate,
   .fill_buffer     = wav_fill_buffer,
-//  .reset_buffer    = wav_stream_reset_buffer,
+  .reset_buffer    = wav_stream_reset_buffer,
   .deinit_source   = wav_deinit_source};
 
 #endif

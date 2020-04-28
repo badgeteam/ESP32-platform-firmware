@@ -8,17 +8,9 @@ __chk_recovery = False
 
 if machine.nvs_getint("system", 'factory_checked'):
 	try:
-		import buttons
-		try:
-			#Use the START button if available
-			recovery_button = buttons.BTN_START
-		except:
-			#Else use the B button
-			recovery_button = buttons.BTN_B
-		__chk_recovery = machine.wake_reason() == (7, 0) and buttons.value(recovery_button)
+		__chk_recovery = machine.wake_reason() == (7, 0)
 	except:
 		pass
-
 
 #Application starting
 if __chk_recovery:
@@ -46,6 +38,3 @@ if app and not app == "shell":
 			system.crashedWarning()
 			time.sleep(3)
 			system.launcher()
-
-# if app and app == "shell":
-# 	print("\nWelcome to the python shell of your badge!\nCheck out https://wiki.badge.team/ for instructions.")

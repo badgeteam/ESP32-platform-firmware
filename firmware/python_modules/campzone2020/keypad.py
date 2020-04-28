@@ -1,0 +1,42 @@
+import stm32
+
+_N_KEYS = const(16)
+_OFFSET_I2C_KEY_STATE = const(4)
+
+keypad_state = [0] * _N_KEYS
+keypad_handlers = []
+
+def add_keypad_handler(handler):
+    global keypad_handlers
+    keypad_handlers.append(handler)
+
+def remove_keypad_handler(handler):
+    global keypad_handlers
+    for index, _handler in keypad_handlers:
+        if handler == _handler:
+            del keypad_handlers[index]
+
+def get_keypad_state():
+    return keypad_state
+
+def _get_key_state():
+    response = stm32.i2c_read_reg(_OFFSET_I2C_KEY_STATE, 2)
+    buttons = bin(int.from_bytes(response, 'little'))[2:]
+    buttons = '0' * (_N_KEYS-len(buttons)) + buttons
+    state = [char == '1' for char in buttons]
+    state.reverse()
+    return state
+
+def _keypad_interrupt_handler(_):
+    global keypad_state
+    new_touch_state = _get_key_state()
+    for index, new_state in new_touch_state:
+        if keypad_state[index] != new_state:
+            for handler in keypad_handlers:
+                try:
+                    handler(index, new_state)
+                except Exception as e:
+                    print('Exception in keypad event handler', e)
+    keypad_state = new_touch_state
+
+stm32.add_interrupt_handler(stm32.INTERRUPT_KEYPAD, _keypad_interrupt_handler)

@@ -1,8 +1,5 @@
-import machine, time, term, buttons
+import machine, time, term
 
-# Deep sleep wakeup button
-pin = buttons._gpioMap[buttons.BTN_A]
-machine.RTC().wake_on_ext0(pin=pin, level=0)
 
 def clear_boot_magic():
     rtc = machine.RTC()
