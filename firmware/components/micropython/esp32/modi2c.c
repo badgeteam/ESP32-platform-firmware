@@ -61,11 +61,7 @@ STATIC mp_obj_t i2c_write_reg_(mp_obj_t _addr, mp_obj_t _reg, mp_obj_t _data) {
 		mp_raise_msg(&mp_type_AttributeError, "Data should be a bytestring");
 	}
 
-	if (data_len != 1) {
-		mp_raise_msg(&mp_type_AttributeError, "Data-lengths other than 1 byte are not supported");
-	}
-
-	esp_err_t res = driver_i2c_write_reg(addr, reg, data[0]);
+	esp_err_t res = driver_i2c_write_reg_n(addr, reg, data, data_len);
 	if (res != ESP_OK) {
 		mp_raise_OSError(MP_EIO);
 	}
