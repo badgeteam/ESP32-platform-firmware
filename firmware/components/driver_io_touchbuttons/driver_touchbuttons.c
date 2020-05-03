@@ -13,7 +13,6 @@
 #include "driver/touch_pad.h"
 #include "include/driver_touchbuttons.h"
 
-#define CONFIG_DRIVER_IO_TOUCHBUTTONS_ENABLE
 #ifdef CONFIG_DRIVER_IO_TOUCHBUTTONS_ENABLE
 
 #define TAG "io_touchbuttons"
@@ -130,11 +129,6 @@ IRAM_ATTR void triggered() {
 static bool initialised = false;
 esp_err_t driver_touchbuttons_init(void)
 {
-    // Touch IO stays configured during deep sleep, so prevent re-init after.
-    if(initialised || esp_reset_reason() != ESP_RST_POWERON) {
-        return ESP_OK;
-    }
-
     // Initialize touch pad peripheral, it will start a timer to run a filter
     ESP_LOGI(TAG, "Initializing touch pad");
 
@@ -151,19 +145,17 @@ esp_err_t driver_touchbuttons_init(void)
     // Enable only the pads set through config.sh
     config_touch_pads();
 
-//    touch_pad_filter_start(portTICK_PERIOD_MS);
     set_thresholds();
 
 #ifdef CONFIG_TOUCH_WAKEUP_SOURCE
     esp_sleep_enable_touchpad_wakeup();
 #endif
 
-    TaskHandle_t handle = NULL;
-    xTaskCreate( triggered, "touchbuttons", 2048, NULL, 0, &handle );
+    xTaskCreate( triggered, "touchbuttons", 2048, NULL, 0, NULL );
 
     initialised = true;
-	ESP_LOGD(TAG, "init done");
-	return ESP_OK;
+    ESP_LOGD(TAG, "init done");
+    return ESP_OK;
 }
 
 #else

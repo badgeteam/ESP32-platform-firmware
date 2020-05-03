@@ -490,7 +490,7 @@ extern const struct _mp_obj_module_t pca9555_module;
 extern const struct _mp_obj_module_t touchbuttons_module;
 #define BUILTIN_MODULE_TOUCHBUTTONS { MP_OBJ_NEW_QSTR(MP_QSTR_touchbuttons), (mp_obj_t)&touchbuttons_module },
 #else
-#define BUILTIN_MODULE_PCA9555
+#define BUILTIN_MODULE_TOUCHBUTTONS
 #endif
 
 #if MICROPY_PY_UCRYPTOLIB
