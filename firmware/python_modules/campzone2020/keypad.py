@@ -6,17 +6,17 @@ _OFFSET_I2C_KEY_STATE = const(4)
 keypad_state = [0] * _N_KEYS
 keypad_handlers = []
 
-def add_keypad_handler(handler):
+def add_handler(handler):
     global keypad_handlers
     keypad_handlers.append(handler)
 
-def remove_keypad_handler(handler):
+def remove_handler(handler):
     global keypad_handlers
     for index, _handler in keypad_handlers:
         if handler == _handler:
             del keypad_handlers[index]
 
-def get_keypad_state():
+def get_state():
     return keypad_state
 
 def _get_key_state():
@@ -36,7 +36,9 @@ def _keypad_interrupt_handler():
                 try:
                     handler(index, new_state)
                 except Exception as e:
-                    print('Exception in keypad event handler', e)
+                    import sys
+                    print('Exception in keypad event handler')
+                    sys.print_exception(e)
     keypad_state = new_touch_state
 
 stm32.add_interrupt_handler(stm32.INTERRUPT_KEYPAD, _keypad_interrupt_handler)

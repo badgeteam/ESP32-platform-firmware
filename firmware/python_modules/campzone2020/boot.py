@@ -1,8 +1,13 @@
-import machine, sys, system, time
+import machine, sys, system, time, display, touchbuttons
 
 rtc = machine.RTC()
 rtc.write(0,0)
 rtc.write(1,0)
+
+def on_touch(state):
+	if state & 512:
+		system.home()
+touchbuttons.set_handler(on_touch)
 
 __chk_recovery = False
 

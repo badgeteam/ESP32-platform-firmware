@@ -100,11 +100,22 @@ def _get_interrupt_mask():
 
 def _interrupt_callback(_):
     global keypad_state
-    _get_interrupt_mask()
+    try:
+        _get_interrupt_mask()
+    except:
+        print('Failed to get interrupt mask')
+        return
     for reason, handlers in interrupt_handlers.items():
         if interrupt_mask | reason:
             for handler in handlers:
-                handler()
+                try:
+                    handler()
+                except Exception as e:
+                    import sys
+                    sys.print_exception(e)
 
 pin = machine.Pin(_INTERRUPT_PIN, machine.Pin.IN, handler=_interrupt_callback, trigger=machine.Pin.IRQ_FALLING)
-_get_interrupt_mask()
+try:
+    _get_interrupt_mask()
+except:
+    print('Failed to get interrupt mask')
