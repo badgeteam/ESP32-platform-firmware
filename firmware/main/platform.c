@@ -74,6 +74,7 @@ void platform_init()
 	INIT_DRIVER(lora         , "LORA"       ) //LoRa modem driver
 	INIT_DRIVER(am2320       , "AM2320"     ) //AM2320 sensor driver
 	INIT_DRIVER(touchbuttons , "TOUCHBUTTONS"     ) //ESP32 touchbuttons driver
+  INIT_DRIVER(fsoveruart   , "FSOVERUART")
 	fflush(stdout);
 	vTaskDelay(100 / portTICK_PERIOD_MS); //Give things time to settle.
 }

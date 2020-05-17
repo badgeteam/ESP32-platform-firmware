@@ -1,0 +1,23 @@
+menu "Driver: FS over uart support"
+	config DRIVER_FSOVERUART_ENABLE
+		bool "Enable the FS over uart driver"
+		default n
+    config DRIVER_FSOVERUART_UART_NUM
+        int "Uart hardware number"
+        default 2
+	config DRIVER_FSOVERUART_UART_TX
+		int "TX pin"
+		default 32
+	config DRIVER_FSOVERUART_UART_RX
+		int "RX pin"
+		default 35
+	config DRIVER_FSOVERUART_UART_CTS
+		int "CTS pin"
+		default 2
+	config DRIVER_FSOVERUART_UART_BAUD
+		int "Baud rate"
+		default 256000
+	config DRIVER_FSOVERUART_BUFFER_SIZE
+		int "UART fifo size"
+		default 2048
+endmenu
