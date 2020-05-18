@@ -7,7 +7,8 @@ apps = [
     {'file': 'memeboard', 'title': 'Memeboard', 'titleAudio': '', 'colour': 0x00FF00, 'category': 'system'},
     {'file': 'sequencer', 'title': 'Sequencer', 'titleAudio': '', 'colour': 0xFF00FF, 'category': 'system'},
     {'file': 'touchtest', 'title': 'TouchTest', 'titleAudio': '', 'colour': 0x00FFFF, 'category': 'system'},
-    {'file': 'usbtest', 'title': 'USBTest', 'titleAudio': '', 'colour': 0xFF0000, 'category': 'system'},
+    {'file': 'hidtest', 'title': 'HIDTest', 'titleAudio': '', 'colour': 0xFF0000, 'category': 'system'},
+    {'file': 'miditest', 'title': 'MIDITest', 'titleAudio': '', 'colour': 0xFF0000, 'category': 'system'},
 ]
 
 presses = {}
