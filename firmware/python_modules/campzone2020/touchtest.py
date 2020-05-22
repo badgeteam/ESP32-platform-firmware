@@ -15,7 +15,8 @@ def on_key(key_index, pressed):
         synth = sndmixer.synth()
         channels[key_index] = synth
         sndmixer.volume(synth, vol)
-        sndmixer.waveform(synth, frequency)
+        sndmixer.waveform(synth, 0)
+        sndmixer.freq(synth, frequency)
         sndmixer.play(synth)
         display.drawPixel(x, y, on)
         display.flush()
