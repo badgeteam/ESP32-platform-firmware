@@ -18,8 +18,15 @@ if machine.nvs_getint("system", 'factory_checked'):
 		pass
 
 #Application starting
-if __chk_recovery:
+if machine.wake_reason() == (0, 0):
+	# Boot splash screen
+	app = "bootsplash"
+elif machine.wake_reason() == (7, 0):
+	# Recovery mode
 	app = "dashboard.recovery"
+elif not machine.nvs_getint("system", 'factory_checked'):
+	# Factory check mode
+	app = "factory_checks"
 else:
 	app = rtc.read_string()
 	if not app:
@@ -29,6 +36,14 @@ else:
 			app = machine.nvs_getstr("system", 'default_app')
 			if not app:
 				app = 'dashboard.home'
+
+try:
+	import os
+	os.mountsd()
+	del os
+except:
+	print('Could not mount SD card')
+	pass
 
 if app and not app == "shell":
 	try:
