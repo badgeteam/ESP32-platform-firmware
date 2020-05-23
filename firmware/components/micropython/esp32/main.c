@@ -279,12 +279,13 @@ void micropython_entry(void)
 	#else
 		mpy_use_spiram = false;
 	#endif
-	ESP_LOGD("MicroPython","SPIRAM: %s", mpy_use_spiram ? "Enabled" : "Disabled");
+	ESP_LOGI("MicroPython","SPIRAM: %s", mpy_use_spiram ? "Enabled" : "Disabled");
 
 	if (mpy_use_spiram) {
 		MPY_MAX_STACK_SIZE = 64*1024;
 		MPY_MIN_HEAP_SIZE = 128*1024;
 		MPY_MAX_HEAP_SIZE =	3584*1024;
+		MPY_DEFAULT_HEAP_SIZE = MPY_MAX_HEAP_SIZE/2;
 		hdr_maxlen = 1024;
 		body_maxlen = 4096;
 		ssh2_hdr_maxlen = 1024;
