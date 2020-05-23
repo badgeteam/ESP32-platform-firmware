@@ -1,14 +1,19 @@
-import system, virtualtimers, display, keypad, sndmixer
+import system, virtualtimers, display, keypad, easyaudio
 
 LONG_PRESS_MS = const(1000)
 
 # Application list
 apps = [
-    {'file': 'memeboard', 'title': 'Memeboard', 'titleAudio': '', 'colour': 0x00FF00, 'category': 'system'},
-    {'file': 'sequencer', 'title': 'Sequencer', 'titleAudio': '', 'colour': 0xFF00FF, 'category': 'system'},
-    {'file': 'touchtest', 'title': 'TouchTest', 'titleAudio': '', 'colour': 0x00FFFF, 'category': 'system'},
-    {'file': 'hidtest', 'title': 'HIDTest', 'titleAudio': '', 'colour': 0xFF0000, 'category': 'system'},
-    {'file': 'miditest', 'title': 'MIDITest', 'titleAudio': '', 'colour': 0xFF0000, 'category': 'system'},
+    {'slug': 'memeboard', 'title': 'Memeboard', 'colour': 0xFE3010, 'category': 'system'},
+    {'slug': 'sequencer', 'title': 'Sequencer', 'colour': 0xE35722, 'category': 'system'},
+    {'slug': 'synthesizer', 'title': 'Synthesizer', 'colour': 0xFCCF0D, 'category': 'system'},
+    {'slug': 'hidtest', 'title': 'HIDTest', 'colour': 0x29BF12, 'category': 'system'},
+    {'slug': 'miditest', 'title': 'MIDITest', 'colour': 0x17BEBB, 'category': 'system'},
+    {'slug': 'whackamole', 'title': 'Whack-A-Mole', 'colour': 0x2721EC, 'category': 'system'},
+    {'slug': 'simonsays', 'title': 'Simon Says', 'colour': 0x441C7A, 'category': 'system'},
+    {'slug': 'ttstest', 'title': 'TTS Test', 'colour': 0x6F1152, 'category': 'system'},
+    {'slug': 'ttstest', 'title': 'Simon Says', 'colour': 0xFF619B, 'category': 'system'},
+    {'slug': 'ttstest', 'title': 'Simon Says', 'colour': 0xFFF1D0, 'category': 'system'},
 ]
 
 presses = {}
@@ -40,15 +45,12 @@ def start_app(key_index):
     app = get_app(key_index)
     print('got app', app)
     if app is not None:
-        system.start(app['file'])
+        system.start(app['slug'])
 
 def play_app_audio(key_index):
     app = get_app(key_index)
     if app is not None:
-        sndmixer.begin(1)  ## Might be started already, but that doesn't matter
-        player = sndmixer.mp3(app['titleAudio'])
-        sndmixer.volume(player, 255)
-        sndmixer.play(player)
+        easyaudio.play('/cache/%s.mp3' % app['slug'])
 
 def on_long_press(key_index):
     global presses
@@ -56,6 +58,7 @@ def on_long_press(key_index):
         press = presses[key_index]
         press['is_long'] = True
         print('long press %d' % key_index)
+        play_app_audio(key_index)
     else:
         print('long press key not found')
 
@@ -80,6 +83,6 @@ def on_key(key_index, pressed):
             del presses[key_index]
         print('release %d' %key_index)
 
-virtualtimers.activate(1000)
+virtualtimers.activate(100)
 keypad.add_handler(on_key)
 drawApps()
