@@ -156,11 +156,6 @@ int wav_init_source_stream(void *stream_read_fn, void *stream, int req_sample_ra
     wav->channels = 1;
   }
 
-  if(wav->rate != 44100 && wav->rate != 22050) {
-    ESP_LOGW(TAG, "Only 44kHz and 22kHz sample rate are supported. This sample is %d", wav->rate);
-    return -1;
-  }
-
   ESP_LOGI(TAG, "channels: %d, bits: %d, rate: %d", wav->channels, wav->bits, wav->rate);
 
   ESP_LOGI(TAG, "data @ %d", wav->seek_func(wav->stream, 0, SEEK_CUR));
