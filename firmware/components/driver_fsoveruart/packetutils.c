@@ -24,3 +24,13 @@ void sendok(uint16_t command) {
     strcpy((char *) &header[8], "ok");
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 11);
 }
+
+void buildfile(char *source, char *target) {
+    if(strncmp(source, "/flash", 6) == 0) {
+        strcpy(target, "/_#!#_spiflash");
+        strcat(target, &source[6]);
+    } else if(strncmp(source, "/sdcard", 7) == 0) {
+        strcpy(target, "/_#!#_sdcard");
+        strcat(target, &source[7]);
+    }
+}

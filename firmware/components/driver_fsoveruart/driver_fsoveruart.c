@@ -19,6 +19,7 @@
 #include "include/driver_fsoveruart.h"
 #include "include/filefunctions.h"
 #include "include/packetutils.h"
+#include "include/specialfunctions.h"
 
 #ifdef CONFIG_DRIVER_FSOVERUART_ENABLE
 
@@ -40,13 +41,13 @@ uart_config_t uart_config = {
 
 QueueHandle_t uart_queue;
 
-uint8_t command_in[512];
+uint8_t command_in[1024];
 
 
 //Function lookup tables
 
-int (*specialfunction[])(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) = {};
-int specialfunction_size = 0;
+int (*specialfunction[])(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) = {execfile};
+int specialfunction_size = 1;
                          //                                                                                  4096    4097      4098       4099     4100      4101    4102
 int (*filefunction[])(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) = {getdir, readfile, writefile, delfile, duplfile, mvfile, makedir};
 int filefunction_size = 7;
@@ -55,6 +56,7 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t size, uint32_t re
     static uint32_t write_pos;
     if(received == length) { //First packet
         write_pos = 0;
+        //ESP_LOGI(TAG, "clear");
     }
     
     if(command && length > 0) {
@@ -94,7 +96,8 @@ void fsoveruartTask(void *pvParameter) {
         if(xQueueReceive(uart_queue, (void * )&event, (portTickType)portMAX_DELAY)) {
             bzero(dtmp, RD_BUF_SIZE);
             uart_get_buffered_data_len(CONFIG_DRIVER_FSOVERUART_UART_NUM, &data_buf);
-            if(data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/2) {
+            //ESP_LOGI(TAG, "buf: %d", data_buf);
+            if(data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/4) {
                 gpio_pad_select_gpio(CONFIG_DRIVER_FSOVERUART_UART_CTS);
                 gpio_set_direction(CONFIG_DRIVER_FSOVERUART_UART_CTS, GPIO_MODE_OUTPUT);
                 gpio_set_level(CONFIG_DRIVER_FSOVERUART_UART_CTS, 1);
@@ -107,12 +110,14 @@ void fsoveruartTask(void *pvParameter) {
                 other types of events. If we take too much time on data event, the queue might
                 be full.*/
                 case UART_DATA:
+                    //ESP_LOGI(TAG, "siz: %d", event.size);
                     uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, event.size, portMAX_DELAY);
                     if(!receiving) {
                         receiving = 1;
                         command = *((uint16_t *) &dtmp[0]);
                         size = *((uint32_t *) &dtmp[2]);
                         verif = *((uint16_t *) &dtmp[6]);
+                        //ESP_LOGI(TAG, "new packet: %d %d %d", command, size, verif);
                         recv = event.size - 8;
                         handleFSCommand(&dtmp[8], command, size, recv, recv);
                     } else {
@@ -197,7 +202,7 @@ esp_err_t driver_fsoveruart_init(void) {
     uart_intr_config(CONFIG_DRIVER_FSOVERUART_UART_NUM, &uart_intr);
 
     ESP_LOGI(TAG, "fs over uart registered.");
-    xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 8192, NULL, 100, NULL, 1);
+    xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 32000, NULL, 100, NULL, 1);
 
     return ESP_OK;
 } 
