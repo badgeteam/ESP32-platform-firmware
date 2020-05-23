@@ -18,7 +18,7 @@ try:
     os.mountsd()
     songs = [filename for filename in os.listfiles('sd/Samples', return_full=True) if
              '/._' not in filename and
-             (filename.endswith('mp3') or filename.endswith('wav'))]
+             (filename.endswith('wav'))]
 except:
     songs = []
 songs.sort()
@@ -43,7 +43,7 @@ for i, state in enumerate(ledstate):
     display.drawPixel(x, y, 0x00FFFF if state else 0x000000)
 
 display.flush()
-sndmixer.begin(16, True)
+sndmixer.begin(4, True)
 sndmixer.beat_sync_start(120)
 file_handles = {}
 

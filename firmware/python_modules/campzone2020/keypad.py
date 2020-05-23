@@ -19,6 +19,10 @@ def remove_handler(handler):
 def get_state():
     return keypad_state
 
+def index_to_coords(key_index):
+    x, y = key_index % 4, int(key_index / 4)
+    return x, y
+
 def _get_key_state():
     response = stm32.i2c_read_reg(_OFFSET_I2C_KEY_STATE, 2)
     buttons = bin(int.from_bytes(response, 'little'))[2:]
