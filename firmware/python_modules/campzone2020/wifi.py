@@ -51,12 +51,14 @@ def wait(duration=_DEFAULT_TIMEOUT, UNUSED_LEGACY_PARAMETER=None):
 	Wait until connection has been made
 	:return: boolean, connected
 	'''
-	t = int(duration*10)
+	t = duration
 	while not status():
 		if t <= 0:
 			break
+		if t % 2 == 0:
+			connect()
 		t -= 1
-		time.sleep(0.1)
+		time.sleep(1)
 	return status()
 
 def ntp(onlyIfNeeded=True, server='pool.ntp.org'):
