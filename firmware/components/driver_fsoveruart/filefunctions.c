@@ -28,17 +28,6 @@ const char root[] = {"dflash\ndsdcard"};
  * 
  ***/
 
-//This function fixes the weird mount points in the badge firmware
-void buildfile(char *source, char *target) {
-    if(strncmp(source, "/flash", 6) == 0) {
-        strcpy(target, "/_#!#_spiflash");
-        strcat(target, &source[6]);
-    } else if(strncmp(source, "/sdcard", 7) == 0) {
-        strcpy(target, "/_#!#_sdcard");
-        strcat(target, &source[7]);
-    }
-}
-
 int getdir(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
 
@@ -69,6 +58,7 @@ int getdir(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, ui
         strcpy((char *) data, "Directory_not_found");  //Cant find directory, request dir doesnt exists
     }
     uint8_t header[8];
+    //ESP_LOGI(TAG, "len: %d", strlen((char *) data));
     createMessageHeader(header, command, strlen((char *) data));
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 8);
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) data, strlen((char *) data));
