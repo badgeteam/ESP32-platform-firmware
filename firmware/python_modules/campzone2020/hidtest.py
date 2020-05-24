@@ -1,3 +1,10 @@
-import hid, keycodes
+import hid, keypad, display
 
-hid.keyboard_type('testing if this works.')
+display.drawFill(0x0000FF)
+display.flush()
+
+def on_key(key_index, pressed):
+    print('key event')
+    hid.keyboard_type('Typing\n')
+
+keypad.add_handler(on_key)

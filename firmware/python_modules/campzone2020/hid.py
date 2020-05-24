@@ -27,7 +27,7 @@ def keyboard_release():
 def keyboard_type(text):
     for character in text:
         keycode, shift = keycodes.char_to_keycode(character)
-        modifier = keycodes.SHIFT if shift else b'\x00'
+        modifier = bytes([keycodes.SHIFT]) if shift else b'\x00'
         keyboard_press_keys(bytes([keycode]), modifier)
     keyboard_release()
 
