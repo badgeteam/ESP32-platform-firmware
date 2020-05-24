@@ -14,7 +14,10 @@ def _write_midi_packet(data):
         address = _OFFSET_I2C_USB_MIDI + slot * 4
         dirty_byte = address + 3
         is_dirty = stm32.i2c_read_reg(dirty_byte, 1)
+        print(is_dirty)
+        is_dirty = int.from_bytes(is_dirty, "little")
         if not is_dirty:
+            print("Writing")
             stm32.i2c_write_reg(address, data + b'0x01')
             return
 
