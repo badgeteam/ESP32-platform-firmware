@@ -100,13 +100,14 @@ def _get_interrupt_mask():
 
 def _interrupt_callback(_):
     global keypad_state
+    global interrupt_mask
     try:
         _get_interrupt_mask()
     except:
         print('Failed to get interrupt mask')
         return
     for reason, handlers in interrupt_handlers.items():
-        if interrupt_mask | reason:
+        if interrupt_mask & reason:           
             for handler in handlers:
                 try:
                     handler()
