@@ -1,7 +1,7 @@
 try:
     import display, easyaudio, keypad, time, system
 
-    easyaudio.play('/sd/ps_1.mp3', volume=10)
+    easyaudio.play('/sd/ps_1.mp3')
     sleeptime = 0.25
 
     for _ in range(2):

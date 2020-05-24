@@ -9,33 +9,33 @@ def on_touch(state):
 		system.home()
 touchbuttons.set_handler(on_touch)
 
-__chk_recovery = False
+with open('cache/bootreason.txt', 'wa') as file:
+	file.write(str(machine.wake_reason()))
 
-if machine.nvs_getint("system", 'factory_checked'):
-	try:
-		__chk_recovery = machine.wake_reason() == (7, 0)
-	except:
-		pass
+#### Application starting ####
 
-#Application starting
-if machine.wake_reason() == (0, 0):
-	# Boot splash screen
-	app = "bootsplash"
-elif machine.wake_reason() == (7, 0):
-	# Recovery mode
-	app = "dashboard.recovery"
-elif not machine.nvs_getint("system", 'factory_checked'):
+# Default app
+app = rtc.read_string()
+if not app:
+	app = machine.nvs_getstr("system", 'default_app')
+	if not app:
+		app = 'dashboard.home'
+
+# Override with special boot mode apps if necessary
+if machine.wake_reason() == (7, 0):
+	# ESP boots twice with (7, 0) after power-on
+	if machine.nvs_getstr('system', '2ndboot') == 'yes':
+		# Boot splash screen
+		app = "bootsplash"
+		machine.nvs_setstr('system', '2ndboot', 'no')
+	else:
+		machine.nvs_setstr('system', '2ndboot', 'yes')
+# elif machine.wake_reason() == (7, 0):
+# 	# Recovery mode
+# 	app = "dashboard.recovery"
+elif not machine.nvs_getint("system", 'factory_checked') == 2:
 	# Factory check mode
 	app = "factory_checks"
-else:
-	app = rtc.read_string()
-	if not app:
-		if not machine.nvs_getint("system", 'factory_checked') == 2:
-			app = "factory_checks"
-		else:
-			app = machine.nvs_getstr("system", 'default_app')
-			if not app:
-				app = 'dashboard.home'
 
 try:
 	import os
