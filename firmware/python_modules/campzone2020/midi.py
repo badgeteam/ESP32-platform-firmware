@@ -3,6 +3,8 @@ import time, stm32, keycodes
 _OFFSET_I2C_USB_MIDI = const(78)
 _done_writing = True
 
+CENTRAL_C = 60 # 60th note number in the MIDI protocol
+
 def _write_midi_packet(data):
     if type(data) is bytes and len(data) != 3:
         print('MIDI packet must be exactly 3 bytes long')
@@ -20,27 +22,23 @@ def _write_midi_packet(data):
     while not _done_writing:
         time.sleep(0.01)
 
-
-def keyboard_press_keys(keys=b'\x00', modifier=b'\x00'):
-    global _done_writing
-    if type(keys) is not bytes:
-        raise Exception('Keycodes must be passed as bytes')
-    if len(keys) > 6:
-        raise Exception('Maximally 6 keycodes may be sent over USB at once')
-    if type(modifier) is not bytes or len(modifier) != 1:
-        raise Exception('Key modifier must be bytes of length 1')
-
-    # Pad keycodes with zeroes until we have exactly 6 keycodes
-    keys = keys + (bytes([0] * (6 - len(keys))))
-    dirty_byte = b'\x01'
-    payload = modifier + keys + dirty_byte
-    _done_writing = False
-    stm32.i2c_write_reg(_OFFSET_I2C_USB_KEYBOARD, payload)
-    while not _done_writing:
-        time.sleep(0.01)
-
 def _clear_writing_status():
     global _done_writing
     _done_writing = True
+
+def note_on(note_number, velocity=127, midi_channel=0):
+    """
+    See https://www.inspiredacoustics.com/en/MIDI_note_numbers_and_center_frequencies for note numbers.
+    """
+    payload = bytes([0x90 + midi_channel, note_number, velocity])
+    _write_midi_packet(payload)
+
+def note_off(note_number, velocity=127, midi_channel=0):
+    """
+    See https://www.inspiredacoustics.com/en/MIDI_note_numbers_and_center_frequencies for note numbers.
+    """
+    payload = bytes([0x80 + midi_channel, note_number, velocity])
+    _write_midi_packet(payload)
+
 
 stm32.add_interrupt_handler(stm32.INTERRUPT_MIDI_WRITTEN, _clear_writing_status)
