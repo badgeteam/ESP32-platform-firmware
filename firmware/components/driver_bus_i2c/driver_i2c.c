@@ -61,6 +61,10 @@ esp_err_t driver_i2c_init(void)
 	res = i2c_driver_install(I2C_MASTER_NUM, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 	if (res != ESP_OK) return res;
 
+        // Set timeout to 13ms to allow communicating with slower peripherals
+        // See: https://github.com/espressif/esp-idf/issues/2551
+        i2c_set_timeout(I2C_MASTER_NUM, 0xFFFFF);
+
 	driver_i2c_init_done = true;
 	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
