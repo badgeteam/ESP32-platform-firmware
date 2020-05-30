@@ -24,11 +24,7 @@ def play(filename, volume=255, loop=False, sync_beat=None, start_at_next=None):
     if channel_id is None or channel_id < 0:
         print('Failed to start audio channel')
         return channel_id
-    try:
-        sndmixer.on_finished(channel_id, lambda _: _clean_channel(channel_id))
-    except:
-        import system
-        system.crashedWarning()
+    sndmixer.on_finished(channel_id, lambda _ : _clean_channel(channel_id))
     sndmixer.volume(channel_id, volume)
     if loop:
         sndmixer.loop(channel_id, True)

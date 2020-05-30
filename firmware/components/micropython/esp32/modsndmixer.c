@@ -17,6 +17,8 @@
                             return mp_const_none; \
                           }}
 
+#define MP_OBJ_IS_CLOSURE(o) (MP_OBJ_IS_OBJ(o) && (((mp_obj_base_t*)MP_OBJ_TO_PTR(o))->type->name == MP_QSTR_closure))
+
 bool sndmixer_started = 0;
 int sndmixer_channels = 0;
 
@@ -248,7 +250,7 @@ static mp_obj_t modsndmixer_on_finished(mp_obj_t _id, mp_obj_t _handle) {
     return mp_const_none;
   }
   int id       = mp_obj_get_int(_id);
-  if(! MP_OBJ_IS_FUN(_handle) && (! MP_OBJ_IS_METH(_handle)))
+  if(! MP_OBJ_IS_FUN(_handle) && (! MP_OBJ_IS_METH(_handle)) && (! MP_OBJ_IS_CLOSURE(_handle)))
   {
     mp_raise_ValueError("Callback function expected!");
     return mp_const_none;
