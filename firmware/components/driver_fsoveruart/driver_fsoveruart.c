@@ -57,7 +57,7 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t size, uint32_t re
     static uint32_t write_pos;
     if(received == length) { //First packet
         write_pos = 0;
-        //ESP_LOGI(TAG, "clear");
+        ESP_LOGI(TAG, "clear");
     }
     
     if(command && length > 0) {
@@ -105,7 +105,7 @@ void fsoveruartTask(void *pvParameter) {
             bzero(dtmp, RD_BUF_SIZE);
             uint32_t data_buf = 0;
             uart_get_buffered_data_len(CONFIG_DRIVER_FSOVERUART_UART_NUM, &data_buf);
-            //ESP_LOGI(TAG, "buf: %d", data_buf);
+            ESP_LOGD(TAG, "buf: %d", data_buf);
             if(data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/4) {
                 gpio_pad_select_gpio(CONFIG_DRIVER_FSOVERUART_UART_CTS);
                 gpio_set_direction(CONFIG_DRIVER_FSOVERUART_UART_CTS, GPIO_MODE_OUTPUT);
@@ -121,12 +121,12 @@ void fsoveruartTask(void *pvParameter) {
                 other types of events. If we take too much time on data event, the queue might
                 be full.*/
                 case UART_DATA:
-                    //ESP_LOGI(TAG, "siz: %d", event.size);                    
+                    ESP_LOGD(TAG, "siz: %d", event.size);
                     while(bytesread != data_buf) {
                         if(!receiving) {
-                            if((data_buf-bytesread) < 8) break; //Break while loop if non complete header is inside 
+                            if((data_buf-bytesread) < 8) break; //Break while loop if non complete header is inside
                             uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, 8, portMAX_DELAY);
-                            bytesread += 8;                        
+                            bytesread += 8;
                             command = *((uint16_t *) &dtmp[0]);
                             size = *((uint32_t *) &dtmp[2]);
                             verif = *((uint16_t *) &dtmp[6]);
@@ -153,7 +153,7 @@ void fsoveruartTask(void *pvParameter) {
                                 receiving = 0;
                             }
                         }
-                    }                
+                    }
                     break;
                 //Event of HW FIFO overflow detected
                 case UART_FIFO_OVF:
