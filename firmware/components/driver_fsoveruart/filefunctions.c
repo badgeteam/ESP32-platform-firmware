@@ -40,7 +40,7 @@ int getdir(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, ui
         return 1;
     }
      //TODO: Fix when folder list exceeds buffer
-    //ESP_LOGI(TAG, "%s", data);
+    ESP_LOGI(TAG, "%s", data);
     char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
     buildfile((char *) data, dir_name);
     //ESP_LOGI(TAG, "%s", dir_name);

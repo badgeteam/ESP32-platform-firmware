@@ -24,7 +24,10 @@
 
 #ifdef CONFIG_DRIVER_FSOVERUART_ENABLE
 
-#define min(a,b) ((a)<(b)?(a):(b))
+
+uint32_t min(uint32_t a, uint32_t b) {
+    return a < b ? a : b;
+}
 
 void fsoveruartTask(void *pvParameter);
 void vTimeoutFunction( TimerHandle_t xTimer );
@@ -68,14 +71,14 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t size, uint32_t re
     int return_val = 0;
     if(command < 4096) {
         if(command < specialfunction_size) {
-            return_val = specialfunction[command](data, command, size, received, length);
+            return_val = specialfunction[command](command_in, command, size, received, length);
         }
     } else if(command < 8192) {
         if((command-4096) < filefunction_size) {
-            return_val = filefunction[command-4096](data, command, size, received, length);
+            return_val = filefunction[command-4096](command_in, command, size, received, length);
         }
     }
-
+    ESP_LOGI(TAG, "%d", return_val);
     if(return_val) {    //Function has indicated that payload should write at start of buffer.
         write_pos = 0;
     }
@@ -92,7 +95,6 @@ void vTimeoutFunction( TimerHandle_t xTimer ) {
 void fsoveruartTask(void *pvParameter) {
     uart_event_t event;
     uint8_t* dtmp = (uint8_t*) malloc(RD_BUF_SIZE);
-    int receiving = 0;
     uint16_t command = 0;
     uint32_t size = 0;
     uint32_t recv = 0;
@@ -121,10 +123,10 @@ void fsoveruartTask(void *pvParameter) {
                 other types of events. If we take too much time on data event, the queue might
                 be full.*/
                 case UART_DATA:
-                    ESP_LOGD(TAG, "siz: %d", event.size);
-                    while(bytesread != data_buf) {
+                    ESP_LOGI(TAG, "siz: %d", event.size);
+                    while(bytesread != event.size) {
                         if(!receiving) {
-                            if((data_buf-bytesread) < 8) break; //Break while loop if non complete header is inside
+                            if((event.size-bytesread) < 8) break; //Break while loop if non complete header is inside
                             uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, 8, portMAX_DELAY);
                             bytesread += 8;
                             command = *((uint16_t *) &dtmp[0]);
@@ -139,16 +141,16 @@ void fsoveruartTask(void *pvParameter) {
                                 uart_flush_input(CONFIG_DRIVER_FSOVERUART_UART_NUM);
                                 xQueueReset(uart_queue);
                                 //Received wrong command, flushing uart queue
-                                sendte(1);
-                                return;
                             }
                         } else {
                             xTimerStop(timeout, 1);
-                            bytestoread = min(min((data_buf-bytesread), (size-recv)), RD_BUF_SIZE);
+                            ESP_LOGI(TAG, "%d %d %d", (event.size-bytesread), (size-recv), RD_BUF_SIZE);
+                            bytestoread = min(min((event.size-bytesread), (size-recv)), RD_BUF_SIZE);
+                            ESP_LOGI(TAG, "Max read: %d", bytestoread);
                             bytestoread = uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, bytestoread, portMAX_DELAY);
                             recv = recv + bytestoread;
                             bytesread += bytestoread;
-                            ESP_LOGI(TAG, "processing packet: %d %d %d %d", command, size, verif, bytestoread);
+                            ESP_LOGI(TAG, "processing packet: %d %d %d %d %d", command, size, recv, verif, bytestoread);
                             handleFSCommand(dtmp, command, size, recv, bytestoread);
                             if(recv == size) {
                                 receiving = 0;
@@ -198,6 +200,15 @@ void fsoveruartTask(void *pvParameter) {
                 xTimerStart(timeout, 1);
             } else {
                 xTimerStop(timeout, 1);
+            }
+            uart_get_buffered_data_len(CONFIG_DRIVER_FSOVERUART_UART_NUM, &data_buf);
+            ESP_LOGD(TAG, "buf: %d", data_buf);
+            if(data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/4) {
+                gpio_pad_select_gpio(CONFIG_DRIVER_FSOVERUART_UART_CTS);
+                gpio_set_direction(CONFIG_DRIVER_FSOVERUART_UART_CTS, GPIO_MODE_OUTPUT);
+                gpio_set_level(CONFIG_DRIVER_FSOVERUART_UART_CTS, 1);
+            } else {
+                uart_set_pin(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_UART_TX, CONFIG_DRIVER_FSOVERUART_UART_RX, CONFIG_DRIVER_FSOVERUART_UART_CTS, -1); //Change pins
             }
         }
     }
