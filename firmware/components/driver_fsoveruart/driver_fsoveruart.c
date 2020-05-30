@@ -24,6 +24,8 @@
 
 #ifdef CONFIG_DRIVER_FSOVERUART_ENABLE
 
+#define min(a,b) ((a)<(b)?(a):(b))
+
 void fsoveruartTask(void *pvParameter);
 void vTimeoutFunction( TimerHandle_t xTimer );
 
@@ -111,6 +113,8 @@ void fsoveruartTask(void *pvParameter) {
             } else {
                 uart_set_pin(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_UART_TX, CONFIG_DRIVER_FSOVERUART_UART_RX, CONFIG_DRIVER_FSOVERUART_UART_CTS, -1); //Change pins
             }
+            uint32_t bytesread = 0;
+            uint32_t bytestoread;
             switch(event.type) {
                 //Event of UART receving data
                 /*We'd better handler data event fast, there would be much more data events than
@@ -118,33 +122,38 @@ void fsoveruartTask(void *pvParameter) {
                 be full.*/
                 case UART_DATA:
                     ESP_LOGD(TAG, "siz: %d", event.size);
-                    uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, event.size, portMAX_DELAY);
-                    if(!receiving) {
-                        receiving = 1;
-                        command = *((uint16_t *) &dtmp[0]);
-                        size = *((uint32_t *) &dtmp[2]);
-                        verif = *((uint16_t *) &dtmp[6]);
-                        ESP_LOGI(TAG, "new packet: %d %d %d", command, size, verif);
-                        if(verif == 0xADDE) {
-                            recv = event.size - 8;
-                            xTimerStart(timeout, 1);
-                            handleFSCommand(&dtmp[8], command, size, recv, recv);
+                    while(bytesread != data_buf) {
+                        if(!receiving) {
+                            if((data_buf-bytesread) < 8) break; //Break while loop if non complete header is inside
+                            uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, 8, portMAX_DELAY);
+                            bytesread += 8;
+                            command = *((uint16_t *) &dtmp[0]);
+                            size = *((uint32_t *) &dtmp[2]);
+                            verif = *((uint16_t *) &dtmp[6]);
+                            ESP_LOGI(TAG, "new packet: %d %d %d %d", command, size, verif, event.size-8);
+                            if(verif == 0xADDE) {
+                                receiving = 1;
+                                recv = 0;
+                            } else {
+                                receiving = 0;
+                                uart_flush_input(CONFIG_DRIVER_FSOVERUART_UART_NUM);
+                                xQueueReset(uart_queue);
+                                //Received wrong command, flushing uart queue
+                                sendte(1);
+                                return;
+                            }
                         } else {
-                            receiving = 0;
-                            uart_flush_input(CONFIG_DRIVER_FSOVERUART_UART_NUM);
-                            xQueueReset(uart_queue);
-                            //Received wrong command, flushing uart queue
-                            sendte(1);
+                            xTimerStop(timeout, 1);
+                            bytestoread = min(min(data_buf, size), RD_BUF_SIZE);
+                            recv = recv + bytestoread;
+                            uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, bytestoread, portMAX_DELAY);
+                            bytesread += bytestoread;
+                            handleFSCommand(dtmp, command, size, recv, bytestoread);
+                            if(recv == size) {
+                                receiving = 0;
+                            }
                         }
-                    } else {
-                        xTimerReset(timeout, 1);
-                        recv = recv + event.size;
-                        handleFSCommand(dtmp, command, size, recv, event.size);
                     }
-                    if(size == recv) {
-                        receiving = 0;
-                        xTimerStop(timeout, 1);
-                    }                   
                     break;
                 //Event of HW FIFO overflow detected
                 case UART_FIFO_OVF:
@@ -183,6 +192,11 @@ void fsoveruartTask(void *pvParameter) {
                 default:
                     ESP_LOGI(TAG, "uart event type: %d", event.type);
                     break;
+            }
+            if(receiving) {
+                xTimerStart(timeout, 1);
+            } else {
+                xTimerStop(timeout, 1);
             }
         }
     }
