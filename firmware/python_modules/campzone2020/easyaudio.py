@@ -12,11 +12,13 @@ def _clean_channel(channel_id):
         del handles[channel_id]
 
 def _add_mp3_or_wav(filename):
+    global handles
     file = open(filename, 'rb')
     if(filename.lower().endswith('.mp3')):
         channel_id = sndmixer.mp3_stream(file)
     elif(filename.lower().endswith('.wav')):
         channel_id = sndmixer.wav_stream(file)
+    handles[channel_id] = file
     return channel_id
 
 def play(filename, volume=255, loop=False, sync_beat=None, start_at_next=None):
