@@ -11,6 +11,7 @@ void createMessageHeader(uint8_t *header, uint16_t command, uint32_t size) {
     header[7] = 0xAD;
 }
 
+//Error executing function
 void sender(uint16_t command) {
      uint8_t header[11];
     createMessageHeader(header, command, 3);
@@ -18,10 +19,27 @@ void sender(uint16_t command) {
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 11);
 }
 
+//Okay
 void sendok(uint16_t command) {
      uint8_t header[11];
     createMessageHeader(header, command, 3);
     strcpy((char *) &header[8], "ok");
+    uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 11);
+}
+
+//Transmission error
+void sendte(uint16_t command) {
+     uint8_t header[11];
+    createMessageHeader(header, command, 3);
+    strcpy((char *) &header[8], "te");
+    uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 11);
+}
+
+//Timeout error
+void sendto(uint16_t command) {
+     uint8_t header[11];
+    createMessageHeader(header, command, 3);
+    strcpy((char *) &header[8], "to");
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 11);
 }
 

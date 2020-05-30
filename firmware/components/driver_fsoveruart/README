@@ -29,6 +29,6 @@ writefile (4098): write contents to disk. Datafield first specifies the filename
 delfile (4099): delete file. Datafield specifies the filename
 duplfile (4100): duplicate file. Datafield specifies first the filename to copy and null terminated to indicate end of file. Afterwhich the targer directory ended with a "/" or a filename is directory.
 mvfile (4101): move file. Similar as duplicate but the source file is deleted
-makedir (4102): delete dir. Datafield specifies which directory to delete, can only delete empty directories.
+makedir (4102): make dir. Datafield specifies which directory to create.
 
 

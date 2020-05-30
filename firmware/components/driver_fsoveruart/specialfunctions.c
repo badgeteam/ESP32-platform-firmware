@@ -20,3 +20,9 @@ int execfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, 
     esp_deep_sleep(1000000);
     return 1;
 }
+
+int heartbeat(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+    if(received != size) return 0;
+    sendok(command);
+    return 1;
+}

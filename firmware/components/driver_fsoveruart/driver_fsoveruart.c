@@ -15,6 +15,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
+#include "freertos/timers.h"
 
 #include "include/driver_fsoveruart.h"
 #include "include/filefunctions.h"
@@ -24,11 +25,9 @@
 #ifdef CONFIG_DRIVER_FSOVERUART_ENABLE
 
 void fsoveruartTask(void *pvParameter);
+void vTimeoutFunction( TimerHandle_t xTimer );
 
 #define TAG "fsoveruart"
-
-#define RD_BUF_SIZE 256
-
 
 uart_config_t uart_config = {
     .baud_rate = CONFIG_DRIVER_FSOVERUART_UART_BAUD,
@@ -40,14 +39,14 @@ uart_config_t uart_config = {
     };
 
 QueueHandle_t uart_queue;
-
+TimerHandle_t timeout;
 uint8_t command_in[1024];
 
 
 //Function lookup tables
 
-int (*specialfunction[])(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) = {execfile};
-int specialfunction_size = 1;
+int (*specialfunction[])(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) = {execfile, heartbeat};
+int specialfunction_size = 2;
                          //                                                                                  4096    4097      4098       4099     4100      4101    4102
 int (*filefunction[])(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) = {getdir, readfile, writefile, delfile, duplfile, mvfile, makedir};
 int filefunction_size = 7;
@@ -80,21 +79,29 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t size, uint32_t re
     }
 }
 
+int receiving = 0;
+
+void vTimeoutFunction( TimerHandle_t xTimer ) {
+    ESP_LOGI(TAG, "Saw no message for 1s assuming task crashed. Resetting...");
+    receiving = 0;
+    sendto(1);
+}
+
 void fsoveruartTask(void *pvParameter) {
     uart_event_t event;
-    size_t buffered_size;
     uint8_t* dtmp = (uint8_t*) malloc(RD_BUF_SIZE);
     int receiving = 0;
     uint16_t command = 0;
     uint32_t size = 0;
     uint32_t recv = 0;
     uint16_t verif = 0;
-    uint32_t data_buf = 0;
+    
 
     for(;;) {
         //Waiting for UART event.
         if(xQueueReceive(uart_queue, (void * )&event, (portTickType)portMAX_DELAY)) {
             bzero(dtmp, RD_BUF_SIZE);
+            uint32_t data_buf = 0;
             uart_get_buffered_data_len(CONFIG_DRIVER_FSOVERUART_UART_NUM, &data_buf);
             //ESP_LOGI(TAG, "buf: %d", data_buf);
             if(data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/4) {
@@ -118,14 +125,25 @@ void fsoveruartTask(void *pvParameter) {
                         size = *((uint32_t *) &dtmp[2]);
                         verif = *((uint16_t *) &dtmp[6]);
                         //ESP_LOGI(TAG, "new packet: %d %d %d", command, size, verif);
-                        recv = event.size - 8;
-                        handleFSCommand(&dtmp[8], command, size, recv, recv);
+                        if(verif == 0xADDE) {
+                            recv = event.size - 8;
+                            xTimerStart(timeout, 1);
+                            handleFSCommand(&dtmp[8], command, size, recv, recv);
+                        } else {
+                            receiving = 0;
+                            uart_flush_input(CONFIG_DRIVER_FSOVERUART_UART_NUM);
+                            xQueueReset(uart_queue);
+                            //Received wrong command, flushing uart queue
+                            sendte(1);
+                        }
                     } else {
+                        xTimerReset(timeout, 1);
                         recv = recv + event.size;
                         handleFSCommand(dtmp, command, size, recv, event.size);
                     }
                     if(size == recv) {
                         receiving = 0;
+                        xTimerStop(timeout, 1);
                     }                   
                     break;
                 //Event of HW FIFO overflow detected
@@ -202,8 +220,8 @@ esp_err_t driver_fsoveruart_init(void) {
     uart_intr_config(CONFIG_DRIVER_FSOVERUART_UART_NUM, &uart_intr);
 
     ESP_LOGI(TAG, "fs over uart registered.");
-    xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 32000, NULL, 100, NULL, 1);
-
+    xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 16000, NULL, 100, NULL, 1);
+    timeout = xTimerCreate("FSoverUART_timeout", 100, false, 0, vTimeoutFunction);
     return ESP_OK;
 } 
 
