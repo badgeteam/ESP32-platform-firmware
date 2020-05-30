@@ -9,12 +9,7 @@ fix = False
 def on_key(key_index, pressed):
     global fix
     print('key event')
-    fix = True
+    if(pressed):
+        hid.keyboard_type("Cyber")
 
 keypad.add_handler(on_key)
-while True:
-    if fix:
-        fix = False
-        hid.keyboard_type("cyber")
-    else:
-        time.sleep(0.5)
