@@ -144,10 +144,11 @@ void fsoveruartTask(void *pvParameter) {
                             }
                         } else {
                             xTimerStop(timeout, 1);
-                            bytestoread = min(min((data_buf-bytesread), size), RD_BUF_SIZE);
+                            bytestoread = min(min((data_buf-bytesread), (size-recv)), RD_BUF_SIZE);
                             bytestoread = uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, bytestoread, portMAX_DELAY);
                             recv = recv + bytestoread;
                             bytesread += bytestoread;
+                            ESP_LOGI(TAG, "processing packet: %d %d %d %d", command, size, verif, bytestoread);
                             handleFSCommand(dtmp, command, size, recv, bytestoread);
                             if(recv == size) {
                                 receiving = 0;
