@@ -144,9 +144,9 @@ void fsoveruartTask(void *pvParameter) {
                             }
                         } else {
                             xTimerStop(timeout, 1);
-                            bytestoread = min(min(data_buf, size), RD_BUF_SIZE);
+                            bytestoread = min(min((data_buf-bytesread), size), RD_BUF_SIZE);
+                            bytestoread = uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, bytestoread, portMAX_DELAY);
                             recv = recv + bytestoread;
-                            uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, bytestoread, portMAX_DELAY);
                             bytesread += bytestoread;
                             handleFSCommand(dtmp, command, size, recv, bytestoread);
                             if(recv == size) {
