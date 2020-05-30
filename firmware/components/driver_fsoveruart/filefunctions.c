@@ -30,7 +30,7 @@ const char root[] = {"dflash\ndsdcard"};
 int getdir(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
 
-    if(length == 0 || length == 1 || length == 2) { //Requesting root
+    if(size == 0 || size == 1 || size == 2) { //Requesting root
         strcat((char *) data, "\n");  //Append folder name and type
         strcat((char *) data, root); //Append root structure
         uint8_t header[8];
@@ -108,8 +108,10 @@ int writefile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received,
     static int failed_open = 0;
     
     if(received == length) {        //Opening new file, cleaning up statics just in case
+        ESP_LOGI(TAG, "New file");
         if(fptr) fclose(fptr);
         failed_open = 0;
+        fptr = NULL;
     }
 
     if(fptr == NULL && failed_open == 0) {
@@ -117,7 +119,7 @@ int writefile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received,
             if(data[i] == 0) {
                 char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
                 buildfile((char *) data, dir_name);
-                //ESP_LOGI(TAG, "Writing: %s", dir_name);
+                ESP_LOGI(TAG, "Writing: %s", dir_name);
 
                 fptr = fopen(dir_name, "w");
                 if(fptr) {
