@@ -33,9 +33,9 @@ int getdir(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, 
     if(size == 0 || size == 1 || size == 2) { //Requesting root
         strcat((char *) data, "\n");  //Append folder name and type
         strcat((char *) data, root); //Append root structure
-        uint8_t header[8];
+        uint8_t header[12];
         createMessageHeader(header, command, strlen((char *) data), message_id);
-        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 8);
+        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
         uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) data, strlen((char *) data));
         return 1;
     }
