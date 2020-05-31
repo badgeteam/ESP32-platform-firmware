@@ -64,6 +64,7 @@ def i2c_read_reg(offset, length):
             return response
         except Exception as e:
             print('i2c read error', e)
+        time.sleep(0.1)
     raise Exception('Failed to read from STM32 over i2c')
 
 def i2c_write_reg(offset, data):
@@ -73,6 +74,7 @@ def i2c_write_reg(offset, data):
             return response
         except Exception as e:
             print('i2c write error', e)
+        time.sleep(0.1)
     raise Exception('Failed to write to STM32 over i2c')
 
 
