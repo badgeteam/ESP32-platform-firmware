@@ -50,13 +50,13 @@ uint8_t command_in[1024];
 
 //Function lookup tables
 
-int (*specialfunction[])(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) = {execfile, heartbeat};
+int (*specialfunction[])(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) = {execfile, heartbeat};
 int specialfunction_size = 2;
                          //                                                                                  4096    4097      4098       4099     4100      4101    4102
-int (*filefunction[])(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) = {getdir, readfile, writefile, delfile, duplfile, mvfile, makedir};
+int (*filefunction[])(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) = {getdir, readfile, writefile, delfile, duplfile, mvfile, makedir};
 int filefunction_size = 7;
 
-void handleFSCommand(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+void handleFSCommand(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     static uint32_t write_pos;
     if(received == length) { //First packet
         write_pos = 0;
@@ -71,11 +71,11 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t size, uint32_t re
     int return_val = 0;
     if(command < 4096) {
         if(command < specialfunction_size) {
-            return_val = specialfunction[command](command_in, command, size, received, length);
+            return_val = specialfunction[command](command_in, command, message_id, size, received, length);
         }
     } else if(command < 8192) {
         if((command-4096) < filefunction_size) {
-            return_val = filefunction[command-4096](command_in, command, size, received, length);
+            return_val = filefunction[command-4096](command_in, command, message_id, size, received, length);
         }
     }
     ESP_LOGI(TAG, "%d", return_val);
@@ -85,11 +85,12 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t size, uint32_t re
 }
 
 int receiving = 0;
+uint32_t message_id = 0;
 
 void vTimeoutFunction( TimerHandle_t xTimer ) {
     ESP_LOGI(TAG, "Saw no message for 1s assuming task crashed. Resetting...");
     receiving = 0;
-    sendto(1);
+    sendto(1, message_id);
 }
 
 void fsoveruartTask(void *pvParameter) {
@@ -127,12 +128,13 @@ void fsoveruartTask(void *pvParameter) {
                     while(bytesread != event.size) {
                         if(!receiving) {
                             if((event.size-bytesread) < 8) break; //Break while loop if non complete header is inside
-                            uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, 8, portMAX_DELAY);
-                            bytesread += 8;
+                            uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, 12, portMAX_DELAY);
+                            bytesread += 12;
                             command = *((uint16_t *) &dtmp[0]);
                             size = *((uint32_t *) &dtmp[2]);
                             verif = *((uint16_t *) &dtmp[6]);
-                            ESP_LOGI(TAG, "new packet: %d %d %d %d", command, size, verif, event.size-8);
+                            message_id = *((uint32_t *) &dtmp[8]);
+                            ESP_LOGI(TAG, "new packet: %d %d %d %d", command, size, verif, event.size-12);
                             if(verif == 0xADDE) {
                                 receiving = 1;
                                 recv = 0;
@@ -151,7 +153,7 @@ void fsoveruartTask(void *pvParameter) {
                             recv = recv + bytestoread;
                             bytesread += bytestoread;
                             ESP_LOGI(TAG, "processing packet: %d %d %d %d %d", command, size, recv, verif, bytestoread);
-                            handleFSCommand(dtmp, command, size, recv, bytestoread);
+                            handleFSCommand(dtmp, command, message_id, size, recv, bytestoread);
                             if(recv == size) {
                                 receiving = 0;
                             }

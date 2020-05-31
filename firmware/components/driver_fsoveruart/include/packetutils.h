@@ -5,11 +5,11 @@
 
 #define RD_BUF_SIZE 512
 
-void createMessageHeader(uint8_t *header, uint16_t command, uint32_t size);
-void sendok(uint16_t command);
-void sender(uint16_t command);
-void sendte(uint16_t command);
-void sendto(uint16_t command);
+void createMessageHeader(uint8_t *header, uint16_t command, uint32_t size, uint32_t message_id);
+void sendok(uint16_t command, uint32_t message_id);
+void sender(uint16_t command, uint32_t message_id);
+void sendte(uint16_t command, uint32_t message_id);
+void sendto(uint16_t command, uint32_t message_id);
 void buildfile(char *source, char *target);
 
 #endif

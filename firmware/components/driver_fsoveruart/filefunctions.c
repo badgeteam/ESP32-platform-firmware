@@ -27,14 +27,14 @@ const char root[] = {"dflash\ndsdcard"};
  * 
  * 
  ***/
-int getdir(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int getdir(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
 
     if(size == 0 || size == 1 || size == 2) { //Requesting root
         strcat((char *) data, "\n");  //Append folder name and type
         strcat((char *) data, root); //Append root structure
         uint8_t header[8];
-        createMessageHeader(header, command, strlen((char *) data));
+        createMessageHeader(header, command, strlen((char *) data), message_id);
         uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 8);
         uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) data, strlen((char *) data));
         return 1;
@@ -56,16 +56,16 @@ int getdir(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, ui
     } else {
         strcpy((char *) data, "Directory_not_found");  //Cant find directory, request dir doesnt exists
     }
-    uint8_t header[8];
+    uint8_t header[12];
     //ESP_LOGI(TAG, "len: %d", strlen((char *) data));
-    createMessageHeader(header, command, strlen((char *) data));
-    uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 8);
+    createMessageHeader(header, command, strlen((char *) data), message_id);
+    uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) data, strlen((char *) data));
 
     return 1;
 }
 
-int readfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int readfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
 
     char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
@@ -79,9 +79,9 @@ int readfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, 
         uint32_t size_file = ftell(fptr_glb);
         //ESP_LOGI(TAG, "file size: %d", size_file);    
         //Create header with file size
-        uint8_t header[8];
-        createMessageHeader(header, command, size_file);
-        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 8);
+        uint8_t header[12];
+        createMessageHeader(header, command, size_file, message_id);
+        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
         
         fseek(fptr_glb, 0, SEEK_SET);
     //     ////ESP_LOGI(TAG, "%d", (int) fptr_glb);
@@ -95,15 +95,15 @@ int readfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, 
         fclose(fptr_glb);
     } else {
         strcpy((char *) data, "Can't open file");
-        uint8_t header[8];
-        createMessageHeader(header, command, strlen((char *) data));
-        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 8);
+        uint8_t header[12];
+        createMessageHeader(header, command, strlen((char *) data), message_id);
+        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
         uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) data, strlen((char *) data));
     }
     return 1;
 }
 
-int writefile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int writefile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     static FILE *fptr = NULL;
     static int failed_open = 0;
     
@@ -134,11 +134,11 @@ int writefile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received,
                 if(received == size) {    //Creating an empty file or short. Close the file and send reply
                     failed_open = 0;
                     if(fptr) {
-                        sendok(command);
+                        sendok(command, message_id);
                         fclose(fptr);
                         fptr = NULL;
                     } else {
-                        sender(command);
+                        sender(command, message_id);
                     }
                     //ESP_LOGI(TAG, "File close, sending reply");
                 }
@@ -153,14 +153,14 @@ int writefile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received,
             fclose(fptr);
             fptr = NULL;
             failed_open = 0;
-            sendok(command);
+            sendok(command, message_id);
         } else {
             vTaskDelay(1);
         }
         return 1;
     } else {
         if(received == size) {
-            sender(command);
+            sender(command, message_id);
             fptr = NULL;
             failed_open = 0;
         }
@@ -168,7 +168,7 @@ int writefile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received,
     }
 }
 
-int delfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int delfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
     
     char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
@@ -176,9 +176,9 @@ int delfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, u
     //ESP_LOGI(TAG, "Del: %s", dir_name);
     
     if(remove(dir_name) == 0) {
-        sendok(command);
+        sendok(command, message_id);
     } else {
-        sender(command);
+        sender(command, message_id);
     }
     return 1;
 }
@@ -199,8 +199,7 @@ int cpyfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, u
     }
 
     if(filename_index == 0) { //no filename found
-        sender(command);
-        return 1;
+        return 0;
     }
 
     if(isfolder) {
@@ -240,31 +239,31 @@ int cpyfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, u
 
 }
 
-int duplfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int duplfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
    
     if(cpyfile(data, command, size, received, length, 0)) {       
-        sendok(command);
+        sendok(command, message_id);
     } else {
-        sender(command);
+        sender(command, message_id);
     }
 
     return 1;
 }
 
-int mvfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int mvfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
    
     if(cpyfile(data, command, size, received, length, 1)) {       
-        sendok(command);
+        sendok(command, message_id);
     } else {
-        sender(command);
+        sender(command, message_id);
     }
 
     return 1;
 }
 
-int makedir(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int makedir(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
 
     char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
@@ -272,9 +271,9 @@ int makedir(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, u
     //ESP_LOGI(TAG, "mkdir: %s", dir_name);
 
     if(mkdir(dir_name, 0777) == 0) {
-        sendok(command);
+        sendok(command, message_id);
     } else {
-        sender(command);
+        sender(command, message_id);
     }
     return 1;
 

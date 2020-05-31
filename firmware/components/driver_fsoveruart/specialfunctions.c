@@ -7,7 +7,7 @@
 
 #define TAG "fsoveruart_sf"
 
-int execfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int execfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
 
     char* filename = (char *) (data+1);   //Take length of the folder and add the spiflash mountpoint
@@ -15,14 +15,14 @@ int execfile(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, 
         filename++;
     }
     ESP_LOGI(TAG, "Starting: %s", filename);
-    sendok(command);
+    sendok(command, message_id);
     driver_rtcmem_string_write(filename);
     esp_deep_sleep(1000000);
     return 1;
 }
 
-int heartbeat(uint8_t *data, uint16_t command, uint32_t size, uint32_t received, uint32_t length) {
+int heartbeat(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
-    sendok(command);
+    sendok(command, message_id);
     return 1;
 }
