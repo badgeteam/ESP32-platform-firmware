@@ -6,9 +6,10 @@ In the Campzone2020 badge this is done by a stm32 which translates the uart to a
 The uart CTS might be necessary for stable operation. Due to the slow write speed of the esp32 spi flash there is a high chance the uart buffer will overflow without CTS. 
 
 
-The driver itself uses packet based format. The packet header consists of 8 bytes.
+The driver itself uses packet based format. The packet header consists of 12 bytes.
 The first 2 bytes is to indicate command id. The next 4 bytes provide the length of the data field.
-The last 2 bytes are always 0xDEAD. After the packet header the data field is provided.
+The next 2 bytes are always 0xDEAD. After the packet header the data field is provided.
+The last 4 bytes is the message id send. The master can generate any message id. The esp32 will respond with the same message id.
 
 
 The command id can be grouped in 4 different categories:
