@@ -60,7 +60,7 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t message_id, uint3
     static uint32_t write_pos;
     if(received == length) { //First packet
         write_pos = 0;
-        ESP_LOGI(TAG, "clear");
+        //ESP_LOGI(TAG, "clear");
     }
     
     if(command && length > 0) {
@@ -78,7 +78,7 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t message_id, uint3
             return_val = filefunction[command-4096](command_in, command, message_id, size, received, length);
         }
     }
-    ESP_LOGI(TAG, "%d", return_val);
+    //ESP_LOGI(TAG, "%d", return_val);
     if(return_val) {    //Function has indicated that payload should write at start of buffer.
         write_pos = 0;
     }
@@ -124,7 +124,7 @@ void fsoveruartTask(void *pvParameter) {
                 other types of events. If we take too much time on data event, the queue might
                 be full.*/
                 case UART_DATA:
-                    ESP_LOGI(TAG, "siz: %d", event.size);
+                    //ESP_LOGI(TAG, "siz: %d", event.size);
                     while(bytesread != event.size) {
                         if(!receiving) {
                             if((event.size-bytesread) < 8) break; //Break while loop if non complete header is inside
@@ -146,9 +146,9 @@ void fsoveruartTask(void *pvParameter) {
                             }
                         } else {
                             xTimerStop(timeout, 1);
-                            ESP_LOGI(TAG, "%d %d %d", (event.size-bytesread), (size-recv), RD_BUF_SIZE);
+                            //ESP_LOGI(TAG, "%d %d %d", (event.size-bytesread), (size-recv), RD_BUF_SIZE);
                             bytestoread = min(min((event.size-bytesread), (size-recv)), RD_BUF_SIZE);
-                            ESP_LOGI(TAG, "Max read: %d", bytestoread);
+                            //ESP_LOGI(TAG, "Max read: %d", bytestoread);
                             bytestoread = uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, bytestoread, portMAX_DELAY);
                             recv = recv + bytestoread;
                             bytesread += bytestoread;

@@ -6,7 +6,7 @@
 #define TAG "fsoveruart_pu"
 
 void createMessageHeader(uint8_t *header, uint16_t command, uint32_t size, uint32_t messageid) {
-    ESP_LOGI(TAG, "Reply: %d %d %d", command, size, messageid);
+    //ESP_LOGI(TAG, "Reply: %d %d %d", command, size, messageid);
     uint16_t *com = (uint16_t *) header;
     *com = command;
     uint32_t *siz = (uint32_t *) &header[2];

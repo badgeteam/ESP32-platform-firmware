@@ -41,7 +41,7 @@ int getdir(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, 
     }
      //TODO: Fix when folder list exceeds buffer
     ESP_LOGI(TAG, "%s", data);
-    char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
+    char dir_name[size+20];   //Take length of the folder and add the spiflash mountpoint
     buildfile((char *) data, dir_name);
     //ESP_LOGI(TAG, "%s", dir_name);
     DIR *d;
@@ -68,7 +68,7 @@ int getdir(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, 
 int readfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
 
-    char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
+    char dir_name[size+10];   //Take length of the folder and add the spiflash mountpoint
     buildfile((char *) data, dir_name);
     //ESP_LOGI(TAG, "Reading: %s", dir_name);
 
@@ -181,8 +181,10 @@ int writefile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t siz
 int delfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
     
-    char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
+    char dir_name[size+10];   //Take length of the folder and add the spiflash mountpoint
     buildfile((char *) data, dir_name);
+    ESP_LOGI(TAG, "Source: %s", data);
+    ESP_LOGI(TAG, "Deleting: %s", dir_name);
     //ESP_LOGI(TAG, "Del: %s", dir_name);
     
     if(remove(dir_name) == 0) {
@@ -276,7 +278,7 @@ int mvfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, 
 int makedir(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     if(received != size) return 0;
 
-    char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
+    char dir_name[size+20];   //Take length of the folder and add the spiflash mountpoint
     buildfile((char *) data, dir_name);
     //ESP_LOGI(TAG, "mkdir: %s", dir_name);
 
