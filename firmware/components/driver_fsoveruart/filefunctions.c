@@ -106,7 +106,10 @@ int readfile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size
 int writefile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     static FILE *fptr = NULL;
     static int failed_open = 0;
-    
+    static char dir_name[256];
+    static char dir_name_tmp[256];
+
+
     if(received == length) {        //Opening new file, cleaning up statics just in case
         ESP_LOGI(TAG, "New file");
         if(fptr) fclose(fptr);
@@ -117,9 +120,13 @@ int writefile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t siz
     if(fptr == NULL && failed_open == 0) {
         for(int i = 0; i < received; i++) {
             if(data[i] == 0) {
-                char dir_name[length+20];   //Take length of the folder and add the spiflash mountpoint
+                if(received > 250) {
+                    failed_open = 1;
+                    return 1;
+                }
                 buildfile((char *) data, dir_name);
-                ESP_LOGI(TAG, "Writing: %s", dir_name);
+                snprintf(dir_name_tmp, 255, "%s.tmp", dir_name);
+                ESP_LOGI(TAG, "Writing: %s", dir_name_tmp);
 
                 fptr = fopen(dir_name, "w");
                 if(fptr) {
@@ -148,12 +155,15 @@ int writefile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t siz
         //ESP_LOGI(TAG, "No filename");
         return 0;   //Found no 0 terminator. File path not received.
     } else if(fptr) {
+        ESP_LOGI(TAG, "fptr: %d %d", (uint32_t) data, length);
         fwrite(data, 1, length, fptr);
         if(received == size) {  //Finished receiving
-            fclose(fptr);
-            fptr = NULL;
-            failed_open = 0;
             sendok(command, message_id);
+            fclose(fptr);
+            remove(dir_name);
+            rename(dir_name_tmp, dir_name);
+            fptr = NULL;
+            failed_open = 0;            
         } else {
             vTaskDelay(1);
         }
