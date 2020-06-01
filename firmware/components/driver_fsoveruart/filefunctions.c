@@ -128,7 +128,7 @@ int writefile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t siz
                 snprintf(dir_name_tmp, 255, "%s.tmp", dir_name);
                 ESP_LOGI(TAG, "Writing: %s", dir_name_tmp);
 
-                fptr = fopen(dir_name, "w");
+                fptr = fopen(dir_name_tmp, "w");
                 if(fptr) {
                     if(received > i) {
                         fwrite(&data[i+1], 1, received-i-1, fptr);
@@ -143,11 +143,12 @@ int writefile(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t siz
                     if(fptr) {
                         sendok(command, message_id);
                         fclose(fptr);
+                        remove(dir_name);
+                        rename(dir_name_tmp, dir_name);
                         fptr = NULL;
                     } else {
                         sender(command, message_id);
                     }
-                    //ESP_LOGI(TAG, "File close, sending reply");
                 }
                 return 1;
             }
