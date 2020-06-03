@@ -217,7 +217,7 @@ void fsoveruartTask(void *pvParameter) {
                 xTimerStop(timeout, 1);
             }
             uart_get_buffered_data_len(CONFIG_DRIVER_FSOVERUART_UART_NUM, &data_buf);
-            ESP_LOGD(TAG, "buf: %d", data_buf);
+            ESP_LOGI(TAG, "buf: %d", data_buf);
             if(data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/4) {
                 gpio_pad_select_gpio(CONFIG_DRIVER_FSOVERUART_UART_CTS);
                 gpio_set_direction(CONFIG_DRIVER_FSOVERUART_UART_CTS, GPIO_MODE_OUTPUT);
@@ -305,7 +305,7 @@ esp_err_t driver_fsoveruart_init(void) {
    
     uart_param_config(CONFIG_DRIVER_FSOVERUART_UART_NUM, &uart_config);   //Configure the uart hardware
     uart_set_pin(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_UART_TX, CONFIG_DRIVER_FSOVERUART_UART_RX, CONFIG_DRIVER_FSOVERUART_UART_CTS, -1); //Change pins
-    uart_driver_install(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE, CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE, 20, &uart_queue, 0); //Install driver
+    uart_driver_install(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE, CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE, 40, &uart_queue, 0); //Install driver
 
     uart_intr_config_t uart_intr = {
         .intr_enable_mask = UART_RXFIFO_FULL_INT_ENA_M
@@ -330,7 +330,7 @@ esp_err_t driver_fsoveruart_init(void) {
 
     ESP_LOGI(TAG, "fs over uart registered.");
     xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 16000, NULL, 100, NULL, 1);
-    timeout = xTimerCreate("FSoverUART_timeout", 10000, false, 0, vTimeoutFunction);
+    timeout = xTimerCreate("FSoverUART_timeout", 100, false, 0, vTimeoutFunction);
     return ESP_OK;
 } 
 
