@@ -45,6 +45,9 @@ uart_config_t uart_config = {
 
 QueueHandle_t uart_queue;
 TimerHandle_t timeout;
+RingbufHandle_t buf_handle;
+
+
 uint8_t command_in[1024];
 
 
@@ -56,13 +59,23 @@ int specialfunction_size = 2;
 int (*filefunction[])(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) = {getdir, readfile, writefile, delfile, duplfile, mvfile, makedir};
 int filefunction_size = 7;
 
+
+
+#define UART_EMPTY_THRESH_DEFAULT  (10)
+#define UART_FULL_THRESH_DEFAULT  (120)
+#define UART_TOUT_THRESH_DEFAULT   (10)
+#define UART_CLKDIV_FRAG_BIT_WIDTH  (3)
+#define UART_TOUT_REF_FACTOR_DEFAULT (UART_CLK_FREQ/(REF_CLK_FREQ<<UART_CLKDIV_FRAG_BIT_WIDTH))
+#define UART_TX_IDLE_NUM_DEFAULT   (0)
+#define UART_PATTERN_DET_QLEN_DEFAULT (10)
+#define UART_MIN_WAKEUP_THRESH      (2)
+
 void handleFSCommand(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
     static uint32_t write_pos;
     if(received == length) { //First packet
         write_pos = 0;
         //ESP_LOGI(TAG, "clear");
     }
-    
     if(command && length > 0) {
         memcpy(&command_in[write_pos], data, length);
         write_pos += length;
@@ -134,7 +147,7 @@ void fsoveruartTask(void *pvParameter) {
                             size = *((uint32_t *) &dtmp[2]);
                             verif = *((uint16_t *) &dtmp[6]);
                             message_id = *((uint32_t *) &dtmp[8]);
-                            ESP_LOGI(TAG, "new packet: %d %d %d %d", command, size, verif, event.size-12);
+                            //ESP_LOGI(TAG, "new packet: %d %d %d %d", command, size, verif, event.size-12);
                             if(verif == 0xADDE) {
                                 receiving = 1;
                                 recv = 0;
@@ -152,7 +165,7 @@ void fsoveruartTask(void *pvParameter) {
                             bytestoread = uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, bytestoread, portMAX_DELAY);
                             recv = recv + bytestoread;
                             bytesread += bytestoread;
-                            ESP_LOGI(TAG, "processing packet: %d %d %d %d %d", command, size, recv, verif, bytestoread);
+                            //ESP_LOGI(TAG, "processing packet: %d %d %d %d %d", command, size, recv, verif, bytestoread);
                             handleFSCommand(dtmp, command, message_id, size, recv, bytestoread);
                             if(recv == size) {
                                 receiving = 0;
@@ -212,21 +225,71 @@ void fsoveruartTask(void *pvParameter) {
             } else {
                 uart_set_pin(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_UART_TX, CONFIG_DRIVER_FSOVERUART_UART_RX, CONFIG_DRIVER_FSOVERUART_UART_CTS, -1); //Change pins
             }
+       }
+       uint32_t bytes_read;
+       FILE *read_loopback;
+       read_loopback = fopen("/dev/loopback","r");
+       do {
+        uint8_t strbuf[128];
+        bytes_read = fread(strbuf, 1, 128, read_loopback);
+        if(bytes_read > 0) {
+            ESP_LOGI(TAG, "Sending data");
+            uint8_t header[12];
+            createMessageHeader(header, 3, bytes_read, 0);
+            uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
+            uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) strbuf, bytes_read);
         }
+       } while (bytes_read > 0);
     }
     free(dtmp);
     dtmp = NULL;
     vTaskDelete(NULL);
 }
 
-#define UART_EMPTY_THRESH_DEFAULT  (10)
-#define UART_FULL_THRESH_DEFAULT  (120)
-#define UART_TOUT_THRESH_DEFAULT   (10)
-#define UART_CLKDIV_FRAG_BIT_WIDTH  (3)
-#define UART_TOUT_REF_FACTOR_DEFAULT (UART_CLK_FREQ/(REF_CLK_FREQ<<UART_CLKDIV_FRAG_BIT_WIDTH))
-#define UART_TX_IDLE_NUM_DEFAULT   (0)
-#define UART_PATTERN_DET_QLEN_DEFAULT (10)
-#define UART_MIN_WAKEUP_THRESH      (2)
+static ssize_t bypass_write(int fd, const void * data, size_t size)
+{  
+    
+    return xRingbufferSend(buf_handle, data, size, pdMS_TO_TICKS(1))*size;
+}
+
+static int bypass_open(const char * path, int flags, int mode) {
+    return 0;
+}
+
+static int bypass_fstat(int fd, struct stat * st) {
+    return 0;
+}
+
+static int bypass_close(int fd) {
+    return 0;
+}
+
+static ssize_t bypass_read(int fd, void* data, size_t size) {
+        //Receive data from byte buffer
+    size_t item_size;
+    char *item = (char *)xRingbufferReceiveUpTo(buf_handle, &item_size, pdMS_TO_TICKS(1), size);
+
+    //Check received data
+    if (item != NULL) {
+        //Print item
+        memcpy(data, item, item_size);
+        //Return Item
+        vRingbufferReturnItem(buf_handle, (void *)item);
+        return item_size;
+    } else {
+        //Failed to receive item
+        return 0;
+    }
+}
+
+esp_vfs_t myfs = {
+.flags = ESP_VFS_FLAG_DEFAULT,
+.write = &bypass_write,
+.open = &bypass_open,
+.fstat = &bypass_fstat,
+.close = &bypass_close,
+.read = &bypass_read,
+};
 
 esp_err_t driver_fsoveruart_init(void) { 
    
@@ -246,6 +309,13 @@ esp_err_t driver_fsoveruart_init(void) {
         .txfifo_empty_intr_thresh = UART_EMPTY_THRESH_DEFAULT
     };
     uart_intr_config(CONFIG_DRIVER_FSOVERUART_UART_NUM, &uart_intr);
+
+
+    buf_handle = xRingbufferCreate(2048, RINGBUF_TYPE_BYTEBUF);
+
+    ESP_ERROR_CHECK(esp_vfs_register("/dev/loopback", &myfs, NULL));
+    
+
 
     ESP_LOGI(TAG, "fs over uart registered.");
     xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 16000, NULL, 100, NULL, 1);
