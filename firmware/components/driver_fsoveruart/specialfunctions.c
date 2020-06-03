@@ -26,3 +26,14 @@ int heartbeat(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t siz
     sendok(command, message_id);
     return 1;
 }
+
+int pythonstdin(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) {
+    FILE *fd;
+    fd = fopen("/dev/fsou/2", "w");
+    fwrite(data, 1, length, fd);
+    fclose(fd);
+    
+    if(received != size) return 1;
+    sendok(command, message_id);
+    return 1;
+}

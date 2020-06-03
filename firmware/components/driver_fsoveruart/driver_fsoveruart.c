@@ -45,7 +45,7 @@ uart_config_t uart_config = {
 
 QueueHandle_t uart_queue;
 TimerHandle_t timeout;
-RingbufHandle_t buf_handle;
+RingbufHandle_t buf_handle[2];
 
 
 uint8_t command_in[1024];
@@ -53,8 +53,8 @@ uint8_t command_in[1024];
 
 //Function lookup tables
 
-int (*specialfunction[])(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) = {execfile, heartbeat};
-int specialfunction_size = 2;
+int (*specialfunction[])(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) = {execfile, heartbeat, pythonstdin};
+int specialfunction_size = 3;
                          //                                                                                  4096    4097      4098       4099     4100      4101    4102
 int (*filefunction[])(uint8_t *data, uint16_t command, uint32_t message_id, uint32_t size, uint32_t received, uint32_t length) = {getdir, readfile, writefile, delfile, duplfile, mvfile, makedir};
 int filefunction_size = 7;
@@ -228,18 +228,20 @@ void fsoveruartTask(void *pvParameter) {
        }
        uint32_t bytes_read;
        FILE *read_loopback;
-       read_loopback = fopen("/dev/loopback","r");
-       do {
-        uint8_t strbuf[128];
-        bytes_read = fread(strbuf, 1, 128, read_loopback);
-        if(bytes_read > 0) {
-            ESP_LOGI(TAG, "Sending data");
-            uint8_t header[12];
-            createMessageHeader(header, 3, bytes_read, 0);
-            uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
-            uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) strbuf, bytes_read);
-        }
-       } while (bytes_read > 0);
+       read_loopback = fopen("/dev/fsou/1","r");
+       if(read_loopback) {
+        do {
+            uint8_t strbuf[128];
+            bytes_read = fread(strbuf, 1, 128, read_loopback);
+            if(bytes_read > 0) {
+                ESP_LOGI(TAG, "Sending data");
+                uint8_t header[12];
+                createMessageHeader(header, 3, bytes_read, 0);
+                uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
+                uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) strbuf, bytes_read);
+            }
+        } while (bytes_read > 0);
+       }
     }
     free(dtmp);
     dtmp = NULL;
@@ -248,12 +250,17 @@ void fsoveruartTask(void *pvParameter) {
 
 static ssize_t bypass_write(int fd, const void * data, size_t size)
 {  
-    
-    return xRingbufferSend(buf_handle, data, size, pdMS_TO_TICKS(1))*size;
+    if(fd > 1) return 0;
+    return xRingbufferSend(buf_handle[fd], data, size, pdMS_TO_TICKS(1))*size;
 }
 
 static int bypass_open(const char * path, int flags, int mode) {
-    return 0;
+    if(strcmp("/1", path) == 0) {
+        return 0;
+    } else if(strcmp("/2", path) == 0) {
+        return 1;
+    }
+    return 2;
 }
 
 static int bypass_fstat(int fd, struct stat * st) {
@@ -266,15 +273,17 @@ static int bypass_close(int fd) {
 
 static ssize_t bypass_read(int fd, void* data, size_t size) {
         //Receive data from byte buffer
+    if(fd > 1) return 0;
     size_t item_size;
-    char *item = (char *)xRingbufferReceiveUpTo(buf_handle, &item_size, pdMS_TO_TICKS(1), size);
-
+    if(fd == 1) size = 1;   //Bit of an hack. Read seem to always be of length 128, this forces stdin of mp to only read 1ch
+    char *item = (char *)xRingbufferReceiveUpTo(buf_handle[fd], &item_size, pdMS_TO_TICKS(1), size);
+    
     //Check received data
     if (item != NULL) {
         //Print item
         memcpy(data, item, item_size);
         //Return Item
-        vRingbufferReturnItem(buf_handle, (void *)item);
+        vRingbufferReturnItem(buf_handle[fd], (void *)item);
         return item_size;
     } else {
         //Failed to receive item
@@ -311,9 +320,10 @@ esp_err_t driver_fsoveruart_init(void) {
     uart_intr_config(CONFIG_DRIVER_FSOVERUART_UART_NUM, &uart_intr);
 
 
-    buf_handle = xRingbufferCreate(2048, RINGBUF_TYPE_BYTEBUF);
+    buf_handle[0] = xRingbufferCreate(2048, RINGBUF_TYPE_BYTEBUF);
+    buf_handle[1] = xRingbufferCreate(2048, RINGBUF_TYPE_BYTEBUF);
 
-    ESP_ERROR_CHECK(esp_vfs_register("/dev/loopback", &myfs, NULL));
+    ESP_ERROR_CHECK(esp_vfs_register("/dev/fsou", &myfs, NULL));
     
 
 
