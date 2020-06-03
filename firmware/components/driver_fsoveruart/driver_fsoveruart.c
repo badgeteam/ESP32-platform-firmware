@@ -147,7 +147,7 @@ void fsoveruartTask(void *pvParameter) {
                             size = *((uint32_t *) &dtmp[2]);
                             verif = *((uint16_t *) &dtmp[6]);
                             message_id = *((uint32_t *) &dtmp[8]);
-                            //ESP_LOGI(TAG, "new packet: %d %d %d %d", command, size, verif, event.size-12);
+                            ESP_LOGI(TAG, "new packet: %d %d %d %d", command, size, verif, event.size-12);
                             if(verif == 0xADDE) {
                                 receiving = 1;
                                 recv = 0;
@@ -165,7 +165,7 @@ void fsoveruartTask(void *pvParameter) {
                             bytestoread = uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, bytestoread, portMAX_DELAY);
                             recv = recv + bytestoread;
                             bytesread += bytestoread;
-                            //ESP_LOGI(TAG, "processing packet: %d %d %d %d %d", command, size, recv, verif, bytestoread);
+                            ESP_LOGI(TAG, "processing packet: %d %d %d %d %d", command, size, recv, verif, bytestoread);
                             handleFSCommand(dtmp, command, message_id, size, recv, bytestoread);
                             if(recv == size) {
                                 receiving = 0;
@@ -241,6 +241,7 @@ void fsoveruartTask(void *pvParameter) {
                 uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) strbuf, bytes_read);
             }
         } while (bytes_read > 0);
+        fclose(read_loopback);
        }
     }
     free(dtmp);
@@ -329,7 +330,7 @@ esp_err_t driver_fsoveruart_init(void) {
 
     ESP_LOGI(TAG, "fs over uart registered.");
     xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 16000, NULL, 100, NULL, 1);
-    timeout = xTimerCreate("FSoverUART_timeout", 100, false, 0, vTimeoutFunction);
+    timeout = xTimerCreate("FSoverUART_timeout", 10000, false, 0, vTimeoutFunction);
     return ESP_OK;
 } 
 
