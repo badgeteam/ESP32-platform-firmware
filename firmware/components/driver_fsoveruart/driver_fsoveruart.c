@@ -106,6 +106,19 @@ void vTimeoutFunction( TimerHandle_t xTimer ) {
     sendto(1, message_id);
 }
 
+void fixcts(bool high) {
+    uint32_t data_buf = 0;
+    uart_get_buffered_data_len(CONFIG_DRIVER_FSOVERUART_UART_NUM, &data_buf);
+    ESP_LOGD(TAG, "buf: %d", data_buf);
+    if(high || data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/4) {
+        gpio_pad_select_gpio(CONFIG_DRIVER_FSOVERUART_UART_CTS);
+        gpio_set_direction(CONFIG_DRIVER_FSOVERUART_UART_CTS, GPIO_MODE_OUTPUT);
+        gpio_set_level(CONFIG_DRIVER_FSOVERUART_UART_CTS, 1);
+    } else {
+        uart_set_pin(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_UART_TX, CONFIG_DRIVER_FSOVERUART_UART_RX, CONFIG_DRIVER_FSOVERUART_UART_CTS, -1); //Change pins
+    }
+}
+
 void fsoveruartTask(void *pvParameter) {
     uart_event_t event;
     uint8_t* dtmp = (uint8_t*) malloc(RD_BUF_SIZE);
@@ -119,16 +132,7 @@ void fsoveruartTask(void *pvParameter) {
         //Waiting for UART event.
         if(xQueueReceive(uart_queue, (void * )&event, (portTickType)portMAX_DELAY)) {
             bzero(dtmp, RD_BUF_SIZE);
-            uint32_t data_buf = 0;
-            uart_get_buffered_data_len(CONFIG_DRIVER_FSOVERUART_UART_NUM, &data_buf);
-            ESP_LOGD(TAG, "buf: %d", data_buf);
-            if(data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/4) {
-                gpio_pad_select_gpio(CONFIG_DRIVER_FSOVERUART_UART_CTS);
-                gpio_set_direction(CONFIG_DRIVER_FSOVERUART_UART_CTS, GPIO_MODE_OUTPUT);
-                gpio_set_level(CONFIG_DRIVER_FSOVERUART_UART_CTS, 1);
-            } else {
-                uart_set_pin(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_UART_TX, CONFIG_DRIVER_FSOVERUART_UART_RX, CONFIG_DRIVER_FSOVERUART_UART_CTS, -1); //Change pins
-            }
+            fixcts(false);
             uint32_t bytesread = 0;
             uint32_t bytestoread;
             switch(event.type) {
@@ -166,7 +170,9 @@ void fsoveruartTask(void *pvParameter) {
                             recv = recv + bytestoread;
                             bytesread += bytestoread;
                             ESP_LOGI(TAG, "processing packet: %d %d %d %d %d", command, size, recv, verif, bytestoread);
+                            fixcts(true);
                             handleFSCommand(dtmp, command, message_id, size, recv, bytestoread);
+                            fixcts(false);
                             if(recv == size) {
                                 receiving = 0;
                             }
@@ -175,7 +181,7 @@ void fsoveruartTask(void *pvParameter) {
                     break;
                 //Event of HW FIFO overflow detected
                 case UART_FIFO_OVF:
-                    ESP_LOGI(TAG, "hw fifo overflow");
+                    ESP_LOGW(TAG, "hw fifo overflow");
                     // If fifo overflow happened, you should consider adding flow control for your application.
                     // The ISR has already reset the rx FIFO,
                     // As an example, we directly flush the rx buffer here in order to read more data.
@@ -184,7 +190,7 @@ void fsoveruartTask(void *pvParameter) {
                     break;
                 //Event of UART ring buffer full
                 case UART_BUFFER_FULL:
-                    ESP_LOGI(TAG, "ring buffer full");
+                    ESP_LOGW(TAG, "ring buffer full");
                     // If buffer full happened, you should consider encreasing your buffer size
                     // As an example, we directly flush the rx buffer here in order to read more data.
                     uart_flush_input(CONFIG_DRIVER_FSOVERUART_UART_NUM);
@@ -216,15 +222,7 @@ void fsoveruartTask(void *pvParameter) {
             } else {
                 xTimerStop(timeout, 1);
             }
-            uart_get_buffered_data_len(CONFIG_DRIVER_FSOVERUART_UART_NUM, &data_buf);
-            ESP_LOGI(TAG, "buf: %d", data_buf);
-            if(data_buf > CONFIG_DRIVER_FSOVERUART_BUFFER_SIZE/4) {
-                gpio_pad_select_gpio(CONFIG_DRIVER_FSOVERUART_UART_CTS);
-                gpio_set_direction(CONFIG_DRIVER_FSOVERUART_UART_CTS, GPIO_MODE_OUTPUT);
-                gpio_set_level(CONFIG_DRIVER_FSOVERUART_UART_CTS, 1);
-            } else {
-                uart_set_pin(CONFIG_DRIVER_FSOVERUART_UART_NUM, CONFIG_DRIVER_FSOVERUART_UART_TX, CONFIG_DRIVER_FSOVERUART_UART_RX, CONFIG_DRIVER_FSOVERUART_UART_CTS, -1); //Change pins
-            }
+            fixcts(false);
        }
        uint32_t bytes_read;
        FILE *read_loopback;
