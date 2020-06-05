@@ -3,7 +3,12 @@ import system, virtualtimers, display, keypad, easyaudio, valuestore
 LONG_PRESS_MS = const(1000)
 
 # Application list
-apps = valuestore.load('system', 'launcher_items') or {}
+apps = {}
+def update():
+    global apps
+    apps = valuestore.load('system', 'launcher_items') or {}
+    drawApps()
+    return 2000
 
 presses = {}
 page = 0
@@ -70,4 +75,5 @@ def on_key(key_index, pressed):
 
 virtualtimers.activate(100)
 keypad.add_handler(on_key)
-drawApps()
+update()
+virtualtimers.new(2000, update)  # Refresh app list every two seconds
