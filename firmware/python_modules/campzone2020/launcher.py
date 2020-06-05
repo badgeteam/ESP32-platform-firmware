@@ -1,44 +1,29 @@
-import system, virtualtimers, display, keypad, easyaudio
+import system, virtualtimers, display, keypad, easyaudio, valuestore
 
 LONG_PRESS_MS = const(1000)
 
 # Application list
-apps = [
-    {'slug': 'memeboard', 'title': 'Memeboard', 'colour': 0xFE3010, 'category': 'system'},
-    {'slug': 'sequencer', 'title': 'Sequencer', 'colour': 0xE35722, 'category': 'system'},
-    {'slug': 'synthesizer', 'title': 'Synthesizer', 'colour': 0xFCCF0D, 'category': 'system'},
-    {'slug': 'whackamole', 'title': 'Whack-A-Mole', 'colour': 0x2721EC, 'category': 'system'},
-    {'slug': 'simonsays', 'title': 'Simon Says', 'colour': 0x441C7A, 'category': 'system'},
-    {'slug': 'hidtest', 'title': 'HIDTest', 'colour': 0x29BF12, 'category': 'system'},
-    {'slug': 'miditest', 'title': 'MIDITest', 'colour': 0x17BEBB, 'category': 'system'},
-    {'slug': 'ttstest', 'title': 'TTS Test', 'colour': 0x6F1152, 'category': 'system'},
-    {'slug': 'ttstest', 'title': 'Simon Says', 'colour': 0xFF619B, 'category': 'system'},
-    {'slug': 'ttstest', 'title': 'Simon Says', 'colour': 0xFFF1D0, 'category': 'system'},
-]
+apps = valuestore.load('system', 'launcher_items') or {}
 
 presses = {}
 page = 0
 
-def get_app_range():
-    begin = 16 * page
-    end = begin + 16
-    return begin, end
-
 def get_app(key_index):
-    app_index = key_index + (16 * page)
-    if app_index >= 0 and app_index < len(apps):
+    app_index = str(key_index + (16 * page))
+    if app_index in apps:
         return apps[app_index]
     else:
         return None
 
 def drawApps():
-    begin, end = get_app_range()
-    cur_page = apps[begin:end]
     display.drawFill(0x00)
-    for index, app in enumerate(cur_page):
-        x = index % 4
-        y = int(index / 4)
-        display.drawPixel(x, y, app['colour'])
+    for index in range(0, 16):
+        app = get_app(index)
+        if app:
+            x = index % 4
+            y = int(index / 4)
+            colour = int(app['colour'].replace("#","0x"),16)
+            display.drawPixel(x, y, colour)
     display.flush()
 
 def start_app(key_index):
