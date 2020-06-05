@@ -20,6 +20,41 @@ def listdir(dir='.'):
 
 
 def stat(filepath='.'):
+    """
+    stat.ST_MODE
+    Inode protection mode.
+
+    stat.ST_INO
+    Inode number.
+
+    stat.ST_DEV
+    Device inode resides on.
+
+    stat.ST_NLINK
+    Number of links to the inode.
+
+    stat.ST_UID
+    User id of the owner.
+
+    stat.ST_GID
+    Group id of the owner.
+
+    stat.ST_SIZE
+    Size in bytes of a plain file; amount of data waiting on some special files.
+
+    stat.ST_ATIME
+    Time of last access.
+
+    stat.ST_MTIME
+    Time of last modification.
+
+    stat.ST_CTIME
+    The “ctime” as reported by the operating system. On some systems (like Unix) is the time of the last metadata
+    change, and, on others (like Windows), is the creation time (see platform documentation for details).
+
+    :param filepath:
+    :return: Tuple with above values
+    """
     filepath = _absolute_path(filepath)
     return _os.stat(filepath)
 

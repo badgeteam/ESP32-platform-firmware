@@ -1,14 +1,19 @@
-import system, virtualtimers, display, keypad, easyaudio, valuestore
+import system, virtualtimers, display, keypad, easyaudio, valuestore, touchbuttons
 
 LONG_PRESS_MS = const(1000)
 
 # Application list
 apps = {}
+app_list_last_modified = 0
 def update():
     global apps
-    apps = valuestore.load('system', 'launcher_items') or {}
-    drawApps()
-    return 2000
+    global app_list_last_modified
+    new_modified = valuestore.last_modified('system', 'launcher_items')
+    if new_modified != app_list_last_modified:
+        app_list_last_modified = new_modified
+        apps = valuestore.load('system', 'launcher_items') or {}
+        drawApps()
+    return 500
 
 presses = {}
 page = 0
@@ -73,7 +78,21 @@ def on_key(key_index, pressed):
             del presses[key_index]
         print('release %d' %key_index)
 
+def on_touch(state):
+    global page
+    left = 128
+    right = 256
+    if state & left:
+        page = 0 if page <= 0 else (page-1)
+        drawApps()
+    elif state & right:
+        page += 1
+        drawApps()
+    print('page: %d' % page)
+
+touchbuttons.set_handler(on_touch)
+
 virtualtimers.activate(100)
 keypad.add_handler(on_key)
 update()
-virtualtimers.new(2000, update)  # Refresh app list every two seconds
+virtualtimers.new(500, update)  # Refresh app list twice per second
