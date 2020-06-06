@@ -334,7 +334,7 @@ esp_err_t driver_fsoveruart_init(void) {
 
 
     ESP_LOGI(TAG, "fs over uart registered.");
-    xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 16000, NULL, 100, NULL, 1);
+    xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 16000, NULL, 100, NULL, 0);
     timeout = xTimerCreate("FSoverUART_timeout", 100, false, 0, vTimeoutFunction);
     return ESP_OK;
 } 
