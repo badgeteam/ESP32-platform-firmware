@@ -19,33 +19,33 @@ void createMessageHeader(uint8_t *header, uint16_t command, uint32_t size, uint3
 
 //Error executing function
 void sender(uint16_t command, uint32_t message_id) {
-     uint8_t header[15];
+     uint8_t header[PACKET_HEADER_SIZE+3];
     createMessageHeader(header, command, 3, message_id);
-    strcpy((char *) &header[12], "er");
+    strcpy((char *) &header[PACKET_HEADER_SIZE], "er");
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 15);
 }
 
 //Okay
 void sendok(uint16_t command, uint32_t message_id) {
-     uint8_t header[15];
+     uint8_t header[PACKET_HEADER_SIZE+3];
     createMessageHeader(header, command, 3, message_id);
-    strcpy((char *) &header[12], "ok");
+    strcpy((char *) &header[PACKET_HEADER_SIZE], "ok");
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 15);
 }
 
 //Transmission error
 void sendte(uint16_t command, uint32_t message_id) {
-     uint8_t header[15];
+     uint8_t header[PACKET_HEADER_SIZE+3];
     createMessageHeader(header, command, 3, message_id);
-    strcpy((char *) &header[12], "te");
+    strcpy((char *) &header[PACKET_HEADER_SIZE], "te");
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 15);
 }
 
 //Timeout error
 void sendto(uint16_t command, uint32_t message_id) {
-     uint8_t header[15];
+     uint8_t header[PACKET_HEADER_SIZE+3];
     createMessageHeader(header, command, 3, message_id);
-    strcpy((char *) &header[12], "to");
+    strcpy((char *) &header[PACKET_HEADER_SIZE], "to");
     uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 15);
 }
 

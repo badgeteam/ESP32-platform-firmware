@@ -142,16 +142,16 @@ void fsoveruartTask(void *pvParameter) {
                 be full.*/
                 case UART_DATA:
                     //ESP_LOGI(TAG, "siz: %d", event.size);
-                    while(bytesread != event.size) {
+                    while(bytesread < event.size) {
                         if(!receiving) {
-                            if((event.size-bytesread) < 8) break; //Break while loop if non complete header is inside
-                            uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, 12, portMAX_DELAY);
-                            bytesread += 12;
+                            if((event.size-bytesread) < PACKET_HEADER_SIZE) break; //Break while loop if non complete header is inside
+                            uart_read_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, dtmp, PACKET_HEADER_SIZE, portMAX_DELAY);
+                            bytesread += PACKET_HEADER_SIZE;
                             command = *((uint16_t *) &dtmp[0]);
                             size = *((uint32_t *) &dtmp[2]);
                             verif = *((uint16_t *) &dtmp[6]);
                             message_id = *((uint32_t *) &dtmp[8]);
-                            ESP_LOGI(TAG, "new packet: %d %d %d %d", command, size, verif, event.size-12);
+                            ESP_LOGI(TAG, "new packet: %d %d %d %d %d", command, size, verif, event.size-PACKET_HEADER_SIZE, message_id);
                             if(verif == 0xADDE) {
                                 receiving = 1;
                                 recv = 0;
@@ -223,24 +223,24 @@ void fsoveruartTask(void *pvParameter) {
                 xTimerStop(timeout, 1);
             }
             fixcts(false);
-       }
-       uint32_t bytes_read;
-       FILE *read_loopback;
-       read_loopback = fopen("/dev/fsou/1","r");
-       if(read_loopback) {
-        do {
-            uint8_t strbuf[128];
-            bytes_read = fread(strbuf, 1, 128, read_loopback);
-            if(bytes_read > 0) {
-                ESP_LOGI(TAG, "Sending data");
-                uint8_t header[12];
-                createMessageHeader(header, 3, bytes_read, 0);
-                uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
-                uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) strbuf, bytes_read);
+       
+            uint32_t bytes_read = 0;
+            FILE *read_loopback;
+            read_loopback = fopen("/dev/fsou/1","r");
+            if(read_loopback) {
+                do {
+                    uint8_t strbuf[128];
+                    bytes_read = fread(strbuf, 1, 128, read_loopback);
+                    if(bytes_read > 0) {
+                        uint8_t header[12];
+                        createMessageHeader(header, 3, bytes_read, 0);
+                        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
+                        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) strbuf, bytes_read);
+                    } 
+                } while (bytes_read > 0);
+                fclose(read_loopback);
             }
-        } while (bytes_read > 0);
-        fclose(read_loopback);
-       }
+        }
     }
     free(dtmp);
     dtmp = NULL;
@@ -249,7 +249,11 @@ void fsoveruartTask(void *pvParameter) {
 
 static ssize_t bypass_write(int fd, const void * data, size_t size)
 {  
-    if(fd > 1) return 0;
+    if(fd > 1) {
+        ESP_LOGW(TAG, "Wrong fd %d", fd);
+        return 0;
+    }
+    ESP_LOGI(TAG, "byte in buffer %d", fd);
     return xRingbufferSend(buf_handle[fd], data, size, pdMS_TO_TICKS(1))*size;
 }
 
@@ -259,6 +263,7 @@ static int bypass_open(const char * path, int flags, int mode) {
     } else if(strcmp("/2", path) == 0) {
         return 1;
     }
+    ESP_LOGW(TAG, "wrond mountpoint %s", path);
     return 2;
 }
 
@@ -272,7 +277,10 @@ static int bypass_close(int fd) {
 
 static ssize_t bypass_read(int fd, void* data, size_t size) {
         //Receive data from byte buffer
-    if(fd > 1) return 0;
+    if(fd > 1) {
+        ESP_LOGW(TAG, "Wrong fd %d", fd);
+        return 0;
+    }
     size_t item_size;
     if(fd == 1) size = 1;   //Bit of an hack. Read seem to always be of length 128, this forces stdin of mp to only read 1ch
     char *item = (char *)xRingbufferReceiveUpTo(buf_handle[fd], &item_size, pdMS_TO_TICKS(1), size);
@@ -280,6 +288,7 @@ static ssize_t bypass_read(int fd, void* data, size_t size) {
     //Check received data
     if (item != NULL) {
         //Print item
+        ESP_LOGI(TAG, "byte from buffer %d", fd);
         memcpy(data, item, item_size);
         //Return Item
         vRingbufferReturnItem(buf_handle[fd], (void *)item);
