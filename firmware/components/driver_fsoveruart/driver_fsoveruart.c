@@ -253,7 +253,6 @@ static ssize_t bypass_write(int fd, const void * data, size_t size)
         ESP_LOGW(TAG, "Wrong fd %d", fd);
         return 0;
     }
-    ESP_LOGI(TAG, "byte in buffer %d", fd);
     return xRingbufferSend(buf_handle[fd], data, size, pdMS_TO_TICKS(1))*size;
 }
 
@@ -288,7 +287,6 @@ static ssize_t bypass_read(int fd, void* data, size_t size) {
     //Check received data
     if (item != NULL) {
         //Print item
-        ESP_LOGI(TAG, "byte from buffer %d", fd);
         memcpy(data, item, item_size);
         //Return Item
         vRingbufferReturnItem(buf_handle[fd], (void *)item);
