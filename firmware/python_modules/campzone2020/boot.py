@@ -19,20 +19,12 @@ if not app:
 		app = 'dashboard.home'
 
 # Override with special boot mode apps if necessary
-if machine.wake_reason() == (7, 0):
-	# ESP boots twice with (7, 0) after power-on
-	if machine.nvs_getstr('system', '2ndboot') == 'yes':
-		# Boot splash screen
-		app = "bootsplash"
-		machine.nvs_setstr('system', '2ndboot', 'no')
-	else:
-		machine.nvs_setstr('system', '2ndboot', 'yes')
-# elif machine.wake_reason() == (7, 0):
-# 	# Recovery mode
-# 	app = "dashboard.recovery"
-elif not machine.nvs_getint("system", 'factory_checked') == 2:
+if machine.nvs_getint('system', 'factory_checked') != 2:
 	# Factory check mode
 	app = "factory_checks"
+elif machine.nvs_getint('system', 'splash_played') != 1:
+	# Boot splash screen
+	app = "bootsplash"
 
 try:
 	import os

@@ -1,7 +1,11 @@
-try:
-    import display, easyaudio, keypad, time, system
+import machine
 
-    easyaudio.play('/sd/ps_1.mp3')
+machine.nvs_setint('system', 'splash_played', 1)
+
+try:
+    import display, audio, keypad, time, system
+
+    audio.play('/cache/boot/splash.mp3')
     sleeptime = 0.25
 
     for _ in range(2):
@@ -41,13 +45,27 @@ try:
         display.flush()
         time.sleep(sleeptime)
 
+    for i in range(4):
+        display.drawFill(0x00)
+        display.drawPixel(i, 0, 0x707070)
+        display.drawPixel(3-i, 3, 0x707070)
+        display.flush()
+        time.sleep(sleeptime)
+
+    for i in range(1, 4):
+        display.drawFill(0x00)
+        display.drawPixel(3, i, 0x707070)
+        display.drawPixel(0, 3-i, 0x707070)
+        display.flush()
+        time.sleep(sleeptime)
+
     for i in range(150):
         display.drawFill(0x00)
         for x in range(1,3):
             for y in range(1,3):
                 display.drawPixel(x, y, (i << 16) + (i << 8) + i)
         display.flush()
-        time.sleep(0.01)
+        time.sleep(0.04)
 except:
     print('Exception in boot splash')
     import system
