@@ -1,4 +1,5 @@
 import system, virtualtimers, display, keypad, touchpads, audio, valuestore
+import term_menu
 
 LONG_PRESS_MS = const(1000)
 
@@ -102,3 +103,7 @@ virtualtimers.activate(100)
 keypad.add_handler(on_key)
 update()
 virtualtimers.new(500, update)  # Refresh app list twice per second
+
+## Launch terminal menu
+menu = term_menu.UartMenu()
+menu.main()
