@@ -1,4 +1,4 @@
-import system, virtualtimers, display, keypad, easyaudio, valuestore, touchbuttons
+import system, virtualtimers, display, keypad, touchpads, audio, valuestore
 
 LONG_PRESS_MS = const(1000)
 
@@ -45,7 +45,7 @@ def start_app(key_index):
 def play_app_audio(key_index):
     app = get_app(key_index)
     if app is not None:
-        easyaudio.play('/cache/%s.mp3' % app['slug'])
+        audio.play('/cache/%s.mp3' % app['slug'])
 
 def on_long_press(key_index):
     global presses
@@ -78,19 +78,25 @@ def on_key(key_index, pressed):
             del presses[key_index]
         print('release %d' %key_index)
 
-def on_touch(state):
+
+def on_left(pressed):
     global page
-    left = 128
-    right = 256
-    if state & left:
+    if pressed:
         page = 0 if page <= 0 else (page-1)
         drawApps()
-    elif state & right:
+        print('page %d' % page)
+
+
+def on_right(pressed):
+    global page
+    if pressed:
         page += 1
         drawApps()
-    print('page: %d' % page)
+        print('page %d' % page)
 
-touchbuttons.set_handler(on_touch)
+
+touchpads.on(touchpads.LEFT, on_left)
+touchpads.on(touchpads.RIGHT, on_right)
 
 virtualtimers.activate(100)
 keypad.add_handler(on_key)

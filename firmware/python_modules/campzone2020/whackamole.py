@@ -1,5 +1,5 @@
 from random import randint
-import keypad, display, virtualtimers, easyaudio
+import keypad, display, virtualtimers, audio
 
 # https://freesound.org/people/petenice/sounds/9509/
 # https://freesound.org/people/Ekokubza123/sounds/104183/
@@ -38,7 +38,7 @@ def on_key(index, pressed):
         difficulty += 0.3
     else:
         audio = miss_audio
-    easyaudio.play(audio)
+    audio.play(audio)
     draw()
 
 

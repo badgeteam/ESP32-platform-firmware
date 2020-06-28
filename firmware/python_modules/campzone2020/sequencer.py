@@ -18,7 +18,7 @@ try:
     os.mountsd()
     songs = [filename for filename in os.listfiles('sd/Samples', return_full=True) if
              '/._' not in filename and
-             (filename.endswith('wav'))]
+             (filename.endswith('mp3'))]
 except:
     songs = []
 songs.sort()
@@ -66,7 +66,7 @@ while True:
         print('playing %d' % number)
         vol = nvs_getint('system', 'volume') or 15
         file_handle = open(songs[number], 'rb')
-        player = sndmixer.wav_stream(file_handle)
+        player = sndmixer.mp3_stream(file_handle)
         print('got channel id %d' % player)
         if player is None:
             continue
