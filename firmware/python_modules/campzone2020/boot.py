@@ -1,13 +1,10 @@
-import machine, sys, system, time, display, touchbuttons
+import machine, sys, system, time, display, touchpads
 
 rtc = machine.RTC()
 rtc.write(0,0)
 rtc.write(1,0)
 
-def on_touch(state):
-	if state & 512:
-		system.home()
-touchbuttons.set_handler(on_touch)
+touchpads.on(touchpads.HOME, system.home)
 
 with open('cache/bootreason.txt', 'wa') as file:
 	file.write(str(machine.wake_reason()))
