@@ -35,7 +35,7 @@ CONFIG_FLASH_ENCRYPTION_ENABLED=
 #
 # Serial flasher config
 #
-CONFIG_ESPTOOLPY_PORT="`ls /dev/tty{USB0,.wchusbserial*,.SLAB_USBtoUART,ACMx} 2>/dev/null`"
+CONFIG_ESPTOOLPY_PORT="`bash -c 'ls /dev/tty{USB*,.wchusbserial*,.usbmodem*,.SLAB_USBtoUART,ACM*} 2>/dev/null'`"
 CONFIG_ESPTOOLPY_BAUD_115200B=
 CONFIG_ESPTOOLPY_BAUD_230400B=
 CONFIG_ESPTOOLPY_BAUD_921600B=y
