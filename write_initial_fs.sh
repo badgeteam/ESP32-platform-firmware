@@ -18,7 +18,7 @@ cd ../..
 # Flash zip file to the OTA partition that it's not booting from
 python3 esp-idf/components/esptool_py/esptool/esptool.py --port \
   $(bash -c 'ls /dev/tty{USB*,.wchusbserial*,.usbmodem*,.SLAB_USBtoUART,ACM*} 2>/dev/null') \
-  write_flash $OFFSET initial_filesystems/$CONFIG_INFO_HARDWARE_FOLDER/initial_fs.zip
+  write_flash $(( $OFFSET + 0x1000 )) initial_filesystems/$CONFIG_INFO_HARDWARE_FOLDER/initial_fs.zip
 
 # And clean up again
 rm initial_filesystems/$CONFIG_INFO_HARDWARE_FOLDER/initial_fs.zip
