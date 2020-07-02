@@ -9,6 +9,6 @@ OFFSET="$(python scripts/print_partition_info.py firmware/$CONFIG_PARTITION_TABL
 SIZE="$(python scripts/print_partition_info.py firmware/$CONFIG_PARTITION_TABLE_CUSTOM_FILENAME otadata size)"
 
 # Erase otadata partition
-python2 esp-idf/components/esptool_py/esptool/esptool.py --port \
-  `bash -c 'ls /dev/tty{USB0,.wchusbserial*,.usbmodem*,.SLAB_USBtoUART,ACMx} 2>/dev/null'` \
+python3 esp-idf/components/esptool_py/esptool/esptool.py --port \
+  `bash -c 'ls /dev/tty{USB*,.wchusbserial*,.usbmodem*,.SLAB_USBtoUART,ACM*} 2>/dev/null'` \
   erase_region $OFFSET $SIZE

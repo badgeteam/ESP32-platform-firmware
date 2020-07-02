@@ -254,7 +254,7 @@ def get_category(category_name):
         return json.load(category_file)
 
 def get_pkg_metadata(name):
-    f = _url_open("https://badge.team/eggs/get/%s/json" % name)
+    f = _url_open("https://%s/eggs/get/%s/json" % (woezel_domain, name))
     try:
         return json.load(f)
     finally:
@@ -262,7 +262,7 @@ def get_pkg_metadata(name):
         del f
 
 def get_pkg_list():
-    f = _url_open("https://badge.team/basket/campzone2019/list/json")
+    f = _url_open("https://%s/basket/%s/list/json" % (woezel_domain, device_name))
     try:
         return json.load(f)
     finally:
@@ -270,7 +270,7 @@ def get_pkg_list():
         del f
 
 def search_pkg_list(query):
-    f = _url_open("https://badge.team/basket/campzone2019/search/%s/json" % query)
+    f = _url_open("https://%s/basket/%s/search/%s/json" % (woezel_domain, device_name, query))
     try:
         return json.load(f)
     finally:

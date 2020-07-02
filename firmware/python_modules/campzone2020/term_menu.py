@@ -1,7 +1,7 @@
-import term, deepsleep as ds, system, version, consts
+import term, system, consts
 
 class UartMenu():
-	def __init__(self, gts, pm, safe = False, pol="Power off"):
+	def __init__(self, gts = None, pm = None, safe = False, pol="Power off"):
 		self.gts = gts
 		self.menu = self.menu_main
 		if (safe):
@@ -21,15 +21,12 @@ class UartMenu():
 		import shell
 	
 	def menu_main(self):
-		items = ["Python shell", "Apps", "Installer", "Settings", "About", "Check for updates", self.power_off_label]
-		callbacks = [self.drop_to_shell, self.opt_launcher, self.opt_installer, self.menu_settings, self.opt_about, self.opt_ota_check, self.go_to_sleep]
+		items = ["Python shell", "Apps", "Installer", "Settings", "About", "Check for updates", "Tools"]
+		callbacks = [self.drop_to_shell, self.opt_launcher, self.opt_installer, self.menu_settings, self.opt_about, self.opt_ota_check]
 		message = "Welcome!\nYour badge is running firmware version "+str(consts.INFO_FIRMWARE_BUILD)+": "+consts.INFO_FIRMWARE_NAME+"\n"
 		cb = term.menu("Main menu", items, 0, message)
 		self.menu = callbacks[cb]
 		return
-	
-	def go_to_sleep(self):
-		self.gts()
 		
 	def opt_change_nickname(self):
 		system.start("dashboard.terminal.nickname", True)
@@ -53,15 +50,9 @@ class UartMenu():
 		system.start("about", True)
 		
 	def menu_settings(self):
-		items = ["Change nickname", "Configure WiFi", "< Return to main menu"]
-		callbacks = [self.opt_change_nickname, self.opt_configure_wifi, self.menu_main]
+		items = ["Configure WiFi", "< Return to main menu"]
+		callbacks = [self.opt_configure_wifi, self.menu_main]
 		cb = term.menu("Settings", items)
-		self.menu = callbacks[cb]
-	
-	def menu_tools(self):
-		items = ["File downloader", "< Return to main menu"]
-		callbacks = [self.opt_downloader, self.menu_main, self.menu_main]
-		cb = term.menu("Tools", items)
 		self.menu = callbacks[cb]
 	
 	def menu_safe(self):

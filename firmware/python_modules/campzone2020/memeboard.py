@@ -1,4 +1,4 @@
-import easyaudio, os, display, keypad
+import audio, os, display, keypad
 
 on_selected = b'\xff\x00\xff'
 on = b'\xf0\xf0\x00'
@@ -42,6 +42,6 @@ def on_key(key_index, pressed):
     if not pressed:
         return
     song = songs[key_index]
-    easyaudio.play(song)
+    audio.play(song)
 
 keypad.add_handler(on_key)

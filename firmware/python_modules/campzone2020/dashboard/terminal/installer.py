@@ -1,4 +1,4 @@
-import term, system, time, wifi, uos, json, sys, gc, woezel, uinstaller
+import term, system, time, wifi, uos, sys, gc, woezel, uinstaller
 
 system.serialWarning()
 
