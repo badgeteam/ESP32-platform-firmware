@@ -12,7 +12,7 @@ def add_handler(handler):
 
 def remove_handler(handler):
     global keypad_handlers
-    for index, _handler in keypad_handlers:
+    for index, _handler in enumerate(keypad_handlers):
         if handler == _handler:
             del keypad_handlers[index]
 
