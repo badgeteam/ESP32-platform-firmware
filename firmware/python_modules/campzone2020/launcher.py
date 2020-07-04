@@ -105,5 +105,5 @@ update()
 virtualtimers.new(500, update)  # Refresh app list twice per second
 
 ## Launch terminal menu
-menu = term_menu.UartMenu()
-menu.main()
+# menu = term_menu.UartMenu()
+# menu.main()
