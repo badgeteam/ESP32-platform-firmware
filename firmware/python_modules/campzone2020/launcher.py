@@ -1,7 +1,9 @@
-import system, virtualtimers, display, keypad, touchpads, audio, valuestore
+import system, virtualtimers, display, keypad, touchpads, audio, valuestore, wifi
 import term_menu
 
 LONG_PRESS_MS = const(1000)
+
+wifi.connect()
 
 # Application list
 apps = {}
