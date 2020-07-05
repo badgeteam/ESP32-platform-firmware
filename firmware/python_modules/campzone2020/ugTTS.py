@@ -76,6 +76,7 @@ def _get_crypto_token(text):
     return str(a) + "." + str(a ^ int(first_seed))
 
 def text_to_mp3(text, filename, lang='en'):
+    text = text.replace(' ', '-')
     crypto_token = _get_crypto_token(text)
     params = {'ie': 'UTF-8',
                'q': text,
