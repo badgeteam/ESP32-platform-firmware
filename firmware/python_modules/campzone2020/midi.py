@@ -18,7 +18,7 @@ def _write_midi_packet():
         is_dirty = stm32.i2c_read_reg(dirty_byte, 1)
         is_dirty = int.from_bytes(is_dirty, "little")
         if not is_dirty:
-            data = note_queue.pop(0)
+            data = _note_queue.pop(0)
             if type(data) is bytes and len(data) != 3:
                 print('MIDI packet must be exactly 3 bytes long')
                 return
