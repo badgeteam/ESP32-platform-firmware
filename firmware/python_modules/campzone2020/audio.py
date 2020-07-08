@@ -1,4 +1,4 @@
-import sndmixer
+import sndmixer, urequests
 
 _no_channels = 4
 sndmixer.begin(_no_channels)
@@ -8,14 +8,16 @@ def _clean_channel(channel_id):
     global handles
     if channel_id in handles:
         file = handles[channel_id]
-        file.close()
+        if file is not None:
+            file.close()
         del handles[channel_id]
 
-def _add_file_channel(filename):
+def _add_channel(filename_or_url):
     global handles
     stream = True
-    file = open(filename, 'rb')
-    lower = filename.lower()
+    is_url = filename_or_url.startswith('http')
+    file = open(filename_or_url, 'rb') if not is_url else urequests.get(filename_or_url).raw
+    lower = filename_or_url.lower()
     if(lower.endswith('.mp3')):
         channel_id = sndmixer.mp3_stream(file)
     elif(lower.endswith('.wav')):
@@ -35,13 +37,17 @@ def _add_file_channel(filename):
     if channel_id < 0:
         return -1
 
+    if is_url:
+        # Needed when streaming from HTTP sockets
+        sndmixer.play(channel_id)
+
     handles[channel_id] = file
     if stream:
         sndmixer.on_finished(channel_id, lambda _ : _clean_channel(channel_id))
     return channel_id
 
-def play(filename, volume=255, loop=False, sync_beat=None, start_at_next=None):
-    channel_id = _add_file_channel(filename)
+def play(filename_or_url, volume=255, loop=False, sync_beat=None, start_at_next=None):
+    channel_id = _add_channel(filename_or_url)
     if channel_id is None or channel_id < 0:
         print('Failed to start audio channel')
         return channel_id
@@ -56,8 +62,8 @@ def play(filename, volume=255, loop=False, sync_beat=None, start_at_next=None):
     return channel_id
 
 def stop_channel(channel_id):
-    sndmixer.stop(channel_id)
     _clean_channel(channel_id)
+    sndmixer.stop(channel_id)
 
 def stop_looping(channel_id):
     sndmixer.loop(channel_id, False)
