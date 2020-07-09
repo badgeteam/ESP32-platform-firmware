@@ -1,8 +1,14 @@
 import sndmixer, urequests
 
-_no_channels = 4
-sndmixer.begin(_no_channels)
+_no_channels = 4  # We can't play more than this number of channels concurrently without glitches
+_started = False
 handles = {}
+
+def _start_audio_if_needed():
+    global _started
+    if not _started:
+        sndmixer.begin(_no_channels)
+        _started = True
 
 def _clean_channel(channel_id):
     global handles
@@ -47,6 +53,7 @@ def _add_channel(filename_or_url):
     return channel_id
 
 def play(filename_or_url, volume=255, loop=False, sync_beat=None, start_at_next=None):
+    _start_audio_if_needed()
     channel_id = _add_channel(filename_or_url)
     if channel_id is None or channel_id < 0:
         print('Failed to start audio channel')
