@@ -1,6 +1,6 @@
 # Based on https://github.com/Boudewijn26/gTTS-token and https://github.com/pndurette/gTTS/
 
-import urequests, re, math, time
+import urequests, audio, re, math, time
 
 _translate_url = 'https://translate.google.com/'
 _token_key = None
@@ -97,3 +97,8 @@ def text_to_mp3(text, filename, lang='en'):
         file.write(request.raw.read())
         request.raw.close()
     return True
+
+
+def speak(text, filename='/cache/tts_temp.mp3', lang='en', volume=255):
+    text_to_mp3(text, filename, lang)
+    audio.play(filename, volume)
