@@ -687,6 +687,178 @@ static mp_obj_t framebuffer_default_fill_color(mp_uint_t n_args, const mp_obj_t 
 
 
 
+//Begin RobotMan2412's matrix stack
+
+static mp_obj_t framebuffer_push(mp_uint_t n_args, const mp_obj_t *args)
+{
+	Window* window = NULL;
+	matrix_stack_2d* stack;
+	int paramOffset = 0;
+	
+	if (MP_OBJ_IS_STR(args[0])) {
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
+		stack = window->stack_2d;
+	}
+	else
+	{
+		stack = &stack_2d_global;
+	}
+	
+	esp_err_t resp = matrix_stack_2d_push(stack);
+	if (resp != ESP_OK) {
+		mp_raise_msg(&mp_type_Exception, "The matrix stack is full and cannot be pushed once more!");
+	}
+	return mp_const_none;
+}
+
+static mp_obj_t framebuffer_pop(mp_uint_t n_args, const mp_obj_t *args)
+{
+	Window* window = NULL;
+	matrix_stack_2d* stack;
+	int paramOffset = 0;
+	
+	if (MP_OBJ_IS_STR(args[0])) {
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
+		stack = window->stack_2d;
+	}
+	else
+	{
+		stack = &stack_2d_global;
+	}
+	
+	esp_err_t resp = matrix_stack_2d_pop(stack);
+	if (resp != ESP_OK) {
+		mp_raise_msg(&mp_type_Exception, "The matrix stack is empty and cannot be pushed once more!");
+	}
+	return mp_const_none;
+}
+
+static mp_obj_t framebuffer_clear(mp_uint_t n_args, const mp_obj_t *args)
+{
+	Window* window = NULL;
+	matrix_stack_2d* stack;
+	int paramOffset = 0;
+	
+	if (MP_OBJ_IS_STR(args[0])) {
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
+		stack = window->stack_2d;
+	}
+	else
+	{
+		stack = &stack_2d_global;
+	}
+	
+	matrix_stack_2d_clear(stack);
+	return mp_const_none;
+}
+
+static mp_obj_t framebuffer_size(mp_uint_t n_args, const mp_obj_t *args)
+{
+	Window* window = NULL;
+	matrix_stack_2d* stack;
+	int paramOffset = 0;
+	
+	if (MP_OBJ_IS_STR(args[0])) {
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
+		stack = window->stack_2d;
+	}
+	else
+	{
+		stack = &stack_2d_global;
+	}
+	
+	return mp_obj_new_int(stack->size);
+}
+
+static mp_obj_t framebuffer_get_matrix(mp_uint_t n_args, const mp_obj_t *args)
+{
+	Window* window = NULL;
+	matrix_stack_2d* stack;
+	int paramOffset = 0;
+	
+	if (MP_OBJ_IS_STR(args[0])) {
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
+		stack = window->stack_2d;
+	}
+	else
+	{
+		stack = &stack_2d_global;
+	}
+	
+	matrix_2d current = stack->current;
+	mp_obj_t out[6] = {
+		mp_obj_new_float(current.arr[0]),
+		mp_obj_new_float(current.arr[1]),
+		mp_obj_new_float(current.arr[2]),
+		mp_obj_new_float(current.arr[3]),
+		mp_obj_new_float(current.arr[4]),
+		mp_obj_new_float(current.arr[5])
+	};
+	return mp_obj_new_list(6, out);
+}
+
+static mp_obj_t framebuffer_translate(mp_uint_t n_args, const mp_obj_t *args)
+{
+	Window* window = NULL;
+	matrix_stack_2d* stack;
+	int paramOffset = 0;
+	
+	if (MP_OBJ_IS_STR(args[0])) {
+		if (n_args < 3) {
+			mp_raise_ValueError("Expected: window, x, y");
+			return mp_const_none;
+		}
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
+		stack = window->stack_2d;
+	}
+	else
+	{
+		if (n_args < 2) {
+			mp_raise_ValueError("Expected: x, y");
+			return mp_const_none;
+		}
+		stack = &stack_2d_global;
+	}
+	
+	stack->current = matrix_2d_multiply(stack->current, matrix_2d_translate(mp_obj_get_float(args[paramOffset]), mp_obj_get_float(args[paramOffset + 1]));
+
+	return mp_const_none;
+}
+
+//End RobotMan2412's matrix stack
+
+
+
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_flush_obj,                0, 1, framebuffer_flush      );
 /* Flush the framebuffer to the display. Arguments: flags (optional) */
 
@@ -852,6 +1024,8 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_windowFocus                   ), MP_ROM_PTR( &framebuffer_window_focus_obj         )}, //Bring a window to the front
 	{MP_ROM_QSTR( MP_QSTR_windowResize                  ), MP_ROM_PTR( &framebuffer_window_resize_obj        )}, //Resize a window
 	{MP_ROM_QSTR( MP_QSTR_windowList                    ), MP_ROM_PTR( &framebuffer_window_list_obj          )}, //List all windows
+
+	/* Functions: matrix stack */
 };
 
 static MP_DEFINE_CONST_DICT(framebuffer_module_globals, framebuffer_module_globals_table);
