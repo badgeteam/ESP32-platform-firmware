@@ -19,6 +19,11 @@ menu "Driver: ILI9341 LCD display"
 	config PIN_NUM_ILI9341_BACKLIGHT
 		depends on DRIVER_ILI9341_ENABLE
 		int "GPIO pin used for backlight"
+		
+	config DRIVER_ILI9341_SPI_SPEED
+		depends on DRIVER_ILI9341_ENABLE
+		int "SPI clock speed"
+		default 1000000
 	
 	config ILI9341_ORIENTATION
 		depends on DRIVER_ILI9341_ENABLE
