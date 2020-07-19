@@ -1,0 +1,7 @@
+{
+  "0":{"slug":"synthesizer","name":"Synthesizer","colour":"#FF7F00"},
+  "1":{"slug":"fourinarow","name":"FourInARow","colour":"#F8B700"},
+  "2":{"slug":"bnr_radio","name":"BNR Radio","colour":"#4A90E2"},
+  "3":{"slug":"midi_controller","name":"MIDI Controller","colour":"#7ED321"},
+  "4":{"slug":"cybertyper","name":"CyberTyper","colour":"#D0021B"}
+}

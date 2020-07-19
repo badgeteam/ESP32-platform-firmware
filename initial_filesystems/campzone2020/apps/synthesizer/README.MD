@@ -1,0 +1,1 @@
+A simple synthesizer that plays sine wave notes over the speakers on buttons presses.
