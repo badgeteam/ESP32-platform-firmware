@@ -97,7 +97,8 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 void driver_framebuffer_window_remove(Window* window)
 {
 	if (window->buffer) free(window->buffer);
-	free(window->stack_2d.matrices);
+	free(window->stack_2d->matrices);
+	free(window->stack_2d);
 	_remove_window_from_linked_list(window);
 	free(window);
 }
