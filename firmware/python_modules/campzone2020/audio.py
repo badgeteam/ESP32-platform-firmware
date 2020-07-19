@@ -1,4 +1,4 @@
-import sndmixer, urequests
+import machine, sndmixer, urequests, os
 
 _no_channels = 4  # We can't play more than this number of channels concurrently without glitches
 _started = False
@@ -18,11 +18,17 @@ def _clean_channel(channel_id):
             file.close()
         del handles[channel_id]
 
-def _add_channel(filename_or_url):
+def _add_channel(filename_or_url, on_finished=None):
     global handles
     stream = True
     is_url = filename_or_url.startswith('http')
-    file = open(filename_or_url, 'rb') if not is_url else urequests.get(filename_or_url).raw
+    if is_url:
+        file = urequests.get(filename_or_url).raw
+    else:
+        if not os.path.isfile(filename_or_url):
+            print('File %s does not exist' % filename_or_url)
+            return -1
+        file = open(filename_or_url, 'rb')
     lower = filename_or_url.lower()
     if(lower.endswith('.mp3')):
         channel_id = sndmixer.mp3_stream(file)
@@ -47,14 +53,24 @@ def _add_channel(filename_or_url):
         # Needed when streaming from HTTP sockets
         sndmixer.play(channel_id)
 
+    def finish_callback(_):
+        _clean_channel(channel_id)
+        if on_finished is not None:
+            try:
+                on_finished()
+            except:
+                pass
+
     handles[channel_id] = file
     if stream:
-        sndmixer.on_finished(channel_id, lambda _ : _clean_channel(channel_id))
+        sndmixer.on_finished(channel_id, finish_callback)
     return channel_id
 
-def play(filename_or_url, volume=255, loop=False, sync_beat=None, start_at_next=None):
+def play(filename_or_url, volume=None, loop=False, sync_beat=None, start_at_next=None, on_finished=None):
+    if volume is None:
+        volume = machine.nvs_getint('system', 'volume') or 255
     _start_audio_if_needed()
-    channel_id = _add_channel(filename_or_url)
+    channel_id = _add_channel(filename_or_url, on_finished)
     if channel_id is None or channel_id < 0:
         print('Failed to start audio channel')
         return channel_id

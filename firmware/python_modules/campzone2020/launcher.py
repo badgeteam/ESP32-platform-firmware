@@ -1,9 +1,49 @@
 import system, virtualtimers, display, keypad, touchpads, audio, valuestore, wifi
-import term_menu
+import os, ugTTS, term_menu, time, machine
 
 LONG_PRESS_MS = const(1000)
 
 wifi.connect()
+
+def download_tts(app):
+    tts_text = app['name']
+    print("Preparing TTS: ", tts_text)
+    try:
+        ugTTS.text_to_mp3(tts_text, '/cache/appnames/%s.mp3' % app['slug'])
+        print("TTS: Success")
+        return True
+    except:
+        return False
+
+
+def update_mp3_cache():
+    global apps
+    # freediskpercent = int(os.statvfs('/cache')[3] / (os.statvfs('/cache')[2] / 100))
+    freediskpercent = 100  # Above free disk space check doesn't work
+    if freediskpercent > 25: # do not fill filesystem when free space < 25%
+        if not wifi.status():
+            wifi.connect()
+            return 2000
+        mp3files = os.listdir('/cache/appnames')
+        for app_index in apps:
+            try:
+                app = apps[app_index]
+                mp3file = '%s.mp3' % app['slug']
+                if mp3file not in mp3files:
+                    try:
+                        audio.play('/cache/system/generating_app_name.mp3')
+                    except:
+                        pass
+                    download_tts(app)
+                    try:
+                        audio.play('/cache/appnames/%s' % mp3file)
+                    except:
+                        pass
+            except:
+                pass
+    else:
+        print("Flash almost full, skipping text-to-speech")
+    return 2000
 
 # Application list
 apps = {}
@@ -14,7 +54,7 @@ def update():
     new_modified = valuestore.last_modified('system', 'launcher_items')
     if new_modified != app_list_last_modified:
         app_list_last_modified = new_modified
-        apps = valuestore.load('system', 'launcher_items') or {}
+        apps = valuestore.load('system', 'launcher_items') or {"0":{"slug":"norbert","name":"Synthesizer","colour":"#4A90E2"}}
         drawApps()
     return 500
 
@@ -48,7 +88,7 @@ def start_app(key_index):
 def play_app_audio(key_index):
     app = get_app(key_index)
     if app is not None:
-        audio.play('/cache/%s.mp3' % app['slug'])
+        audio.play('/cache/appnames/%s.mp3' % app['slug'])
 
 def on_long_press(key_index):
     global presses
@@ -101,10 +141,18 @@ def on_right(pressed):
 touchpads.on(touchpads.LEFT, on_left)
 touchpads.on(touchpads.RIGHT, on_right)
 
-virtualtimers.activate(100)
+if not machine.nvs_getint('system', 'welcome_done'):
+    machine.nvs_setint('system', 'welcome_done', 1)
+    audio.play('/cache/system/welcome.mp3')
+    time.sleep(3)
+    audio.play('/cache/system/press.mp3')
+    time.sleep(3)
+
+virtualtimers.activate(500)
 keypad.add_handler(on_key)
 update()
 virtualtimers.new(500, update)  # Refresh app list twice per second
+virtualtimers.new(2000, update_mp3_cache)  # Refresh app names every 2 seconds
 
 ## Launch terminal menu
 # menu = term_menu.UartMenu()

@@ -61,8 +61,26 @@ def stat(filepath='.'):
 # Add some nice standard Python path traversal methods
 class path:
     def isdir(path):
-        st = stat(path)
-        return not not (st[0] & 0x4000)
+        try:
+            st = stat(path)
+            return not not (st[0] & 0x4000)
+        except OSError as e:
+            error_code = e.args[0]
+            if error_code == 2:
+                return False
+            else:
+                raise e
+
+    def isfile(path):
+        try:
+            st = stat(path)
+            return not (st[0] & 0x4000)
+        except OSError as e:
+            error_code = e.args[0]
+            if error_code == 2:
+                return False
+            else:
+                raise e
 
     def join(path, *paths):
         result = path

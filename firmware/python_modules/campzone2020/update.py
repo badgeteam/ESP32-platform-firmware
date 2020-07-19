@@ -1,6 +1,5 @@
-import system, rgb, time, gc, urequests as requests, version
-import uinterface, consts
-from uinterface import confirmation_dialog, connect_wifi
+import system, time, gc, urequests as requests, version
+import consts
 
 _FONT = rgb.FONT_7x5
 _MAIN_FRAMERATE = 20
@@ -24,7 +23,7 @@ def _retrieve_latest_update():
     try:
         _show_progress("Checking for updates")
         gc.collect()
-        ota_version_url = 'https://' + consts.OTA_WEB_SERVER + ':' + consts.OTA_WEB_PORT.replace('"', '') + '/version-' + consts.INFO_HARDWARE_WOEZEL_NAME
+        ota_version_url = 'https://' + consts.OTA_WEB_SERVER + ':' + consts.OTA_WEB_PORT.replace('"', '') + '/version/' + consts.INFO_HARDWARE_WOEZEL_NAME + '.txt'
         request = requests.get(ota_version_url, timeout=10)
         result = request.json()
         request.close()

@@ -16,9 +16,9 @@ except:
 
 try:
     os.mountsd()
-    songs = [filename for filename in os.listfiles('sd/Samples', return_full=True) if
+    songs = [filename for filename in os.listfiles('cache/Samples', return_full=True) if
              '/._' not in filename and
-             (filename.endswith('mp3'))]
+             (filename.endswith('mp3') or filename.endswith('wav') or filename.endswith('opus'))]
 except:
     songs = []
 songs.sort()
@@ -44,7 +44,7 @@ for i, state in enumerate(ledstate):
 
 display.flush()
 sndmixer.begin(4, True)
-sndmixer.beat_sync_start(120)
+sndmixer.beat_sync_start(100)
 file_handles = {}
 
 released = True
@@ -74,7 +74,7 @@ while True:
         sndmixer.on_finished(player, lambda _: file_handles[player].close())
         sndmixer.volume(player, vol)
         sndmixer.loop(player, True)
-        sndmixer.start_at_next(player, 4)
+        sndmixer.start_at_next(player, 8)
         number = -1
 
     time.sleep(0.01)

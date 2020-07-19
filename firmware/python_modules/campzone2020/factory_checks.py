@@ -1,6 +1,6 @@
 import machine, keypad, display, audio
 
-background = 0x050505
+background = 0x303030
 was_pressed = [False] * 4
 
 display.drawFill(background)

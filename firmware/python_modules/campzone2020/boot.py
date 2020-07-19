@@ -6,8 +6,14 @@ rtc.write(1,0)
 
 touchpads.on(touchpads.HOME, system.home)
 
-with open('cache/bootreason.txt', 'wa') as file:
-	file.write(str(machine.wake_reason()))
+try:
+	import consts
+	with open('cache/version.txt', 'w') as file:
+		file.write('{"firmware": %d, "badge_type": "%s"}' %
+				   (consts.INFO_FIRMWARE_BUILD, consts.INFO_HARDWARE_WOEZEL_NAME))
+except BaseException as e:
+	sys.print_exception(e)
+	system.crashedWarning()
 
 #### Application starting ####
 
@@ -16,7 +22,7 @@ app = rtc.read_string()
 if not app:
 	app = machine.nvs_getstr("system", 'default_app')
 	if not app:
-		app = 'dashboard.home'
+		app = 'launcher'
 
 # Override with special boot mode apps if necessary
 if machine.nvs_getint('system', 'factory_checked') != 2:

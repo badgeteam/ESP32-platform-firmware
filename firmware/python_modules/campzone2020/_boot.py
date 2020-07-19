@@ -1,6 +1,6 @@
 import uos, gc, sys, system, virtualtimers, machine
 
-folders = ['lib', 'apps', 'cache', 'cache/woezel', 'config']
+folders = ['lib', 'apps', 'cache', 'cache/system', 'cache/appnames', 'cache/woezel', 'config']
 for folder in folders:
     try:
         uos.mkdir(folder)
@@ -11,6 +11,8 @@ for folder in folders:
 # slash characters before single characters that are also HTML elements,
 # like <a> or <s> (e.g. /apps or /sdcard won't work.)
 sys.path.append('apps')
+sys.path.append('sd/apps')
+sys.path.append('sd/lib')
 
 del folders, uos
 gc.collect()
