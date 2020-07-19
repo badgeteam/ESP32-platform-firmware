@@ -9,4 +9,18 @@ menu "Driver: framebuffer support"
     config DRIVER_FRAMEBUFFER_SWAP_R_AND_B
         bool "Swap red and blue"
         default n
+    config DRIVER_FRAMEBUFFER_CORRECT_GAMMA
+        bool "Apply gamma correction to LED brightness values"
+        default n
+    config DRIVER_FRAMEBUFFER_CORRECT_GB
+        bool "Correct LED brightness for green and blue channel (needed for some LEDs)"
+        default n
+    config DRIVER_FRAMEBUFFER_G_RATIO
+		depends on DRIVER_FRAMEBUFFER_CORRECT_GB
+        int "Multiply blue colour channel by (this/255) to correct for LED channel brightness"
+        default 167
+    config DRIVER_FRAMEBUFFER_B_RATIO
+		depends on DRIVER_FRAMEBUFFER_CORRECT_GB
+        int "Multiply blue colour channel by (this/255) to correct for LED channel brightness"
+        default 240
 endmenu
