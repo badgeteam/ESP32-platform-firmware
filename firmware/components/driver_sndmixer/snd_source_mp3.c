@@ -185,7 +185,7 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   *ctx      = (void *)mp3;
   int tries = 5;
   do {
-    printf("Beep boop I'm a loop\r\n");
+    ESP_LOGI(TAG, "Finding chunk of mp3 data\r\n");
     _readData(mp3);
   } while (!mp3_decode(*ctx) && --tries);
   if (!tries) {
