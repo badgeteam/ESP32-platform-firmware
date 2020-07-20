@@ -76,7 +76,7 @@ void handleFSCommand(uint8_t *data, uint16_t command, uint32_t message_id, uint3
         write_pos = 0;
         //ESP_LOGI(TAG, "clear");
     }
-    if(command && length > 0) {
+    if(length > 0) {
         memcpy(&command_in[write_pos], data, length);
         write_pos += length;
     }
