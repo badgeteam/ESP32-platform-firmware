@@ -86,11 +86,6 @@ void driver_framebuffer_line(Window* window, int16_t x0, int16_t y0, int16_t x1,
 	}
 }
 
-void driver_framebuffer_triangle(Window* window, int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color)
-{
-
-}
-
 void driver_framebuffer_rect(Window* window, int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color)
 {
 	if (fill) {

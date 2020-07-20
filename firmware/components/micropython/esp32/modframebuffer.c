@@ -10,7 +10,6 @@
 #include "extmod/vfs_native.h"
 
 #include <driver_framebuffer.h>
-#include <driver_framebuffer_matrix.h>
 #include <driver_framebuffer_compositor.h>
 #include <driver_framebuffer_devices.h>
 
@@ -348,7 +347,6 @@ static mp_obj_t framebuffer_draw_fill(mp_uint_t n_args, const mp_obj_t *args)
 static mp_obj_t framebuffer_draw_line(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
 	if (MP_OBJ_IS_STR(args[0])) {
 		if (n_args != 6) {
 			mp_raise_ValueError("Expected 5 or 6 arguments: (window), x0, y0, x1, y1 and color");
@@ -359,29 +357,13 @@ static mp_obj_t framebuffer_draw_line(mp_uint_t n_args, const mp_obj_t *args)
 			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
-		stack = window->stack_2d;
 	}
-	else
-	{
-		stack = &stack_2d_global;
-	}
-	
-	double x0 = mp_obj_get_float(args[n_args-5]);
-	double y0 = mp_obj_get_float(args[n_args-4]);
-	double x1 = mp_obj_get_float(args[n_args-3]);
-	double y1 = mp_obj_get_float(args[n_args-2]);
+	int x0 = mp_obj_get_int(args[n_args-5]);
+	int y0 = mp_obj_get_int(args[n_args-4]);
+	int x1 = mp_obj_get_int(args[n_args-3]);
+	int y1 = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
-
-	//transform point according to the transformation
-	matrix_2d_transform_point(stack->current, &x0, &y0);
-	matrix_2d_transform_point(stack->current, &x1, &y1);
-	//convert back to int so the line drawer will accept it
-	int16_t x0i = (int16_t) (x0 + 0.5);
-	int16_t y0i = (int16_t) (y0 + 0.5);
-	int16_t x1i = (int16_t) (x1 + 0.5);
-	int16_t y1i = (int16_t) (y1 + 0.5);
-
-	driver_framebuffer_line(window, x0i, y0i, x1i, y1i, color);
+	driver_framebuffer_line(window, x0, y0, x1, y1, color);
 	return mp_const_none;
 }
 
@@ -705,15 +687,15 @@ static mp_obj_t framebuffer_default_fill_color(mp_uint_t n_args, const mp_obj_t 
 
 
 
-//Begin matrix stack
+//Begin RobotMan2412's matrix stack
 
-static mp_obj_t framebuffer_pushMatrix(mp_uint_t n_args, const mp_obj_t *args)
+static mp_obj_t framebuffer_push(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
+	matrix_stack_2d* stack;
 	int paramOffset = 0;
 	
-	if (n_args > 0 && MP_OBJ_IS_STR(args[0])) {
+	if (MP_OBJ_IS_STR(args[0])) {
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
 		if (!window) {
 			mp_raise_ValueError("Window not found");
@@ -734,13 +716,13 @@ static mp_obj_t framebuffer_pushMatrix(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
-static mp_obj_t framebuffer_popMatrix(mp_uint_t n_args, const mp_obj_t *args)
+static mp_obj_t framebuffer_pop(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
+	matrix_stack_2d* stack;
 	int paramOffset = 0;
 	
-	if (n_args > 0 && MP_OBJ_IS_STR(args[0])) {
+	if (MP_OBJ_IS_STR(args[0])) {
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
 		if (!window) {
 			mp_raise_ValueError("Window not found");
@@ -761,13 +743,13 @@ static mp_obj_t framebuffer_popMatrix(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
-static mp_obj_t framebuffer_clearMatrix(mp_uint_t n_args, const mp_obj_t *args)
+static mp_obj_t framebuffer_clear(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
+	matrix_stack_2d* stack;
 	int paramOffset = 0;
 	
-	if (n_args > 0 && MP_OBJ_IS_STR(args[0])) {
+	if (MP_OBJ_IS_STR(args[0])) {
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
 		if (!window) {
 			mp_raise_ValueError("Window not found");
@@ -785,13 +767,13 @@ static mp_obj_t framebuffer_clearMatrix(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
-static mp_obj_t framebuffer_matrixSize(mp_uint_t n_args, const mp_obj_t *args)
+static mp_obj_t framebuffer_size(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
+	matrix_stack_2d* stack;
 	int paramOffset = 0;
 	
-	if (n_args > 0 && MP_OBJ_IS_STR(args[0])) {
+	if (MP_OBJ_IS_STR(args[0])) {
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
 		if (!window) {
 			mp_raise_ValueError("Window not found");
@@ -799,53 +781,19 @@ static mp_obj_t framebuffer_matrixSize(mp_uint_t n_args, const mp_obj_t *args)
 		}
 		paramOffset++;
 		stack = window->stack_2d;
-		printf("Matrix stack from window object.");
 	}
 	else
 	{
 		stack = &stack_2d_global;
-		printf("Matrix stack from global.");
 	}
 	
 	return mp_obj_new_int(stack->size);
 }
 
-static mp_obj_t framebuffer_getMatrix(mp_uint_t n_args, const mp_obj_t *args)
+static mp_obj_t framebuffer_get_matrix(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
-	int paramOffset = 0;
-	
-	if (n_args > 0 && MP_OBJ_IS_STR(args[0])) {
-		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
-		if (!window) {
-			mp_raise_ValueError("Window not found");
-			return mp_const_none;
-		}
-		paramOffset++;
-		stack = window->stack_2d;
-	}
-	else
-	{
-		stack = &stack_2d_global;
-	}
-	
-	matrix_2d current = stack->current;
-	mp_obj_t out[6] = {
-		mp_obj_new_float(current.arr[0]),
-		mp_obj_new_float(current.arr[1]),
-		mp_obj_new_float(current.arr[2]),
-		mp_obj_new_float(current.arr[3]),
-		mp_obj_new_float(current.arr[4]),
-		mp_obj_new_float(current.arr[5])
-	};
-	return mp_obj_new_list(6, out);
-}
-
-static mp_obj_t framebuffer_setMatrix(mp_uint_t n_args, const mp_obj_t *args)
-{
-	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
+	matrix_stack_2d* stack;
 	int paramOffset = 0;
 	
 	if (MP_OBJ_IS_STR(args[0])) {
@@ -872,54 +820,12 @@ static mp_obj_t framebuffer_setMatrix(mp_uint_t n_args, const mp_obj_t *args)
 		mp_obj_new_float(current.arr[5])
 	};
 	return mp_obj_new_list(6, out);
-}
-
-static mp_obj_t framebuffer_transformPoint(mp_uint_t n_args, const mp_obj_t *args)
-{
-	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
-	int paramOffset = 0;
-	
-	if (MP_OBJ_IS_STR(args[0])) {
-		if (n_args < 3) {
-			mp_raise_ValueError("Expected: window, x, y");
-			return mp_const_none;
-		}
-		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
-		if (!window) {
-			mp_raise_ValueError("Window not found");
-			return mp_const_none;
-		}
-		paramOffset++;
-		stack = window->stack_2d;
-	}
-	else
-	{
-		if (n_args < 2) {
-			mp_raise_ValueError("Expected: x, y");
-			return mp_const_none;
-		}
-		stack = &stack_2d_global;
-	}
-	
-	double x = mp_obj_get_float(args[paramOffset]);
-	double y = mp_obj_get_float(args[paramOffset + 1]);
-
-	//printf("%f, %f -> ", x, y);
-	matrix_2d_transform_point(stack->current, &x, &y);
-	//printf("%f, %f\n", x, y);
-
-	mp_obj_t out[2] = {
-		mp_obj_new_float(x),
-		mp_obj_new_float(y)
-	};
-	return mp_obj_new_tuple(2, out);
 }
 
 static mp_obj_t framebuffer_translate(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
+	matrix_stack_2d* stack;
 	int paramOffset = 0;
 	
 	if (MP_OBJ_IS_STR(args[0])) {
@@ -944,119 +850,14 @@ static mp_obj_t framebuffer_translate(mp_uint_t n_args, const mp_obj_t *args)
 		stack = &stack_2d_global;
 	}
 	
-	stack->current = matrix_2d_multiply(stack->current, matrix_2d_translate(mp_obj_get_float(args[paramOffset]), mp_obj_get_float(args[paramOffset + 1])));
+	stack->current = matrix_2d_multiply(stack->current, matrix_2d_translate(mp_obj_get_float(args[paramOffset]), mp_obj_get_float(args[paramOffset + 1]));
 
 	return mp_const_none;
 }
 
-static mp_obj_t framebuffer_rotate(mp_uint_t n_args, const mp_obj_t *args)
-{
-	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
-	int paramOffset = 0;
-	
-	if (MP_OBJ_IS_STR(args[0])) {
-		if (n_args < 2) {
-			mp_raise_ValueError("Expected: window, angle");
-			return mp_const_none;
-		}
-		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
-		if (!window) {
-			mp_raise_ValueError("Window not found");
-			return mp_const_none;
-		}
-		paramOffset++;
-		stack = window->stack_2d;
-	}
-	else
-	{
-		if (n_args < 1) {
-			mp_raise_ValueError("Expected: angle");
-			return mp_const_none;
-		}
-		stack = &stack_2d_global;
-	}
-	
-	stack->current = matrix_2d_multiply(stack->current, matrix_2d_rotate(mp_obj_get_float(args[paramOffset])));
+//End RobotMan2412's matrix stack
 
-	return mp_const_none;
-}
 
-static mp_obj_t framebuffer_scale(mp_uint_t n_args, const mp_obj_t *args)
-{
-	Window* window = NULL;
-	matrix_stack_2d* stack = NULL;
-	int paramOffset = 0;
-	
-	if (MP_OBJ_IS_STR(args[0])) {
-		if (n_args < 3) {
-			mp_raise_ValueError("Expected: window, xscale, yscale");
-			return mp_const_none;
-		}
-		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
-		if (!window) {
-			mp_raise_ValueError("Window not found");
-			return mp_const_none;
-		}
-		paramOffset++;
-		stack = window->stack_2d;
-	}
-	else
-	{
-		if (n_args < 2) {
-			mp_raise_ValueError("Expected: xscale, yscale");
-			return mp_const_none;
-		}
-		stack = &stack_2d_global;
-	}
-	
-	stack->current = matrix_2d_multiply(stack->current, matrix_2d_scale(mp_obj_get_float(args[paramOffset]), mp_obj_get_float(args[paramOffset + 1])));
-
-	return mp_const_none;
-}
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_pushMatrix_obj,          0, 1, framebuffer_pushMatrix);
-/* Arguments: window (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_popMatrix_obj,           0, 1, framebuffer_popMatrix);
-/* Arguments: window (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_clearMatrix_obj,         0, 1, framebuffer_clearMatrix);
-/* Arguments: window (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_matrixSize_obj,          0, 1, framebuffer_matrixSize);
-/* Arguments: window (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_getMatrix_obj,           0, 1, framebuffer_getMatrix);
-/* Arguments: window (optional) */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_setMatrix_obj,           1, 2, framebuffer_setMatrix);
-/* Arguments: window (optional), matrix */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_transformPoint_obj,      1, 2, framebuffer_transformPoint);
-/* Arguments: window (optional), x, y */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_translate_obj,           2, 3, framebuffer_translate);
-/* Arguments: window (optional), x, y */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_rotate_obj,              1, 2, framebuffer_rotate);
-/* Arguments: window (optional), angle */
-
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_scale_obj,               2, 3, framebuffer_scale);
-/* Arguments: window (optional), xscale, yscale */
-
-	// {MP_ROM_QSTR( MP_QSTR_pushMatrix                    ), MP_ROM_PTR( &framebuffer_pushMatrix_obj           )}, //Push the current matrix onto the stack
-	// {MP_ROM_QSTR( MP_QSTR_popMatrix                     ), MP_ROM_PTR( &framebuffer_popMatrix_obj            )}, //Pop the top matrix off the stack
-	// {MP_ROM_QSTR( MP_QSTR_clearMatrix                   ), MP_ROM_PTR( &framebuffer_clearMatrix_obj          )}, //Clear the matrix stack
-	// {MP_ROM_QSTR( MP_QSTR_matrixSize                    ), MP_ROM_PTR( &framebuffer_matrixSize_obj           )}, //Get the size of the matrix stack
-	// {MP_ROM_QSTR( MP_QSTR_getMatrix                     ), MP_ROM_PTR( &framebuffer_getMatrix_obj            )}, //Get the current matrix
-	// {MP_ROM_QSTR( MP_QSTR_setMatrix                     ), MP_ROM_PTR( &framebuffer_setMatrix_obj            )}, //Set the current matrix
-	// {MP_ROM_QSTR( MP_QSTR_transformPoint                ), MP_ROM_PTR( &framebuffer_transformPoint_obj       )}, //Transform a point by the current matrix
-	// {MP_ROM_QSTR( MP_QSTR_translate                     ), MP_ROM_PTR( &framebuffer_translate_obj            )}, //Translate (move) the canvas
-	// {MP_ROM_QSTR( MP_QSTR_rotate                        ), MP_ROM_PTR( &framebuffer_rotate_obj               )}, //Rotate the canvas around the origin
-	// {MP_ROM_QSTR( MP_QSTR_scale                         ), MP_ROM_PTR( &framebuffer_scale_obj                )}, //Scale the canvas
-
-//End matrix stack
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_flush_obj,                0, 1, framebuffer_flush      );
 /* Flush the framebuffer to the display. Arguments: flags (optional) */
@@ -1225,16 +1026,6 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_windowList                    ), MP_ROM_PTR( &framebuffer_window_list_obj          )}, //List all windows
 
 	/* Functions: matrix stack */
-	{MP_ROM_QSTR( MP_QSTR_pushMatrix                    ), MP_ROM_PTR( &framebuffer_pushMatrix_obj           )}, //Push the current matrix onto the stack
-	{MP_ROM_QSTR( MP_QSTR_popMatrix                     ), MP_ROM_PTR( &framebuffer_popMatrix_obj            )}, //Pop the top matrix off the stack
-	{MP_ROM_QSTR( MP_QSTR_clearMatrix                   ), MP_ROM_PTR( &framebuffer_clearMatrix_obj          )}, //Clear the matrix stack
-	{MP_ROM_QSTR( MP_QSTR_matrixSize                    ), MP_ROM_PTR( &framebuffer_matrixSize_obj           )}, //Get the size of the matrix stack
-	{MP_ROM_QSTR( MP_QSTR_getMatrix                     ), MP_ROM_PTR( &framebuffer_getMatrix_obj            )}, //Get the current matrix
-	{MP_ROM_QSTR( MP_QSTR_setMatrix                     ), MP_ROM_PTR( &framebuffer_setMatrix_obj            )}, //Set the current matrix
-	{MP_ROM_QSTR( MP_QSTR_transformPoint                ), MP_ROM_PTR( &framebuffer_transformPoint_obj       )}, //Transform a point by the current matrix
-	{MP_ROM_QSTR( MP_QSTR_translate                     ), MP_ROM_PTR( &framebuffer_translate_obj            )}, //Translate (move) the canvas
-	{MP_ROM_QSTR( MP_QSTR_rotate                        ), MP_ROM_PTR( &framebuffer_rotate_obj               )}, //Rotate the canvas around the origin
-	{MP_ROM_QSTR( MP_QSTR_scale                         ), MP_ROM_PTR( &framebuffer_scale_obj                )}, //Scale the canvas
 };
 
 static MP_DEFINE_CONST_DICT(framebuffer_module_globals, framebuffer_module_globals_table);
