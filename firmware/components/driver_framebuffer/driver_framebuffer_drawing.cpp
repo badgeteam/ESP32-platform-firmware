@@ -44,6 +44,76 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
+typedef struct texture_2d_t {
+	uint32_t *buffer;
+	int16_t width;
+	int16_t height;
+} texture_2d;
+
+typedef struct point_3d_t {
+	double x, y, z;
+} point_3d;
+
+typedef struct triangle_3d_t {
+	bool modificationAllowed; //This is false if the shape is being drawn, because at this time it will not affect anything to modify vertices.
+	point_3d *point0;
+	point_3d *point1;
+	point_3d *point2;
+	double u0, v0;
+	double u1, v1;
+	double u2, v2;
+} triangle_3d;
+
+/*
+ * Defines a shader applicable to 2D drawing.
+ * A shader is a piece of code which allows for special coloring of a drawn object in an otherwise impossible way.
+ * 
+ * Arguments:
+ * uint32_t tint -- Tint of the drawing, named tint because this would be used to tint the texture, or specify the color if no texture is present.
+ * texture_2d *texture -- Pointer to the texture object, if NULL then there is no texture.
+ * int16_t screenX -- Real X position on screen.
+ * int16_t screenY -- Real Y position on screen.
+ * double preTransformX -- X position on screen that this would have been it if it were untransformed.
+ * double preTransformY -- Y position on screen that this would have been it if it were untransformed.
+ * double u -- Represents the X coordinate on the texture, from 0 to 1.
+ * double v -- Represents the Y coordinate on the texture, from 0 to 1.
+ * void *args -- Anything as an argument to the shader.
+ * int n_args -- How many arguments the shader has recieved.
+ * 
+ * Returns:
+ * The color to be drawn, formatted in 0xAARRGGBB.
+ */
+typedef uint32_t(*shader_2d)(uint32_t tint, texture_2d *texture, int16_t screenX, int16_t screenY, \
+				double preTransformX, double preTransformY, double u, double v, void *args, int n_args);
+
+/*
+ * Defines a shader applicable to 2D drawing.
+ * A shader is a piece of code which allows for special coloring of a drawn object in an otherwise impossible way.
+ * 3D shaders also have the power to distort an object, such as moving vertices around.
+ * For this reason, the shader will be called twice:
+ * Once to displace the vertices,
+ * And once more to draw the shape or model.
+ * 
+ * Arguments:
+ * uint32_t tint -- Tint of the drawing, named tint because this would be used to tint the texture, or specify the color if no texture is present.
+ * texture_2d *texture -- Pointer to the texture object, if NULL then there is no texture.
+ * int16_t screenX -- Real X position on screen.
+ * int16_t screenY -- Real Y position on screen.
+ * double preTransformX -- X position in space that this would have been it if it were untransformed.
+ * double preTransformY -- Y position in space that this would have been it if it were untransformed.
+ * double preTransformZ -- Z position in space that this would have been it if it were untransformed.
+ * double u -- Represents the X coordinate on the texture, from 0 to 1.
+ * double v -- Represents the Y coordinate on the texture, from 0 to 1.
+ * triangle_3d *triangle -- The triangle upon which this shader is applied, it is a pointer to allow modifiction of the triangle.
+ * void *args -- Anything as an argument to the shader.
+ * int n_args -- How many arguments the shader has recieved.
+ * 
+ * Returns:
+ * The color to be drawn, formatted in 0xAARRGGBB.
+ */
+typedef uint32_t(*shader_3d)(uint32_t tint, texture_2d *texture, int16_t screenX, int16_t screenY, \
+				double preTransformX, double preTransformY, double preTransformZ, double u, double v, triangle_3d *triangle, void *args, int n_args);
+
 #define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
 
 void driver_framebuffer_line(Window* window, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint32_t color)
@@ -174,9 +244,13 @@ void driver_framebuffer_triangle(Window* window, double x0, double y0, double x1
 
 void driver_framebuffer_quad(Window* window, double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, uint32_t color)
 {
-	// This is easier to do if represented as two triangles.
+	// This is easier to do if represented as triangles.
+	driver_framebuffer_triangle(window, x0, y0, x1, y1, x2, y2, color);
+	driver_framebuffer_triangle(window, x1, y1, x3, y3, x2, y2, color);
+	// Do this twice so as to make a gap less likely.
 	driver_framebuffer_triangle(window, x0, y0, x1, y1, x3, y3, color);
 	driver_framebuffer_triangle(window, x1, y1, x2, y2, x3, y3, color);
+	// Unfortunately, very thin quads will still show a gap occasionally.
 }
 
 void driver_framebuffer_rect(Window* window, int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color)

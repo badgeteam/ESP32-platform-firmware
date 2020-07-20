@@ -277,37 +277,51 @@ static mp_obj_t framebuffer_window_transparency(mp_uint_t n_args, const mp_obj_t
 
 static mp_obj_t framebuffer_get_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	Window* window = NULL;
-	
+	matrix_stack_2d* stack;
+
 	if ((n_args > 0) && (MP_OBJ_IS_STR(args[0]))) { //A window was provided
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
 		if (!window) {
 			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
+		stack = window->stack_2d;
+	}
+	else
+	{
+		stack = &stack_2d_global;
 	}
 	
-	int x = mp_obj_get_int(args[n_args-2]);
-	int y = mp_obj_get_int(args[n_args-1]);
+	double x = mp_obj_get_float(args[n_args-3]);
+	double y = mp_obj_get_float(args[n_args-2]);
+	matrix_2d_transform_point(stack->current, &x, &y);
 	
 	return mp_obj_new_int(driver_framebuffer_getPixel(window, x, y));
 }
 
 static mp_obj_t framebuffer_draw_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	Window* window = NULL;
-	
+	matrix_stack_2d* stack;
+
 	if ((n_args > 0) && (MP_OBJ_IS_STR(args[0]))) { //A window was provided
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
 		if (!window) {
 			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
+		stack = window->stack_2d;
+	}
+	else
+	{
+		stack = &stack_2d_global;
 	}
 	
-	int x = mp_obj_get_int(args[n_args-3]);
-	int y = mp_obj_get_int(args[n_args-2]);
+	double x = mp_obj_get_float(args[n_args-3]);
+	double y = mp_obj_get_float(args[n_args-2]);
+	matrix_2d_transform_point(stack->current, &x, &y);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
 	
-	driver_framebuffer_setPixel(window, x, y, color);
+	driver_framebuffer_setPixel(window, (int) (x + 0.5), (int) (y + 0.5), color);
 	return mp_const_none;
 }
 
@@ -419,6 +433,46 @@ static mp_obj_t framebuffer_draw_triangle(mp_uint_t n_args, const mp_obj_t *args
 	matrix_2d_transform_point(stack->current, &x1, &y1);
 	matrix_2d_transform_point(stack->current, &x2, &y2);
 	driver_framebuffer_triangle(window, x0, y0, x1, y1, x2, y2, color);
+	return mp_const_none;
+}
+
+static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
+{
+	Window* window = NULL;
+	matrix_stack_2d* stack;
+	int paramOffset = 0;
+	if (MP_OBJ_IS_STR(args[0])) {
+		if (n_args != 7) {
+			mp_raise_ValueError("Expected 9 or 10 arguments: (window), x0, y0, x1, y1, x2, y2, x3, y3, color");
+			return mp_const_none;
+		}
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset = 1;
+		stack = window->stack_2d;
+	}
+	else
+	{
+		stack = &stack_2d_global;
+	}
+	
+	double x0 = mp_obj_get_int(args[paramOffset]);
+	double y0 = mp_obj_get_int(args[paramOffset + 1]);
+	double x1 = mp_obj_get_int(args[paramOffset + 2]);
+	double y1 = mp_obj_get_int(args[paramOffset + 3]);
+	double x2 = mp_obj_get_int(args[paramOffset + 4]);
+	double y2 = mp_obj_get_int(args[paramOffset + 5]);
+	double x3 = mp_obj_get_int(args[paramOffset + 6]);
+	double y3 = mp_obj_get_int(args[paramOffset + 7]);
+	uint32_t color = mp_obj_get_int(args[paramOffset + 8]);
+	matrix_2d_transform_point(stack->current, &x0, &y0);
+	matrix_2d_transform_point(stack->current, &x1, &y1);
+	matrix_2d_transform_point(stack->current, &x2, &y2);
+	matrix_2d_transform_point(stack->current, &x3, &y3);
+	driver_framebuffer_quad(window, x0, y0, x1, y1, x2, y2, x3, y3, color);
 	return mp_const_none;
 }
 
@@ -1179,6 +1233,9 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_fill_obj,          
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_line_obj,            5, 6, framebuffer_draw_line);
 /* Draw a line from point (x0,y0) to point (x1,y1) in the framebuffer or a window. Arguments: window (optional), x0, y0, x1, y1, color */
 
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_quad_obj,            9,10, framebuffer_draw_quad);
+/* Draw a rectangle in the framebuffer or a window. Arguments: window (optional), x0, y0, x1, y1, x2, y2, x3, y3, color*/
+
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_rect_obj,            6, 7, framebuffer_draw_rect);
 /* Draw a rectangle in the framebuffer or a window. Arguments: window (optional), x, y, width, height, color*/
 
@@ -1273,6 +1330,7 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_drawPixel                     ), MP_ROM_PTR( &framebuffer_draw_pixel_obj           )}, //Set the color of a pixel
 	{MP_ROM_QSTR( MP_QSTR_drawFill                      ), MP_ROM_PTR( &framebuffer_draw_fill_obj            )}, //Fill the framebuffer or a window
 	{MP_ROM_QSTR( MP_QSTR_drawLine                      ), MP_ROM_PTR( &framebuffer_draw_line_obj            )}, //Draw a line
+	{MP_ROM_QSTR( MP_QSTR_drawQuad                      ), MP_ROM_PTR( &framebuffer_draw_quad_obj            )}, //Draw a quad
 	{MP_ROM_QSTR( MP_QSTR_drawRect                      ), MP_ROM_PTR( &framebuffer_draw_rect_obj            )}, //Draw a rectangle
 	{MP_ROM_QSTR( MP_QSTR_drawTriangle                  ), MP_ROM_PTR( &framebuffer_draw_triangle_obj        )}, //Draw a triangle
 	{MP_ROM_QSTR( MP_QSTR_drawTri                       ), MP_ROM_PTR( &framebuffer_draw_triangle_obj        )}, //Draw a triangle
