@@ -385,47 +385,9 @@ static mp_obj_t framebuffer_draw_line(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
-static mp_obj_t framebuffer_draw_triangle(mp_uint_t n_args, const mp_obj_t *args)
-{
-	Window* window = NULL;
-	matrix_stack_2d* stack;
-	int paramOffset = 0;
-	if (MP_OBJ_IS_STR(args[0])) {
-		if (n_args != 7) {
-			mp_raise_ValueError("Expected: (window), x0, y0, x1, y1, x2, y2, color");
-			return mp_const_none;
-		}
-		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
-		if (!window) {
-			mp_raise_ValueError("Window not found");
-			return mp_const_none;
-		}
-		paramOffset = 1;
-		stack = window->stack_2d;
-	}
-	else
-	{
-		stack = &stack_2d_global;
-	}
-	
-	double x0 = mp_obj_get_float(args[paramOffset]);
-	double y0 = mp_obj_get_float(args[paramOffset + 1]);
-	double x1 = mp_obj_get_float(args[paramOffset + 2]);
-	double y1 = mp_obj_get_float(args[paramOffset + 3]);
-	double x2 = mp_obj_get_float(args[paramOffset + 4]);
-	double y2 = mp_obj_get_float(args[paramOffset + 5]);
-	matrix_2d_transform_point(stack->current, &x0, &y0);
-	matrix_2d_transform_point(stack->current, &x1, &y1);
-	matrix_2d_transform_point(stack->current, &x2, &y2);
-	uint32_t color = mp_obj_get_int(args[paramOffset + 6]);
-	driver_framebuffer_triangle(window, x0, y0, x1, y1, x2, y2, color);
-	return mp_const_none;
-}
-
 static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack;
 	if (MP_OBJ_IS_STR(args[0])) {
 		if (n_args != 7) {
 			mp_raise_ValueError("Expected 6 or 7 arguments: (window), x, y, width, height, fill and color");
@@ -436,45 +398,14 @@ static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
-		stack = window->stack_2d;
 	}
-	else
-	{
-		stack = &stack_2d_global;
-	}
-	
-	double x0 = mp_obj_get_float(args[n_args-6]);
-	double y0 = mp_obj_get_float(args[n_args-5]);
-	double w = mp_obj_get_float(args[n_args-4]);
-	double h = mp_obj_get_float(args[n_args-3]);
-	double x1 = x0 + w - 1;
-	double y1 = y0;
-	double x2 = x1;
-	double y2 = y0 + h - 1;
-	double x3 = x0;
-	double y3 = y2;
-	matrix_2d_transform_point(stack->current, &x0, &y0);
-	matrix_2d_transform_point(stack->current, &x1, &y1);
-	matrix_2d_transform_point(stack->current, &x2, &y2);
-	matrix_2d_transform_point(stack->current, &x3, &y3);
+	int x = mp_obj_get_int(args[n_args-6]);
+	int y = mp_obj_get_int(args[n_args-5]);
+	int w = mp_obj_get_int(args[n_args-4]);
+	int h = mp_obj_get_int(args[n_args-3]);
 	int fill = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
-	//driver_framebuffer_rect(window, x, y, w, h, fill, color);
-	if (!fill) {
-		driver_framebuffer_line(window, x0, y0, x1, y1, color);
-		driver_framebuffer_line(window, x1, y1, x2, y2, color);
-		driver_framebuffer_line(window, x2, y2, x3, y3, color);
-		driver_framebuffer_line(window, x3, y3, x0, y0, color);
-	}
-	else
-	{
-		driver_framebuffer_quad(window,
-			x0, y0,
-			x1, y1,
-			x2, y2,
-			x3, y3,
-		color);
-	}
+	driver_framebuffer_rect(window, x, y, w, h, fill, color);
 	return mp_const_none;
 }
 
@@ -1187,9 +1118,6 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_fill_obj,          
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_line_obj,            5, 6, framebuffer_draw_line);
 /* Draw a line from point (x0,y0) to point (x1,y1) in the framebuffer or a window. Arguments: window (optional), x0, y0, x1, y1, color */
 
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_triangle_obj,        7, 8, framebuffer_draw_triangle);
-/* Draw a rectangle in the framebuffer or a window. Arguments: window (optional), x0, y0, x1, y1, x2, y2, color*/
-
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_rect_obj,            6, 7, framebuffer_draw_rect);
 /* Draw a rectangle in the framebuffer or a window. Arguments: window (optional), x, y, width, height, color*/
 
@@ -1282,8 +1210,6 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_drawFill                      ), MP_ROM_PTR( &framebuffer_draw_fill_obj            )}, //Fill the framebuffer or a window
 	{MP_ROM_QSTR( MP_QSTR_drawLine                      ), MP_ROM_PTR( &framebuffer_draw_line_obj            )}, //Draw a line
 	{MP_ROM_QSTR( MP_QSTR_drawRect                      ), MP_ROM_PTR( &framebuffer_draw_rect_obj            )}, //Draw a rectangle
-	{MP_ROM_QSTR( MP_QSTR_drawTriangle                  ), MP_ROM_PTR( &framebuffer_draw_triangle_obj        )}, //Draw a triangle
-	{MP_ROM_QSTR( MP_QSTR_drawTri                       ), MP_ROM_PTR( &framebuffer_draw_triangle_obj        )}, //Draw a triangle
 	{MP_ROM_QSTR( MP_QSTR_drawCircle                    ), MP_ROM_PTR( &framebuffer_draw_circle_obj          )}, //Draw a circle
 	{MP_ROM_QSTR( MP_QSTR_drawRaw                       ), MP_ROM_PTR( &framebuffer_draw_raw_obj             )}, //Write raw data to the buffer
 	
