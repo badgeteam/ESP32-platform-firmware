@@ -774,7 +774,7 @@ static mp_obj_t framebuffer_default_fill_color(mp_uint_t n_args, const mp_obj_t 
 
 
 
-//Begin RobotMan2412's matrix stack
+//Begin matrix stack
 
 static mp_obj_t framebuffer_pushMatrix(mp_uint_t n_args, const mp_obj_t *args)
 {
@@ -1125,7 +1125,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_scale_obj,              
 	// {MP_ROM_QSTR( MP_QSTR_rotate                        ), MP_ROM_PTR( &framebuffer_rotate_obj               )}, //Rotate the canvas around the origin
 	// {MP_ROM_QSTR( MP_QSTR_scale                         ), MP_ROM_PTR( &framebuffer_scale_obj                )}, //Scale the canvas
 
-//End RobotMan2412's matrix stack
+//End matrix stack
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_flush_obj,                0, 1, framebuffer_flush      );
 /* Flush the framebuffer to the display. Arguments: flags (optional) */

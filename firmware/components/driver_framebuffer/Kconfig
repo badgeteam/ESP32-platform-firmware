@@ -1,4 +1,4 @@
-menu "Driver: framebuffer & matrices support"
+menu "Driver: framebuffer support"
 	config DRIVER_FRAMEBUFFER_ENABLE
 		bool "Enable the framebuffer driver"
 		default n
@@ -11,6 +11,6 @@ menu "Driver: framebuffer & matrices support"
 		default n
 	config MATRIX_STACK_SIZE
 		depends on DRIVER_FRAMEBUFFER_ENABLE
-		int "Size allocated to the matrix stack"
+		int "Size allocated to the matrix stack by default"
 		default 128
 endmenu
