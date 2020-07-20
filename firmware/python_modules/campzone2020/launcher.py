@@ -1,14 +1,17 @@
-import system, virtualtimers, display, keypad, touchpads, audio, valuestore, wifi
+import system, virtualtimers, display, keypad, touchpads, audio, valuestore, wifi, sys, system
 import os, ugTTS, term_menu, time, machine
 
 LONG_PRESS_MS = const(1000)
 
+# This is set if a TTS error occurs, which then disables TTS download until a power cycle
+tts_failed = False
+
 wifi.connect()
 
 def download_tts(app):
-    tts_text = app['name']
-    print("Preparing TTS: ", tts_text)
     try:
+        tts_text = app['name']
+        print("Preparing TTS: ", tts_text)
         ugTTS.text_to_mp3(tts_text, '/cache/appnames/%s.mp3' % app['slug'])
         print("TTS: Success")
         return True
@@ -17,9 +20,12 @@ def download_tts(app):
 
 
 def update_mp3_cache():
-    global apps
+    global apps, tts_failed
     # freediskpercent = int(os.statvfs('/cache')[3] / (os.statvfs('/cache')[2] / 100))
     freediskpercent = 100  # Above free disk space check doesn't work
+    if tts_failed:
+        print('Skipping app name generation due to earlier error.')
+        return 60000
     if freediskpercent > 25: # do not fill filesystem when free space < 25%
         if not wifi.status():
             wifi.connect()
@@ -32,15 +38,24 @@ def update_mp3_cache():
                 if mp3file not in mp3files:
                     try:
                         audio.play('/cache/system/generating_app_name.mp3')
-                    except:
-                        pass
-                    download_tts(app)
+                    except BaseException as e:
+                        tts_failed = True
+                        sys.print_exception(e)
+                        system.crashedWarning()
+                    success = download_tts(app)
+                    if not success:
+                        tts_failed = True
+                        return 2000
                     try:
                         audio.play('/cache/appnames/%s' % mp3file)
-                    except:
-                        pass
-            except:
-                pass
+                    except BaseException as e:
+                        tts_failed = True
+                        sys.print_exception(e)
+                        system.crashedWarning()
+            except BaseException as e:
+                tts_failed = True
+                sys.print_exception(e)
+                system.crashedWarning()
     else:
         print("Flash almost full, skipping text-to-speech")
     return 2000
