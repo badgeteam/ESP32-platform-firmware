@@ -13,9 +13,11 @@
 
 //creates a 2D matrix representing the given rotation in radians
 matrix_2d matrix_2d_rotate(double angle) {
+    double dSin = sin(angle);
+    double dCos = cos(angle);
     return (matrix_2d){ .arr = {
-            cos(angle), -sin(angle), 0,
-            sin(angle), cos(angle), 0
+            dCos, -dSin, 0,
+            dSin, dCos, 0
     }};
 }
 

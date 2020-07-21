@@ -529,6 +529,7 @@ static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 static mp_obj_t framebuffer_draw_circle(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
+	matrix_stack_2d* stack;
 	if (MP_OBJ_IS_STR(args[0])) {
 		if (n_args != 6) {
 			mp_raise_ValueError("Expected 7 or 8 arguments: (window), x, y, radius, starting-angle, ending-angle, fill and color");
@@ -539,15 +540,21 @@ static mp_obj_t framebuffer_draw_circle(mp_uint_t n_args, const mp_obj_t *args)
 			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
+		stack = window->stack_2d;
 	}
-	int x     = mp_obj_get_int(args[n_args-7]);
-	int y     = mp_obj_get_int(args[n_args-6]);
-	int r     = mp_obj_get_int(args[n_args-5]);
-	int a0    = mp_obj_get_int(args[n_args-4]);
-	int a1    = mp_obj_get_int(args[n_args-3]);
+	else
+	{
+		stack = &stack_2d_global;
+	}
+	
+	double x     = mp_obj_get_float(args[n_args-7]);
+	double y     = mp_obj_get_float(args[n_args-6]);
+	double r     = mp_obj_get_float(args[n_args-5]);
+	double a0    = mp_obj_get_float(args[n_args-4]);
+	double a1    = mp_obj_get_float(args[n_args-3]);
 	int fill  = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
-	driver_framebuffer_circle(window, x, y, r, a0, a1, fill, color);
+	driver_framebuffer_circle(window, stack, x, y, r, a0, a1, fill, color);
 	return mp_const_none;
 }
 

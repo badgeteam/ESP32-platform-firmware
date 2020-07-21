@@ -19,7 +19,10 @@ void driver_framebuffer_quad(Window* window, double x0, double y0, double x1, do
 void driver_framebuffer_rect(Window* window, int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color);
 /* Draw a rectangle (filled or only the outline) from point (x, y) to point (x+w, y+h) */
 
-void driver_framebuffer_circle(Window* window, int16_t x0, int16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint32_t color);
+void driver_framebuffer_circle(Window* window, matrix_stack_2d* stack, double x0, double y0, double r, double a0, double a1, bool fill, uint32_t color);
+/* Draw a circle (filled or only the outline) at center point (x0, y0) with a radius r starting at angle a0 and ending at angle a1 */
+
+void driver_framebuffer_circle_old(Window* window, int16_t x0, int16_t y0, uint16_t r, uint16_t a0, uint16_t a1, bool fill, uint32_t color);
 /* Draw a circle (filled or only the outline) at center point (x0, y0) with a radius r starting at angle a0 and ending at angle a1 */
 
 #ifdef __cplusplus

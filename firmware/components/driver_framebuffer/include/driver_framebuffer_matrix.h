@@ -10,6 +10,7 @@
 extern "C" {
 #endif
 
+
 /*
  * This file is NOT part of an external library but is rather created and maintained by RobotMan2412 and the badge team.
  * 
