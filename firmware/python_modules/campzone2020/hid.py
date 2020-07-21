@@ -9,10 +9,18 @@ def _keyboard_write():
     global _keyboard_queue
     if len(_keyboard_queue) == 0:
         return
-    is_dirty = stm32.i2c_read_reg(_OFFSET_I2C_USB_KEYBOARD+7, 1)
-    is_dirty = int.from_bytes(is_dirty, "little")
+    is_dirty = True
+    retries = 10
+
+    while is_dirty and retries > 0:
+        retries -= 1
+        is_dirty = stm32.i2c_read_reg(_OFFSET_I2C_USB_KEYBOARD+7, 1)
+        is_dirty = int.from_bytes(is_dirty, "little")
+        time.sleep(0.01)
+
     if is_dirty:
         return
+
     payload = _keyboard_queue.pop(0)
     stm32.i2c_write_reg(_OFFSET_I2C_USB_KEYBOARD, payload)
 
@@ -41,7 +49,7 @@ def keyboard_type(text):
         keycode, shift = keycodes.char_to_keycode(character)
         modifier = bytes([keycodes.MOD_SHIFT]) if shift else b'\x00'
         keyboard_press_keys(bytes([keycode]), modifier)
-    keyboard_release()
+        keyboard_release()
 
 def _clear_writing_status():
     _keyboard_write()
