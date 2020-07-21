@@ -12,7 +12,7 @@ def download_tts(app):
     try:
         tts_text = app['name']
         print("Preparing TTS: ", tts_text)
-        ugTTS.text_to_mp3(tts_text, '/cache/appnames/%s.mp3' % app['slug'])
+        ugTTS.text_to_mp3(tts_text, ('/cache/appnames/%s.mp3' % app['slug']).lower())
         print("TTS: Success")
         return True
     except:
@@ -34,7 +34,7 @@ def update_mp3_cache():
         for app_index in apps:
             try:
                 app = apps[app_index]
-                mp3file = '%s.mp3' % app['slug']
+                mp3file = ('%s.mp3' % app['slug']).lower()
                 if mp3file not in mp3files:
                     try:
                         audio.play('/cache/system/generating_app_name.mp3')
