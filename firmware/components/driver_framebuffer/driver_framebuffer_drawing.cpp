@@ -242,7 +242,7 @@ void driver_framebuffer_triangle0(Window* window, double x0, double y0, double x
 	}
 }
 
-void driver_framebuffer_triangle(Window* window, double x0, double y0, double x1, double y1, double x2, double y2, uint32_t color)
+void driver_framebuffer_triangle1(Window* window, double x0, double y0, double x1, double y1, double x2, double y2, uint32_t color)
 {
 	//sort the points such that point 0 is the top and point 2 is the bottom
 	//lower number is higher on screen
@@ -330,15 +330,329 @@ void driver_framebuffer_triangle(Window* window, double x0, double y0, double x1
 	}
 }
 
+void clamp_to_view(Window* window, int *x, int *y)
+{
+	int16_t width;
+	int16_t height;
+	driver_framebuffer_window_getSize(window, &width, &height);
+	if (x[0] < 0) {
+		x[0] = 0;
+	}
+	else if (x[0] >= width) {
+		x[0] = width - 1;
+	}
+	if (y[0] < 0) {
+		y[0] = 0;
+	}
+	else if (y[0] >= height) {
+		y[0] = height - 1;
+	}
+}
+
+void driver_framebuffer_triangle2(Window* window, double x0, double y0, double x1, double y1, double x2, double y2, uint32_t color)
+{
+	//sort the points such that point 0 is the top and point 2 is the bottom
+	//lower number is higher on screen
+	float temp;
+	if (y1 < y0) { //ensure y1 is under y0
+		//swap points 1 and 0
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+		temp = x0;
+		x0 = x1;
+		x1 = temp;
+	}
+	if (y2 < y1) { //ensure y2 is under y1
+		//swap points 2 and 1
+		temp = y1;
+		y1 = y2;
+		y2 = temp;
+		temp = x1;
+		x1 = x2;
+		x2 = temp;
+	}
+	if (y2 < y0) { //ensure y2 is under y0
+		//swap points 2 and 0
+		temp = y0;
+		y0 = y2;
+		y2 = temp;
+		temp = x0;
+		x0 = x2;
+		x2 = temp;
+	}
+	if (y1 < y0) { //ensure y1 is under y0 once more
+		//swap points 1 and 0
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+		temp = x0;
+		x0 = x1;
+		x1 = temp;
+	}
+	
+	// Get the bounding box of the triangle
+	int leftMost = (int) (x0 - 1);
+	int rightMost = (int) (x0 + 1);
+	if (x1 - 1 < leftMost) {
+		leftMost = (int) (x1 - 1);
+	}
+	if (x2 - 1 < leftMost) {
+		leftMost = (int) (x2 - 1);
+	}
+	if (x1 + 1 > rightMost) {
+		rightMost = (int) (x1 + 1);
+	}
+	if (x2 + 1 > rightMost) {
+		rightMost = (int) (x2 + 1);
+	}
+	int topMost = (int) (y0);
+	int bottomMost = (int) (y2 + 1);
+
+	// Clamp the box to the view area
+	clamp_to_view(window, &leftMost, &topMost);
+	clamp_to_view(window, &rightMost, &bottomMost);
+
+	double xStep0 = (x1 - x0) / (y1 - y0);
+	double xStep1 = (x2 - x1) / (y2 - y1);
+	double xStep2 = (x2 - x0) / (y2 - y0);
+
+	// Plot all the points in the box which fall in the triangle
+	for (int y = topMost; y <= bottomMost; y++) {
+		for (int x = leftMost; x <= rightMost; x++) {
+			bool doDraw = 0;
+			if (y > y1 && y <= y2) {
+				double xc0 = x1 + xStep1 * (y - y1);
+				double xc1 = x0 + xStep2 * (y - y0);
+				if (xc0 > xc1) {
+					double tmp = xc0;
+					xc0 = xc1;
+					xc1 = tmp;
+				}
+				doDraw = x >= xc0 && x < xc1;
+			}
+			else if (y <= y1 && y >= y0) {
+				double xc0 = x0 + xStep0 * (y - y0);
+				double xc1 = x0 + xStep2 * (y - y0);
+				if (xc0 > xc1) {
+					double tmp = xc0;
+					xc0 = xc1;
+					xc1 = tmp;
+				}
+				doDraw = x >= xc0 && x < xc1;
+			}
+			if (doDraw) {
+				driver_framebuffer_setPixel(window, x, y, color);
+			}
+		}
+	}
+}
+
+void driver_framebuffer_triangle3(Window* window, double x0, double y0, double x1, double y1, double x2, double y2, uint32_t color)
+{
+	//sort the points such that point 0 is the top and point 2 is the bottom
+	//lower number is higher on screen
+	float temp;
+	if (y1 < y0) { //ensure y1 is under y0
+		//swap points 1 and 0
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+		temp = x0;
+		x0 = x1;
+		x1 = temp;
+	}
+	if (y2 < y1) { //ensure y2 is under y1
+		//swap points 2 and 1
+		temp = y1;
+		y1 = y2;
+		y2 = temp;
+		temp = x1;
+		x1 = x2;
+		x2 = temp;
+	}
+	if (y2 < y0) { //ensure y2 is under y0
+		//swap points 2 and 0
+		temp = y0;
+		y0 = y2;
+		y2 = temp;
+		temp = x0;
+		x0 = x2;
+		x2 = temp;
+	}
+	if (y1 < y0) { //ensure y1 is under y0 once more
+		//swap points 1 and 0
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+		temp = x0;
+		x0 = x1;
+		x1 = temp;
+	}
+	
+	// Get the bounding box of the triangle
+	// int leftMost = (int) (x0 - 1);
+	// int rightMost = (int) (x0 + 1);
+	// if (x1 - 1 < leftMost) {
+	// 	leftMost = (int) (x1 - 1);
+	// }
+	// if (x2 - 1 < leftMost) {
+	// 	leftMost = (int) (x2 - 1);
+	// }
+	// if (x1 + 1 > rightMost) {
+	// 	rightMost = (int) (x1 + 1);
+	// }
+	// if (x2 + 1 > rightMost) {
+	// 	rightMost = (int) (x2 + 1);
+	// }
+	int topMost = (int) y0;
+	if (topMost <= y0 - 0.5) topMost ++;
+	int bottomMost = (int) y2;
+	if (bottomMost <= y2 - 0.5) bottomMost ++;
+
+	// Clamp the box to the view area
+	//clamp_to_view(window, &leftMost, &topMost);
+	//clamp_to_view(window, &rightMost, &bottomMost);
+
+	double xStep0 = (x1 - x0) / (y1 - y0 + 1);
+	double xStep1 = (x2 - x1) / (y2 - y1 + 1);
+	double xStep2 = (x2 - x0) / (y2 - y0 + 1);
+
+	// Plot all the points in the box which fall in the triangle
+	int y = topMost;
+	for (y = topMost; y <= y1; y++) {
+		double xc0 = x0 + xStep0 * (y - y0) + 0.5;
+		double xc1 = x0 + xStep2 * (y - y0) + 0.5;
+		if (xc0 > xc1) {
+			double tmp = xc0;
+			xc0 = xc1;
+			xc1 = tmp;
+		}
+		int max = (int) xc1;
+		for (int x = (int) xc0; x <= xc1; x++) {
+			driver_framebuffer_setPixel(window, x, y, color);
+		}
+	};
+	for (; y <= bottomMost; y++) {
+		double xc0 = x1 + xStep1 * (y - y1) + 0.5;
+		double xc1 = x0 + xStep2 * (y - y0) + 0.5;
+		if (xc0 > xc1) {
+			double tmp = xc0;
+			xc0 = xc1;
+			xc1 = tmp;
+		}
+		int max = (int) xc1;
+		for (int x = (int) xc0; x <= xc1; x++) {
+			driver_framebuffer_setPixel(window, x, y, color);
+		}
+	}
+}
+
+void driver_framebuffer_triangle(Window* window, double x0, double y0, double x1, double y1, double x2, double y2, uint32_t color)
+{
+	//sort the points such that point 0 is the top and point 2 is the bottom
+	//lower number is higher on screen
+	float temp;
+	if (y1 < y0) { //ensure y1 is under y0
+		//swap points 1 and 0
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+		temp = x0;
+		x0 = x1;
+		x1 = temp;
+	}
+	if (y2 < y1) { //ensure y2 is under y1
+		//swap points 2 and 1
+		temp = y1;
+		y1 = y2;
+		y2 = temp;
+		temp = x1;
+		x1 = x2;
+		x2 = temp;
+	}
+	if (y2 < y0) { //ensure y2 is under y0
+		//swap points 2 and 0
+		temp = y0;
+		y0 = y2;
+		y2 = temp;
+		temp = x0;
+		x0 = x2;
+		x2 = temp;
+	}
+	if (y1 < y0) { //ensure y1 is under y0 once more
+		//swap points 1 and 0
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+		temp = x0;
+		x0 = x1;
+		x1 = temp;
+	}
+	
+	// From point 0 to point 1
+	double inc01 = (x1 - x0) / (y1 - y0);
+	double add01 = (x0 / inc01 - y0) * inc01;
+	if (inc01 == 0) add01 = x0;
+	// From point 0 to point 2
+	double inc02 = (x2 - x0) / (y2 - y0);
+	double add02 = (x0 / inc02 - y0) * inc02;
+	if (inc02 == 0) add02 = x0;
+	// From point 1 to point 2
+	double inc12 = (x2 - x1) / (y2 - y1);
+	double add12 = (x1 / inc12 - y1) * inc12;
+	if (inc12 == 0) add12 = x1;
+
+	// if (inc01 > 1000000 || inc02 > 1000000 || inc12 > 1000000 || inc01 < -1000000 || inc02 < -1000000 || inc12 < -1000000) {
+	// 	printf("%f + %f, %f + %f, %f + %f, (%f : %f) (%f : %f) (%f : %f)\n", inc01, add01, inc02, add02, inc12, add12, x0, y0, x1, y1, x2, y2);
+	// 	//return;
+	// }
+
+	// Check whether we need to draw the top part
+	int yCheck = (int) (y0 + 0.5);
+	if ((double) yCheck + 0.5 <= y1) {
+		// Draw top part
+		int startY = (int) (y0 + 0.5);
+		int endY = (int) (y1 + 0.5);
+		for (int y = startY; y < endY; y++) {
+			int startX = ((double) y + 0.5) * inc01 + add01 + 0.5;
+			int endX = ((double) y + 0.5) * inc02 + add02 + 0.5;
+			if (startX > endX) {
+				int tmp = startX;
+				startX = endX;
+				endX = tmp;
+			}
+			for (int x = startX; x < endX; x++) {
+				driver_framebuffer_setPixel(window, x, y, color);
+			}
+		}
+	}
+	// Check whether we need to draw the bottom part
+	yCheck = (int) (y1 + 0.5);
+	if ((double) yCheck + 0.5 <= y2) {
+		// Draw bottom part
+		int startY = (int) (y1 + 0.5);
+		int endY = (int) (y2 + 0.5);
+		for (int y = startY; y < endY; y++) {
+			int startX = ((double) y + 0.5) * inc12 + add12 + 0.5;
+			int endX = ((double) y + 0.5) * inc02 + add02 + 0.5;
+			if (startX > endX) {
+				int tmp = startX;
+				startX = endX;
+				endX = tmp;
+			}
+			for (int x = startX; x < endX; x++) {
+				driver_framebuffer_setPixel(window, x, y, color);
+			}
+		}
+	}
+}
+
 void driver_framebuffer_quad(Window* window, double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, uint32_t color)
 {
 	// This is easier to do if represented as triangles.
 	driver_framebuffer_triangle(window, x0, y0, x1, y1, x2, y2, color);
-	driver_framebuffer_triangle(window, x1, y1, x3, y3, x2, y2, color);
-	// Do this twice so as to make a gap less likely.
-	driver_framebuffer_triangle(window, x0, y0, x1, y1, x3, y3, color);
-	driver_framebuffer_triangle(window, x1, y1, x2, y2, x3, y3, color);
-	// Unfortunately, very thin quads will still show a gap occasionally.
+	driver_framebuffer_triangle(window, x0, y0, x2, y2, x3, y3, color);
 }
 
 void driver_framebuffer_rect(Window* window, int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color)
@@ -355,6 +669,7 @@ void driver_framebuffer_rect(Window* window, int16_t x, int16_t y, uint16_t w, u
 	}
 }
 
+// Not actually a unit test
 double circle_test_radius(matrix_stack_2d* stack, double radius)
 {
 	matrix_2d current = stack->current;
@@ -397,33 +712,9 @@ void driver_framebuffer_circle(Window* window, matrix_stack_2d* stack, double x,
 	}
 	
 	matrix_2d_transform_point(stack->current, &x, &y);
-	if (radius >= -0.00001 && radius <= 0.00001) {
-		printf("No.\n");
-		// Don't bother at all if it's 0 radius
-		return;
-	}
-	if (radius >= -0.5 && radius <= 0.5) {
-		// Don't bother with all this complicated stuff if it's just a pixel
-		printf("Pixel.\n");
-		driver_framebuffer_setPixel(window, (int) (x + 0.5), (int) (y + 0.5), color);
-		return;
-	}
 	// Test the scale of the stack so as to have enough precision to fool the viewer
 	double effectiveCircumfrence = circle_test_radius(stack, radius) * M_PI;
-	int nSteps;
-	if (effectiveCircumfrence > 200) {
-		// Say every 9-10 pixels is acceptable for large circles
-		nSteps = (int) (effectiveCircumfrence / 9.5);
-	}
-	if (effectiveCircumfrence > 100) {
-		// Say every 3-4 pixels is acceptable for medium size circles
-		nSteps = (int) (effectiveCircumfrence / 3.5);
-	}
-	else
-	{
-		// Say every pixel is required for small circles
-		nSteps = (int) effectiveCircumfrence;
-	}
+	int nSteps = effectiveCircumfrence < 60 ? (int) (effectiveCircumfrence / 1.7) : 40;
 	double anglePerStep = (startAngle - endAngle) / (double) nSteps;
 	// Make a copy of the matrix for later use
 	matrix_2d current = stack->current;
@@ -434,7 +725,6 @@ void driver_framebuffer_circle(Window* window, matrix_stack_2d* stack, double x,
 		// Rotate to the starting angle
 		current = matrix_2d_multiply(current, matrix_2d_rotate(startAngle));
 	}
-	printf("Steps: %d\n", nSteps);
 	// Start circling!
 	if (fill) {
 		double lastX = 0;
@@ -446,7 +736,6 @@ void driver_framebuffer_circle(Window* window, matrix_stack_2d* stack, double x,
 			current = matrix_2d_multiply(current, rotationStep);
 			matrix_2d_transform_point(current, &newX, &newY);
 			driver_framebuffer_triangle(window, x, y, lastX, lastY, newX, newY, color);
-			printf("Tri: (%f, %f)  (%f, %f)  (%f, %f)\n", x, y, lastX, lastY, newX, newY);
 			lastX = newX;
 			lastY = newY;
 		}
