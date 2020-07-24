@@ -34,9 +34,13 @@ def update_mp3_cache():
         for app_index in apps:
             try:
                 app = apps[app_index]
+                if 'name' not in app:
+                    print('App "%s" is likely missing a metadata.json file. Please reinstall it if needed, or remove it from the homescreen.' % app['slug'])
+                    continue
                 mp3file = ('%s.mp3' % app['slug']).lower()
                 if mp3file not in mp3files:
                     try:
+                        print('Downloading TTS for ' + app['slug'])
                         audio.play('/cache/system/generating_app_name.mp3')
                     except BaseException as e:
                         tts_failed = True
