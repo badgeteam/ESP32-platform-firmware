@@ -25,6 +25,7 @@ def populate_apps():
 	except OSError:
 		userApps = []
 	add_app("dashboard.tools.reset_default",{"name":"Reset default app", "category":"system"})
+	add_app("dashboard.tools.erase_storage",{"name":"Erase storage", "category":"system"})
 	add_app("dashboard.launcher",{"name":"Launcher", "category":"system"})
 	add_app("dashboard.tools.factory_reset",{"name":"Factory reset", "category":"system"})
 	add_app("dashboard.tools.update_firmware",{"name":"Firmware update", "category":"system"})
