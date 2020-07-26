@@ -1,6 +1,7 @@
 #include "include/nvs_init.h"
 #include "include/platform.h"
 #include "include/ota_update.h"
+#include "include/factory_reset.h"
 #include "driver_framebuffer.h"
 
 #include <stdio.h>
@@ -24,7 +25,7 @@ void nvs_write_zip_status(bool status)
 	}
 	res = nvs_set_u8(my_handle, "preseed", status);
 	if (res != ESP_OK) {
-		printf("NVS seems unusable! Please erase flash and try flashing again. (1)\n");
+		printf("NVS seems unusable! Please erase flash and try flashing again. (2)\n");
 		halt();
 	}
 }
@@ -55,12 +56,15 @@ void app_main()
 		}
 		esp_restart();
 	}
-	
+
 	int magic = get_magic();
 	
 	switch(magic) {
 		case MAGIC_OTA:
 			badge_ota_update();
+			break;
+		case MAGIC_FACTORY_RESET:
+			factory_reset();
 			break;
 		default:
 			micropython_entry();
