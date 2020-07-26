@@ -11,6 +11,8 @@
 #include <driver/spi_master.h>
 #include <freertos/task.h>
 
+#include "driver/ledc.h"
+
 #include "include/driver_flipdotter.h"
 
 #ifdef CONFIG_DRIVER_FLIPDOTTER_ENABLE
@@ -149,6 +151,18 @@ static void driver_flipdotter_post_transfer_callback(spi_transaction_t *t)
 	xSemaphoreGiveFromISR(driver_flipdotter_refresh_trigger, NULL);
 }
 
+esp_err_t driver_flipdotter_set_backlight(uint8_t brightness)
+{
+	#if CONFIG_PIN_NUM_FLIPDOTTER_BACKLIGHT >= 0
+		//return gpio_set_level(CONFIG_PIN_NUM_FLIPDOTTER_BACKLIGHT, brightness > 127);
+		ledc_set_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0, brightness);
+		ledc_update_duty(LEDC_HIGH_SPEED_MODE, LEDC_CHANNEL_0);
+		return ESP_OK;
+	#else
+		return ESP_FAIL;
+	#endif
+}
+
 esp_err_t driver_flipdotter_init(void)
 {
 	static bool driver_flipdotter_init_done = false;
@@ -156,6 +170,30 @@ esp_err_t driver_flipdotter_init(void)
 	ESP_LOGD(TAG, "init called");
 	
 	esp_err_t res;
+	
+	// Initialize backlight GPIO pin
+	#if CONFIG_PIN_NUM_FLIPDOTTER_BACKLIGHT >= 0
+		res = gpio_set_direction(CONFIG_PIN_NUM_FLIPDOTTER_BACKLIGHT, GPIO_MODE_OUTPUT);
+		if (res != ESP_OK) return res;
+		
+		ledc_timer_config_t ledc_timer = {
+			.duty_resolution = LEDC_TIMER_8_BIT, // resolution of PWM duty
+			.freq_hz = 5000,                     // frequency of PWM signal
+			.speed_mode = LEDC_HIGH_SPEED_MODE,  // timer mode
+			.timer_num = LEDC_TIMER_0,           // timer index
+		};
+		ledc_timer_config(&ledc_timer);
+		
+		ledc_channel_config_t ledc_channel = {
+			.channel    = LEDC_CHANNEL_0,
+			.duty       = 0,
+			.gpio_num   = CONFIG_PIN_NUM_FLIPDOTTER_BACKLIGHT,
+			.speed_mode = LEDC_HIGH_SPEED_MODE,
+			.hpoint     = 0,
+			.timer_sel  = LEDC_TIMER_0
+		};
+		ledc_channel_config(&ledc_channel);
+	#endif
 	
 	//Initialize fire GPIO pin
 	res = gpio_set_direction(CONFIG_PIN_NUM_FLIPDOTTER_FIRE, GPIO_MODE_OUTPUT);

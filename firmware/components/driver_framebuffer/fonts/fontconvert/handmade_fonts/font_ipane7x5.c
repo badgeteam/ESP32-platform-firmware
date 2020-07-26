@@ -139,5 +139,5 @@ const GFXglyph ipane7x5Glyphs[] = {
 const GFXfont ipane7x5 = {
   (uint8_t  *)ipane7x5Bitmaps,
   (GFXglyph *)ipane7x5Glyphs,
-  0x20, 0x7F, 7 };
+  0x20, 0x7F, 8 };
 // Approx. 1090 bytes
