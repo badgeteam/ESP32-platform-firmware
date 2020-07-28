@@ -3,7 +3,7 @@ import stm32
 _N_KEYS = const(16)
 _OFFSET_I2C_KEY_STATE = const(4)
 
-keypad_state = [0] * _N_KEYS
+keypad_state = [False] * _N_KEYS
 keypad_handlers = []
 
 def add_handler(handler):
@@ -46,3 +46,4 @@ def _keypad_interrupt_handler():
     keypad_state = new_touch_state
 
 stm32.add_interrupt_handler(stm32.INTERRUPT_KEYPAD, _keypad_interrupt_handler)
+_keypad_interrupt_handler()

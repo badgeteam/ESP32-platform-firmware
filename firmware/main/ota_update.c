@@ -110,7 +110,7 @@ void graphics_show(const char* text, uint8_t percentage, bool showPercentage, bo
 				driver_framebuffer_flush(0);
 			#endif
 			#ifdef CONFIG_DRIVER_DISPLAY_I2C_ENABLE
-				driver_framebuffer_fill(NULL, 0x050505);
+				driver_framebuffer_fill(NULL, 0x252525);
 				uint32_t progressPosition = (percentage*FB_WIDTH*FB_HEIGHT)/100;
                                 for(uint32_t i = 0; i < progressPosition; i++) {
                                   uint32_t x = i % FB_WIDTH;

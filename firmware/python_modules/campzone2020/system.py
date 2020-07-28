@@ -94,5 +94,11 @@ def get_vcc_bat():
     finally:
         return voltage_bat
 
+def eraseStorage():
+    rtc = machine.RTC()
+    rtc.write(0,2)
+    rtc.write(1,253)
+    reboot()
+
 def crashedWarning():
     pass

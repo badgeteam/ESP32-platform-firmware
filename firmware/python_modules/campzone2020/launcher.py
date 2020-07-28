@@ -73,7 +73,7 @@ def update():
     new_modified = valuestore.last_modified('system', 'launcher_items')
     if new_modified != app_list_last_modified:
         app_list_last_modified = new_modified
-        apps = valuestore.load('system', 'launcher_items') or {"0":{"slug":"norbert","name":"Synthesizer","colour":"#4A90E2"}}
+        apps = valuestore.load('system', 'launcher_items') or {"0":{"slug":"recover","name":"Recover","colour":"#4A90E2"}}
         drawApps()
     return 500
 

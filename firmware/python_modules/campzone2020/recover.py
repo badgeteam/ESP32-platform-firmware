@@ -2,26 +2,34 @@ import wifi, ugTTS, os, audio, time, display, sys, system, machine
 
 try:
     os.mountsd()
-    os.mkdir('/cache/system')
 except:
     pass
 
+print('=== Starting recovery procedure ===')
+
 try:
-    audio.play('/cache/system/updating_messages.mp3')
+    display.drawFill(0x252525)
+    display.flush()
 except BaseException as e:
     sys.print_exception(e)
     if not machine.nvs_get_u8("system", "ignore_crash"):
-        print("Exception initialising system speech updater")
+        print("Exception setting system speech updater background")
         system.crashedWarning()
 
+print('Connecting to WiFi')
 wifi.connect()
 wifi.wait()
 wifi.connect()
 
 if not wifi.status():
-    audio.play('/cache/system/wifi_failed.mp3')
-    time.sleep(3)
+    print('Failed to connect to WiFi. Please configure your badge\'s WiFi from your web browser.')
     system.launcher()
+
+try:
+    ugTTS.speak('Initialising files on your badge')
+    time.sleep(3)
+except:
+    pass
 
 pairs = [
     ['Updating system speech messages.', '/cache/system/updating_messages.mp3'],
@@ -38,22 +46,7 @@ pairs = [
     ['Downloading necessary files.', '/cache/system/downloading_files.mp3'],
     ['Check for system updates.', '/cache/system/check_system_update.mp3'],
     ['Works.', '/cache/system/works.mp3'],
-    ['Whack-A-Mole', '/cache/appnames/whack_a_mole.mp3'],
-    ['Memeboard', '/cache/appnames/memeboard.mp3'],
-    ['Sequencer', '/cache/appnames/sequencer.mp3'],
-    ['Synthesizer', '/cache/appnames/synthesizer.mp3'],
-    ['Hid Test', '/cache/appnames/hid_test.mp3'],
-    ['Midi Test', '/cache/appnames/midi_test.mp3'],
 ]
-
-try:
-    display.drawFill(0x050505)
-    display.flush()
-except BaseException as e:
-    sys.print_exception(e)
-    if not machine.nvs_get_u8("system", "ignore_crash"):
-        print("Exception setting system speech updater background")
-        system.crashedWarning()
 
 for index, pair in enumerate(pairs):
     progress = index / len(pairs)
@@ -73,7 +66,38 @@ for index, pair in enumerate(pairs):
             print("Exception updating file %s" % path)
             system.crashedWarning()
 
-display.drawFill(0x007F00)
-display.flush()
-time.sleep(1)
+try:
+    display.drawFill(0x007F00)
+    display.flush()
+except:
+    pass
+
+import woezel
+apps_json = {"0":{"slug":"synthesizer","name":"Synthesizer","colour":"#FF7F00"},"1":{"slug":"fourinarow","name":"FourInARow","colour":"#F8B700"},"2":{"slug":"bnr_radio","name":"BNR Radio","colour":"#4A90E2"},"3":{"slug":"midi_controller","name":"MIDI Controller","colour":"#7ED321"},"4":{"slug":"cybertyper","name":"CyberTyper","colour":"#D0021B"}}
+for index in range(len(list(apps_json.keys()))):
+    try:
+        app = apps_json[str(index)]
+        progress = index / len(list(apps_json.keys()))
+        for i in range(int(progress * 16)):
+            x = i % 4
+            y = int(i / 4)
+            display.drawPixel(x, y, 0x00007F)
+        display.flush()
+        print('Installing %s' % app['slug'])
+        woezel.install(app['slug'])
+    except:
+        pass
+
+try:
+    display.drawFill(0x00007F)
+    display.flush()
+except:
+    pass
+
+try:
+    import valuestore
+    valuestore.save('system', 'launcher_items', apps_json)
+except:
+    pass
+
 system.launcher()

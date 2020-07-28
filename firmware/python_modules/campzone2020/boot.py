@@ -15,6 +15,20 @@ except BaseException as e:
 	sys.print_exception(e)
 	system.crashedWarning()
 
+#### Recovery button combinations ####
+try:
+	import keypad
+	state = keypad.get_state()
+	outer_corners = ([True] + [False]*2 + [True] + [False]*8 + [True] + [False]*2 + [True])
+	if state == outer_corners:
+		import system
+		print('Reformatting internal flash storage. This can take a few minutes.')
+		system.eraseStorage()
+except BaseException as e:
+	sys.print_exception(e)
+	import system
+	system.crashedWarning()
+
 #### Application starting ####
 
 # Default app
