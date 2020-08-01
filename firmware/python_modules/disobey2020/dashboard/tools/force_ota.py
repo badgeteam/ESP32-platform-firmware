@@ -1,2 +1,1 @@
-import system
-system.ota(False)
+../../../shared/dashboard/tools/force_ota.py
