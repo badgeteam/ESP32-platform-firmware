@@ -279,22 +279,34 @@ static mp_obj_t framebuffer_get_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	Window* window = NULL;
 	matrix_stack_2d* stack;
 
-	if ((n_args > 0) && (MP_OBJ_IS_STR(args[0]))) { //A window was provided
+	bool raw = false;
+	int paramOffset = 0;
+
+	if (n_args > 0 && MP_OBJ_IS_STR(args[0])) { //A window was provided
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
 		if (!window) {
 			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
 		stack = window->stack_2d;
+		if (n_args > 3) {
+			raw = mp_obj_get_int(args[3]) != 0;
+		}
+		paramOffset = 1;
 	}
 	else
 	{
 		stack = &stack_2d_global;
+		if (n_args > 2) {
+			raw = mp_obj_get_int(args[2]) != 0;
+		}
 	}
 	
-	double x = mp_obj_get_float(args[n_args-3]);
-	double y = mp_obj_get_float(args[n_args-2]);
-	matrix_2d_transform_point(stack->current, &x, &y);
+	float x = mp_obj_get_float(args[paramOffset]);
+	float y = mp_obj_get_float(args[paramOffset + 1]);
+	if (!raw) {
+		matrix_2d_transform_point(stack->current, &x, &y);
+	}
 	
 	return mp_obj_new_int(driver_framebuffer_getPixel(window, x, y));
 }
@@ -303,23 +315,35 @@ static mp_obj_t framebuffer_draw_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	Window* window = NULL;
 	matrix_stack_2d* stack;
 
-	if ((n_args > 0) && (MP_OBJ_IS_STR(args[0]))) { //A window was provided
+	bool raw = false;
+	int paramOffset = 0;
+
+	if (n_args > 0 && MP_OBJ_IS_STR(args[0])) { //A window was provided
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
 		if (!window) {
 			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
 		stack = window->stack_2d;
+		if (n_args > 4) {
+			raw = mp_obj_get_int(args[4]) != 0;
+		}
+		paramOffset = 1;
 	}
 	else
 	{
 		stack = &stack_2d_global;
+		if (n_args > 3) {
+			raw = mp_obj_get_int(args[3]) != 0;
+		}
 	}
 	
-	double x = mp_obj_get_float(args[n_args-3]);
-	double y = mp_obj_get_float(args[n_args-2]);
-	matrix_2d_transform_point(stack->current, &x, &y);
-	uint32_t color = mp_obj_get_int(args[n_args-1]);
+	float x = mp_obj_get_float(args[paramOffset]);
+	float y = mp_obj_get_float(args[paramOffset + 1]);
+	if (!raw) {
+		matrix_2d_transform_point(stack->current, &x, &y);
+	}
+	uint32_t color = mp_obj_get_int(args[paramOffset + 2]);
 	
 	driver_framebuffer_setPixel(window, (int) (x + 0.5), (int) (y + 0.5), color);
 	return mp_const_none;
@@ -380,10 +404,10 @@ static mp_obj_t framebuffer_draw_line(mp_uint_t n_args, const mp_obj_t *args)
 		stack = &stack_2d_global;
 	}
 	
-	double x0 = mp_obj_get_float(args[n_args-5]);
-	double y0 = mp_obj_get_float(args[n_args-4]);
-	double x1 = mp_obj_get_float(args[n_args-3]);
-	double y1 = mp_obj_get_float(args[n_args-2]);
+	float x0 = mp_obj_get_float(args[n_args-5]);
+	float y0 = mp_obj_get_float(args[n_args-4]);
+	float x1 = mp_obj_get_float(args[n_args-3]);
+	float y1 = mp_obj_get_float(args[n_args-2]);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
 
 	//transform point according to the transformation
@@ -422,12 +446,12 @@ static mp_obj_t framebuffer_draw_triangle(mp_uint_t n_args, const mp_obj_t *args
 		stack = &stack_2d_global;
 	}
 	
-	double x0 = mp_obj_get_int(args[paramOffset]);
-	double y0 = mp_obj_get_int(args[paramOffset + 1]);
-	double x1 = mp_obj_get_int(args[paramOffset + 2]);
-	double y1 = mp_obj_get_int(args[paramOffset + 3]);
-	double x2 = mp_obj_get_int(args[paramOffset + 4]);
-	double y2 = mp_obj_get_int(args[paramOffset + 5]);
+	float x0 = mp_obj_get_int(args[paramOffset]);
+	float y0 = mp_obj_get_int(args[paramOffset + 1]);
+	float x1 = mp_obj_get_int(args[paramOffset + 2]);
+	float y1 = mp_obj_get_int(args[paramOffset + 3]);
+	float x2 = mp_obj_get_int(args[paramOffset + 4]);
+	float y2 = mp_obj_get_int(args[paramOffset + 5]);
 	uint32_t color = mp_obj_get_int(args[paramOffset + 6]);
 	matrix_2d_transform_point(stack->current, &x0, &y0);
 	matrix_2d_transform_point(stack->current, &x1, &y1);
@@ -459,14 +483,14 @@ static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 		stack = &stack_2d_global;
 	}
 	
-	double x0 = mp_obj_get_int(args[paramOffset]);
-	double y0 = mp_obj_get_int(args[paramOffset + 1]);
-	double x1 = mp_obj_get_int(args[paramOffset + 2]);
-	double y1 = mp_obj_get_int(args[paramOffset + 3]);
-	double x2 = mp_obj_get_int(args[paramOffset + 4]);
-	double y2 = mp_obj_get_int(args[paramOffset + 5]);
-	double x3 = mp_obj_get_int(args[paramOffset + 6]);
-	double y3 = mp_obj_get_int(args[paramOffset + 7]);
+	float x0 = mp_obj_get_int(args[paramOffset]);
+	float y0 = mp_obj_get_int(args[paramOffset + 1]);
+	float x1 = mp_obj_get_int(args[paramOffset + 2]);
+	float y1 = mp_obj_get_int(args[paramOffset + 3]);
+	float x2 = mp_obj_get_int(args[paramOffset + 4]);
+	float y2 = mp_obj_get_int(args[paramOffset + 5]);
+	float x3 = mp_obj_get_int(args[paramOffset + 6]);
+	float y3 = mp_obj_get_int(args[paramOffset + 7]);
 	uint32_t color = mp_obj_get_int(args[paramOffset + 8]);
 	matrix_2d_transform_point(stack->current, &x0, &y0);
 	matrix_2d_transform_point(stack->current, &x1, &y1);
@@ -496,16 +520,16 @@ static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 	{
 		stack = &stack_2d_global;
 	}
-	double x0 = mp_obj_get_int(args[n_args-6]);
-	double y0 = mp_obj_get_int(args[n_args-5]);
-	double w = mp_obj_get_int(args[n_args-4]);
-	double h = mp_obj_get_int(args[n_args-3]);
-	double x1 = x0 + w - 1;
-	double y1 = y0;
-	double x2 = x1;
-	double y2 = y0 + h - 1;
-	double x3 = x0;
-	double y3 = y2;
+	float x0 = mp_obj_get_float(args[n_args-6]);
+	float y0 = mp_obj_get_float(args[n_args-5]);
+	float w = mp_obj_get_float(args[n_args-4]);
+	float h = mp_obj_get_float(args[n_args-3]);
+	float x1 = x0 + w;
+	float y1 = y0;
+	float x2 = x1;
+	float y2 = y0 + h;
+	float x3 = x0;
+	float y3 = y2;
 	matrix_2d_transform_point(stack->current, &x0, &y0);
 	matrix_2d_transform_point(stack->current, &x1, &y1);
 	matrix_2d_transform_point(stack->current, &x2, &y2);
@@ -547,18 +571,18 @@ static mp_obj_t framebuffer_draw_circle(mp_uint_t n_args, const mp_obj_t *args)
 		stack = &stack_2d_global;
 	}
 	
-	double x     = mp_obj_get_float(args[n_args-7]);
-	double y     = mp_obj_get_float(args[n_args-6]);
-	double r     = mp_obj_get_float(args[n_args-5]);
-	double a0    = mp_obj_get_float(args[n_args-4]);
-	double a1    = mp_obj_get_float(args[n_args-3]);
+	float x     = mp_obj_get_float(args[n_args-7]);
+	float y     = mp_obj_get_float(args[n_args-6]);
+	float r     = mp_obj_get_float(args[n_args-5]);
+	float a0    = mp_obj_get_float(args[n_args-4]);
+	float a1    = mp_obj_get_float(args[n_args-3]);
 	int fill  = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
 	driver_framebuffer_circle(window, stack, x, y, r, a0, a1, fill, color);
 	return mp_const_none;
 }
 
-STATIC mp_obj_t framebuffer_draw_text(mp_uint_t n_args, const mp_obj_t *args) {
+static mp_obj_t framebuffer_draw_text(mp_uint_t n_args, const mp_obj_t *args) {
 	uint8_t argOffset = 0;
 	Window* window = NULL;
 	if (MP_OBJ_IS_STR(args[0])) { //window, x, y, text ...
@@ -890,6 +914,7 @@ static mp_obj_t framebuffer_clearMatrix(mp_uint_t n_args, const mp_obj_t *args)
 	Window* window = NULL;
 	matrix_stack_2d* stack = NULL;
 	int paramOffset = 0;
+	bool keepStack = false;
 	
 	if (n_args > 0 && MP_OBJ_IS_STR(args[0])) {
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
@@ -899,13 +924,25 @@ static mp_obj_t framebuffer_clearMatrix(mp_uint_t n_args, const mp_obj_t *args)
 		}
 		paramOffset++;
 		stack = window->stack_2d;
+		if (n_args > 1) {
+			keepStack = mp_obj_is_true(args[1]);
+		}
 	}
 	else
 	{
 		stack = &stack_2d_global;
+		if (n_args > 0) {
+			keepStack = mp_obj_is_true(args[0]);
+		}
 	}
 	
-	matrix_stack_2d_clear(stack);
+	if (!keepStack) {
+		matrix_stack_2d_clear(stack);
+	}
+	else
+	{
+		stack->current = matrix_2d_identity();
+	}
 	return mp_const_none;
 }
 
@@ -984,16 +1021,27 @@ static mp_obj_t framebuffer_setMatrix(mp_uint_t n_args, const mp_obj_t *args)
 		stack = &stack_2d_global;
 	}
 	
-	matrix_2d current = stack->current;
-	mp_obj_t out[6] = {
-		mp_obj_new_float(current.arr[0]),
-		mp_obj_new_float(current.arr[1]),
-		mp_obj_new_float(current.arr[2]),
-		mp_obj_new_float(current.arr[3]),
-		mp_obj_new_float(current.arr[4]),
-		mp_obj_new_float(current.arr[5])
-	};
-	return mp_obj_new_list(6, out);
+	if (MP_OBJ_IS_SMALL_INT(args[paramOffset]) || MP_OBJ_IS_QSTR(args[paramOffset]) || mp_obj_is_float(args[paramOffset])) {
+		mp_raise_ValueError("Expected 6 enties in list, by index:\n[ 0  1  2 ]\n[ 3  4  5 ]");
+	}
+
+	mp_obj_t *list;
+	size_t list_len;
+	matrix_2d matrix;
+	mp_obj_list_get(args[paramOffset], &list_len, &list);
+
+	if (list_len != 6) {
+		mp_raise_ValueError("Expected 6 enties in list, by index:\n[ 0  1  2 ]\n[ 3  4  5 ]");
+		return mp_const_none;
+	}
+
+	for (int i = 0; i < 6; i++) {
+		matrix.arr[i] = mp_obj_get_float(list[i]);
+	}
+
+	stack->current = matrix;
+
+	return mp_const_none;
 }
 
 static mp_obj_t framebuffer_transformPoint(mp_uint_t n_args, const mp_obj_t *args)
@@ -1024,8 +1072,8 @@ static mp_obj_t framebuffer_transformPoint(mp_uint_t n_args, const mp_obj_t *arg
 		stack = &stack_2d_global;
 	}
 	
-	double x = mp_obj_get_float(args[paramOffset]);
-	double y = mp_obj_get_float(args[paramOffset + 1]);
+	float x = mp_obj_get_float(args[paramOffset]);
+	float y = mp_obj_get_float(args[paramOffset + 1]);
 
 	//printf("%f, %f -> ", x, y);
 	matrix_2d_transform_point(stack->current, &x, &y);
@@ -1143,7 +1191,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_pushMatrix_obj,         
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_popMatrix_obj,           0, 1, framebuffer_popMatrix);
 /* Arguments: window (optional) */
 
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_clearMatrix_obj,         0, 1, framebuffer_clearMatrix);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_clearMatrix_obj,         0, 2, framebuffer_clearMatrix);
 /* Arguments: window (optional) */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_matrixSize_obj,          0, 1, framebuffer_matrixSize);
@@ -1228,10 +1276,10 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_list_obj,        
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_transparency_obj,  1, 3, framebuffer_window_transparency);
 /* Query or configure transparency for a window. Arguments: window, enable (optional), color (optional) */
 
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_get_pixel_obj,            2, 3, framebuffer_get_pixel);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_get_pixel_obj,            2, 4, framebuffer_get_pixel);
 /* Get the color of a pixel in the framebuffer or in a window. Arguments: window (optional), x, y */
 
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_pixel_obj,           3, 4, framebuffer_draw_pixel);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_pixel_obj,           3, 5, framebuffer_draw_pixel);
 /* Set the color of a pixel in the framebuffer or in a window. Arguments: window (optional), x, y, color */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_fill_obj,            0, 2, framebuffer_draw_fill);

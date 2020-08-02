@@ -33,7 +33,7 @@ typedef struct Window_t {
 	/* Buffer */
 	uint8_t* buffer;
 
-	/* RobotMan2412's matrix stack */
+	/* Graphics acceleration */
 	matrix_stack_2d* stack_2d;       // 2D matrix stack
 } Window;
 

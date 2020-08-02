@@ -6,15 +6,15 @@
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
 /*
- * This file is NOT part of an external library but is rather created and maintained by RobotMan2412 and the badge team.
+ * This file is NOT part of an external library but is rather created and maintained by the badge team.
  * 
  * DO NOT TOUCH THIS FILE UNLESS YOU UNDERSTAND MATRICES!
  */
 
 //creates a 2D matrix representing the given rotation in radians
-matrix_2d matrix_2d_rotate(double angle) {
-    double dSin = sin(angle);
-    double dCos = cos(angle);
+matrix_2d matrix_2d_rotate(float angle) {
+    float dSin = sin(angle);
+    float dCos = cos(angle);
     return (matrix_2d){ .arr = {
             dCos, -dSin, 0,
             dSin, dCos, 0
@@ -22,7 +22,7 @@ matrix_2d matrix_2d_rotate(double angle) {
 }
 
 //creates a 2D matrix representing the given translation
-matrix_2d matrix_2d_translate(double x, double y) {
+matrix_2d matrix_2d_translate(float x, float y) {
     return (matrix_2d){ .arr = {
             1, 0, x,
             0, 1, y
@@ -30,7 +30,7 @@ matrix_2d matrix_2d_translate(double x, double y) {
 }
 
 //creates a 2D matrix representing the given scaling
-matrix_2d matrix_2d_scale(double x, double y) {
+matrix_2d matrix_2d_scale(float x, float y) {
     return (matrix_2d){ .arr = {
             y, 0, 0,
             0, x, 0
@@ -38,9 +38,15 @@ matrix_2d matrix_2d_scale(double x, double y) {
 }
 
 // Potentially.
-// matrix_3x2_2d matrix_2d_shear(double x, double y);
+// matrix_3x2_2d matrix_2d_shear(float x, float y);
 
 /* MATRIX OPERATIONS */
+
+//checks whether or not the matrix is an identity matrix
+bool matrix_2d_is_identity(matrix_2d matrix) {
+    return matrix.var.a0 == 1 && matrix.var.a1 == 0 && matrix.var.a2 == 0 &&
+           matrix.var.b0 == 0 && matrix.var.b1 == 1 && matrix.var.b2 == 0;
+}
 
 /*
  * 
@@ -98,9 +104,9 @@ matrix_2d matrix_2d_multiply(matrix_2d left, matrix_2d right) {
  */
 //transforms the point according to the matrix
 //this method is optimised for 2D
-void matrix_2d_transform_point(matrix_2d matrix, double *x, double *y) {
-    double xIn = *x;
-    double yIn = *y;
+void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y) {
+    float xIn = *x;
+    float yIn = *y;
     //printf("[%f   %f   %f]\n[%f   %f   %f]", matrix.var.a0, matrix.var.a1, matrix.var.a2, matrix.var.b0, matrix.var.b1, matrix.var.b2);
     x[0] = matrix.var.a0*xIn + matrix.var.a1*yIn + matrix.var.a2;
     y[0] = matrix.var.b0*xIn + matrix.var.b1*yIn + matrix.var.b2;

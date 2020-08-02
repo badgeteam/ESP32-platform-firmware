@@ -12,7 +12,7 @@ extern "C" {
 
 
 /*
- * This file is NOT part of an external library but is rather created and maintained by RobotMan2412 and the badge team.
+ * This file is NOT part of an external library but is rather created and maintained by the badge team.
  * 
  * DO NOT TOUCH THIS FILE UNLESS YOU UNDERSTAND MATRICES!
  */
@@ -21,7 +21,7 @@ extern "C" {
 /* ==== DATA TYPES ==== */
 
 
-typedef double matrix_var;
+typedef float matrix_var;
 
 typedef union matrix_2d_t {					// Used by the driver for 2D transformations
 	struct {								// Represented as struct where aN is top row and bN is bottom row
@@ -47,15 +47,6 @@ typedef struct matrix_stack_3d_t {
     matrix_3d current;						// The active matrix
 } matrix_stack_3d;
 
-typedef float depth_buffer_type;			// Whatever will get stored in the depth buffer
-
-typedef struct graphics_stack_3d_t {		// The 3D graphics stack, includes everything required for 3D
-	matrix_stack_3d *stack;					// The 3D matrix stack
-	depth_buffer_type *depth_buffer;        // The depth buffer, it allows to easily sort polygons by which one is on top
-	int width;								// The width of the depth buffer
-	int height;								// The height of the depth buffer
-} graphics_stack_3d;
-
 typedef struct matrix_stack_2d_t {
 	uint16_t capacity;						// How many matrices the current stack can hold in total
 	uint16_t size;							// How many matrices are currently on the stack
@@ -76,26 +67,28 @@ typedef struct matrix_stack_2d_t {
 
 
 //creates a 2D matrix representing the given rotation in radians
-matrix_2d matrix_2d_rotate(double angle);
+matrix_2d matrix_2d_rotate(float angle);
 
 //creates a 2D matrix representing the given translation
-matrix_2d matrix_2d_translate(double x, double y);
+matrix_2d matrix_2d_translate(float x, float y);
 
 //creates a 2D matrix representing the given scaling
-matrix_2d matrix_2d_scale(double x, double y);
+matrix_2d matrix_2d_scale(float x, float y);
 
 // Potentially.
-// matrix_3x2_2d matrix_2d_shear(double x, double y);
+// matrix_3x2_2d matrix_2d_shear(float x, float y);
 
 
 /* ==== MATRIX OPERATIONS ==== */
 
+//checks whether or not the matrix is an identity matrix
+bool matrix_2d_is_identity(matrix_2d matrix);
 
 //performs a matrix multiplication, internally factors in the bottom row which is omitted in storage
 matrix_2d matrix_2d_multiply(matrix_2d left, matrix_2d right);
 
 //transforms the point according to the matrix
-void matrix_2d_transform_point(matrix_2d matrix, double *x, double *y);
+void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y);
 
 
 /* ==== STACK OPERATIONS ==== */
