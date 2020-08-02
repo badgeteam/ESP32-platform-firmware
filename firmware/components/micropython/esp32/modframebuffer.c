@@ -138,7 +138,7 @@ static mp_obj_t framebuffer_draw_raw(mp_uint_t n_args, const mp_obj_t *args)
 	}
 	
 	mp_uint_t len;
-	uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[4], &len);
+	uint32_t *data = (uint32_t *)mp_obj_str_get_data(args[4], &len);
 	
 	for (int16_t px = 0; px < w; px++) {
 		for (int16_t py = 0; py < h; py++) {
