@@ -5,6 +5,7 @@
 #include "py/mperrno.h"
 #include "py/mphal.h"
 #include "py/runtime.h"
+#include "py/objarray.h"
 
 #include "extmod/vfs.h"
 #include "extmod/vfs_native.h"
@@ -18,6 +19,17 @@
 const GFXfont * defaultFont = &roboto_12pt7b;
 uint32_t defaultTextColor = COLOR_TEXT_DEFAULT;
 uint32_t defaultFillColor = COLOR_FILL_DEFAULT;
+
+static uint8_t *mp_obj_to_u8_ptr(mp_obj_t obj, size_t *len) {
+  if (MP_OBJ_IS_TYPE(obj, &mp_type_bytes)) {
+    return (uint8_t *)mp_obj_str_get_data(obj, len);
+  } else if(MP_OBJ_IS_TYPE(obj, &mp_type_bytearray)) {
+    mp_obj_array_t *array = MP_OBJ_TO_PTR(obj);
+    *len = array->len;
+    return array->items;
+  }
+  return NULL;
+}
 
 static mp_obj_t framebuffer_flush(mp_uint_t n_args, const mp_obj_t *args)
 {
@@ -126,26 +138,31 @@ static mp_obj_t framebuffer_draw_raw(mp_uint_t n_args, const mp_obj_t *args)
 			return mp_const_none;
 		}
 	}
+		
+	size_t  length;
+	uint8_t* data   = mp_obj_to_u8_ptr(args[n_args-5], &length);
 	
-	int16_t x = mp_obj_get_int(args[n_args-5]);
-	int16_t y = mp_obj_get_int(args[n_args-4]);
-	int16_t w = mp_obj_get_int(args[n_args-3]);
-	int16_t h = mp_obj_get_int(args[n_args-2]);
-	
-	if (!MP_OBJ_IS_TYPE(args[n_args-1], &mp_type_bytes)) {
-		mp_raise_ValueError("Expected a bytestring like object.");
+	if (data == NULL) {
+		mp_raise_ValueError("Expected a bytes or bytearray object");
 		return mp_const_none;
 	}
 	
-	mp_uint_t len;
-	uint8_t *data = (uint8_t *)mp_obj_str_get_data(args[4], &len);
+	int16_t start_x = mp_obj_get_int(args[n_args-4]);
+	int16_t start_y = mp_obj_get_int(args[n_args-3]);
+	int16_t width   = mp_obj_get_int(args[n_args-2]);
+	int16_t height  = mp_obj_get_int(args[n_args-1]);
 	
-	for (int16_t px = 0; px < w; px++) {
-		for (int16_t py = 0; py < h; py++) {
-			driver_framebuffer_setPixel(window, x+px, y+py, data[(x+px) + (y+py)*w]);
-		}
+	if (length != width*height*3) {
+		mp_raise_ValueError("Expected 3 bytes per pixel (red, green and blue)");
+		return mp_const_none;
 	}
 	
+	for (int16_t pos_x = 0; pos_x < width; pos_x++) {
+		for (int16_t pos_y = 0; pos_y < height; pos_y++) {
+			uint32_t value = data[(pos_x + pos_y * width) * 3 + 2] + (data[(pos_x + pos_y * width) * 3 + 1] << 8) + (data[(pos_x + pos_y * width) * 3] << 16);
+			driver_framebuffer_setPixel(window, start_x+pos_x, start_y+pos_y, value);
+		}
+	}
 	return mp_const_none;
 }
 
