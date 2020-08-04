@@ -23,7 +23,7 @@ menu "Driver: ILI9341 LCD display"
 	config DRIVER_ILI9341_SPI_SPEED
 		depends on DRIVER_ILI9341_ENABLE
 		int "SPI clock speed"
-		default 1000000
+		default 40000000
 	
 	config ILI9341_ORIENTATION
 		depends on DRIVER_ILI9341_ENABLE
