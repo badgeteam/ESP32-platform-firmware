@@ -5,11 +5,15 @@
  */
 
 #include "sdkconfig.h"
-#include "include/driver_framebuffer_internal.h"
+#include "esp_heap_caps.h"
+#include "esp_log.h"
+#include "esp_system.h"
 
-#define TAG "fb"
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+#include "include/driver_framebuffer_internal.h"
+#define TAG "fb"
+
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 uint8_t* framebuffer1;
@@ -23,6 +27,8 @@ uint8_t* framebuffer;
 inline uint16_t convert24to16(uint32_t in) //RGB24 to 565
 {
 	uint8_t r = (in>>16)&0xFF;
+	uint8_t b = in&0xFF;
+#endif
 	uint8_t g = (in>>8)&0xFF;
 	uint8_t b = in&0xFF;
 	return ((b & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (r >> 3);
@@ -62,7 +68,7 @@ esp_err_t driver_framebuffer_init()
 	static bool driver_framebuffer_init_done = false;
 	if (driver_framebuffer_init_done) return ESP_OK;
 	ESP_LOGD(TAG, "init called");
-	
+
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 		ESP_LOGI(TAG, "Allocating %u bytes for framebuffer 1", FB_SIZE);
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_SPIRAM
@@ -91,13 +97,13 @@ esp_err_t driver_framebuffer_init()
 			return ESP_FAIL;
 		}
 	#endif
-		
+
 	driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //1st framebuffer
-	
+
 	#ifdef CONFIG_DRIVER_HUB75_ENABLE
 		driver_hub75_switch_buffer(framebuffer); //Needed to make the legacy compositor work.
 	#endif
-	
+
 	//driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
 	//driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
 	driver_framebuffer_set_orientation_angle(NULL, 0); //Apply global orientation (needed for flip)
@@ -131,7 +137,7 @@ void driver_framebuffer_fill(Window* window, uint32_t value)
 	int16_t width, height;
 	if (!_getFrameContext(window, &buffer, &width, &height)) return;
 	if (!window) driver_framebuffer_set_dirty_area(0,0,width-1,height-1, true);
-	
+
 	#if   defined(FB_TYPE_1BPP)
 		memset(buffer, convert8to1(convert24to8(value)) ? 0xFF : 0x00, (width*height)/8);
 	#elif defined(FB_TYPE_8BPP)
@@ -240,11 +246,11 @@ void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t 
 		uint32_t positionBits = (x+(y*width))*12;
 		uint32_t positionByte = positionBits/8;
 		uint8_t positionBit = positionBits % 8;
-		
+
 		uint8_t r = (value >> 20) &0x0F;
 		uint8_t g = (value >> 12) &0x0F;
 		uint8_t b = (value >> 04) &0x0F;
-		
+
 		switch(positionBit) {
 			case 0:
 				buffer[positionByte+0] = (r<<4) | g;
@@ -293,7 +299,7 @@ void driver_framebuffer_setPixel(Window* window, int16_t x, int16_t y, uint32_t 
 	#else
 		#error "No framebuffer type configured."
 	#endif
-	
+
 	if ((!window) && changed) driver_framebuffer_set_dirty_area(x,y,x,y,false);
 }
 
@@ -336,11 +342,11 @@ uint32_t driver_framebuffer_getPixel(Window* window, int16_t x, int16_t y)
 		uint32_t positionBits = (x+(y*width))*12;
 		uint32_t positionByte = positionBits/8;
 		uint8_t positionBit = positionBits % 8;
-		
+
 		uint8_t r = 0;
 		uint8_t g = 0;
 		uint8_t b = 0;
-		
+
 		switch(positionBit) {
 			case 0:
 				r = (buffer[positionByte+0] & 0xF0);
@@ -408,11 +414,11 @@ bool driver_framebuffer_flush(uint32_t flags)
 		ESP_LOGE(TAG, "flush without alloc!");
 		return false;
 	}
-	
+
 	_render_windows();
 
 	uint32_t eink_flags = 0;
-	
+
 	if ((flags & FB_FLAG_FULL) || (flags & FB_FLAG_FORCE)) {
 		driver_framebuffer_set_dirty_area(0, 0, FB_WIDTH-1, FB_HEIGHT-1, true);
 		#ifdef DISPLAY_FLAG_LUT_BIT
@@ -421,11 +427,11 @@ bool driver_framebuffer_flush(uint32_t flags)
 	} else if (!driver_framebuffer_is_dirty()) {
 		return false; //No need to update, stop.
 	}
-	
+
 	#ifdef CONFIG_DRIVER_HUB75_ENABLE
 	compositor_disable();
 	#endif
-	
+
 	#if defined(FB_TYPE_8BPP) && defined(DISPLAY_FLAG_8BITPIXEL)
 		eink_flags |= DISPLAY_FLAG_8BITPIXEL;
 	#endif
@@ -443,7 +449,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 #else
 #error "NO LUT BIT"
 	#endif
-		
+
 	#ifdef FB_FLUSH_GS
 	if (flags & FB_FLAG_LUT_GREYSCALE) {
 		FB_FLUSH_GS(framebuffer, eink_flags);
@@ -455,7 +461,7 @@ bool driver_framebuffer_flush(uint32_t flags)
 	#ifdef FB_FLUSH_GS
 	}
 	#endif
-	
+
 	#ifdef CONFIG_DRIVER_FRAMEBUFFER_DOUBLE_BUFFERED
 	if (framebuffer==framebuffer1) {
 		framebuffer = framebuffer2;
@@ -481,29 +487,25 @@ esp_err_t driver_framebuffer_png(Window* window, int16_t x, int16_t y, lib_reade
 		printf("Out of memory.\n");
 		return ESP_FAIL;
 	}
-	
+
 	int res = lib_png_read_header(pr);
 	if (res < 0) {
 		lib_png_destroy(pr);
 		printf("Can not read header.\n");
 		return ESP_FAIL;
 	}
-	
+
 	int width = pr->ihdr.width;
 	int height = pr->ihdr.height;
-	//int bit_depth = pr->ihdr.bit_depth;
-	//int color_type = pr->ihdr.color_type;
-	
-	//driver_framebuffer_set_dirty_area(x, y, x + width - 1, y + height - 1, false);
-	
+
 	uint32_t dst_min_x = x < 0 ? -x : 0;
 	uint32_t dst_min_y = y < 0 ? -y : 0;
-	
+
 	int16_t screenWidth;
 	int16_t screenHeight;
-		
+
 	driver_framebuffer_get_orientation_size(window, &screenWidth, &screenHeight);
-	
+
 	res = lib_png_load_image(window, pr, x, y, dst_min_x, dst_min_y, screenWidth - x, screenHeight - y, screenWidth);
 
 	lib_png_destroy(pr);
@@ -512,7 +514,8 @@ esp_err_t driver_framebuffer_png(Window* window, int16_t x, int16_t y, lib_reade
 		printf("Failed to load image.\n");
 		return ESP_FAIL;
 	}
-	
+
+	driver_framebuffer_set_dirty_area(x, y, x + width - 1, y + height - 1, false);
 	return ESP_OK;
 }
 
@@ -548,5 +551,6 @@ uint8_t driver_framebuffer_getBacklight()
 }
 
 #else
+#include "include/driver_framebuffer_disabled.h"
 esp_err_t driver_framebuffer_init() { return ESP_OK; }
 #endif
