@@ -423,6 +423,7 @@ static mp_obj_t framebuffer_draw_line(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
+#ifdef CONFIG_G_NEW_TRIANGLE
 static mp_obj_t framebuffer_draw_triangle(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
@@ -459,7 +460,9 @@ static mp_obj_t framebuffer_draw_triangle(mp_uint_t n_args, const mp_obj_t *args
 	driver_framebuffer_triangle(window, x0, y0, x1, y1, x2, y2, color);
 	return mp_const_none;
 }
+#endif
 
+#ifdef CONFIG_G_NEW_QUAD
 static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
@@ -499,6 +502,7 @@ static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 	driver_framebuffer_quad(window, x0, y0, x1, y1, x2, y2, x3, y3, color);
 	return mp_const_none;
 }
+#endif
 
 static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 {
@@ -520,6 +524,8 @@ static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 	{
 		stack = &stack_2d_global;
 	}
+
+	#ifdef CONFIG_G_NEW_RECT
 	float x0 = mp_obj_get_float(args[n_args-6]);
 	float y0 = mp_obj_get_float(args[n_args-5]);
 	float w = mp_obj_get_float(args[n_args-4]);
@@ -547,6 +553,15 @@ static mp_obj_t framebuffer_draw_rect(mp_uint_t n_args, const mp_obj_t *args)
 		driver_framebuffer_line(window, x2, y2, x3, y3, color);
 		driver_framebuffer_line(window, x3, y3, x0, y0, color);
 	}
+	#else
+	int x0 = mp_obj_get_int(args[n_args-6]);
+	int y0 = mp_obj_get_int(args[n_args-5]);
+	int w = mp_obj_get_int(args[n_args-4]);
+	int h = mp_obj_get_int(args[n_args-3]);
+	int fill = mp_obj_get_int(args[n_args-2]);
+	uint32_t color = mp_obj_get_int(args[n_args-1]);
+	driver_framebuffer_rect(window, x0, y0, w, h, fill, color);
+	#endif
 	return mp_const_none;
 }
 
@@ -571,14 +586,25 @@ static mp_obj_t framebuffer_draw_circle(mp_uint_t n_args, const mp_obj_t *args)
 		stack = &stack_2d_global;
 	}
 	
-	float x     = mp_obj_get_float(args[n_args-7]);
-	float y     = mp_obj_get_float(args[n_args-6]);
-	float r     = mp_obj_get_float(args[n_args-5]);
-	float a0    = mp_obj_get_float(args[n_args-4]);
-	float a1    = mp_obj_get_float(args[n_args-3]);
+	#ifdef CONFIG_G_NEW_CIRCLE
+	float x   = mp_obj_get_float(args[n_args-7]);
+	float y   = mp_obj_get_float(args[n_args-6]);
+	float r   = mp_obj_get_float(args[n_args-5]);
+	float a0  = mp_obj_get_float(args[n_args-4]);
+	float a1  = mp_obj_get_float(args[n_args-3]);
 	int fill  = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
-	driver_framebuffer_circle(window, stack, x, y, r, a0, a1, fill, color);
+	driver_framebuffer_circle_new(window, stack, x, y, r, a0 * M_PI / 180.0, a1 * M_PI / 180.0, fill, color);
+	#else
+	int x   = mp_obj_get_int(args[n_args-7]);
+	int y   = mp_obj_get_int(args[n_args-6]);
+	int r   = mp_obj_get_int(args[n_args-5]);
+	int a0  = mp_obj_get_int(args[n_args-4]);
+	int a1  = mp_obj_get_int(args[n_args-3]);
+	int fill  = mp_obj_get_int(args[n_args-2]);
+	uint32_t color = mp_obj_get_int(args[n_args-1]);
+	driver_framebuffer_circle(window, x, y, r, a0, a1, fill, color);
+	#endif
 	return mp_const_none;
 }
 
@@ -1288,14 +1314,18 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_fill_obj,          
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_line_obj,            5, 6, framebuffer_draw_line);
 /* Draw a line from point (x0,y0) to point (x1,y1) in the framebuffer or a window. Arguments: window (optional), x0, y0, x1, y1, color */
 
+#ifdef CONFIG_G_NEW_QUAD
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_quad_obj,            9,10, framebuffer_draw_quad);
 /* Draw a rectangle in the framebuffer or a window. Arguments: window (optional), x0, y0, x1, y1, x2, y2, x3, y3, color*/
+#endif
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_rect_obj,            6, 7, framebuffer_draw_rect);
 /* Draw a rectangle in the framebuffer or a window. Arguments: window (optional), x, y, width, height, color*/
 
+#ifdef CONFIG_G_NEW_TRIANGLE
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_triangle_obj,        7, 8, framebuffer_draw_triangle);
 /* Draw a rectangle in the framebuffer or a window. Arguments: window (optional), x0, y0, x1, y1, x2, y2, color*/
+#endif
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_circle_obj,          7, 8, framebuffer_draw_circle);
 /* Draw a circle in the framebuffer or a window. Arguments: window (optional), x, y, radius, starting-angle, ending-angle, fill, color */
@@ -1385,10 +1415,14 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_drawPixel                     ), MP_ROM_PTR( &framebuffer_draw_pixel_obj           )}, //Set the color of a pixel
 	{MP_ROM_QSTR( MP_QSTR_drawFill                      ), MP_ROM_PTR( &framebuffer_draw_fill_obj            )}, //Fill the framebuffer or a window
 	{MP_ROM_QSTR( MP_QSTR_drawLine                      ), MP_ROM_PTR( &framebuffer_draw_line_obj            )}, //Draw a line
+	#ifdef CONFIG_G_NEW_QUAD
 	{MP_ROM_QSTR( MP_QSTR_drawQuad                      ), MP_ROM_PTR( &framebuffer_draw_quad_obj            )}, //Draw a quad
+	#endif
 	{MP_ROM_QSTR( MP_QSTR_drawRect                      ), MP_ROM_PTR( &framebuffer_draw_rect_obj            )}, //Draw a rectangle
+	#ifdef CONFIG_G_NEW_TRIANGLE
 	{MP_ROM_QSTR( MP_QSTR_drawTriangle                  ), MP_ROM_PTR( &framebuffer_draw_triangle_obj        )}, //Draw a triangle
 	{MP_ROM_QSTR( MP_QSTR_drawTri                       ), MP_ROM_PTR( &framebuffer_draw_triangle_obj        )}, //Draw a triangle
+	#endif
 	{MP_ROM_QSTR( MP_QSTR_drawCircle                    ), MP_ROM_PTR( &framebuffer_draw_circle_obj          )}, //Draw a circle
 	{MP_ROM_QSTR( MP_QSTR_drawRaw                       ), MP_ROM_PTR( &framebuffer_draw_raw_obj             )}, //Write raw data to the buffer
 	

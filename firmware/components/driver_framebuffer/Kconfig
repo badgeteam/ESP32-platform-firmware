@@ -12,5 +12,25 @@ menu "Driver: framebuffer support"
 	config MATRIX_STACK_SIZE
 		depends on DRIVER_FRAMEBUFFER_ENABLE
 		int "Size allocated to the matrix stack by default"
-		default 128
+		default 64
+	config G_NEW_TRIANGLE
+		depends on DRIVER_FRAMEBUFFER_ENABLE
+		bool "Enable triangle drawing"
+		default y
+	config G_NEW_CIRCLE
+		depends on G_NEW_TRIANGLE
+		bool "Enable new circle drawing, enables matrix stack for circles"
+		default y
+	config G_NEW_QUAD
+		depends on G_NEW_TRIANGLE
+		bool "Enable quad drawing"
+		default y
+	config G_NEW_RECT
+		depends on G_NEW_QUAD
+		bool "Enable new rectangle drawing, enables matrix stack for rectangles"
+		default y
+	config G_NEW_TEXT
+		depends on DRIVER_FRAMEBUFFER_ENABLE
+		bool "Enable new text drawing, enables matrix stack for text but uses more memory"
+		default y
 endmenu

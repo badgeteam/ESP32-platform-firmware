@@ -141,6 +141,21 @@ void _print_char(Window* window, unsigned char c, int16_t x0, int16_t y0, uint8_
 	}
 }
 
+// Draws a string to the screen
+void _write(Window* window, uint8_t c, int16_t x0, int16_t *x, int16_t *y, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
+{
+	if (font == NULL) { ESP_LOGE(TAG, "write called without font"); return; }
+	const GFXglyph *glyph = font->glyph + c - (uint8_t) font->first;
+	if (c == '\n') {
+		*x = x0;
+		*y += font->yAdvance * yScale;
+	} else if (c != '\r') {
+		_print_char(window, c, *x, *y+(font->yAdvance*yScale), xScale, yScale, color, font);
+		*x += glyph->xAdvance * xScale;
+	}
+}
+
+#ifdef CONFIG_G_NEW_TEXT
 // Maps a character directly onto a texture
 void _print_char_texture(texture_2d* __restrict__ texture, unsigned char c, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
@@ -187,20 +202,6 @@ void _print_char_texture(texture_2d* __restrict__ texture, unsigned char c, int1
 	}
 }
 
-// Draws a string to the screen
-void _write(Window* window, uint8_t c, int16_t x0, int16_t *x, int16_t *y, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
-{
-	if (font == NULL) { ESP_LOGE(TAG, "write called without font"); return; }
-	const GFXglyph *glyph = font->glyph + c - (uint8_t) font->first;
-	if (c == '\n') {
-		*x = x0;
-		*y += font->yAdvance * yScale;
-	} else if (c != '\r') {
-		_print_char(window, c, *x, *y+(font->yAdvance*yScale), xScale, yScale, color, font);
-		*x += glyph->xAdvance * xScale;
-	}
-}
-
 //Maps a string to a texture
 void _write_texture(texture_2d* __restrict__ texture, uint8_t c, int16_t x0, int16_t *x, int16_t *y, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
@@ -214,6 +215,7 @@ void _write_texture(texture_2d* __restrict__ texture, uint8_t c, int16_t x0, int
 		*x += glyph->xAdvance * xScale;
 	}
 }
+#endif
 
 uint16_t _char_width(uint8_t c, const GFXfont *font)
 {
@@ -255,13 +257,16 @@ uint16_t driver_framebuffer_print(Window* window, const char* str, int16_t x0, i
 
 	int16_t x;
 	int16_t y;
+	#ifdef CONFIG_G_NEW_TEXT
 	if (matrix_2d_is_identity(stack->current)) {
+	#endif
 		x = x0;
 		y = y0;
 		// We can run the non-matrix code if the matrix is (effectively) identity
 		for (uint16_t i = 0; i < strlen(str); i++) {
 			_write(window, str[i], x0, &x, &y, xScale, yScale, color, font);
 		}
+	#ifdef CONFIG_G_NEW_TEXT
 	}
 	else
 	{
@@ -323,6 +328,7 @@ uint16_t driver_framebuffer_print(Window* window, const char* str, int16_t x0, i
 		free(texture->buffer);
 		free(texture);
 	}
+	#endif
 
 	return y;
 }
