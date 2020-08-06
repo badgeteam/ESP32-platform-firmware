@@ -1,6 +1,8 @@
 
 #include "include/driver_framebuffer_internal.h"
 
+#include "sdkconfig.h"
+
 #include <math.h>
 
 #define TAG "fb-drawing"

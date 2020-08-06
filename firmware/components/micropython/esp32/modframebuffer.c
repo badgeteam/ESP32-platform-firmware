@@ -14,6 +14,10 @@
 #include <driver_framebuffer_compositor.h>
 #include <driver_framebuffer_devices.h>
 
+#include <math.h>
+
+#include "sdkconfig.h"
+
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
 const GFXfont * defaultFont = &roboto_12pt7b;
@@ -304,9 +308,11 @@ static mp_obj_t framebuffer_get_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	
 	float x = mp_obj_get_float(args[paramOffset]);
 	float y = mp_obj_get_float(args[paramOffset + 1]);
+	#ifdef CONFIG_G_MATRIX_ENABLE
 	if (!raw) {
 		matrix_2d_transform_point(stack->current, &x, &y);
 	}
+	#endif
 	
 	return mp_obj_new_int(driver_framebuffer_getPixel(window, x, y));
 }
@@ -340,9 +346,11 @@ static mp_obj_t framebuffer_draw_pixel(mp_uint_t n_args, const mp_obj_t *args) {
 	
 	float x = mp_obj_get_float(args[paramOffset]);
 	float y = mp_obj_get_float(args[paramOffset + 1]);
+	#ifdef CONFIG_G_MATRIX_ENABLE
 	if (!raw) {
 		matrix_2d_transform_point(stack->current, &x, &y);
 	}
+	#endif
 	uint32_t color = mp_obj_get_int(args[paramOffset + 2]);
 	
 	driver_framebuffer_setPixel(window, (int) (x + 0.5), (int) (y + 0.5), color);
@@ -410,9 +418,11 @@ static mp_obj_t framebuffer_draw_line(mp_uint_t n_args, const mp_obj_t *args)
 	float y1 = mp_obj_get_float(args[n_args-2]);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
 
+	#ifdef CONFIG_G_MATRIX_ENABLE
 	//transform point according to the transformation
 	matrix_2d_transform_point(stack->current, &x0, &y0);
 	matrix_2d_transform_point(stack->current, &x1, &y1);
+	#endif
 	//convert back to int so the line drawer will accept it
 	int16_t x0i = (int16_t) (x0 + 0.5);
 	int16_t y0i = (int16_t) (y0 + 0.5);
@@ -880,7 +890,7 @@ static mp_obj_t framebuffer_default_fill_color(mp_uint_t n_args, const mp_obj_t 
 
 
 //Begin matrix stack
-
+#ifdef CONFIG_G_MATRIX_ENABLE
 static mp_obj_t framebuffer_pushMatrix(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
@@ -1251,7 +1261,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_scale_obj,              
 	// {MP_ROM_QSTR( MP_QSTR_translate                     ), MP_ROM_PTR( &framebuffer_translate_obj            )}, //Translate (move) the canvas
 	// {MP_ROM_QSTR( MP_QSTR_rotate                        ), MP_ROM_PTR( &framebuffer_rotate_obj               )}, //Rotate the canvas around the origin
 	// {MP_ROM_QSTR( MP_QSTR_scale                         ), MP_ROM_PTR( &framebuffer_scale_obj                )}, //Scale the canvas
-
+#endif //CONFIG_G_MATRIX_ENABLE
 //End matrix stack
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_flush_obj,                0, 1, framebuffer_flush      );
@@ -1303,10 +1313,10 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_transparency_obj,
 /* Query or configure transparency for a window. Arguments: window, enable (optional), color (optional) */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_get_pixel_obj,            2, 4, framebuffer_get_pixel);
-/* Get the color of a pixel in the framebuffer or in a window. Arguments: window (optional), x, y */
+/* Get the color of a pixel in the framebuffer or in a window. Arguments: window (optional), x, y, ignore transformation (optional, ignored without matrix stack) */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_pixel_obj,           3, 5, framebuffer_draw_pixel);
-/* Set the color of a pixel in the framebuffer or in a window. Arguments: window (optional), x, y, color */
+/* Set the color of a pixel in the framebuffer or in a window. Arguments: window (optional), x, y, color, ignore transformation (optional, ignored without matrix stack) */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_draw_fill_obj,            0, 2, framebuffer_draw_fill);
 /* Fill the framebuffer or a window with a color. Arguments: window (optional), color */
@@ -1415,14 +1425,14 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_drawPixel                     ), MP_ROM_PTR( &framebuffer_draw_pixel_obj           )}, //Set the color of a pixel
 	{MP_ROM_QSTR( MP_QSTR_drawFill                      ), MP_ROM_PTR( &framebuffer_draw_fill_obj            )}, //Fill the framebuffer or a window
 	{MP_ROM_QSTR( MP_QSTR_drawLine                      ), MP_ROM_PTR( &framebuffer_draw_line_obj            )}, //Draw a line
-	#ifdef CONFIG_G_NEW_QUAD
+#ifdef CONFIG_G_NEW_QUAD
 	{MP_ROM_QSTR( MP_QSTR_drawQuad                      ), MP_ROM_PTR( &framebuffer_draw_quad_obj            )}, //Draw a quad
-	#endif
+#endif
 	{MP_ROM_QSTR( MP_QSTR_drawRect                      ), MP_ROM_PTR( &framebuffer_draw_rect_obj            )}, //Draw a rectangle
-	#ifdef CONFIG_G_NEW_TRIANGLE
+#ifdef CONFIG_G_NEW_TRIANGLE
 	{MP_ROM_QSTR( MP_QSTR_drawTriangle                  ), MP_ROM_PTR( &framebuffer_draw_triangle_obj        )}, //Draw a triangle
 	{MP_ROM_QSTR( MP_QSTR_drawTri                       ), MP_ROM_PTR( &framebuffer_draw_triangle_obj        )}, //Draw a triangle
-	#endif
+#endif
 	{MP_ROM_QSTR( MP_QSTR_drawCircle                    ), MP_ROM_PTR( &framebuffer_draw_circle_obj          )}, //Draw a circle
 	{MP_ROM_QSTR( MP_QSTR_drawRaw                       ), MP_ROM_PTR( &framebuffer_draw_raw_obj             )}, //Write raw data to the buffer
 	
@@ -1437,6 +1447,7 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_windowResize                  ), MP_ROM_PTR( &framebuffer_window_resize_obj        )}, //Resize a window
 	{MP_ROM_QSTR( MP_QSTR_windowList                    ), MP_ROM_PTR( &framebuffer_window_list_obj          )}, //List all windows
 
+#ifdef CONFIG_G_MATRIX_ENABLE
 	/* Functions: matrix stack */
 	{MP_ROM_QSTR( MP_QSTR_pushMatrix                    ), MP_ROM_PTR( &framebuffer_pushMatrix_obj           )}, //Push the current matrix onto the stack
 	{MP_ROM_QSTR( MP_QSTR_popMatrix                     ), MP_ROM_PTR( &framebuffer_popMatrix_obj            )}, //Pop the top matrix off the stack
@@ -1448,6 +1459,7 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_translate                     ), MP_ROM_PTR( &framebuffer_translate_obj            )}, //Translate (move) the canvas
 	{MP_ROM_QSTR( MP_QSTR_rotate                        ), MP_ROM_PTR( &framebuffer_rotate_obj               )}, //Rotate the canvas around the origin
 	{MP_ROM_QSTR( MP_QSTR_scale                         ), MP_ROM_PTR( &framebuffer_scale_obj                )}, //Scale the canvas
+#endif
 };
 
 static MP_DEFINE_CONST_DICT(framebuffer_module_globals, framebuffer_module_globals_table);

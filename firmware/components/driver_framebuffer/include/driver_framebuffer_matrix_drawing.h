@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef union rgb_splitter_union_t {			// Used to seperate ARGB more efficiently due to the way CPUs work
 	struct {
@@ -50,5 +52,7 @@ uint32_t shader_2d_lerp(float u, float v, int16_t x, int16_t y, void *args);
 
 uint32_t shader_2d_nolerp(float u, float v, int16_t x, int16_t y, void *args);
 
-#endif //CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+#ifdef __cplusplus
+}
+#endif
 

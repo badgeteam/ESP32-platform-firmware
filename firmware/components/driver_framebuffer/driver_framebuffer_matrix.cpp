@@ -5,6 +5,8 @@
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
+#ifdef CONFIG_G_MATRIX_ENABLE
+
 /*
  * This file is NOT part of an external library but is rather created and maintained by the badge team.
  * 
@@ -107,7 +109,6 @@ matrix_2d matrix_2d_multiply(matrix_2d left, matrix_2d right) {
 void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y) {
     float xIn = *x;
     float yIn = *y;
-    //printf("[%f   %f   %f]\n[%f   %f   %f]", matrix.var.a0, matrix.var.a1, matrix.var.a2, matrix.var.b0, matrix.var.b1, matrix.var.b2);
     x[0] = matrix.var.a0*xIn + matrix.var.a1*yIn + matrix.var.a2;
     y[0] = matrix.var.b0*xIn + matrix.var.b1*yIn + matrix.var.b2;
 }
@@ -151,6 +152,8 @@ esp_err_t matrix_stack_2d_pop(matrix_stack_2d *stack) {
     stack->current = stack->matrices[stack->size];
     return ESP_OK;
 }
+
+#endif //CONFIG_G_MATRIX_ENABLE
 
 #endif //CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 

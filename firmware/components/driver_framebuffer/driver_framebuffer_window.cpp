@@ -83,9 +83,11 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 		window->buffer = (uint8_t*) heap_caps_malloc(((width*height*PIXEL_SIZE)/8)+1, MALLOC_CAP_8BIT);
 	#endif
 	
+	#ifdef CONFIG_G_MATRIX_ENABLE
 	/* Initialise matrix stack */
 	window->stack_2d = new matrix_stack_2d();
 	matrix_stack_2d_init(window->stack_2d);
+	#endif
 
 	/* Linked list */
 	window->_prevWindow = driver_framebuffer_window_last();
@@ -97,8 +99,10 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 void driver_framebuffer_window_remove(Window* window)
 {
 	if (window->buffer) free(window->buffer);
+	#ifdef CONFIG_G_MATRIX_ENABLE
 	free(window->stack_2d->matrices);
 	free(window->stack_2d);
+	#endif
 	_remove_window_from_linked_list(window);
 	free(window);
 }

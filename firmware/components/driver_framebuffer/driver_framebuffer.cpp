@@ -120,23 +120,10 @@ esp_err_t driver_framebuffer_init()
 		driver_hub75_switch_buffer(framebuffer); //Needed to make the legacy compositor work.
 	#endif
 	
-	//Initialise the globl matrix stack.
-	//
-	//The matrix stack is used for linear transformations:
-	//  translate (move)
-	//  scale
-	//  rotate along origin
-	//Think of the framebuffer as a stretchable cloth;
-	//In that context, the matrix is what defines how to stretch and move the canvas.
-	//
-	//The stack part allows you to recover a matrix you may want to use once more.
-	//The stack is a hierarchy where you can only recover the most recently added element immediately:
-	//  some base transformation
-	//    maybe we want to animate a figure here
-	//      head
-	//With this hierarchical view, it is easier to see what i mean by this.
+	#ifdef CONFIG_G_MATRIX_ENABLE
+	//Initialise the global matrix stack.
 	matrix_stack_2d_init(&stack_2d_global);
-	//later on, i may want to add a 3D matrix stack and a depth buffer, required elements for 3D graphics
+	#endif
 
 	//driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
 	//driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
