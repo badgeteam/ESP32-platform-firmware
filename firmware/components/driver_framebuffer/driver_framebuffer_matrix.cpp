@@ -7,11 +7,10 @@
 
 #ifdef CONFIG_G_MATRIX_ENABLE
 
-/*
- * This file is NOT part of an external library but is rather created and maintained by the badge team.
- * 
- * DO NOT TOUCH THIS FILE UNLESS YOU UNDERSTAND MATRICES!
- */
+/* HyperLazerDeathRays
+     ~Me, probably. */
+
+/* HELPER FUNCTIONS */
 
 //creates a 2D matrix representing the given rotation in radians
 matrix_2d matrix_2d_rotate(float angle) {
@@ -114,6 +113,8 @@ void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y) {
 }
 
 /* STACK OPERATIONS */
+//making the stack part of the matrix stack
+//push, pop, init, clear: if you don't understand stacks in general, you should look up how one works
 
 //initialises the given matrix stack so as to be ready for use
 void matrix_stack_2d_init(matrix_stack_2d *stack) {
@@ -133,7 +134,7 @@ void matrix_stack_2d_clear(matrix_stack_2d *stack) {
     stack->matrices = new matrix_2d[CONFIG_MATRIX_STACK_SIZE];
 }
 
-//returns ESP_ERROR if the stack would become too big
+//returns 1 if the stack would become too big
 esp_err_t matrix_stack_2d_push(matrix_stack_2d *stack) {
     if (stack->size >= stack->capacity) {
         return 1;
@@ -143,7 +144,7 @@ esp_err_t matrix_stack_2d_push(matrix_stack_2d *stack) {
     return ESP_OK;
 }
 
-//returns ESP_ERROR if the stack is already empty
+//returns 1 if the stack is already empty
 esp_err_t matrix_stack_2d_pop(matrix_stack_2d *stack) {
     if (stack->size <= 0) {
         return 1;

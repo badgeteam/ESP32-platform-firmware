@@ -11,13 +11,6 @@ extern "C" {
 #endif
 
 
-/*
- * This file is NOT part of an external library but is rather created and maintained by the badge team.
- * 
- * DO NOT TOUCH THIS FILE UNLESS YOU UNDERSTAND MATRICES!
- */
-
-
 /* ==== DATA TYPES ==== */
 
 

@@ -33,8 +33,9 @@ typedef struct Window_t {
 	/* Buffer */
 	uint8_t* buffer;
 
-	/* Graphics acceleration */
+	/* Graphics */
 	matrix_stack_2d* stack_2d;       // 2D matrix stack
+	// Note: I keep this here, uninitialised if the matrix stack is disabled
 } Window;
 
 extern matrix_stack_2d stack_2d_global;
