@@ -16,6 +16,7 @@
 #include "driver_framebuffer_drawing.h"
 #include "driver_framebuffer_text.h"
 #include "driver_framebuffer.h"
+#include "driver_framebuffer_matrix.h"
 
 //PNG library
 #include "mem_reader.h"
