@@ -115,6 +115,16 @@ void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y) {
     y[0] = matrix.var.b0*xIn + matrix.var.b1*yIn + matrix.var.b2;
 }
 
+//unlinks and deletes the entire stack
+void matrix_stack_2d_unlink_all(matrix_2d_link *link) {
+    matrix_2d_link *next;
+    while (link != NULL) {
+        next = link->next;
+        delete link;
+        link = next;
+    }
+}
+
 /* STACK OPERATIONS */
 //making the stack part of the matrix stack
 //see a stack as a literal stack of paper in a box
@@ -128,18 +138,20 @@ void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y) {
 void matrix_stack_2d_init(matrix_stack_2d *stack) {
     stack->capacity = CONFIG_MATRIX_STACK_SIZE;
     stack->current = matrix_2d_identity();
-    stack->matrices = new matrix_2d[CONFIG_MATRIX_STACK_SIZE];
+    stack->matrices = NULL;
     stack->size = 0;
 }
 
-//clears the matrix stack
+//clears the matrix stack, including the current matrix
 //WARNING: This assumes the stack is already initialised!
 void matrix_stack_2d_clear(matrix_stack_2d *stack) {
-    delete[] stack->matrices;
+    //unlink all matrices
+    matrix_stack_2d_unlink_all(stack->matrices);
+    stack->matrices = NULL;
+
     stack->size = 0;
     stack->capacity = CONFIG_MATRIX_STACK_SIZE;
     stack->current = matrix_2d_identity();
-    stack->matrices = new matrix_2d[CONFIG_MATRIX_STACK_SIZE];
 }
 
 //returns 1 if the stack would become too big
@@ -147,18 +159,27 @@ esp_err_t matrix_stack_2d_push(matrix_stack_2d *stack) {
     if (stack->size >= stack->capacity) {
         return 1;
     }
-    stack->matrices[stack->size] = stack->current;
+    //enlink current matrix
+    matrix_2d_link *next = stack->matrices;
+    stack->matrices = new matrix_2d_link();
+    stack->matrices->matrix = stack->current;
+    stack->matrices->next = next;
+
     stack->size ++;
     return ESP_OK;
 }
 
 //returns 1 if the stack is already empty
 esp_err_t matrix_stack_2d_pop(matrix_stack_2d *stack) {
-    if (stack->size <= 0) {
+    if (stack->size <= 0 || stack->matrices == NULL) {
+        stack->size = 0;
         return 1;
     }
+    //unlink top matrix
+    stack->current = stack->matrices->matrix;
+    stack->matrices = stack->matrices->next;
+
     stack-> size --;
-    stack->current = stack->matrices[stack->size];
     return ESP_OK;
 }
 
