@@ -14,9 +14,9 @@ menu "Driver: framebuffer support"
 		default n
 	config MATRIX_STACK_SIZE
 		depends on G_MATRIX_ENABLE
-		int "Size allocated to the matrix stack by default, you cannot pushMatrix more times than this number"
-		# One 2D matrix is 2x3 floats or 24 bytes in total. For 2D contexts, this means 1536 bytes by default.
-		# One 3D matrix is 3x4 floats or 48 bytes in total. For 3D contexts, this means 3072 bytes by default.
+		int "Maximum size, in entries, of the matrix stack, at most 65535"
+		# When empty, no memory is used for 2D matrix stacks, a single entry being 6 floats + 1 pointer or 28 bytes
+		# When empty, no memory is used for 3D matrix stacks, a single entry being 12 floats + 1 pointer or 52 bytes
 		default 64
 	config G_NEW_TRIANGLE
 		depends on G_MATRIX_ENABLE

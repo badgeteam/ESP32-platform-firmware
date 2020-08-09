@@ -16,15 +16,28 @@ extern "C" {
 
 typedef float matrix_var;
 
-typedef union matrix_2d_t {					// Used by the driver for 2D transformations
-	struct {								// Represented as struct where aN is top row and bN is bottom row
-		matrix_var a0, a1, a2;				//    and 0 is left column, 1 is middle column, 2 is right column
+typedef union matrix_2d_t {						// Used by the driver for 2D transformations
+	struct {									// Represented as struct where aN is top row and bN is bottom row
+		matrix_var a0, a1, a2;					//    and 0 is left column, 1 is middle column, 2 is right column
 		matrix_var b0, b1, b2;
 	} var;
-	matrix_var arr[6];						// Represented as array where index 0->2 is top row, index 3->5 is bottom row
+	matrix_var arr[6];							// Represented as array where index 0->2 is top row, index 3->5 is bottom row
 } matrix_2d;
 
-typedef union matrix_3d_t {					// Used by driver for 3D transformations
+typedef struct matrix_2d_link_t matrix_2d_link;	// Forward declare so as to allow self reference
+typedef struct matrix_2d_link_t {				// Used by the driver for creating the 2D matrix stack
+	matrix_2d matrix;
+	matrix_2d_link *next;
+} matrix_2d_link;
+
+typedef struct matrix_stack_2d_t {
+	uint16_t capacity;							// How many matrices the current stack can hold in total
+	uint16_t size;								// How many matrices are currently on the stack
+	matrix_2d_link *matrices;					// The stack, as a linked list
+    matrix_2d current;							// The active matrix
+} matrix_stack_2d;
+
+typedef union matrix_3d_t {						// Used by driver for 3D transformations
 	struct {
 		matrix_var a0, a1, a2, a3;
 		matrix_var b0, b1, b2, b3;
@@ -33,19 +46,18 @@ typedef union matrix_3d_t {					// Used by driver for 3D transformations
 	matrix_var arr[12];
 } matrix_3d;
 
-typedef struct matrix_stack_3d_t {
-	uint16_t capacity;						// How many matrices the current stack can hold in total
-	uint16_t size;							// How many matrices are currently on the stack
-	matrix_3d *matrices;					// The matrix array
-    matrix_3d current;						// The active matrix
-} matrix_stack_3d;
+typedef struct matrix_3d_link_t matrix_3d_link;	// Forward declare so as to allow self reference
+typedef struct matrix_3d_link_t {				// Used by the driver for creating the 3D matrix stack
+	matrix_3d matrix;
+	matrix_3d_link *next;
+} matrix_3d_link;
 
-typedef struct matrix_stack_2d_t {
-	uint16_t capacity;						// How many matrices the current stack can hold in total
-	uint16_t size;							// How many matrices are currently on the stack
-	matrix_2d *matrices;					// The matrix array
-    matrix_2d current;						// The active matrix
-} matrix_stack_2d;
+typedef struct matrix_stack_3d_t {
+	uint16_t capacity;							// How many matrices the current stack can hold in total
+	uint16_t size;								// How many matrices are currently on the stack
+	matrix_3d_link *matrices;					// The stack, as a linked list
+    matrix_3d current;							// The active matrix
+} matrix_stack_3d;
 
 
 
