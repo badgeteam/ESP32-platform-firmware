@@ -6,11 +6,36 @@ menu "Driver: framebuffer support"
 		depends on DRIVER_FRAMEBUFFER_ENABLE
 		bool "Flip by 180 degrees"
 		default n
-    config DRIVER_FRAMEBUFFER_SWAP_R_AND_B
-        bool "Swap red and blue"
+	config DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+		bool "Swap red and blue"
+		default n
+	config G_MATRIX_ENABLE
+		bool "Enable the matrix stack, allowing for 2D transformations"
 		default n
 	config MATRIX_STACK_SIZE
-		depends on DRIVER_FRAMEBUFFER_ENABLE
-		int "Size allocated to the matrix stack by default"
-		default 128
+		depends on G_MATRIX_ENABLE
+		int "Size allocated to the matrix stack by default, you cannot pushMatrix more times than this number"
+		# One 2D matrix is 2x3 floats or 24 bytes in total. For 2D contexts, this means 1536 bytes by default.
+		# One 3D matrix is 3x4 floats or 48 bytes in total. For 3D contexts, this means 3072 bytes by default.
+		default 64
+	config G_NEW_TRIANGLE
+		depends on G_MATRIX_ENABLE
+		bool "Enable triangle drawing"
+		default y
+	config G_NEW_CIRCLE
+		depends on G_NEW_TRIANGLE
+		bool "Enable new circle drawing, enables matrix stack for circles and optimises circle drawing"
+		default y
+	config G_NEW_QUAD
+		depends on G_NEW_TRIANGLE
+		bool "Enable quad drawing, used also for rectangle drawing"
+		default y
+	config G_NEW_RECT
+		depends on G_NEW_QUAD
+		bool "Enable new rectangle drawing, enables matrix stack for rectangles"
+		default y
+	config G_NEW_TEXT
+		depends on G_MATRIX_ENABLE
+		bool "Enable new text drawing, enables matrix stack for text but uses more memory when transformed"
+		default y
 endmenu

@@ -86,11 +86,6 @@ void driver_framebuffer_line(Window* window, int16_t x0, int16_t y0, int16_t x1,
 	}
 }
 
-void driver_framebuffer_triangle(Window* window, int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color)
-{
-
-}
-
 void driver_framebuffer_rect(Window* window, int16_t x, int16_t y, uint16_t w, uint16_t h, bool fill, uint32_t color)
 {
 	if (fill) {
@@ -105,7 +100,6 @@ void driver_framebuffer_rect(Window* window, int16_t x, int16_t y, uint16_t w, u
 	}
 }
 
-
 void driver_framebuffer_circle(Window* window, int16_t x0, int16_t y0, uint16_t r, uint16_t startAngle, uint16_t endAngle, bool fill, uint32_t color)
 {
 	bool havePrevPixel = 0;
@@ -115,7 +109,7 @@ void driver_framebuffer_circle(Window* window, int16_t x0, int16_t y0, uint16_t 
 	for (int f=(fill ? 0 : r); f <= r; f++) {
 		havePrevPixel = false;
 		for (int i=startAngle; i<endAngle; i++) {
-			double radians = i * M_PI / 180;
+			float radians = i * M_PI / 180;
 			int px = x0 + f * cos(radians);
 			int py = y0 + f * sin(radians);
 			if (havePrevPixel && ((prevX != px) || (prevY != py))) {

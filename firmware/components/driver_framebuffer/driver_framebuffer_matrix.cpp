@@ -5,22 +5,25 @@
 
 #ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 
-/*
- * This file is NOT part of an external library but is rather created and maintained by RobotMan2412 and the badge team.
- * 
- * DO NOT TOUCH THIS FILE UNLESS YOU UNDERSTAND MATRICES!
- */
+#ifdef CONFIG_G_MATRIX_ENABLE
+
+/* HyperLazerDeathRays
+     ~Me, probably. */
+
+/* HELPER FUNCTIONS */
 
 //creates a 2D matrix representing the given rotation in radians
-matrix_2d matrix_2d_rotate(double angle) {
+matrix_2d matrix_2d_rotate(float angle) {
+    float dSin = sin(angle);
+    float dCos = cos(angle);
     return (matrix_2d){ .arr = {
-            cos(angle), -sin(angle), 0,
-            sin(angle), cos(angle), 0
+            dCos, -dSin, 0,
+            dSin, dCos, 0
     }};
 }
 
 //creates a 2D matrix representing the given translation
-matrix_2d matrix_2d_translate(double x, double y) {
+matrix_2d matrix_2d_translate(float x, float y) {
     return (matrix_2d){ .arr = {
             1, 0, x,
             0, 1, y
@@ -28,7 +31,7 @@ matrix_2d matrix_2d_translate(double x, double y) {
 }
 
 //creates a 2D matrix representing the given scaling
-matrix_2d matrix_2d_scale(double x, double y) {
+matrix_2d matrix_2d_scale(float x, float y) {
     return (matrix_2d){ .arr = {
             y, 0, 0,
             0, x, 0
@@ -36,9 +39,16 @@ matrix_2d matrix_2d_scale(double x, double y) {
 }
 
 // Potentially.
-// matrix_3x2_2d matrix_2d_shear(double x, double y);
+// matrix_3x2_2d matrix_2d_shear(float x, float y);
 
 /* MATRIX OPERATIONS */
+
+//checks whether or not the matrix is an identity matrix
+//the identity matrix is a special transformation that represents no transformation being applied at all
+bool matrix_2d_is_identity(matrix_2d matrix) {
+    return matrix.var.a0 == 1 && matrix.var.a1 == 0 && matrix.var.a2 == 0 &&
+           matrix.var.b0 == 0 && matrix.var.b1 == 1 && matrix.var.b2 == 0;
+}
 
 /*
  * 
@@ -69,6 +79,7 @@ matrix_2d matrix_2d_scale(double x, double y) {
  */
 //performs a matrix multiplication, internally factors in the bottom row which is omitted in storage
 //this method is optimised for 2D
+//TODO: potentially convert to assembly for even faster hyperspeeds
 matrix_2d matrix_2d_multiply(matrix_2d left, matrix_2d right) {
 	return (matrix_2d) { .arr = {
 		left.var.a0*right.var.a0 + left.var.a1*right.var.b0, left.var.a0*right.var.a1 + left.var.a1*right.var.b1, left.var.a0*right.var.a2 + left.var.a1*right.var.b2 + left.var.a2, 
@@ -96,15 +107,22 @@ matrix_2d matrix_2d_multiply(matrix_2d left, matrix_2d right) {
  */
 //transforms the point according to the matrix
 //this method is optimised for 2D
-void matrix_2d_transform_point(matrix_2d matrix, double *x, double *y) {
-    double xIn = *x;
-    double yIn = *y;
-    //printf("[%f   %f   %f]\n[%f   %f   %f]", matrix.var.a0, matrix.var.a1, matrix.var.a2, matrix.var.b0, matrix.var.b1, matrix.var.b2);
+//TODO: potentially convert to assembly for even faster hyperspeeds
+void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y) {
+    float xIn = *x;
+    float yIn = *y;
     x[0] = matrix.var.a0*xIn + matrix.var.a1*yIn + matrix.var.a2;
     y[0] = matrix.var.b0*xIn + matrix.var.b1*yIn + matrix.var.b2;
 }
 
 /* STACK OPERATIONS */
+//making the stack part of the matrix stack
+//see a stack as a literal stack of paper in a box
+//you can only access the top i.e. the one you just placed, and as such a stack is first-on-last-off storage
+//push: take the current transformation and put it on the stack
+//pop: remove the top from the stack and set the current transformation to it
+//init: initialise the stack as empty and set the current matrix to identity
+//clear: clear the entire matrix stack, including the current matrix, but assumes that the stack is already initialised
 
 //initialises the given matrix stack so as to be ready for use
 void matrix_stack_2d_init(matrix_stack_2d *stack) {
@@ -124,7 +142,7 @@ void matrix_stack_2d_clear(matrix_stack_2d *stack) {
     stack->matrices = new matrix_2d[CONFIG_MATRIX_STACK_SIZE];
 }
 
-//returns ESP_ERROR if the stack would become too big
+//returns 1 if the stack would become too big
 esp_err_t matrix_stack_2d_push(matrix_stack_2d *stack) {
     if (stack->size >= stack->capacity) {
         return 1;
@@ -134,7 +152,7 @@ esp_err_t matrix_stack_2d_push(matrix_stack_2d *stack) {
     return ESP_OK;
 }
 
-//returns ESP_ERROR if the stack is already empty
+//returns 1 if the stack is already empty
 esp_err_t matrix_stack_2d_pop(matrix_stack_2d *stack) {
     if (stack->size <= 0) {
         return 1;
@@ -143,6 +161,8 @@ esp_err_t matrix_stack_2d_pop(matrix_stack_2d *stack) {
     stack->current = stack->matrices[stack->size];
     return ESP_OK;
 }
+
+#endif //CONFIG_G_MATRIX_ENABLE
 
 #endif //CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 

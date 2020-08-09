@@ -3,7 +3,7 @@ import _device as device
 
 def reboot():
 	device.prepareForSleep()
-	machine.deepsleep(2)
+	machine.deepsleep(1)
 
 def sleep(duration=0, status=False):
 	if not device.configureWakeupSource():
@@ -21,12 +21,14 @@ def sleep(duration=0, status=False):
 	machine.deepsleep(duration)
 
 def start(app, status=False):
+	"""
 	if status:
 		if app == "" or app == "launcher":
 			term.header(True, "Loading menu...")
 		else:
 			term.header(True, "Loading application "+app+"...")
 		device.showLoadingScreen(app)
+	"""
 	machine.RTC().write_string(app)
 	reboot()
 
@@ -42,13 +44,20 @@ def shell(status=False):
 # Over-the-air updating
 
 def ota(status=False):
+	"""
 	if status:
 		term.header(True, "Starting update...")
 		device.showLoadingScreen("OTA update")
+	"""
 	rtc = machine.RTC()
 	rtc.write(0,1) # Boot mode selection magic
 	rtc.write(1,254)
-	device.prepareForSleep()
+	reboot()
+
+def eraseStorage():
+	rtc = machine.RTC()
+	rtc.write(0,2)
+	rtc.write(1,253)
 	reboot()
 
 def serialWarning():

@@ -1,3 +1,1 @@
-import machine, system
-machine.nvs_setstr("system", 'default_app', "")
-system.home()
+../../../shared/dashboard/tools/reset_default.py
