@@ -44,6 +44,7 @@ matrix_2d matrix_2d_scale(float x, float y) {
 /* MATRIX OPERATIONS */
 
 //checks whether or not the matrix is an identity matrix
+//the identity matrix is a special transformation that represents no transformation being applied at all
 bool matrix_2d_is_identity(matrix_2d matrix) {
     return matrix.var.a0 == 1 && matrix.var.a1 == 0 && matrix.var.a2 == 0 &&
            matrix.var.b0 == 0 && matrix.var.b1 == 1 && matrix.var.b2 == 0;
@@ -78,6 +79,7 @@ bool matrix_2d_is_identity(matrix_2d matrix) {
  */
 //performs a matrix multiplication, internally factors in the bottom row which is omitted in storage
 //this method is optimised for 2D
+//TODO: potentially convert to assembly for even faster hyperspeeds
 matrix_2d matrix_2d_multiply(matrix_2d left, matrix_2d right) {
 	return (matrix_2d) { .arr = {
 		left.var.a0*right.var.a0 + left.var.a1*right.var.b0, left.var.a0*right.var.a1 + left.var.a1*right.var.b1, left.var.a0*right.var.a2 + left.var.a1*right.var.b2 + left.var.a2, 
@@ -105,6 +107,7 @@ matrix_2d matrix_2d_multiply(matrix_2d left, matrix_2d right) {
  */
 //transforms the point according to the matrix
 //this method is optimised for 2D
+//TODO: potentially convert to assembly for even faster hyperspeeds
 void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y) {
     float xIn = *x;
     float yIn = *y;
@@ -114,7 +117,12 @@ void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y) {
 
 /* STACK OPERATIONS */
 //making the stack part of the matrix stack
-//push, pop, init, clear: if you don't understand stacks in general, you should look up how one works
+//see a stack as a literal stack of paper in a box
+//you can only access the top i.e. the one you just placed, and as such a stack is first-on-last-off storage
+//push: take the current transformation and put it on the stack
+//pop: remove the top from the stack and set the current transformation to it
+//init: initialise the stack as empty and set the current matrix to identity
+//clear: clear the entire matrix stack, including the current matrix, but assumes that the stack is already initialised
 
 //initialises the given matrix stack so as to be ready for use
 void matrix_stack_2d_init(matrix_stack_2d *stack) {

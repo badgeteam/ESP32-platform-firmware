@@ -53,6 +53,7 @@ typedef struct matrix_stack_2d_t {
 
 
 //creates the 2D identity matrix
+//the identity matrix is a special transformation that represents no transformation being applied at all
 #define matrix_2d_identity() ((matrix_2d) { .arr = {1, 0, 0, 0, 1, 0} })
 
 
