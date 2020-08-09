@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "driver_framebuffer_matrix_drawing.h"
 
 #ifdef __cplusplus
 extern "C" {

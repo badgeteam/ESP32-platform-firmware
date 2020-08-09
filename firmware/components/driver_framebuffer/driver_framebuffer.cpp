@@ -18,6 +18,8 @@ uint8_t* framebuffer2;
 
 uint8_t* framebuffer;
 
+matrix_stack_2d stack_2d_global;
+
 /* Color space conversions */
 
 inline uint16_t convert24to16(uint32_t in) //RGB24 to 565
@@ -118,6 +120,11 @@ esp_err_t driver_framebuffer_init()
 		driver_hub75_switch_buffer(framebuffer); //Needed to make the legacy compositor work.
 	#endif
 	
+	#ifdef CONFIG_G_MATRIX_ENABLE
+	//Initialise the global matrix stack.
+	matrix_stack_2d_init(&stack_2d_global);
+	#endif
+
 	//driver_framebuffer_flush(FB_FLAG_FORCE | FB_FLAG_FULL);
 	//driver_framebuffer_fill(NULL, COLOR_FILL_DEFAULT); //2nd framebuffer
 	driver_framebuffer_set_orientation_angle(NULL, 0); //Apply global orientation (needed for flip)

@@ -107,6 +107,7 @@ const GFXfont* fontPointers[] = {
 };
 
 /* Private functions */
+// Draws a character to the screen
 void _print_char(Window* window, unsigned char c, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
 	if ((c < font->first) || (c > font->last)) {
@@ -140,6 +141,7 @@ void _print_char(Window* window, unsigned char c, int16_t x0, int16_t y0, uint8_
 	}
 }
 
+// Draws a string to the screen
 void _write(Window* window, uint8_t c, int16_t x0, int16_t *x, int16_t *y, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
 	if (font == NULL) { ESP_LOGE(TAG, "write called without font"); return; }
@@ -152,6 +154,68 @@ void _write(Window* window, uint8_t c, int16_t x0, int16_t *x, int16_t *y, uint8
 		*x += glyph->xAdvance * xScale;
 	}
 }
+
+#ifdef CONFIG_G_NEW_TEXT
+// Maps a character directly onto a texture
+void _print_char_texture(texture_2d* __restrict__ texture, unsigned char c, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
+{
+	if ((c < font->first) || (c > font->last)) {
+		ESP_LOGE(TAG, "print_char_texture called with unprintable character");
+		return;
+	}
+
+	c -= (uint8_t) font->first;
+	const GFXglyph *glyph   = font->glyph + c;
+	const uint8_t  *bitmap  = font->bitmap;
+
+	uint16_t bitmapOffset = glyph->bitmapOffset;
+	uint8_t  width        = glyph->width;
+	uint8_t  height       = glyph->height;
+	int8_t   xOffset      = glyph->xOffset;
+	int8_t   yOffset      = glyph->yOffset;
+
+	uint8_t  bit = 0, bits = 0;
+	for (uint8_t y = 0; y < height; y++) {
+		for (uint8_t x = 0; x < width; x++) {
+			if(!(bit++ & 7)) bits = bitmap[bitmapOffset++];
+			if(bits & 0x80) {
+				if (xScale == 1 && yScale == 1) {
+					int resX = x0+xOffset+x;
+					int resY = y0+yOffset+y-1;
+					if (resX >= 0 && resX < texture->width && resY >= 0 && resY < texture->height) {
+						texture->buffer[resX + resY * texture->width] = color | 0xff000000;
+					}
+				} else {
+					int startX = x0+(xOffset+x)*xScale;
+					int startY = y0+(yOffset+y)*yScale-1;
+					for (int resY = startY; resY < startY + yScale; resY++) {
+						for (int resX = startX; resX < startX + xScale; resX++) {
+							if (resX >= 0 && resX < texture->width && resY >= 0 && resY < texture->height) {
+								texture->buffer[resX + resY * texture->width] = color | 0xff000000;
+							}
+						}
+					}
+				}
+			}
+			bits <<= 1;
+		}
+	}
+}
+
+//Maps a string to a texture
+void _write_texture(texture_2d* __restrict__ texture, uint8_t c, int16_t x0, int16_t *x, int16_t *y, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
+{
+	if (font == NULL) { ESP_LOGE(TAG, "write_texture called without font"); return; }
+	const GFXglyph *glyph = font->glyph + c - (uint8_t) font->first;
+	if (c == '\n') {
+		*x = x0;
+		*y += font->yAdvance * yScale;
+	} else if (c != '\r') {
+		_print_char_texture(texture, c, *x, *y+(font->yAdvance*yScale), xScale, yScale, color, font);
+		*x += glyph->xAdvance * xScale;
+	}
+}
+#endif
 
 uint16_t _char_width(uint8_t c, const GFXfont *font)
 {
@@ -182,10 +246,90 @@ const GFXfont* driver_framebuffer_findFontByName(const char* fontName)
 
 uint16_t driver_framebuffer_print(Window* window, const char* str, int16_t x0, int16_t y0, uint8_t xScale, uint8_t yScale, uint32_t color, const GFXfont *font)
 {
-	int16_t x = x0, y = y0;
-	for (uint16_t i = 0; i < strlen(str); i++) {
-		_write(window, str[i], x0, &x, &y, xScale, yScale, color, font);
+	matrix_stack_2d *stack;
+	if (window == NULL) {
+		stack = &stack_2d_global;
 	}
+	else
+	{
+		stack = window->stack_2d;
+	}
+
+	int16_t x;
+	int16_t y;
+	#ifdef CONFIG_G_NEW_TEXT
+	if (matrix_2d_is_identity(stack->current)) {
+	#endif
+		x = x0;
+		y = y0;
+		// We can run the non-matrix code if the matrix is (effectively) identity
+		for (uint16_t i = 0; i < strlen(str); i++) {
+			_write(window, str[i], x0, &x, &y, xScale, yScale, color, font);
+		}
+	#ifdef CONFIG_G_NEW_TEXT
+	}
+	else
+	{
+		// Otherwise, we need to call the matrix functions
+		// Note that this is one of the only functions which absolutely requires alpha blending to work
+
+		// Get size of text and allocate a texture
+		uint16_t textWidth = driver_framebuffer_get_string_width(str, font);
+		uint16_t textHeight = driver_framebuffer_get_string_height(str, font);
+		texture_2d *texture = (texture_2d *) malloc(sizeof(texture_2d));
+		texture->width = textWidth;
+		texture->height = textHeight;
+		texture->buffer = (uint32_t *) malloc(sizeof(uint32_t) * textWidth * textHeight);
+		for (int i = 0; i < textWidth * textHeight; i++) {
+			// Zero out the entire texture, set alpha to 0
+			texture->buffer[i] = 0;
+		}
+
+		// Map the text onto the texture
+		x = 0;
+		y = 0;
+		for (uint16_t i = 0; i < strlen(str); i++) {
+			_write_texture(texture, str[i], x0, &x, &y, xScale, yScale, color, font);
+		}
+		
+		// Draw using textured triangles
+		float tx0 = x0;
+		float ty0 = y0;
+		float tx1 = x0 + textWidth;
+		float ty1 = y0;
+		float tx2 = x0 + textWidth;
+		float ty2 = y0 + textHeight;
+		float tx3 = x0;
+		float ty3 = y0 + textHeight;
+		matrix_2d_transform_point(stack->current, &tx0, &ty0);
+		matrix_2d_transform_point(stack->current, &tx1, &ty1);
+		matrix_2d_transform_point(stack->current, &tx2, &ty2);
+		matrix_2d_transform_point(stack->current, &tx3, &ty3);
+		triangle_uv uv0 = {
+			.u0 = 0,
+			.v0 = 0,
+			.u1 = 1,
+			.v1 = 0,
+			.u2 = 1,
+			.v2 = 1
+		};
+		driver_framebuffer_triangle_textured(window, tx0, ty0, tx1, ty1, tx2, ty2, uv0, texture, &shader_2d_nolerp);
+		triangle_uv uv1 = {
+			.u0 = 0,
+			.v0 = 0,
+			.u1 = 0,
+			.v1 = 1,
+			.u2 = 1,
+			.v2 = 1
+		};
+		driver_framebuffer_triangle_textured(window, tx0, ty0, tx3, ty3, tx2, ty2, uv1, texture, &shader_2d_nolerp);
+
+		// Clean up
+		free(texture->buffer);
+		free(texture);
+	}
+	#endif
+
 	return y;
 }
 

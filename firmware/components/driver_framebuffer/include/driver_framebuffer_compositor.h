@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "esp_system.h"
 #include "driver_framebuffer_orientation_internal.h"
+#include "driver_framebuffer_matrix.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,7 +32,13 @@ typedef struct Window_t {
 	
 	/* Buffer */
 	uint8_t* buffer;
+
+	/* Graphics */
+	matrix_stack_2d* stack_2d;       // 2D matrix stack
+	// Note: I keep this here, uninitialised if the matrix stack is disabled
 } Window;
+
+extern matrix_stack_2d stack_2d_global;
 
 Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint16_t height);
 /* Create a window */
