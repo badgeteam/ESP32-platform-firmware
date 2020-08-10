@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Dan Halbert
+# Copyright (c) 2020 Tom Clement
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -166,6 +167,14 @@ _ASCII_TO_KEYCODE = (
     b"\x4c"  # DEL DELETE (called Forward Delete in usb.org document)
 )
 
+ENTER = 0x28
+"""Enter"""
+ESCAPE = 0x29
+"""Escape"""
+TAB = 0x2B
+"""Tab"""
+SPACE = 0x2C
+"""Space bar"""
 CAPS_LOCK = 0x39
 """Caps Lock"""
 
