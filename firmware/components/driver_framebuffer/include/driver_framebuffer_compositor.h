@@ -7,6 +7,7 @@
 #include "esp_system.h"
 #include "driver_framebuffer_orientation_internal.h"
 #include "driver_framebuffer_matrix.h"
+#include "lib3d.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,10 +33,12 @@ typedef struct Window_t {
 	
 	/* Buffer */
 	uint8_t* buffer;
+	depth_buffer_3d_t *depth_buffer;// 3D depth buffer
 
 	/* Graphics */
-	matrix_stack_2d* stack_2d;       // 2D matrix stack
-	// Note: I keep this here, uninitialised if the matrix stack is disabled
+	bool is_3d;
+	matrix_stack_2d* stack_2d;      // 2D matrix stack
+	matrix_stack_3d* stack_3d;      // 3D matrix stack
 } Window;
 
 extern matrix_stack_2d stack_2d_global;

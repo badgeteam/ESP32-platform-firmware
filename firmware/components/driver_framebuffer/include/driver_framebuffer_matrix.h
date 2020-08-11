@@ -69,6 +69,11 @@ typedef struct matrix_stack_3d_t {
 #define matrix_2d_identity() ((matrix_2d) { .arr = {1, 0, 0, 0, 1, 0} })
 
 
+//creates the 3D identity matrix
+//the identity matrix is a special transformation that represents no transformation being applied at all
+#define matrix_3d_identity() ((matrix_3d) { .arr = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0} })
+
+
 /* ==== HELPER FUNCTIONS ==== */
 
 
@@ -82,10 +87,24 @@ matrix_2d matrix_2d_translate(float x, float y);
 matrix_2d matrix_2d_scale(float x, float y);
 
 // Potentially.
-// matrix_3x2_2d matrix_2d_shear(float x, float y);
+// matrix_2d matrix_2d_shear(float x, float y);
+
+
+//creates a 3D matrix representing the given rotation in radians
+// matrix_3d matrix_3d_rotate(float x, float y, float z);
+
+//creates a 3D matrix representing the given translation
+matrix_3d matrix_3d_translate(float x, float y, float z);
+
+//creates a 3D matrix representing the given scaling
+matrix_3d matrix_3d_scale(float x, float y, float z);
+
+// Potentially.
+// matrix_3d matrix_3d_shear(float x, float y, float z);
 
 
 /* ==== MATRIX OPERATIONS ==== */
+
 
 //checks whether or not the matrix is an identity matrix
 bool matrix_2d_is_identity(matrix_2d matrix);
@@ -95,6 +114,16 @@ matrix_2d matrix_2d_multiply(matrix_2d left, matrix_2d right);
 
 //transforms the point according to the matrix
 void matrix_2d_transform_point(matrix_2d matrix, float *x, float *y);
+
+
+//checks whether or not the matrix is an identity matrix
+bool matrix_3d_is_identity(matrix_3d matrix);
+
+//performs a matrix multiplication, internally factors in the bottom row which is omitted in storage
+matrix_3d matrix_3d_multiply(matrix_3d left, matrix_3d right);
+
+//transforms the point according to the matrix
+void matrix_3d_transform_point(matrix_3d matrix, float *x, float *y, float *z);
 
 
 /* ==== STACK OPERATIONS ==== */
@@ -107,11 +136,26 @@ void matrix_stack_2d_init(matrix_stack_2d *stack);
 //WARNING: This assumes the stack is already initialised!
 void matrix_stack_2d_clear(matrix_stack_2d *stack);
 
-//returns ESP_ERROR if the stack would become too big
+//returns 1 if the stack would become too big
 esp_err_t matrix_stack_2d_push(matrix_stack_2d *stack);
 
-//returns ESP_ERROR if the stack is already empty
+//returns 1 if the stack is already empty
 esp_err_t matrix_stack_2d_pop(matrix_stack_2d *stack);
+
+
+//initialises the given matrix stack so as to be ready for use
+void matrix_stack_3d_init(matrix_stack_3d *stack);
+
+//clears the matrix stack
+//WARNING: This assumes the stack is already initialised!
+void matrix_stack_3d_clear(matrix_stack_3d *stack);
+
+//returns 1 if the stack would become too big
+esp_err_t matrix_stack_3d_push(matrix_stack_3d *stack);
+
+//returns 1 if the stack is already empty
+esp_err_t matrix_stack_3d_pop(matrix_stack_3d *stack);
+
 
 #ifdef __cplusplus
 }

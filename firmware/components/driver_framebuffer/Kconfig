@@ -9,6 +9,7 @@ menu "Driver: framebuffer support"
 	config DRIVER_FRAMEBUFFER_SWAP_R_AND_B
 		bool "Swap red and blue"
 		default n
+
 	config G_MATRIX_ENABLE
 		bool "Enable the matrix stack, allowing for 2D transformations"
 		default n
@@ -18,6 +19,7 @@ menu "Driver: framebuffer support"
 		# When empty, no memory is used for 2D matrix stacks, a single entry being 6 floats + 1 pointer or 28 bytes
 		# When empty, no memory is used for 3D matrix stacks, a single entry being 12 floats + 1 pointer or 52 bytes
 		default 64
+		
 	config G_NEW_TRIANGLE
 		depends on G_MATRIX_ENABLE
 		bool "Enable triangle drawing"
@@ -37,5 +39,18 @@ menu "Driver: framebuffer support"
 	config G_NEW_TEXT
 		depends on G_MATRIX_ENABLE
 		bool "Enable new text drawing, enables matrix stack for text but uses more memory when transformed"
+		default y
+
+	config LIB3D_ENABLE
+		depends on G_MATRIX_ENABLE
+		bool "Enable 3D drawing and rendering"
+		default n
+	config LIB3D_SMALLBUF
+		depends on LIB3D_ENABLE
+		bool "Use simple compression on the depth buffer to save on memory"
+		default n
+	config LIB3D_INLINING
+		depends on LIB3D_ENABLE
+		bool "Enable inlining of simple 3D functions"
 		default y
 endmenu
