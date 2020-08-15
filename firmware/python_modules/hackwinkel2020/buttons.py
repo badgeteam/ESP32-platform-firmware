@@ -14,6 +14,7 @@ BTN_B      = 5
 # --- INTERNAL MAPPING TABLES ---
 
 __num = 6
+__orientation = 0
 _gpioMap = [34,36,35,39,25,26]
 
 # --- CALLBACKS ---
@@ -34,21 +35,50 @@ def __cb_btn_b(arg):
 	if __cb[-1][BTN_B]:
 		__cb[-1][BTN_B](arg)
 
-def __cb_btn_up(arg):
-	if __cb[-1][BTN_UP]:
-		__cb[-1][BTN_UP](arg)
-
 def __cb_btn_down(arg):
-	if __cb[-1][BTN_DOWN]:
-		__cb[-1][BTN_DOWN](arg)
-
-def __cb_btn_left(arg):
-	if __cb[-1][BTN_LEFT]:
-		__cb[-1][BTN_LEFT](arg)
+    btn = BTN_DOWN
+    if __orientation == 90:
+        btn = BTN_LEFT
+    elif __orientation == 180:
+        btn = BTN_UP
+    elif __orientation == 270:
+        btn = BTN_RIGHT
+    if __cb[-1][btn]:
+        __cb[-1][btn](arg)
 
 def __cb_btn_right(arg):
-	if __cb[-1][BTN_RIGHT]:
-		__cb[-1][BTN_RIGHT](arg)
+    btn = BTN_RIGHT
+    if __orientation == 90:
+        btn = BTN_DOWN
+    elif __orientation == 180:
+        btn = BTN_LEFT
+    elif __orientation == 270:
+        btn = BTN_UP
+    if __cb[-1][btn]:
+        __cb[-1][btn](arg)
+
+def __cb_btn_up(arg):
+    btn = BTN_UP
+    if __orientation == 90:
+        btn = BTN_RIGHT
+    elif __orientation == 180:
+        btn = BTN_DOWN
+    elif __orientation == 270:
+        btn = BTN_LEFT
+    if __cb[-1][btn]:
+        __cb[-1][btn](arg)
+
+
+def __cb_btn_left(arg):
+    btn = BTN_LEFT
+    if __orientation == 90:
+        btn = BTN_UP
+    elif __orientation == 180:
+        btn = BTN_RIGHT
+    elif __orientation == 270:
+        btn = BTN_DOWN
+    if __cb[-1][btn]:
+        __cb[-1][btn](arg)
 
 def __init():
 	global mappings
@@ -102,5 +132,12 @@ def popMapping():
 		__cb = __cb[:-1]
 	if len(__cb) < 1:
 		pushMapping()
+
+def rotate(value):
+    '''
+    Change the orientation of the arrow keys (0, 90, 180, 270)
+    '''
+    global __orientation
+    __orientation = value
 
 __init()

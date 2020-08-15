@@ -2,6 +2,9 @@ import machine, system, term
 
 system.serialWarning()
 
-import _mpr121calib
+try:
+	import _mpr121calib
+except:
+	pass
 
 system.home()

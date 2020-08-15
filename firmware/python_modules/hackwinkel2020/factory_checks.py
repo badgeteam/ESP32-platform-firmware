@@ -1,4 +1,4 @@
-import machine, display, time, system, consts, easydraw, network, neopixel, mpr121, sndmixer, identification
+import machine, display, time, system, consts, easydraw, network
 
 PREV_TGT = 2
 CURR_TGT = 3

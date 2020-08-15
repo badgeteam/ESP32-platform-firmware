@@ -115,16 +115,16 @@ esp_err_t driver_st7789v_set_addr_window(uint16_t x, uint16_t y, uint16_t w, uin
 }
 
 esp_err_t driver_st7789v_reset(void) {
+	esp_err_t res;
 	#if CONFIG_PIN_NUM_ST7789V_RESET >= 0
-	esp_err_t res = gpio_set_level(CONFIG_PIN_NUM_ST7789V_RESET, false);
-	if (res != ESP_OK) return res;
-	ets_delay_us(200000);
-	res = gpio_set_level(CONFIG_PIN_NUM_ST7789V_RESET, true);
-	if (res != ESP_OK) return res;
-	#else //Reset pin not connected, use software reset
-	esp_err_t res = driver_st7789v_send_command(ST7789V_SWRESET);
-	if (res != ESP_OK) return res;
+		res = gpio_set_level(CONFIG_PIN_NUM_ST7789V_RESET, false);
+		if (res != ESP_OK) return res;
+		ets_delay_us(200000);
+		res = gpio_set_level(CONFIG_PIN_NUM_ST7789V_RESET, true);
+		if (res != ESP_OK) return res;
 	#endif
+	res = driver_st7789v_send_command(ST7789V_SWRESET);
+	if (res != ESP_OK) return res;
 	ets_delay_us(200000);
 	return ESP_OK;
 }
