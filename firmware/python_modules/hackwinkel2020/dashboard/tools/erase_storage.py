@@ -1,0 +1,1 @@
+../../../shared/dashboard/tools/erase_storage.py
