@@ -190,11 +190,6 @@ void driver_framebuffer_triangle_textured(Window* window, float x0, float y0, fl
 	float add12 = (x1 / inc12 - y1) * inc12;
 	if (inc12 == 0) add12 = x1;
 
-	// if (inc01 > 1000000 || inc02 > 1000000 || inc12 > 1000000 || inc01 < -1000000 || inc02 < -1000000 || inc12 < -1000000) {
-	// 	printf("%f + %f, %f + %f, %f + %f, (%f : %f) (%f : %f) (%f : %f)\n", inc01, add01, inc02, add02, inc12, add12, x0, y0, x1, y1, x2, y2);
-	// 	//return;
-	// }
-
 	// Does not change per pixel in barycentric interpolation
 	float baryTemp = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2);
 
