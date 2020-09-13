@@ -1,5 +1,6 @@
 menu "Driver: MPR121 touch input"
 	config DRIVER_MPR121_ENABLE
+        depends on BUS_I2C0_ENABLE || BUS_I2C1_ENABLE
 		bool "Enable the MPR121 input driver"
 		default n
 	
@@ -7,6 +8,12 @@ menu "Driver: MPR121 touch input"
 		depends on DRIVER_MPR121_ENABLE
 		int "MPR121 I2C address"
 		default 90
+		
+	config DRIVER_MPR121_I2C_BUS
+		depends on DRIVER_MPR121_ENABLE
+		int"MPR121 I2C bus"
+		default 0
+		range 0 1
 		
 	config PIN_NUM_MPR121_INT
 		depends on DRIVER_MPR121_ENABLE

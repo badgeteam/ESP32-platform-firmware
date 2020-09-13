@@ -179,7 +179,7 @@ esp_err_t driver_st7735_init(void)
 	if (res != ESP_OK) return res;
 
 	//Allocate partial update buffer
-	internalBuffer = heap_caps_malloc(CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
+	internalBuffer = heap_caps_malloc(CONFIG_BUS_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
 	if (!internalBuffer) return ESP_FAIL;
 	
 	//Initialize reset GPIO pin
@@ -282,8 +282,8 @@ esp_err_t driver_st7735_write_partial(const uint8_t *frameBuffer, uint16_t x0, u
 	/*} else {
 		while (h > 0) {
 			uint16_t lines = h;
-			if (w*2*lines > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
-				lines = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/(w*2);
+			if (w*2*lines > CONFIG_BUS_VSPI_MAX_TRANSFERSIZE) {
+				lines = CONFIG_BUS_VSPI_MAX_TRANSFERSIZE/(w*2);
 			}
 			for (uint16_t y = 0; y < lines; y++) {
 				uint32_t internalBufferOffset = y*w*2; //Current line * width * 2 (because 16-bit per pixel)

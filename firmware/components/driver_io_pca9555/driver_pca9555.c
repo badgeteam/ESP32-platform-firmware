@@ -10,7 +10,7 @@
 #include <nvs_flash.h>
 #include <nvs.h>
 #include <driver/gpio.h>
-#include <driver_i2c.h>
+#include <buses.h>
 #include "include/driver_pca9555.h"
 
 #ifdef CONFIG_DRIVER_PCA9555_ENABLE
@@ -29,7 +29,7 @@ uint8_t reg_output[2]   = {0xFF, 0xFF};
 
 static inline esp_err_t driver_pca9555_read_reg(uint8_t reg, uint8_t *data, size_t data_len)
 {
-	esp_err_t res = driver_i2c_read_reg(CONFIG_I2C_ADDR_PCA9555, reg, data, data_len);
+	esp_err_t res = driver_i2c_read_reg(CONFIG_DRIVER_PCA9555_I2C_BUS, CONFIG_I2C_ADDR_PCA9555, reg, data, data_len);
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c pca9555 read reg error %d", res);
 	}
@@ -38,7 +38,7 @@ static inline esp_err_t driver_pca9555_read_reg(uint8_t reg, uint8_t *data, size
 
 static inline esp_err_t driver_pca9555_write_reg(uint8_t reg, uint8_t *data, size_t data_len)
 {
-	esp_err_t res = driver_i2c_write_reg_n(CONFIG_I2C_ADDR_PCA9555, reg, data, data_len);
+	esp_err_t res = driver_i2c_write_reg_n(CONFIG_DRIVER_PCA9555_I2C_BUS, CONFIG_I2C_ADDR_PCA9555, reg, data, data_len);
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c pca9555 write reg error %d", res);
 	}

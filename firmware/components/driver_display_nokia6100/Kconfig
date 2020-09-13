@@ -1,6 +1,6 @@
 menu "Driver: Nokia 6100 LCD display"
 	config DRIVER_NOKIA6100_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable the Nokia 6100 display driver"
 		default n
 		

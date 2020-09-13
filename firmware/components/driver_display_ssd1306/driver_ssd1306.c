@@ -10,7 +10,7 @@
 #include <esp_log.h>
 #include <driver/gpio.h>
 
-#include <driver_i2c.h>
+#include <buses.h>
 #include "include/driver_ssd1306.h"
 
 #ifdef CONFIG_DRIVER_SSD1306_ENABLE
@@ -19,7 +19,7 @@ static const char *TAG = "ssd1306";
 
 static inline esp_err_t i2c_command(uint8_t value)
 {
-	esp_err_t res = driver_i2c_write_reg(CONFIG_I2C_ADDR_SSD1306, 0x00, value);
+	esp_err_t res = driver_i2c_write_reg(CONFIG_DRIVER_SSD1306_I2C_BUS, CONFIG_I2C_ADDR_SSD1306, 0x00, value);
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c write command(0x%02x): error %d", value, res);
 		return res;
@@ -29,7 +29,7 @@ static inline esp_err_t i2c_command(uint8_t value)
 
 static inline esp_err_t i2c_data(const uint8_t* buffer, uint16_t len)
 {
-	esp_err_t res = driver_i2c_write_buffer_reg(CONFIG_I2C_ADDR_SSD1306, 0x40, buffer, len);
+	esp_err_t res = driver_i2c_write_buffer_reg(CONFIG_DRIVER_SSD1306_I2C_BUS, , CONFIG_I2C_ADDR_SSD1306, 0x40, buffer, len);
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c write data: error %d", res);
 		return res;
@@ -50,11 +50,6 @@ esp_err_t driver_ssd1306_reset(void)
 
 esp_err_t driver_ssd1306_init(void)
 {
-	static bool driver_ssd1306_init_done = false;
-	if (driver_ssd1306_init_done) return ESP_OK;
-	ESP_LOGD(TAG, "init called");
-	esp_err_t res = driver_i2c_init();
-	if (res != ESP_OK) return res;
 #if CONFIG_PIN_NUM_SSD1306_RESET >= 0
 	gpio_set_direction(CONFIG_PIN_NUM_SSD1306_RESET, GPIO_MODE_OUTPUT);
 	driver_ssd1306_reset();
@@ -169,9 +164,6 @@ esp_err_t driver_ssd1306_init(void)
 	uint8_t buffer[1024] = {0};
 	res = driver_ssd1306_write(buffer); //Clear screen
 	if (res != ESP_OK) return res;
-	
-	driver_ssd1306_init_done = true;
-	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
 }
 
