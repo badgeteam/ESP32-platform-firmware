@@ -124,6 +124,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_radio_lora/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_pca9555/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_fpga_ice40/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libopus/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 MP_EXTRA_INC += -I$(IDF_PATH)/components/esp_ringbuf/include
@@ -220,6 +221,7 @@ SRC_C =  $(addprefix esp32/,\
 	modmpu6050.c \
 	modlora.c \
 	modpca9555.c \
+	modice40.c \
 	)
 
 ifdef CONFIG_DRIVER_I2C_ENABLE

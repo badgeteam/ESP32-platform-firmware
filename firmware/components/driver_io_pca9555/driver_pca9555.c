@@ -60,7 +60,7 @@ void driver_pca9555_intr_task(void *arg)
 				ESP_LOGE(TAG, "pca9555: failed to read input state");
 			}
 			uint16_t current_state = data[0] + (data[1]<<8);
-			for (int i = 0; i < 15; i++) {
+			for (int i = 0; i < 16; i++) {
 				if ((current_state & (1 << i)) != (previous_state & (1 << i))) {
 					bool value = (current_state & (1 << i)) > 0;
 					xSemaphoreTake(driver_pca9555_mux, portMAX_DELAY);
