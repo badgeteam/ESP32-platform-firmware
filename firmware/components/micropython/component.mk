@@ -99,7 +99,7 @@ MP_EXTRA_INC += -I$(ESPCOMP)/mdns/include
 MP_EXTRA_INC += -I$(IDF_PATH)/components/freertos/include/freertos
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp_http_client/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/esp_http_client/lib/include
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/buses/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_bus_i2c/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_hub75/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_input_mpr121/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_erc12864/include
@@ -124,6 +124,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_sdcard/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_radio_lora/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_pca9555/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_fpga_ice40/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libopus/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 MP_EXTRA_INC += -I$(IDF_PATH)/components/esp_ringbuf/include
@@ -220,9 +221,10 @@ SRC_C =  $(addprefix esp32/,\
 	modmpu6050.c \
 	modlora.c \
 	modpca9555.c \
+	modice40.c \
 	)
-	
-ifdef CONFIG_BUS_I2C0_ENABLE
+
+ifdef CONFIG_DRIVER_I2C_ENABLE
 SRC_C += esp32/modi2c.c
 endif
 
