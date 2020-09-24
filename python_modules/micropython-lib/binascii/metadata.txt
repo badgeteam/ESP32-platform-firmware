@@ -1,0 +1,3 @@
+srctype=pypy
+type=module
+version = 2.4.0-5
