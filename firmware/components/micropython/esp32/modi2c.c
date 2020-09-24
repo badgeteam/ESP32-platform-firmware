@@ -6,9 +6,9 @@
 #include "py/mphal.h"
 #include "py/runtime.h"
 
-#include <buses.h>
+#include <driver_i2c.h>
 
-#ifdef CONFIG_BUS_I2C0_ENABLE
+#ifdef CONFIG_DRIVER_I2C_ENABLE
 
 STATIC mp_obj_t i2c_read_reg_(mp_obj_t _addr, mp_obj_t _reg, mp_obj_t _len) {
 	int addr = mp_obj_get_int(_addr);
@@ -30,7 +30,7 @@ STATIC mp_obj_t i2c_read_reg_(mp_obj_t _addr, mp_obj_t _reg, mp_obj_t _len) {
 	vstr_t vstr;
 	vstr_init_len(&vstr, len);
 
-	esp_err_t res = driver_i2c_read_reg(0, addr, reg, (uint8_t *) vstr.buf, len);
+	esp_err_t res = driver_i2c_read_reg(addr, reg, (uint8_t *) vstr.buf, len);
 	if (res != ESP_OK) {
 		mp_raise_OSError(MP_EIO);
 	}
@@ -62,7 +62,7 @@ STATIC mp_obj_t i2c_write_reg_(mp_obj_t _addr, mp_obj_t _reg, mp_obj_t _data) {
 		mp_raise_msg(&mp_type_AttributeError, "Data-lengths other than 1 byte are not supported");
 	}
 
-	esp_err_t res = driver_i2c_write_reg(0, addr, reg, data[0]);
+	esp_err_t res = driver_i2c_write_reg(addr, reg, data[0]);
 	if (res != ESP_OK) {
 		mp_raise_OSError(MP_EIO);
 	}
@@ -74,9 +74,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(i2c_write_reg_obj, i2c_write_reg_);
 STATIC const mp_rom_map_elem_t i2c_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_i2c_read_reg), MP_ROM_PTR(&i2c_read_reg_obj)},
     {MP_ROM_QSTR(MP_QSTR_i2c_write_reg), MP_ROM_PTR(&i2c_write_reg_obj)},
-    {MP_ROM_QSTR(MP_QSTR_GPIO_SDA), MP_ROM_INT(CONFIG_PIN_NUM_I2C0_DATA) },
-    {MP_ROM_QSTR(MP_QSTR_GPIO_CLK), MP_ROM_INT(CONFIG_PIN_NUM_I2C0_CLK) },
-    {MP_ROM_QSTR(MP_QSTR_SPEED), MP_ROM_INT(CONFIG_I2C0_MASTER_FREQ_HZ) },
+    {MP_ROM_QSTR(MP_QSTR_GPIO_SDA), MP_ROM_INT(CONFIG_PIN_NUM_I2C_DATA) },
+    {MP_ROM_QSTR(MP_QSTR_GPIO_CLK), MP_ROM_INT(CONFIG_PIN_NUM_I2C_CLK) },
+    {MP_ROM_QSTR(MP_QSTR_SPEED), MP_ROM_INT(CONFIG_I2C_MASTER_FREQ_HZ) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(i2c_module_globals, i2c_module_globals_table);
@@ -86,4 +86,4 @@ const mp_obj_module_t i2c_module = {
     .globals = (mp_obj_dict_t *)&i2c_module_globals,
 };
 
-#endif
+#endif // CONFIG_DRIVER_I2C_ENABLE
