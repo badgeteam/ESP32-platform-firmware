@@ -43,14 +43,10 @@ menu "Driver: framebuffer support"
 
 	config LIB3D_ENABLE
 		depends on G_MATRIX_ENABLE
-		bool "Enable 3D drawing and rendering"
+		bool "Enable 3D drawing and rendering (very experimental)"
 		default n
-	config LIB3D_SMALLBUF
+	config LIB3D_TRI_BUFFER_SIZE
 		depends on LIB3D_ENABLE
-		bool "Use simple compression on the depth buffer to save on memory"
-		default n
-	config LIB3D_INLINING
-		depends on LIB3D_ENABLE
-		bool "Enable inlining of simple 3D functions"
-		default y
+		int "Triangle buffer size for 3D rendering, used for 3D rendering"
+		default 32
 endmenu

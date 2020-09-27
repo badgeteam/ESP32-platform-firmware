@@ -44,6 +44,10 @@
 extern "C" {
 #endif
 
+extern matrix_stack_2d stack_2d_global;
+extern matrix_stack_3d stack_3d_global;
+extern bool is_3d_global;
+
 esp_err_t driver_framebuffer_init();
 /* Initialize the framebuffer driver (called once at system boot from platform.c) */
 

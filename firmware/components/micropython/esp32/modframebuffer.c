@@ -493,10 +493,24 @@ static mp_obj_t framebuffer_draw_triangle(mp_uint_t n_args, const mp_obj_t *args
 static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 {
 	Window* window = NULL;
-	matrix_stack_2d* stack;
+	matrix_stack_2d* stack_2d;
+	matrix_stack_3d* stack_3d;
+	bool is_3d;
 	int paramOffset = 0;
 	if (MP_OBJ_IS_STR(args[0])) {
-		if (n_args != 7) {
+		paramOffset = 1;
+		stack_2d = window->stack_2d;
+		stack_3d = window->stack_3d;
+		is_3d = window->is_3d;
+		#ifdef CONFIG_LIB3D_ENABLE
+		if (is_3d) {
+			if (n_args != 10 && n_args != 14) {
+				mp_raise_ValueError("Expected 9 to 14 arguments: (window), x0, y0, (z0), x1, y1, (z1), x2, y2, (z2), x3, y3, (z3), color");
+			}
+		}
+		else
+		#endif
+		if (n_args != 10) {
 			mp_raise_ValueError("Expected 9 or 10 arguments: (window), x0, y0, x1, y1, x2, y2, x3, y3, color");
 			return mp_const_none;
 		}
@@ -505,28 +519,84 @@ static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
-		paramOffset = 1;
-		stack = window->stack_2d;
 	}
 	else
 	{
-		stack = &stack_2d_global;
+		stack_2d = &stack_2d_global;
+		stack_3d = &stack_3d_global;
+		is_3d = is_3d_global;
+		#ifdef CONFIG_LIB3D_ENABLE
+		if (is_3d) {
+			if (n_args != 9 && n_args != 13) {
+				mp_raise_ValueError("Expected 9 to 14 arguments: (window), x0, y0, (z0), x1, y1, (z1), x2, y2, (z2), x3, y3, (z3), color");
+			}
+		}
+		else
+		#endif
+		if (n_args != 9) {
+			mp_raise_ValueError("Expected 9 or 10 arguments: (window), x0, y0, x1, y1, x2, y2, x3, y3, color");
+			return mp_const_none;
+		}
 	}
-	
-	float x0 = mp_obj_get_int(args[paramOffset]);
-	float y0 = mp_obj_get_int(args[paramOffset + 1]);
-	float x1 = mp_obj_get_int(args[paramOffset + 2]);
-	float y1 = mp_obj_get_int(args[paramOffset + 3]);
-	float x2 = mp_obj_get_int(args[paramOffset + 4]);
-	float y2 = mp_obj_get_int(args[paramOffset + 5]);
-	float x3 = mp_obj_get_int(args[paramOffset + 6]);
-	float y3 = mp_obj_get_int(args[paramOffset + 7]);
-	uint32_t color = mp_obj_get_int(args[paramOffset + 8]);
-	matrix_2d_transform_point(stack->current, &x0, &y0);
-	matrix_2d_transform_point(stack->current, &x1, &y1);
-	matrix_2d_transform_point(stack->current, &x2, &y2);
-	matrix_2d_transform_point(stack->current, &x3, &y3);
-	driver_framebuffer_quad(window, x0, y0, x1, y1, x2, y2, x3, y3, color);
+	#ifdef CONFIG_LIB3D_ENABLE
+	if (is_3d) {
+		float x0 = mp_obj_get_int(args[paramOffset]);
+		float y0 = mp_obj_get_int(args[paramOffset + 1]);
+		float z0 = mp_obj_get_int(args[paramOffset + 2]);
+		float x1 = mp_obj_get_int(args[paramOffset + 3]);
+		float y1 = mp_obj_get_int(args[paramOffset + 4]);
+		float z1 = mp_obj_get_int(args[paramOffset + 5]);
+		float x2 = mp_obj_get_int(args[paramOffset + 6]);
+		float y2 = mp_obj_get_int(args[paramOffset + 7]);
+		float z2 = mp_obj_get_int(args[paramOffset + 8]);
+		float x3 = mp_obj_get_int(args[paramOffset + 9]);
+		float y3 = mp_obj_get_int(args[paramOffset + 10]);
+		float z3 = mp_obj_get_int(args[paramOffset + 11]);
+		uint32_t color = mp_obj_get_int(args[paramOffset + 12]);
+		vector_3d p0 = { .x = x0, .y = y0, .z = z0 };
+		vector_3d p1 = { .x = x1, .y = y1, .z = z1 };
+		vector_3d p2 = { .x = x2, .y = y2, .z = z2 };
+		vector_3d p3 = { .x = x3, .y = y3, .z = z3 };
+		int16_t winWidth, winHeight;
+		driver_framebuffer_get_orientation_size(window, &winWidth, &winHeight);
+		vector_3d displayVec = { .x = winWidth, .y = winHeight, .z = 1 };
+		p0 = project3d_perspec(p0, displayVec);
+		p1 = project3d_perspec(p1, displayVec);
+		p2 = project3d_perspec(p2, displayVec);
+		p3 = project3d_perspec(p3, displayVec);
+		triangle_3d tri0 = {
+			.a0 = &p0,
+			.a1 = &p1,
+			.a2 = &p2,
+			.color = color
+		};
+		triangle_3d tri1 = {
+			.a0 = &p0,
+			.a1 = &p3,
+			.a2 = &p2,
+			.color = color
+		};
+		render3d_tri(window, tri0);
+		render3d_tri(window, tri1);
+	}
+	else
+	#endif
+	{
+		float x0 = mp_obj_get_int(args[paramOffset]);
+		float y0 = mp_obj_get_int(args[paramOffset + 1]);
+		float x1 = mp_obj_get_int(args[paramOffset + 2]);
+		float y1 = mp_obj_get_int(args[paramOffset + 3]);
+		float x2 = mp_obj_get_int(args[paramOffset + 4]);
+		float y2 = mp_obj_get_int(args[paramOffset + 5]);
+		float x3 = mp_obj_get_int(args[paramOffset + 6]);
+		float y3 = mp_obj_get_int(args[paramOffset + 7]);
+		uint32_t color = mp_obj_get_int(args[paramOffset + 8]);
+		matrix_2d_transform_point(stack_2d->current, &x0, &y0);
+		matrix_2d_transform_point(stack_2d->current, &x1, &y1);
+		matrix_2d_transform_point(stack_2d->current, &x2, &y2);
+		matrix_2d_transform_point(stack_2d->current, &x3, &y3);
+		driver_framebuffer_quad(window, x0, y0, x1, y1, x2, y2, x3, y3, color);
+	}
 	return mp_const_none;
 }
 #endif
@@ -621,7 +691,7 @@ static mp_obj_t framebuffer_draw_circle(mp_uint_t n_args, const mp_obj_t *args)
 	float a1  = mp_obj_get_float(args[n_args-3]);
 	int fill  = mp_obj_get_int(args[n_args-2]);
 	uint32_t color = mp_obj_get_int(args[n_args-1]);
-	driver_framebuffer_circle_new(window, stack, x, y, r, a0 * M_PI / 180.0, a1 * M_PI / 180.0, fill, color);
+	driver_framebuffer_circle_new(window, stack, x, y, r, a0 * 3.14159265358979323846 / 180.0, a1 * 3.14159265358979323846 / 180.0, fill, color);
 	#else
 	int x   = mp_obj_get_int(args[n_args-7]);
 	int y   = mp_obj_get_int(args[n_args-6]);
@@ -1238,6 +1308,44 @@ static mp_obj_t framebuffer_scale(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
+static mp_obj_t framebuffer_set3D(mp_uint_t n_args, const mp_obj_t *args)
+{
+	Window* window = NULL;
+	
+	if (MP_OBJ_IS_STR(args[0])) {
+		if (n_args < 3) {
+			mp_raise_ValueError("Expected: window, set_3d");
+			return mp_const_none;
+		}
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		bool new_3d = mp_obj_is_true(args[1]);
+		if (window->is_3d && !new_3d) {
+			// Go from 3D to 2D.
+			free(window->depth_buffer->buffer);
+			free(window->depth_buffer);
+			window->is_3d = 0;
+			matrix_stack_3d_clear(window->stack_3d);
+			free(window->stack_3d);
+			window->stack_2d = (matrix_stack_2d *) malloc(sizeof(matrix_stack_2d));
+			matrix_stack_2d_init(window->stack_2d);
+		}
+	}
+	else
+	{
+		if (n_args < 2) {
+			mp_raise_ValueError("Expected: set_3d");
+			bool new_3d = mp_obj_is_true(args[0]);
+			return mp_const_none;
+		}
+	}
+	
+	return mp_const_none;
+}
+
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_pushMatrix_obj,          0, 1, framebuffer_pushMatrix);
 /* Arguments: window (optional) */
 
@@ -1268,16 +1376,6 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_rotate_obj,             
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_scale_obj,               2, 3, framebuffer_scale);
 /* Arguments: window (optional), xscale, yscale */
 
-	// {MP_ROM_QSTR( MP_QSTR_pushMatrix                    ), MP_ROM_PTR( &framebuffer_pushMatrix_obj           )}, //Push the current matrix onto the stack
-	// {MP_ROM_QSTR( MP_QSTR_popMatrix                     ), MP_ROM_PTR( &framebuffer_popMatrix_obj            )}, //Pop the top matrix off the stack
-	// {MP_ROM_QSTR( MP_QSTR_clearMatrix                   ), MP_ROM_PTR( &framebuffer_clearMatrix_obj          )}, //Clear the matrix stack
-	// {MP_ROM_QSTR( MP_QSTR_matrixSize                    ), MP_ROM_PTR( &framebuffer_matrixSize_obj           )}, //Get the size of the matrix stack
-	// {MP_ROM_QSTR( MP_QSTR_getMatrix                     ), MP_ROM_PTR( &framebuffer_getMatrix_obj            )}, //Get the current matrix
-	// {MP_ROM_QSTR( MP_QSTR_setMatrix                     ), MP_ROM_PTR( &framebuffer_setMatrix_obj            )}, //Set the current matrix
-	// {MP_ROM_QSTR( MP_QSTR_transformPoint                ), MP_ROM_PTR( &framebuffer_transformPoint_obj       )}, //Transform a point by the current matrix
-	// {MP_ROM_QSTR( MP_QSTR_translate                     ), MP_ROM_PTR( &framebuffer_translate_obj            )}, //Translate (move) the canvas
-	// {MP_ROM_QSTR( MP_QSTR_rotate                        ), MP_ROM_PTR( &framebuffer_rotate_obj               )}, //Rotate the canvas around the origin
-	// {MP_ROM_QSTR( MP_QSTR_scale                         ), MP_ROM_PTR( &framebuffer_scale_obj                )}, //Scale the canvas
 #endif //CONFIG_G_MATRIX_ENABLE
 //End matrix stack
 

@@ -19,6 +19,8 @@ uint8_t* framebuffer2;
 uint8_t* framebuffer;
 
 matrix_stack_2d stack_2d_global;
+matrix_stack_3d stack_3d_global;
+bool is_3d_global;
 
 /* Color space conversions */
 
