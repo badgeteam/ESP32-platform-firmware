@@ -368,7 +368,7 @@ if not rtc.isSet() and cfg_wifi:
 
 # Text scroller
 display.windowCreate("scroller", 512, 32) #Workaround!!! windows get corrupted when size is not in units of 8
-display.windowShow("scroller")
+display.windowHide("scroller")
 display.windowMove("scroller", 65, display.height()-22) # Move out of visible screen
 display.drawFill("scroller", COLOR_BG)
 display.drawText("scroller", 0, 0, cfg_nick_text, COLOR_FG, "permanentmarker22")
@@ -377,6 +377,8 @@ def scrollerThread():
 	scrollerStartPos = 129
 	scrollerEndPos = -display.getTextWidth(cfg_nick_text, "permanentmarker22") - 128
 	scrollerPos = scrollerStartPos
+	display.windowMove("scroller", scrollerPos, display.height()-22) 
+	display.windowShow("scroller")
 	global stopThreads
 	while not stopThreads:
 		display.windowMove("scroller", scrollerPos, display.height()-22) 

@@ -50,10 +50,12 @@ void platform_init()
 	if (isr_init()    != ESP_OK) restart();
     if (start_buses() != ESP_OK) restart();
     
-	INIT_DRIVER(hub75        , "HUB75"      ) //LED matrix as found on the CampZone 2019 badge
-	INIT_DRIVER(erc12864     , "ERC12864"   ) //128x64 LCD screen as found on the Disobey 2019 badge
-	INIT_DRIVER(ssd1306      , "SSD1306"    ) //128x64 OLED screen as found on the Disobey 2020 badge
-	INIT_DRIVER(eink         , "E-INK"      ) //296x128 e-ink display as found on the SHA2017 and HackerHotel 2019 badges
+    INIT_DRIVER(pca9555      , "PCA9555"    ) //16-bit I/O expander
+    INIT_DRIVER(ice40        , "ICE40"      ) //ICE40 FPGA driver
+	INIT_DRIVER(hub75        , "HUB75"      ) //LED matrix
+	INIT_DRIVER(erc12864     , "ERC12864"   ) //128x64 LCD screen
+	INIT_DRIVER(ssd1306      , "SSD1306"    ) //128x64 OLED screen
+	INIT_DRIVER(eink         , "E-INK"      ) //296x128 e-ink display
 	INIT_DRIVER(gxgde0213b1  , "GXGDE0213B1") //E-ink on OHS badge
 	INIT_DRIVER(nokia6100    , "NOKIA6100"  ) //Nokia 6100 LCD
 	INIT_DRIVER(flipdotter   , "FLIPDOTTER" ) //Otter flipdot display
@@ -66,7 +68,6 @@ void platform_init()
 	fbReady = true;                           //Notify the error handler that framebuffer support is now available
 	
 	INIT_DRIVER(mpr121       , "MPR121"     ) //I/O expander with touch inputs as found on the SHA2017 and HackerHotel 2019 badges
-    INIT_DRIVER(pca9555      , "PCA9555"     ) //16-bit I/O expander found on the Troopers 2020 badge
 	INIT_DRIVER(disobey_samd , "SAMD"       ) //I/O via the SAMD co-processor on the Disobey 2019 badge
 	INIT_DRIVER(neopixel     , "NEOPIXEL"   ) //Addressable LEDs as found on the SHA2017 and HackerHotel 2019 badges
 	INIT_DRIVER(microphone   , "MICROPHONE" ) //Microphone driver

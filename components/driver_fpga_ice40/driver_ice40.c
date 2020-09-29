@@ -32,7 +32,7 @@ esp_err_t driver_ice40_send(const uint8_t *data, int len) {
     spi_transaction_t t = {
         .length = len * 8,  // transaction length is in bits
         .tx_buffer = data,
-        .rx_buffer = null
+        .rx_buffer = NULL
     };
     return spi_device_transmit(spiDevice, &t);
 }
@@ -42,20 +42,63 @@ esp_err_t driver_ice40_receive(uint8_t *data, int len) {
     spi_transaction_t t = {
         .length = len * 8,  // transaction length is in bits
         .rxlength = len * 8,
-        .rx_buffer = data,
-        .tx_buffer = null
+        .tx_buffer = NULL,
+        .rx_buffer = data
     };
     return spi_device_transmit(spiDevice, &t);
 }
 
-esp_err_t driver_ice40_disable() {
+esp_err_t driver_ice40_register_device(bool enableChipSelect) {
+    if (spiDeviceHasChipSelect && enableChipSelect && (spiDevice != NULL)) {
+        // We're already in the correct mode
+        return ESP_OK;
+    }
+    if ((!spiDeviceHasChipSelect) && (!enableChipSelect) && (spiDevice != NULL)) {
+        // We're already in the correct mode
+        return ESP_OK;
+    }
     esp_err_t res = ESP_FAIL;
+    if (spiDevice != NULL) {
+        res = spi_bus_remove_device(spiDevice);
+        if (res != ESP_OK) return res;
+    }
+    if (enableChipSelect) {
+        static const spi_device_interface_config_t devcfg = {
+            .clock_speed_hz = CONFIG_DRIVER_ICE40_SPI_SPEED,
+            .mode           = 0,  // SPI mode 0
+            .spics_io_num   = CONFIG_PIN_NUM_ICE40_CS,
+            .queue_size     = 1,
+            .flags          = SPI_DEVICE_HALFDUPLEX
+        };
+        res = spi_bus_add_device(VSPI_HOST, &devcfg, &spiDevice);
+        spiDeviceHasChipSelect = true;
+    } else {
+        static const spi_device_interface_config_t devcfg = {
+            .clock_speed_hz = CONFIG_DRIVER_ICE40_SPI_SPEED,
+            .mode           = 0,  // SPI mode 0
+            .spics_io_num   = -1,
+            .queue_size     = 1,
+            .flags          = SPI_DEVICE_HALFDUPLEX
+        };
+        res = spi_bus_add_device(VSPI_HOST, &devcfg, &spiDevice);
+        if (res != ESP_OK) return res;
+        res = gpio_set_direction(CONFIG_PIN_NUM_ICE40_CS, GPIO_MODE_OUTPUT);
+        if (res != ESP_OK) return res;
+        res = gpio_set_level(CONFIG_PIN_NUM_ICE40_CS, true); // Set CS pin high
+        spiDeviceHasChipSelect = false;
+    }
+    return res;
+}
+
+esp_err_t driver_ice40_disable() {
+    esp_err_t res = driver_ice40_register_device(false); // Disable the CS pin for normal SPI transfers
+    if (res != ESP_OK) return res;
     #ifdef CONFIG_PIN_NUM_ICE40_RESET
         res = gpio_set_level(CONFIG_PIN_NUM_ICE40_RESET, false);
         if (res != ESP_OK) return res;
     #endif
     #ifdef CONFIG_PIN_NUM_ICE40_RESET_PCA9555
-        res = driver_pca9555_set_gpio_value(CONFIG_PIN_NUM_ICE40_RESET_PCA9555, false);
+        res = (driver_pca9555_set_gpio_value(CONFIG_PIN_NUM_ICE40_RESET_PCA9555, false)==0) ? ESP_OK : ESP_FAIL;
         if (res != ESP_OK) return res;
     #endif
     if (!spiDeviceHasChipSelect) {
@@ -71,64 +114,32 @@ esp_err_t driver_ice40_enable() {
         res = gpio_set_level(CONFIG_PIN_NUM_ICE40_RESET, true);
     #endif
     #ifdef CONFIG_PIN_NUM_ICE40_RESET_PCA9555
-        res = driver_pca9555_set_gpio_value(CONFIG_PIN_NUM_ICE40_RESET_PCA9555, true);
+        res = (driver_pca9555_set_gpio_value(CONFIG_PIN_NUM_ICE40_RESET_PCA9555, true)==0) ? ESP_OK : ESP_FAIL;
     #endif
+    return res;
 }
 
 int driver_ice40_get_done(void) {
     #ifdef CONFIG_PIN_NUM_ICE40_DONE
-        return !gpio_get_level(CONFIG_PIN_NUM_ICE40_DONE);
+        return gpio_get_level(CONFIG_PIN_NUM_ICE40_DONE);
     #endif
     #ifdef CONFIG_PIN_NUM_ICE40_DONE_PCA9555
-        return !driver_pca9555_get_gpio_value(CONFIG_PIN_NUM_ICE40_DONE_PCA9555);
+        return driver_pca9555_get_gpio_value(CONFIG_PIN_NUM_ICE40_DONE_PCA9555);
     #endif
     return 0;
-}
-
-esp_err_t driver_ice40_register_device(bool enableChipSelect) {
-    if (spiDeviceHasChipSelect && enableChipSelect && (spiDevice != NULL)) {
-        // We're already in the correct mode
-        return ESP_OK;
-    }
-    if ((!spiDeviceHasChipSelect) && (!enableChipSelect) && (spiDevice != NULL)) {
-        // We're already in the correct mode
-        return ESP_OK;
-    }
-    esp_err_t res = ESP_FAIL;
-    if (spiDevice != NULL) {
-        spi_bus_remove_device(spiDevice);
-    }
-    if (enableChipSelect) {
-        static const spi_device_interface_config_t devcfg = {
-            .clock_speed_hz = CONFIG_DRIVER_ICE40_SPI_SPEED,
-            .mode           = 0,  // SPI mode 0
-            .spics_io_num   = CONFIG_PIN_NUM_ICE40_CS,
-            .queue_size     = 1,
-            .flags          = SPI_DEVICE_FULLDUPLEX
-        };
-        res = spi_bus_add_device(VSPI_HOST, &devcfg, &spiDevice);
-    } else {
-        static const spi_device_interface_config_t devcfg = {
-            .clock_speed_hz = CONFIG_DRIVER_ICE40_SPI_SPEED,
-            .mode           = 0,  // SPI mode 0
-            .spics_io_num   = -1,
-            .queue_size     = 1,
-            .flags          = SPI_DEVICE_FULLDUPLEX
-        };
-        res = spi_bus_add_device(VSPI_HOST, &devcfg, &spiDevice);
-    }
-    return res;
 }
 
 esp_err_t driver_ice40_load_bitstream(uint8_t* bitstream, uint32_t length) {
     esp_err_t res = driver_ice40_disable(); // Put ICE40 in reset state
     if (res != ESP_OK) return res;
-    res = driver_ice40_register_device(false); // Disable the CS pin for normal SPI transfers
-    if (res != ESP_OK) return res;
     res = gpio_set_level(CONFIG_PIN_NUM_ICE40_CS, false); // Set CS pin low
     if (res != ESP_OK) return res;
-    esp_err_t res = driver_ice40_enable(); // Put ICE40 in SPI slave download state
+    res = driver_ice40_enable(); // Put ICE40 in SPI slave download state
     if (res != ESP_OK) return res;
+    if (driver_ice40_get_done()) {
+        printf("Before: ICE40 signals DONE (wrong)\n");
+        return ESP_FAIL;
+    }
     uint32_t position = 0;
     while (position < length) {
         uint32_t remaining = length - position;
@@ -140,16 +151,15 @@ esp_err_t driver_ice40_load_bitstream(uint8_t* bitstream, uint32_t length) {
         const uint8_t dummy[10] = {0};
         driver_ice40_send(dummy, sizeof(dummy));
     }
-    res = gpio_set_level(CONFIG_PIN_NUM_ICE40_CS, false); // Set CS pin high
+    res = gpio_set_level(CONFIG_PIN_NUM_ICE40_CS, true); // Set CS pin high
     if (res != ESP_OK) return res;
-    if (driver_ice40_get_done()) {
-        res = driver_ice40_register_device(true); // Enable the CS pin for normal SPI transfers
-        if (res != ESP_OK) return res;
-        res = ESP_OK;
-    } else {
-        res = ESP_FAIL;
+    if (!driver_ice40_get_done()) {
+        printf("After: ICE40 signals not DONE (wrong)\n");
     }
-    return res;
+    res = driver_ice40_register_device(true); // Enable the CS pin for normal SPI transfers
+    if (res != ESP_OK) return res;
+    
+    return ESP_OK;
 }
 
 esp_err_t driver_ice40_init(void) {	
@@ -177,13 +187,11 @@ esp_err_t driver_ice40_init(void) {
     if (res != ESP_OK) return res;
         
     if (!driver_ice40_get_done()) {
-        printf("ICE40: No bitstream loaded, putting FPGA in RESET state.");
+        printf("ICE40: No bitstream loaded, putting FPGA in RESET state.\n");
         res = driver_ice40_disable();
         if (res != ESP_OK) return res;
-        res = driver_ice40_register_device(false);
-        if (res != ESP_OK) return res;
     } else {
-        printf("ICE40: A bitstream has already been loaded, FPGA is active.");
+        printf("ICE40: A bitstream has already been loaded, FPGA is active.\n");
         res = driver_ice40_register_device(true);
         if (res != ESP_OK) return res;
     }

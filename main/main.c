@@ -1,8 +1,7 @@
-#include "include/nvs_init.h"
 #include "include/platform.h"
 #include "include/ota_update.h"
 #include "include/factory_reset.h"
-#include "driver_framebuffer.h"
+#include "driver_rtcmem.h"
 
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -13,53 +12,48 @@
 
 extern void micropython_entry(void);
 
-extern esp_err_t unpack_first_boot_zip(void);
-
-void nvs_write_zip_status(bool status)
-{
-	nvs_handle my_handle;
-	esp_err_t res = nvs_open("system", NVS_READWRITE, &my_handle);
-	if (res != ESP_OK) {
-		printf("NVS seems unusable! Please erase flash and try flashing again. (1)\n");
-		halt();
-	}
-	res = nvs_set_u8(my_handle, "preseed", status);
-	if (res != ESP_OK) {
-		printf("NVS seems unusable! Please erase flash and try flashing again. (2)\n");
-		halt();
-	}
+esp_err_t nvs_init() {
+    const esp_partition_t * nvs_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_NVS, NULL);
+    if (nvs_partition == NULL) return ESP_FAIL;        
+    esp_err_t res = nvs_flash_init();
+    if (res != ESP_OK) {
+        res = esp_partition_erase_range(nvs_partition, 0, nvs_partition->size);
+        if (res != ESP_OK) return res;
+        res = nvs_flash_init();
+        if (res != ESP_OK) return res;
+    }
+    return ESP_OK;
 }
 
-void app_main()
-{
-	logo();
-	bool is_first_boot = nvs_init();
+int magic() {
+	int valueA, valueB;
+	if (driver_rtcmem_int_read(0, &valueA) != ESP_OK) return 0;
+	if (driver_rtcmem_int_read(1, &valueB) != ESP_OK) return 0;
+	if (valueA == (uint8_t)~valueB) {
+        return valueA;
+    }
+	return 0;
+}
+
+void reset() {
+    fflush(stdout);
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	esp_restart();
+}
+
+void app_main() {
+    // Start the non-volatile storage component
+	if (nvs_init() != ESP_OK) {
+        printf("Unable to access the non-volatile storage partition in flash\n");
+        printf("This could be caused by an unstable 3.3v supply rail to the ESP32 or by a damaged flash chip.\n");
+        reset();
+    }
+
+    // Start the other components
 	platform_init();
 
-	if (is_first_boot) {
-		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-			driver_framebuffer_fill(NULL, COLOR_BLACK);
-			driver_framebuffer_print(NULL, "Extracting ZIP...\n", 0, 0, 1, 1, COLOR_WHITE, &roboto_12pt7b);
-			driver_framebuffer_flush(0);
-		#endif
-		printf("Attempting to unpack FAT initialization ZIP file...\b");
-		if (unpack_first_boot_zip() != ESP_OK) { //Error
-			#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-				driver_framebuffer_fill(NULL, COLOR_BLACK);
-				driver_framebuffer_print(NULL, "ZIP error!\n", 0, 0, 1, 1, COLOR_WHITE, &roboto_12pt7b);
-				driver_framebuffer_flush(0);
-			#endif
-			printf("An error occured while unpacking the ZIP file!");
-			nvs_write_zip_status(false);
-		} else {
-			nvs_write_zip_status(true);
-		}
-		esp_restart();
-	}
-
-	int magic = get_magic();
-	
-	switch(magic) {
+    // Start the application
+	switch(magic()) {
 		case MAGIC_OTA:
 			badge_ota_update();
 			break;

@@ -30,7 +30,7 @@ menu "Driver: ICE40 FPGA"
 		
     config PIN_NUM_ICE40_INT
 		depends on DRIVER_ICE40_ENABLE
-		int "PCA9555 pin used for interrupt"
+		int "GPIO pin used for interrupt"
 		
 	config PIN_NUM_ICE40_CS
 		depends on DRIVER_ICE40_ENABLE
