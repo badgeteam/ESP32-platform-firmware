@@ -342,6 +342,10 @@ extern const struct _mp_obj_module_t eink_module;
 extern const struct _mp_obj_module_t neopixel_module;
 #endif
 
+#ifdef CONFIG_DRIVER_APA102_ENABLE
+extern const struct _mp_obj_module_t apa102_module;
+#endif
+
 #ifdef CONFIG_DRIVER_LORA_ENABLE
 extern const struct _mp_obj_module_t lora_module;
 #endif
@@ -436,6 +440,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_NEOPIXEL
 #endif
 
+#ifdef CONFIG_DRIVER_APA102_ENABLE
+#define BUILTIN_MODULE_APA102 { MP_OBJ_NEW_QSTR(MP_QSTR_apa102), (mp_obj_t)&apa102_module },
+#else
+#define BUILTIN_MODULE_APA102
+#endif
+
 #ifdef CONFIG_DRIVER_LORA_ENABLE
 #define BUILTIN_MODULE_LORA { MP_OBJ_NEW_QSTR(MP_QSTR_lora), (mp_obj_t)&lora_module },
 #else
@@ -524,6 +534,7 @@ extern const struct _mp_obj_module_t ice40_module;
 	BUILTIN_MODULE_SSD1306 \
 	BUILTIN_MODULE_FRAMEBUFFER \
 	BUILTIN_MODULE_NEOPIXEL \
+	BUILTIN_MODULE_APA102 \
 	BUILTIN_MODULE_LORA \
 	BUILTIN_MODULE_HUB75 \
 	BUILTIN_MODULE_EINK \

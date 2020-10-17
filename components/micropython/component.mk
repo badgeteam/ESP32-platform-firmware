@@ -112,6 +112,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_flipdotter/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/png
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_apa102/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7735/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7789v/include
@@ -209,6 +210,7 @@ SRC_C =  $(addprefix esp32/,\
 	modmpr121.c \
 	moderc12864.c \
 	modneopixel.c \
+	modapa102.c \
 	modloopback.c \
 	modssd1306.c \
 	modeink.c \
