@@ -287,6 +287,7 @@ endif
 
 EXTMOD_SRC_C = $(addprefix extmod/,\
 	modbtree.c \
+	modonewire.c \
 	moducryptolib.c \
 	machine_spi.c \
 	)
