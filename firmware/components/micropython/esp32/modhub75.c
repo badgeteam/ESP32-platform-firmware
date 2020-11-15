@@ -69,7 +69,6 @@ STATIC mp_obj_t hub75_enablecomp() {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(hub75_enablecomp_obj, hub75_enablecomp);
 
-
 STATIC mp_obj_t hub75_text(size_t n_args, const mp_obj_t *args) {
     char *test = (char*)mp_obj_str_get_str(args[0]);
 
@@ -221,6 +220,11 @@ STATIC mp_obj_t hub75_setfont(mp_obj_t index_obj) {
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_setfont_obj, hub75_setfont);
+
+STATIC mp_obj_t hub75_getintensity() {
+    return mp_obj_new_int(compositor_getIntensity());
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(hub75_getintensity_obj, hub75_getintensity);
 
 STATIC const mp_rom_map_elem_t hub75_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_hub75)},

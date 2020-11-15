@@ -12,11 +12,11 @@ if not ntp.local_time_available():
         wifi.connect()
         if wifi.wait():
             rgb.clear()
-            rgb.framerate(20)
+            rgb.framerate(24)
         else:
             print('No wifi')
             rgb.clear()
-            rgb.framerate(20)
+            rgb.framerate(24)
             data, frames = icon_no_wifi
             rgb.image(data, (12, 0), (8,8))
             time.sleep(3)

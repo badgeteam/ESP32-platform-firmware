@@ -1,6 +1,8 @@
 import machine,utime,ustruct
-i2c = machine.I2C(scl=machine.Pin(5),sda=machine.Pin(4),freq=100000)
+i2c = machine.I2C(scl=machine.Pin(5),sda=machine.Pin(4),freq=400000)
 sensor = i2c.scan()[0] if len(i2c.scan()) >= 1 else None
+
+# https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf
 
 def cmd_i2c(sensor,addr,val):
     try:
@@ -23,11 +25,11 @@ def has_sensor():
 
 # init stuffs
 def init():
-    cmd_i2c(sensor,0x19,b'\x00')
-    cmd_i2c(sensor,0x1a,b'\x00')
-    cmd_i2c(sensor,0x1b,b'\x08')
-    cmd_i2c(sensor,0x1c,b'\x00')
-    cmd_i2c(sensor,0x6b,b'\x01')
+    cmd_i2c(sensor,0x19,b'\x00')  # No sample rate divider
+    cmd_i2c(sensor,0x1a,b'\x03')  # 44Hz bandwidth filter
+    cmd_i2c(sensor,0x1b,b'\x08')  # 500 degrees per second gyro range
+    cmd_i2c(sensor,0x1c,b'\x00')  # 2g of acceleration range
+    cmd_i2c(sensor,0x6b,b'\x01')  # Use X-axis gyro PLL as clock source
 
 def get_gyro():
     result = (0,0,0)
@@ -35,6 +37,8 @@ def get_gyro():
         result = (ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x43,2)) [0],
                   ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x45,2)) [0],
                   ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x47,2)) [0])
+    except Exception as e:
+        print('Got error:', e)
     finally:
         return result
 
@@ -44,6 +48,8 @@ def get_accel():
         result = (ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3b,2)) [0],
                   ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3d,2)) [0],
                   ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3f,2)) [0])
+    except Exception as e:
+        print('Got error:', e)
     finally:
         return result
 

@@ -14,7 +14,7 @@ def scan_access_point_list():
 
 def prompt_message(message):
         rgb.clear()
-        rgb.framerate(20)
+        rgb.framerate(24)
         rgb.setfont(rgb.FONT_7x5)
         uinterface.skippabletext(message)
 

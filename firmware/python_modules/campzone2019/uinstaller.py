@@ -37,10 +37,13 @@ if system.__current_app__ == 'uinstaller':
     ###
 
     rgb.clear()
-    rgb.framerate(20)
+    rgb.framerate(24)
     uinterface.loading_text('Installing %s' % to_install)
     del icon_no_wifi
     gc.collect()
+    if not wifi.status():
+        print('No WiFi again')
+        wifi.connect()
     if woezel.install(to_install):
         # Reset launcher's selected index to newly installed app
         machine.nvs_setint('launcher', 'index', 0)
@@ -51,3 +54,10 @@ if system.__current_app__ == 'uinstaller':
         uinterface.skippabletext('Failed to install "%s"' % to_install)
         
     system.reboot()
+
+# import rgb
+# from default_icons import animation_connecting_wifi
+# rgb.clear()
+# data, size, frames = animation_connecting_wifi
+# rgb.framerate(3)
+# rgb.gif(data, (12, 0), size, frames)

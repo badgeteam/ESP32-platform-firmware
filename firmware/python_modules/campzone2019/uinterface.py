@@ -115,7 +115,7 @@ def connect_wifi(duration=None):
         time.sleep(3)
 
     rgb.clear()
-    rgb.framerate(20)
+    rgb.framerate(24)
     del data, size, frames
     gc.collect()
     return wifi.status()
@@ -187,7 +187,7 @@ def _confirmation_dialog_register_callbacks():
 
 def _initialize_display():
     rgb.clear()
-    rgb.framerate(20)
+    rgb.framerate(24)
     rgb.setfont(FONT)
 
 def _input_exit_routine():

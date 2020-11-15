@@ -8,7 +8,7 @@ MAX_BRIGHTNESS = PANEL_WIDTH
 
 FONT_7x5 = 0
 FONT_6x3 = 1
-current_framerate = 20
+current_framerate = 24
 current_font = FONT_7x5
 font_heights = [7, 6]
 
@@ -34,7 +34,7 @@ def text(text, color=(255, 255, 255), pos=None):
 
 def scrolltext(text, color=(255, 255, 255), pos=None, width=PANEL_WIDTH):
     if pos is None:
-        pos = (0, int((8 - font_heights[current_font]) / 2))
+        pos = (0, (8 - font_heights[current_font]) // 2)
 
     r, g, b = color
     x, y = pos
@@ -85,3 +85,5 @@ def setfont(font_index):
 
 # Restore previously set brightness
 setbrightness(getbrightness() or (MAX_BRIGHTNESS - 2))
+# setfont(1)
+framerate(1)

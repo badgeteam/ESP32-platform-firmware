@@ -12,14 +12,9 @@ for folder in folders:
 # like <a> or <s> (e.g. /apps or /sdcard won't work.)
 sys.path.append('apps')
 
-# Hijack the system start function to fix some CZ19 screen issues
-orig_start = system.start
-def hijacked_start(app, status=True):
-    import rgb, time
-    rgb.clear()
-    time.sleep(0.1)
-    orig_start(app, status)
-system.start = hijacked_start
+# Enable LEDs
+# en = machine.PWM(12, freq=20000)
+# en.duty(100)
 
 ## Make badge sleep in undervoltage conditions
 virtualtimers.activate(1000) # low resolution needed

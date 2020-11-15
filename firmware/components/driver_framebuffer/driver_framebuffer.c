@@ -26,11 +26,14 @@ uint8_t* framebuffer;
 
 inline uint16_t convert24to16(uint32_t in) //RGB24 to 565
 {
+#ifdef CONFIG_DRIVER_FRAMEBUFFER_SWAP_R_AND_B
+	uint8_t b = (in>>16)&0xFF;
+	uint8_t r = in&0xFF;
+#else
 	uint8_t r = (in>>16)&0xFF;
 	uint8_t b = in&0xFF;
 #endif
 	uint8_t g = (in>>8)&0xFF;
-	uint8_t b = in&0xFF;
 	return ((b & 0b11111000) << 8) | ((g & 0b11111100) << 3) | (r >> 3);
 }
 

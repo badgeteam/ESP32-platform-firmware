@@ -50,7 +50,8 @@ int gpio_bus[32] = {CONFIG_PIN_NUM_HUB75_R0,
                     CONFIG_PIN_NUM_HUB75_LAT,
                     CONFIG_PIN_NUM_HUB75_OE, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 int gpio_clk = CONFIG_PIN_NUM_HUB75_CLK;
-int clkspeed_hz = CONFIG_HUB75_CLOCK_SPEED;
+//int clkspeed_hz = CONFIG_HUB75_CLOCK_SPEED;
+int clkspeed_hz = 20000000;
 i2s_parallel_cfg_bits_t bits = I2S_PARALLEL_BITS_8;
 
 #define DMA_MAX (4096-4)
@@ -87,7 +88,7 @@ static void fill_dma_desc(volatile lldesc_t *dmadesc, i2s_parallel_buffer_desc_t
     }
     //Loop last back to first
     dmadesc[n-1].qe.stqe_next=(lldesc_t*)&dmadesc[0];
-    printf("fill_dma_desc: filled %d descriptors\n", n);
+//    printf("fill_dma_desc: filled %d descriptors\n", n);
 }
 
 static void gpio_setup_out(int gpio, int sig) {

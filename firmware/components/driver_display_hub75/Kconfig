@@ -59,4 +59,8 @@ menu "Driver: HUB75 LED panel display"
 		int "Clock speed to run the HUB75 I2S updates at"
 		default 2000000
 
+	config HUB75_REGULATE_VLED
+		bool "Enables PWM regulation of the LED power rails based on current draw, to prevent its voltage from reaching beyond the 4.7V logic threshold."
+		default n
+
 endmenu

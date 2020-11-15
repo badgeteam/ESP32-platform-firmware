@@ -29,6 +29,13 @@ class Response:
         import ujson
         return ujson.loads(self.content)
 
+    def save(self, filename):
+        content = self.raw.read(4096)
+        with open(filename, 'wb') as file:
+            while content:
+                file.write(content)
+                content = self.raw.read(4096)
+
 
 def request(method, url, data=None, json=None, headers={}, stream=None, timeout=10, redirect=5):
     if not wifi.status():
@@ -51,7 +58,15 @@ def request(method, url, data=None, json=None, headers={}, stream=None, timeout=
         host, port = host.split(":", 1)
         port = int(port)
 
-    ai = usocket.getaddrinfo(host, port)
+    ai = None
+    for retry in range(3):
+        ai = usocket.getaddrinfo(host, port)
+        if len(ai) > 0:
+            break
+        print('Could not fetch address info for hatchery. Retrying.')
+    if ai is None or len(ai) == 0:
+        raise ValueError("WiFi is not connected")
+
     addr = ai[0][-1]
     s = usocket.socket()
     if timeout:

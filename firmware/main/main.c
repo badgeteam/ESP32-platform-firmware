@@ -35,28 +35,28 @@ void app_main()
 	bool is_first_boot = nvs_init();
 	platform_init();
 
-	if (is_first_boot) {
-		
-		
-		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-			driver_framebuffer_fill(NULL, COLOR_BLACK);
-			driver_framebuffer_print(NULL, "Extracting ZIP...\n", 0, 0, 1, 1, COLOR_WHITE, &roboto12pt7b);
-			driver_framebuffer_flush(0);
-		#endif
-		printf("Attempting to unpack FAT initialization ZIP file...\b");
-		if (unpack_first_boot_zip() != ESP_OK) { //Error
-			#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
-				driver_framebuffer_fill(NULL, COLOR_BLACK);
-				driver_framebuffer_print(NULL, "ZIP error!\n", 0, 0, 1, 1, COLOR_WHITE, &roboto12pt7b);
-				driver_framebuffer_flush(0);
-			#endif
-			printf("An error occured while unpacking the ZIP file!");
-			nvs_write_zip_status(false);
-		} else {
-			nvs_write_zip_status(true);
-		}
-		esp_restart();
-	}
+//	if (is_first_boot) {
+//
+//
+//		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+//			driver_framebuffer_fill(NULL, COLOR_BLACK);
+//			driver_framebuffer_print(NULL, "Extracting ZIP...\n", 0, 0, 1, 1, COLOR_WHITE, &roboto12pt7b);
+//			driver_framebuffer_flush(0);
+//		#endif
+//		printf("Attempting to unpack FAT initialization ZIP file...\b");
+//		if (unpack_first_boot_zip() != ESP_OK) { //Error
+//			#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
+//				driver_framebuffer_fill(NULL, COLOR_BLACK);
+//				driver_framebuffer_print(NULL, "ZIP error!\n", 0, 0, 1, 1, COLOR_WHITE, &roboto12pt7b);
+//				driver_framebuffer_flush(0);
+//			#endif
+//			printf("An error occured while unpacking the ZIP file!");
+//			nvs_write_zip_status(false);
+//		} else {
+//			nvs_write_zip_status(true);
+//		}
+//		esp_restart();
+//	}
 	
 	int magic = get_magic();
 	

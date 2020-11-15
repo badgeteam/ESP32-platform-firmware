@@ -217,7 +217,7 @@ def cbSleep(_):
     uinterface.skippabletext('ZzZz')
 
 def init_power_management():
-    virtualtimers.activate(1000)  # Start scheduler with 1 second ticks
+    virtualtimers.activate(100)  # Start scheduler with 1 second ticks
     pm.set_timeout(5 * 60 * 1000)  # Set timeout to 5 minutes
     pm.callback(cbSleep)  # Show sleep message
     pm.feed()  # Feed the power management task, starts the countdown...
@@ -271,3 +271,6 @@ else:
                 if c == "\x03" or c == "\x04": # CTRL+C or CTRL+D
                         wait = False
         import shell
+
+# en = machine.PWM(12, freq=20000)
+# en.duty(100)

@@ -3,7 +3,7 @@ import network, time, machine, consts
 _STA_IF = network.WLAN(network.STA_IF)
 _AP_IF  = network.WLAN(network.AP_IF)
 
-_DEFAULT_TIMEOUT  = machine.nvs_getint("system", "wifi.timeout") or 10
+_DEFAULT_TIMEOUT  = machine.nvs_getint("system", "wifi.timeout") or 20
 _DEFAULT_SSID     = machine.nvs_getstr("system", "wifi.ssid")
 _DEFAULT_PASSWORD = machine.nvs_getstr("system", "wifi.password")
 
@@ -51,12 +51,14 @@ def wait(duration=_DEFAULT_TIMEOUT, UNUSED_LEGACY_PARAMETER=None):
 	Wait until connection has been made
 	:return: boolean, connected
 	'''
-	t = int(duration*10)
+	t = duration
 	while not status():
 		if t <= 0:
 			break
+		# if t % 2 == 0:
+		# 	connect()
 		t -= 1
-		time.sleep(0.1)
+		time.sleep(1)
 	return status()
 
 def ntp(onlyIfNeeded=True, server='pool.ntp.org'):

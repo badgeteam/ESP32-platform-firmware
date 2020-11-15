@@ -101,50 +101,6 @@ def _expandhome(s):
         s = s.replace("~/", h + "/")
     return s
 
-import ussl
-import usocket
-def _url_open(url):
-    if debug:
-        print(url)
-
-    proto, _, host, urlpath = url.split('/', 3)
-    try:
-        ai = usocket.getaddrinfo(host, 443)
-    except OSError as e:
-        _fatal("Unable to resolve %s (no Internet?)" % host, e)
-    #print("Address infos:", ai)
-    if len(ai) == 0:
-        _fatal("Unable to resolve %s (no Internet?)" % host, errno.EHOSTUNREACH)
-    addr = ai[0][4]
-
-    s = usocket.socket(ai[0][0])
-    try:
-        #print("Connect address:", addr)
-        s.connect(addr)
-
-        if proto == "https:":
-            s = ussl.wrap_socket(s, server_hostname=host)
-
-        # MicroPython rawsocket module supports file interface directly
-        s.write("GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n" % (urlpath, host))
-        l = s.readline()
-        protover, status, msg = l.split(None, 2)
-        if status != b"200":
-            if status == b"404" or status == b"301":
-                raise NotFoundError("Package not found")
-            raise ValueError(status)
-        while 1:
-            l = s.readline()
-            if not l:
-                raise ValueError("Unexpected EOF in HTTP headers")
-            if l == b'\r\n':
-                break
-    except Exception as e:
-        s.close()
-        raise e
-
-    return s
-
 
 def _fatal(msg, exc=None):
     print("Error:", msg)
@@ -254,28 +210,29 @@ def get_category(category_name):
         return json.load(category_file)
 
 def get_pkg_metadata(name):
-    f = _url_open("https://badge.team/eggs/get/%s/json" % name)
+    import gc
+    gc.collect()
     try:
-        return json.load(f)
-    finally:
-        f.close()
-        del f
+        response = urequests.get('http://%s/eggs/get/%s/json' % (woezel_domain, name))
+    except BaseException as e:
+        import sys
+        sys.print_exception(e)
+        print('Exception getting package metadata')
+
+
+    return response.json()
 
 def get_pkg_list():
-    f = _url_open("https://badge.team/basket/campzone2019/list/json")
-    try:
-        return json.load(f)
-    finally:
-        f.close()
-        del f
+    import dumbstreamjson
+    return list(dumbstreamjson.from_url('http://%s/basket/%s/list/json' % (woezel_domain, device_name),
+                                   keys=['name', 'slug', 'category', 'revision']))
 
 def search_pkg_list(query):
-    f = _url_open("https://badge.team/basket/campzone2019/search/%s/json" % query)
-    try:
-        return json.load(f)
-    finally:
-        f.close()
-        del f
+    import dumbstreamjson
+    return list(dumbstreamjson.from_url('http://%s/basket/%s/search/%s/json' % (woezel_domain, device_name, query),
+                                        keys=['name', 'slug', 'category', 'revision']))
+    response = urequests.get()
+    return response.json()
 
 def is_installed(app_name, path=None):
     if path == None:
@@ -325,7 +282,7 @@ def install_pkg(pkg_spec, install_path, force_reinstall):
     package_url = packages[0]["url"]
     print("Installing %s rev. %s from %s" % (pkg_spec, latest_ver, package_url))
     package_fname = op_basename(package_url)
-    f1 = _url_open(package_url)
+    f1 = urequests.get(package_url).raw
     try:
         f2 = uzlib.DecompIO(f1, gzdict_sz)
         f3 = tarfile.TarFile(fileobj=f2)
@@ -379,6 +336,8 @@ def install(to_install, install_path=None, force_reinstall=False):
                 to_install.extend(deps)
         return True
     except Exception as e:
+        import sys
+        sys.print_exception(e)
         print("Error installing '{}': {}, packages may be partially installed".format(
                 pkg_spec, e),
             file=sys.stderr)
