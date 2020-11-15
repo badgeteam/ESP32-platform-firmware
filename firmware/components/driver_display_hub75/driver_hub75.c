@@ -154,7 +154,7 @@ void displayTask(void *pvParameter)
         ledc_timer_config(&ledc_timer);
         ledc_channel_config_t led_power_dimmer = {
             .channel    = 0,
-            .duty       = 255,
+            .duty       = 0,
             .gpio_num   = 12,
             .speed_mode = LEDC_HIGH_SPEED_MODE,
             .hpoint     = 0,
@@ -164,6 +164,8 @@ void displayTask(void *pvParameter)
 
         bool usb_connected = true;
         TickType_t lastUsbCheck = 0;
+        uint8_t duty = 255;
+        uint32_t deduced_current = 0;
 
 	while(driver_hub75_active) {
 		if(compositor_status()) composite();
@@ -180,10 +182,9 @@ void displayTask(void *pvParameter)
                 if (usb_connected) {
                     uint32_t intensity        = total_intensity;
                     uint8_t milliamps_per_led = 35;
-                    uint32_t deduced_current =
+                    deduced_current =
                         (uint32_t)((intensity / 255.0) * milliamps_per_led *
                                    ((brightness - 2) / 32.0) / 8);  // in milliamps
-                    uint8_t duty = 255;
 
                     // Correct for blank frames. Example: 1 data frame + 3 blank frames, of
                     // which 1 blanks the row, actual current is <deduced> * 3/4.
@@ -209,13 +210,15 @@ void displayTask(void *pvParameter)
                       duty = (int)((deduced_current - MID) / ((float)UPPER - MID) * (255 - PCT_MID)) +
                              PCT_MID;
                     }
-
-                    if (duty != 255) {
-//                        printf("%d %d\n", deduced_current, duty);
-                    }
-                    ledc_set_duty(led_power_dimmer.speed_mode, led_power_dimmer.channel, duty);
-                    ledc_update_duty(led_power_dimmer.speed_mode, led_power_dimmer.channel);
+                } else {
+                  duty = 255;
                 }
+
+                if (duty != 255) {
+                    printf("%d %d\n", deduced_current, duty);
+                }
+                ledc_set_duty(led_power_dimmer.speed_mode, led_power_dimmer.channel, duty);
+                ledc_update_duty(led_power_dimmer.speed_mode, led_power_dimmer.channel);
 #endif // CONFIG_HUB75_REGULATE_VLED
 
 		vTaskDelayUntil( &xLastWakeTime, 1.0 / framerate * 1000 / portTICK_PERIOD_MS );

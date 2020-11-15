@@ -221,11 +221,6 @@ STATIC mp_obj_t hub75_setfont(mp_obj_t index_obj) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_setfont_obj, hub75_setfont);
 
-STATIC mp_obj_t hub75_getintensity() {
-    return mp_obj_new_int(compositor_getIntensity());
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(hub75_getintensity_obj, hub75_getintensity);
-
 STATIC const mp_rom_map_elem_t hub75_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_hub75)},
     {MP_ROM_QSTR(MP_QSTR_text), MP_ROM_PTR(&hub75_text_obj)},
