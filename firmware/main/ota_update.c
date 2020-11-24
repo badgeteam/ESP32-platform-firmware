@@ -469,7 +469,7 @@ badge_ota_task(void *pvParameter)
 		}
 		const char *code = index((const char *) buffer, ' ');
 		if (code == NULL || strncmp((const char *) code, " 200 ", 5) != 0) {
-			ESP_LOGE(TAG, "did not receive 200 code.");
+			ESP_LOGE(TAG, "did not receive 200 code, but instead got: %s", code);
 			task_fatal_error();
 		}
 		ESP_LOGW(TAG, "Status '%s', OK", (const char *) buffer);

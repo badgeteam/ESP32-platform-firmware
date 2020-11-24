@@ -12,6 +12,13 @@
 
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 
+#define ASSERT_STARTED() {if (!sndmixer_started) { \
+                            mp_raise_ValueError(msg_error_not_started); \
+                            return mp_const_none; \
+                          }}
+
+#define MP_OBJ_IS_CLOSURE(o) (MP_OBJ_IS_OBJ(o) && (((mp_obj_base_t*)MP_OBJ_TO_PTR(o))->type->name == MP_QSTR_closure))
+
 bool sndmixer_started = 0;
 int sndmixer_channels = 0;
 
@@ -130,7 +137,17 @@ static mp_obj_t modsndmixer_wav(mp_obj_t _data) {
   uint8_t *data = (uint8_t *)mp_obj_str_get_data(_data, &len);
 
   int id = sndmixer_queue_wav(data, data + len - 1, 1);
-  sndmixer_play(id);
+//  sndmixer_play(id);
+  return mp_obj_new_int(id);
+}
+
+static mp_obj_t modsndmixer_wav_stream(mp_obj_t _stream) {
+  if (!sndmixer_started) {
+    mp_raise_ValueError(msg_error_not_started);
+    return mp_const_none;
+  }
+  int id = sndmixer_queue_wav_stream(mp_stream_posix_read, mp_stream_posix_lseek, (void *)_stream);
+//  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -147,7 +164,7 @@ static mp_obj_t modsndmixer_mod(mp_obj_t _data) {
   uint8_t *data = (uint8_t *)mp_obj_str_get_data(_data, &len);
 
   int id = sndmixer_queue_mod(data, data + len - 1);
-  sndmixer_play(id);
+//  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -159,7 +176,7 @@ static mp_obj_t modsndmixer_mp3(mp_obj_t _data) {
   size_t len;
   uint8_t *data = mp_obj_to_u8_ptr(_data, &len);
   int id = sndmixer_queue_mp3(data, data + len - 1);
-  sndmixer_play(id);
+//  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -168,8 +185,8 @@ static mp_obj_t modsndmixer_mp3_stream(mp_obj_t _stream) {
     mp_raise_ValueError(msg_error_not_started);
     return mp_const_none;
   }
-  int id = sndmixer_queue_mp3_stream(mp_stream_posix_read, (void *)_stream);
-  sndmixer_play(id);
+  int id = sndmixer_queue_mp3_stream(mp_stream_posix_read, mp_stream_posix_lseek, (void *)_stream);
+//  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -181,7 +198,7 @@ static mp_obj_t modsndmixer_opus(mp_obj_t _data) {
   mp_uint_t len;
   uint8_t *data = mp_obj_to_u8_ptr(_data, &len);
   int id = sndmixer_queue_opus(data, data + len);
-  sndmixer_play(id);
+//  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -191,7 +208,7 @@ static mp_obj_t modsndmixer_opus_stream(mp_obj_t _stream) {
     return mp_const_none;
   }
   int id = sndmixer_queue_opus_stream(mp_stream_posix_read, (void *)_stream);
-  sndmixer_play(id);
+//  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -201,7 +218,7 @@ static mp_obj_t modsndmixer_synth() {
     return mp_const_none;
   }
   int id = sndmixer_queue_synth();
-  sndmixer_play(id);
+//  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -227,6 +244,43 @@ static mp_obj_t modsndmixer_waveform(mp_obj_t _id, mp_obj_t _waveform) {
   return mp_const_none;
 }
 
+static mp_obj_t modsndmixer_on_finished(mp_obj_t _id, mp_obj_t _handle) {
+  if (!sndmixer_started) {
+    mp_raise_ValueError(msg_error_not_started);
+    return mp_const_none;
+  }
+  int id       = mp_obj_get_int(_id);
+  if(! MP_OBJ_IS_FUN(_handle) && (! MP_OBJ_IS_METH(_handle)) && (! MP_OBJ_IS_CLOSURE(_handle)))
+  {
+    mp_raise_ValueError("Callback function expected!");
+    return mp_const_none;
+  }
+  sndmixer_set_callback(id, mp_sched_schedule, _handle);
+  return mp_const_none;
+}
+
+static mp_obj_t modsndmixer_beat_sync_start(mp_obj_t _bpm) {
+  ASSERT_STARTED();
+  int bpm       = mp_obj_get_int(_bpm);
+
+  sndmixer_beat_sync_start(bpm);
+  return mp_const_none;
+}
+
+static mp_obj_t modsndmixer_beat_sync_stop() {
+  ASSERT_STARTED();
+  sndmixer_beat_sync_stop();
+  return mp_const_none;
+}
+
+static mp_obj_t modsndmixer_start_at_next(mp_obj_t _id, mp_obj_t _play_at_next) {
+  ASSERT_STARTED();
+  int id            = mp_obj_get_int(_id);
+  int play_at_next  = mp_obj_get_int(_play_at_next);
+
+  sndmixer_start_at_next(id, play_at_next);
+  return mp_const_none;
+}
 /* --- */
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(modsndmixer_begin_obj, 0, 2, modsndmixer_begin);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_play_obj, modsndmixer_play);
@@ -237,6 +291,7 @@ static MP_DEFINE_CONST_FUN_OBJ_0(modsndmixer_resume_all_obj, modsndmixer_resume_
 static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_loop_obj, modsndmixer_loop);
 static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_volume_obj, modsndmixer_volume);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_wav_obj, modsndmixer_wav);
+static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_wav_stream_obj, modsndmixer_wav_stream);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_mod_obj, modsndmixer_mod);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_mp3_obj, modsndmixer_mp3);
 static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_mp3_stream_obj, modsndmixer_mp3_stream);
@@ -245,6 +300,10 @@ static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_opus_stream_obj, modsndmixer_opus_s
 static MP_DEFINE_CONST_FUN_OBJ_0(modsndmixer_synth_obj, modsndmixer_synth);
 static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_freq_obj, modsndmixer_freq);
 static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_waveform_obj, modsndmixer_waveform);
+static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_on_finished_obj, modsndmixer_on_finished);
+static MP_DEFINE_CONST_FUN_OBJ_1(modsndmixer_beat_sync_start_obj, modsndmixer_beat_sync_start);
+static MP_DEFINE_CONST_FUN_OBJ_0(modsndmixer_beat_sync_stop_obj, modsndmixer_beat_sync_stop);
+static MP_DEFINE_CONST_FUN_OBJ_2(modsndmixer_start_at_next_obj, modsndmixer_start_at_next);
 
 static const mp_rom_map_elem_t sndmixer_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_begin), MP_ROM_PTR(&modsndmixer_begin_obj)},
@@ -256,6 +315,7 @@ static const mp_rom_map_elem_t sndmixer_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_loop), MP_ROM_PTR(&modsndmixer_loop_obj)},
     {MP_ROM_QSTR(MP_QSTR_volume), MP_ROM_PTR(&modsndmixer_volume_obj)},
     {MP_ROM_QSTR(MP_QSTR_wav), MP_ROM_PTR(&modsndmixer_wav_obj)},
+    {MP_ROM_QSTR(MP_QSTR_wav_stream), MP_ROM_PTR(&modsndmixer_wav_stream_obj)},
     {MP_ROM_QSTR(MP_QSTR_mod), MP_ROM_PTR(&modsndmixer_mod_obj)},
     {MP_ROM_QSTR(MP_QSTR_mp3), MP_ROM_PTR(&modsndmixer_mp3_obj)},
     {MP_ROM_QSTR(MP_QSTR_mp3_stream), MP_ROM_PTR(&modsndmixer_mp3_stream_obj)},
@@ -264,6 +324,10 @@ static const mp_rom_map_elem_t sndmixer_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_synth), MP_ROM_PTR(&modsndmixer_synth_obj)},
     {MP_ROM_QSTR(MP_QSTR_freq), MP_ROM_PTR(&modsndmixer_freq_obj)},
     {MP_ROM_QSTR(MP_QSTR_waveform), MP_ROM_PTR(&modsndmixer_waveform_obj)},
+    {MP_ROM_QSTR(MP_QSTR_on_finished), MP_ROM_PTR(&modsndmixer_on_finished_obj)},
+    {MP_ROM_QSTR(MP_QSTR_beat_sync_start), MP_ROM_PTR(&modsndmixer_beat_sync_start_obj)},
+    {MP_ROM_QSTR(MP_QSTR_beat_sync_stop), MP_ROM_PTR(&modsndmixer_beat_sync_stop_obj)},
+    {MP_ROM_QSTR(MP_QSTR_start_at_next), MP_ROM_PTR(&modsndmixer_start_at_next_obj)}
 };
 
 static MP_DEFINE_CONST_DICT(sndmixer_module_globals, sndmixer_module_globals_table);

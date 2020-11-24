@@ -34,24 +34,20 @@ def init():
 def get_gyro():
     result = (0,0,0)
     try:
-        result = (ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x43,2)) [0],
-                  ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x45,2)) [0],
-                  ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x47,2)) [0])
+        result = ustruct.unpack(">hhh", noisy_readfrom_mem(sensor, 0x43, 6))
     except Exception as e:
         print('Got error:', e)
     finally:
         return result
 
 def get_accel():
-    result = (0,0,0)
+    x, y, z = (0,0,0)
     try:
-        result = (ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3b,2)) [0],
-                  ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3d,2)) [0],
-                  ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x3f,2)) [0])
+        x, y, z = ustruct.unpack(">hhh", noisy_readfrom_mem(sensor, 0x3b, 6))
     except Exception as e:
         print('Got error:', e)
     finally:
-        return result
+        return (x, y, z)
 
 def get_temp():
     return ustruct.unpack(">h",noisy_readfrom_mem(sensor,0x41,2)) [0] / 340 + 36.53

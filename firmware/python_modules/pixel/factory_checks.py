@@ -22,9 +22,8 @@ checklist = [
 def next_check():
     if(len(checklist) == 0):
         rgb.clear()
-        rgb.background((0, 50, 0))
-        rgb.text("Done!", CYAN, (4, 1))
         machine.nvs_setint('system', 'factory_checked', 2)
+        import partsim
         return
 
     background, textcolor, x_pos, text, gpio = checklist.pop(0)

@@ -12,13 +12,13 @@ FONT = rgb.FONT_7x5
 FONT_WIDTH = 5
 
 CONFIRMATION_YES_IMAGE = {
-    "data": [0, 0, 0, 0x00FF0000, 0x00FF0000, 0, 0x00FF0000, 0, 0, 0x00FF0000, 0, 0, 0, 0, 0, 0],
+    "data": [0, 0, 0, 0x00FF00FF, 0x00FF00FF, 0, 0x00FF00FF, 0, 0, 0x00FF00FF, 0, 0, 0, 0, 0, 0],
     "width": 4,
     "height": 4
 }
 
 CONFIRMATION_NO_IMAGE = {
-    "data": [0xFF000000, 0, 0, 0xFF000000, 0, 0xFF000000, 0xFF000000, 0, 0, 0xFF000000, 0xFF000000, 0, 0xFF000000, 0, 0, 0xFF000000],
+    "data": [0xFF0000FF, 0, 0, 0xFF0000FF, 0, 0xFF0000FF, 0xFF0000FF, 0, 0, 0xFF0000FF, 0xFF0000FF, 0, 0xFF0000FF, 0, 0, 0xFF0000FF],
     "width": 4,
     "height": 4
 }
@@ -115,7 +115,7 @@ def connect_wifi(duration=None):
         time.sleep(3)
 
     rgb.clear()
-    rgb.framerate(26)
+    rgb.framerate(24)
     del data, size, frames
     gc.collect()
     return wifi.status()
@@ -187,7 +187,7 @@ def _confirmation_dialog_register_callbacks():
 
 def _initialize_display():
     rgb.clear()
-    rgb.framerate(26)
+    rgb.framerate(24)
     rgb.setfont(FONT)
 
 def _input_exit_routine():

@@ -218,6 +218,7 @@ def get_pkg_metadata(name):
         import sys
         sys.print_exception(e)
         print('Exception getting package metadata')
+        return None
 
 
     return response.json()
@@ -258,6 +259,8 @@ def is_installed(app_name, path=None):
 
 def install_pkg(pkg_spec, install_path, force_reinstall):
     data = get_pkg_metadata(pkg_spec)
+    if data is None:
+        return None
     already_installed = is_installed(pkg_spec, install_path)
     latest_ver = data["info"]["version"]
     verf = "%s%s/version" % (install_path, pkg_spec)
@@ -279,11 +282,13 @@ def install_pkg(pkg_spec, install_path, force_reinstall):
     del data
     gc.collect()
     assert len(packages) == 1
-    package_url = packages[0]["url"]
+    package_url = packages[0]["url"].replace('https', 'http')
     print("Installing %s rev. %s from %s" % (pkg_spec, latest_ver, package_url))
     package_fname = op_basename(package_url)
     f1 = urequests.get(package_url).raw
     try:
+        gc.collect()
+        print('mem_free:', gc.mem_free())
         f2 = uzlib.DecompIO(f1, gzdict_sz)
         f3 = tarfile.TarFile(fileobj=f2)
         meta = _install_tar(f3, "%s%s/" % (install_path, pkg_spec))

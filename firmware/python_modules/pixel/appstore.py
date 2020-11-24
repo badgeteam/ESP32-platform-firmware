@@ -5,7 +5,7 @@ from default_icons import icon_no_wifi, animation_connecting_wifi, animation_loa
 def woezel_callback(text, error):
     global category_stats
     rgb.clear()
-    rgb.framerate(26)
+    rgb.framerate(24)
     rgb.setfont(rgb.FONT_7x5)
     print(text)
 
@@ -43,7 +43,7 @@ active_categories = [cat for cat in categories if cat['eggs'] > 0]
 
 if len(active_categories) == 0:
     rgb.clear()
-    rgb.framerate(26)
+    rgb.framerate(24)
     uinterface.skippabletext('Error loading')
     system.start("appstore")
 

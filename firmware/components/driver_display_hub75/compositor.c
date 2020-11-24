@@ -7,6 +7,8 @@
 #include "include/font_6x3.h"
 #include "include/compositor.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 
 #define C_SM 0xFFFFFFFF
@@ -27,6 +29,7 @@ bool enabled = true;
 Color background;
 Color *buffer;
 renderTask_t *head = NULL;
+SemaphoreHandle_t node_lock = NULL;
 
 #define N_FONTS 2
 int font_index = 0;
@@ -50,33 +53,37 @@ Color genColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 
 void compositor_init() {
         background.value = 0;
+        node_lock = xSemaphoreCreateMutex();
 }
 
 /*
 Clears the render list. Keeps the background
  */
 void compositor_clear() {
-        renderTask_t *node = head;
-        renderTask_t *next;
-        while(node != NULL) {
-                next = node->next;
-                if(node->id == 0) {
-                        free(node->payload);
-                } else if(node->id == 1) {
-                        free(node->payload);
-                } else if(node->id == 2) {
-                        scrollText_t *t = (scrollText_t *) node->payload;
-                        free(t->text);
-                        free(node->payload);
-                } else if(node->id == 3) {
-                        animation_t *gif = (animation_t *) node->payload;
-                        free(gif->gif);
-                        free(node->payload);
-                }
-                free(node);
-                node = next;
-        }
-        head = NULL;
+  if(xSemaphoreTake(node_lock, ( TickType_t ) 10 / portTICK_PERIOD_MS) == pdTRUE) {
+    renderTask_t *node = head;
+    renderTask_t *next;
+    while (node != NULL) {
+      next = node->next;
+      if (node->id == 0) {
+        free(node->payload);
+      } else if (node->id == 1) {
+        free(node->payload);
+      } else if (node->id == 2) {
+        scrollText_t *t = (scrollText_t *)node->payload;
+        free(t->text);
+        free(node->payload);
+      } else if (node->id == 3) {
+        animation_t *gif = (animation_t *)node->payload;
+        free(gif->gif);
+        free(node->payload);
+      }
+      free(node);
+      node = next;
+    }
+    head = NULL;
+    xSemaphoreGive(node_lock);
+  }
 }
 
 /*
@@ -182,9 +189,10 @@ void compositor_addAnimation(uint8_t *image, int x, int y, int width, int length
 void compositor_setPixel(int x, int y, Color color) {
 	if (!buffer) return;
 	Color *target = &buffer[y*CONFIG_HUB75_WIDTH+x];
-	target->RGB[1] = color.RGB[1] + (255-color.RGB[0])*target->RGB[1]/255;
-	target->RGB[2] = color.RGB[2] + (255-color.RGB[0])*target->RGB[2]/255;
-	target->RGB[3] = color.RGB[3] + (255-color.RGB[0])*target->RGB[3]/255;
+        double alpha = color.RGB[0]/255;
+	target->RGB[1] = (uint8_t)(alpha*color.RGB[1] + (1-alpha)*target->RGB[1]);
+	target->RGB[2] = (uint8_t)(alpha*color.RGB[2] + (1-alpha)*target->RGB[2]);
+	target->RGB[3] = (uint8_t)(alpha*color.RGB[3] + (1-alpha)*target->RGB[3]);
 }
 
 void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
@@ -257,6 +265,10 @@ void display_crash() {
 
 void composite() {
 	if (!buffer) return;
+
+        if(xSemaphoreTake(node_lock, ( TickType_t ) 10 / portTICK_PERIOD_MS) != pdTRUE) {
+          return;
+        }
 	//Setting the background color
 	for(int x=0; x<CONFIG_HUB75_WIDTH; x++) {
 			for(int y=0; y<CONFIG_HUB75_HEIGHT; y++) {
@@ -287,6 +299,7 @@ void composite() {
 		}
 		node = node->next;
 	}
+        xSemaphoreGive(node_lock);
 }
 
 void compositor_setBuffer(Color* framebuffer) {

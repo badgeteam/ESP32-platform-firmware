@@ -14,13 +14,17 @@ snake = [(10, 4), (8, 4), (9, 4)]
 food = (24, 6)
 
 def render():
+    rgb.disablecomp()
     rgb.clear()
-    rgb.background((0,0,0))
+    # rgb.background((0,0,0))
+
+    rgb.pixel((0, 255, 200, 255), food)
 
     for x,y in snake:
-        rgb.pixel((255, 255, 255), (x, y))
+        rgb.pixel((255, 255, 255, 255), (x, y))
 
-    rgb.pixel((0, 255, 200), food)
+    rgb.enablecomp()
+
 
 
 def input_up(pressed):

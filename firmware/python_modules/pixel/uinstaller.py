@@ -16,7 +16,7 @@ if system.__current_app__ == 'uinstaller':
     ### For some reason normal uinterface.connect_wifi() doesn't
     ### work from dashboard.terminal.installer, so we have to do this
     ### odd workaround of connecting twice.
-    wifi.connect()
+    # wifi.connect()
 
     rgb.clear()
     data, size, frames = animation_connecting_wifi
@@ -24,8 +24,7 @@ if system.__current_app__ == 'uinstaller':
     rgb.gif(data, (12, 0), size, frames)
 
     del data, size, frames, animation_connecting_wifi
-    gc.collect()
-    wifi.wait()
+    # wifi.wait()
     wifi.connect()
     wifi.wait()
 
@@ -37,13 +36,11 @@ if system.__current_app__ == 'uinstaller':
     ###
 
     rgb.clear()
-    rgb.framerate(26)
+    rgb.framerate(24)
     uinterface.loading_text('Installing %s' % to_install)
     del icon_no_wifi
-    gc.collect()
-    if not wifi.status():
-        print('No WiFi again')
-        wifi.connect()
+    time.sleep(5)
+    # gc.collect()
     if woezel.install(to_install):
         # Reset launcher's selected index to newly installed app
         machine.nvs_setint('launcher', 'index', 0)

@@ -36,6 +36,13 @@
 // a new row, drasticall reducing line bleeding.
 #define NULLFRAMES 3
 
+// Configuration for LED power rail regulation
+#define UPPER   600
+#define MID     350
+#define LOWER   40
+#define PCT_MID 200  // 78% of 255
+#define PCT_MIN 25  // 10% of 255
+
 //8*32 RGB leds, with a blank frame after it to suppress line bleeding
 #define BITPLANE_SZ (8*32*(NULLFRAMES+1))
 
@@ -194,12 +201,6 @@ void displayTask(void *pvParameter)
                       deduced_current /= 3; // this silly heuristic works
                     }
 
-                    #define UPPER   600
-                    #define MID     350
-                    #define LOWER   80
-                    #define PCT_MID 135  // 53% of 255
-                    #define PCT_MIN 12  // 5% of 255
-
                     if (deduced_current <= LOWER) {
                       duty = PCT_MIN;
                     } else if (deduced_current <= MID) {
@@ -215,7 +216,7 @@ void displayTask(void *pvParameter)
                 }
 
                 if (duty != 255) {
-                    printf("%d %d\n", deduced_current, duty);
+//                    printf("%d %d\n", deduced_current, duty);
                 }
                 ledc_set_duty(led_power_dimmer.speed_mode, led_power_dimmer.channel, duty);
                 ledc_update_duty(led_power_dimmer.speed_mode, led_power_dimmer.channel);

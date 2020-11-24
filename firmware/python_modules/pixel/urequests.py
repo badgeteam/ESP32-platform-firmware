@@ -38,9 +38,6 @@ class Response:
 
 
 def request(method, url, data=None, json=None, headers={}, stream=None, timeout=10, redirect=5):
-    if not wifi.status():
-        raise ValueError("WiFi not connected")
-
     try:
         proto, dummy, host, path = url.split("/", 3)
     except ValueError:

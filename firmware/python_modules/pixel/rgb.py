@@ -28,17 +28,31 @@ def text(text, color=(255, 255, 255), pos=None):
     if pos is None:
         pos = (0, int((8 - font_heights[current_font]) / 2))
 
-    r, g, b = color
+    if len(color) == 3:
+        r, g, b = color
+        a = 255
+    elif len(color) == 4:
+        r, g, b, a = color
+    else:
+        print('Color argument should be (r, g, b) or (r, g, b, a) tuple')
+        return
     x, y = pos
-    hub75.text(text, r, g, b, x, y)
+    hub75.text(text, r, g, b, a, x, y)
 
 def scrolltext(text, color=(255, 255, 255), pos=None, width=PANEL_WIDTH):
     if pos is None:
         pos = (0, (8 - font_heights[current_font]) // 2)
 
-    r, g, b = color
+    if len(color) == 3:
+        r, g, b = color
+        a = 255
+    elif len(color) == 4:
+        r, g, b, a = color
+    else:
+        print('Color argument should be (r, g, b) or (r, g, b, a) tuple')
+        return
     x, y = pos
-    hub75.scrolltext(text, r, g, b, x, y, width)
+    hub75.scrolltext(text, r, g, b, a, x, y, width)
 
 def background(color=(0, 0, 0)):
     r, g, b = color
@@ -46,9 +60,16 @@ def background(color=(0, 0, 0)):
 
 
 def pixel(color=(255, 255, 255), pos=(0,0)):
-    r, g, b = color
+    a = 255
+    if len(color) == 3:
+        r, g, b = color
+    elif len(color) == 4:
+        r, g, b, a = color
+    else:
+        print('Color argument should be (r, g, b) or (r, g, b, a) tuple')
+        return
     x, y = pos
-    hub75.pixel(r, g, b, x, y)
+    hub75.pixel(r, g, b, a, x, y)
 
 
 def gif(data, pos=(0,0), size=(8,8), frames=1):
