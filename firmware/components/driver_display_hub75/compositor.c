@@ -210,6 +210,7 @@ void renderImage(uint8_t *image, int x, int y, int sizeX, int sizeY) {
 
 void renderText(char *text, Color color, int x, int y, int sizeX, int skip, bool firstshow) {
 	int endX = sizeX > 0 ? x+sizeX : CONFIG_HUB75_WIDTH - 1;
+	uint8_t utf_c1 = 0;
 	if(skip < 0) {
 		if (!firstshow)
 		{
@@ -221,8 +222,31 @@ void renderText(char *text, Color color, int x, int y, int sizeX, int skip, bool
 		}
 		skip = 0;
 	}
+
+	// Suppports the following UTF-8 chars:
+	// - 0x20-0x7f (ASCII range without control chars)
+	// - 0xc2 0xa0-0xbf (first latin block without control chars)
+	// - 0xc3 0x80-0xbf (second latin block)
+	// See: https://en.wikipedia.org/wiki/UTF-8
 	for(int i = 0; i<strlen(text); i++) {
-		uint8_t charId = (uint8_t)text[i] - 32;
+		uint8_t c = (uint8_t)text[i];
+		uint8_t charId = 0; // default to space
+		if (c & 0x80) {
+			// UTF-8/multi-byte
+			if (utf_c1) {
+				charId = utf_c1 + (c - 0x80);
+				utf_c1 = 0;
+			} else if (c == 0xc2) {
+				utf_c1 = 0x80 - 0x20 - 0x20; // carve out UTF control chars too
+				continue;
+			} else if (c == 0xc3) {
+				utf_c1 = 0xc0 - 0x20;
+				continue;
+			}
+		} else if (c >= 0x20) {
+			charId = c - 0x20;
+		}
+
 		(*font_render_char[font_index])(charId, color, &x, y, endX, &skip);
 		if(skip == 0) x++; //If started printing insert blank line
 		else skip--; //If not decrease the number to skip by one to make it fluid
