@@ -10,14 +10,17 @@ scheduler = []
 timer = machine.Timer(1)
 period = 0
 debugEnabled = False
+rebootOnError = False
 
 # Start the virtual timers scheduler
-def begin(p=100):
+def begin(p=100, reboot_on_error=False):
     global timer
     global period
+    global rebootOnError
     if p<1:
         return
     period = p
+    rebootOnError = reboot_on_error
     timer.init(period=p, mode=machine.Timer.PERIODIC, callback=timer_callback)
 
 # Start the virtual timers scheduler (obselete)
@@ -109,6 +112,9 @@ def timer_callback(tmr):
                 newTarget = scheduler[i]["cb"]()
             except BaseException as e:
                 sys.print_exception(e)
+                if rebootOnError:
+                    import system
+                    system.reboot()
                 newTarget = -1
             if newTarget > 0:
                 scheduler[i]["pos"] = 0

@@ -501,6 +501,7 @@ friendly_repl_reset:
             }
         }
 
+        mp_hal_stdout_tx_str("\r\n");
         ret = parse_compile_execute(&line, parse_input_kind, EXEC_FLAG_ALLOW_DEBUGGING | EXEC_FLAG_IS_REPL | EXEC_FLAG_SOURCE_IS_VSTR);
         if (ret & PYEXEC_FORCED_EXIT) {
             return ret;

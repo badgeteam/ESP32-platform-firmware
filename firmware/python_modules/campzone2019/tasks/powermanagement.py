@@ -1,1 +1,0 @@
-../../shared/tasks/powermanagement.py
