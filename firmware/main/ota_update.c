@@ -32,7 +32,7 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/esp_debug.h"
 
-#include "letsencrypt.h"
+#include "pinned_certs.h"
 
 #include "include/ota_update.h"
 #include "driver_framebuffer.h"
@@ -339,12 +339,17 @@ badge_ota_task(void *pvParameter)
 		abort();
 	}
 
-	ESP_LOGW(TAG, "Loading the CA root certificate...");
-	ret = mbedtls_x509_crt_parse_der(&cacert, letsencrypt, LETSENCRYPT_LENGTH);
-	if (ret < 0) {
-		ESP_LOGE(TAG, "mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
-		abort();
-	}
+	ESP_LOGW(TAG, "Loading the CA root certificates...");
+
+        // Pinned certificates (letsencrypt and digicert, see pinned_certs.h)
+        for(int i = 0; i < NUM_PINNED_CERTS; i++) {
+            cert_t certificate = pinned_certificates[i];
+            ret = mbedtls_x509_crt_parse_der(&cacert, certificate.data, certificate.data_len);
+            if(ret != 0) {
+                ESP_LOGE(TAG, "mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
+                abort();
+            }
+        }
 
 	ESP_LOGW(TAG, "Setting hostname for TLS session...");
 

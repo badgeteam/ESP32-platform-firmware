@@ -24,7 +24,7 @@ def _retrieve_latest_update():
     try:
         _show_progress("Checking for updates")
         gc.collect()
-        ota_version_url = 'https://' + consts.OTA_WEB_SERVER + ':' + consts.OTA_WEB_PORT.replace('"', '') + '/' + consts.OTA_WEB_VERSION_PATH
+        ota_version_url = 'https://' + consts.OTA_WEB_SERVER + ':' + consts.OTA_WEB_PORT.replace('"', '') + consts.OTA_WEB_VERSION_PATH
         request = requests.get(ota_version_url, timeout=10)
         result = request.json()
         request.close()

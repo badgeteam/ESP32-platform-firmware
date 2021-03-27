@@ -83,16 +83,16 @@ CONFIG_MONITOR_BAUD=115200
 #
 # Firmware & device configuration
 #
-CONFIG_INFO_FIRMWARE_NAME="Everyone's a hero in their own way"
-CONFIG_INFO_FIRMWARE_BUILD=21021227
+CONFIG_INFO_FIRMWARE_NAME="Everything You Ever"
+CONFIG_INFO_FIRMWARE_BUILD=21032728
 CONFIG_INFO_HARDWARE_NAME="Pixel Badge"
 CONFIG_INFO_HARDWARE_FOLDER="pixel"
 CONFIG_INFO_HARDWARE_WOEZEL_NAME="pixel"
-CONFIG_OTA_WEB_SERVER="ota.curious.supplies"
+CONFIG_OTA_WEB_SERVER="raw.githubusercontent.com"
 CONFIG_OTA_WEB_USE_HTTPS=y
 CONFIG_OTA_WEB_PORT=443
-CONFIG_OTA_WEB_PATH="/firmware/pixel.bin"
-CONFIG_OTA_WEB_VERSION_PATH="/version/pixel.txt"
+CONFIG_OTA_WEB_PATH="/badgeteam/ota/master/pixel.bin"
+CONFIG_OTA_WEB_VERSION_PATH="/badgeteam/ota/master/version/pixel.txt"
 CONFIG_WOEZEL_WEB_SERVER="hatchery.curious.supplies"
 CONFIG_WIFI_SSID="PixelBadge"
 CONFIG_WIFI_PASSWORD="PixelBadge"
