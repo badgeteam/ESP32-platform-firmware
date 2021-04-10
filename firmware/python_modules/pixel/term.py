@@ -67,6 +67,7 @@ def draw_menu_partial(title, items, selected=0, text="", width=32,lastSelected=0
 def menu(title, items, selected = 0, text="", width=32):
 	clear()
 	lastSelected = selected
+	lastForceRedraw = 0.0
 	needFullDraw = True
 	while True:
 		if needFullDraw:
@@ -77,6 +78,13 @@ def menu(title, items, selected = 0, text="", width=32):
 		key = None
 		while not key:
 			key = machine.stdin_get(1,1)#sys.stdin.read(1)
+
+			# Workaround for term not showing on boot on Win/PuTTY
+			# unless you manually press a key. Here we force a redraw
+			# every time for two seconds after booting
+			if time.time() < 3.0 and (time.time() - lastForceRedraw) >= 1.0:
+				key = ' '
+				lastForceRedraw = time.time()
 		feedPm()
 		try:
 			if key == "\x03" or key == "\x04": # CTRL+C or CTRL+D
@@ -88,11 +96,11 @@ def menu(title, items, selected = 0, text="", width=32):
 					if (key=="A"):
 						if (selected>0):
 							selected -= 1
-							needFullDraw = False
+							needFullDraw = True
 					if (key=="B"):
 						if (selected<len(items)-1):
 							selected += 1
-							needFullDraw = False
+							needFullDraw = True
 			elif (ord(key)==0x01):
 				import tasks.powermanagement as pm
 				pm.disable()

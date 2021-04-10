@@ -115,7 +115,7 @@ def step():
     ay *= -float(scale) / 256
     az *= float(scale) / 2048
 
-    # print('Accel', ax, ay, az)
+    print('Accel', ax, ay, az)
 
     # A tiny bit of random motion is applied to each grain, so that tall
     # stacks of pixels tend to topple (else the whole stack slides across
