@@ -472,6 +472,10 @@ static mp_obj_t framebuffer_draw_triangle(mp_uint_t n_args, const mp_obj_t *args
 	int paramOffset = 0;
 	if (MP_OBJ_IS_STR(args[0])) {
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
 		is_3d = window->is_3d;
 		#ifdef CONFIG_LIB3D_ENABLE
 		if (is_3d && n_args != 11) {
