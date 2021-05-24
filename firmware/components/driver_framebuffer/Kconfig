@@ -43,7 +43,7 @@ menu "Driver: framebuffer support"
 
 	config LIB3D_ENABLE
 		depends on G_MATRIX_ENABLE
-		bool "Enable 3D drawing and rendering (very experimental)"
+		bool "Enable 3D drawing and rendering (experimental)"
 		default n
 	config LIB3D_TRI_BUFFER_SIZE
 		depends on LIB3D_ENABLE

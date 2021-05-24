@@ -57,9 +57,11 @@ uint32_t driver_framebuffer_lerp_color(uint32_t col0, uint32_t col1, float part)
 /* Linear interpolation of two colors. */
 
 /* 3D drawing */
+void depth3d_clear(depth_buffer_3d *buffer);
+/* Waits for drawing tasks to finish and clears depth buffer. */
 
-void driver_framebuffer_tri3d(triangle_3d triangle, uint32_t param, uint8_t mode);
-/* Queues a triangle to be drawn, or waits if neccesary. */
+int driver_framebuffer_tri3d(triangle_3d triangle, uint32_t param, uint8_t mode);
+/* Queues a triangle to be drawn, or waits if neccesary. Returns 0 on OK, 1 on error. */
 
 /* shaders */
 

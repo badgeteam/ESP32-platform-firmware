@@ -91,7 +91,7 @@ matrix_2d matrix_2d_scale(float x, float y);
 
 
 //creates a 3D matrix representing the given rotation in radians
-// matrix_3d matrix_3d_rotate(float x, float y, float z);
+matrix_3d matrix_3d_rotate(float x, float y, float z);
 
 //creates a 3D matrix representing the given translation
 matrix_3d matrix_3d_translate(float x, float y, float z);

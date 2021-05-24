@@ -46,7 +46,31 @@ matrix_2d matrix_2d_scale(float x, float y) {
 
 //creates a 3D matrix representing the given rotation in radians
 //rotates in order z->y->x
-// matrix_3d matrix_3d_rotate(float x, float y, float z);
+matrix_3d matrix_3d_rotate(float x, float y, float z) {
+    float xSin = sin(x);
+    float xCos = cos(x);
+    float ySin = sin(y);
+    float yCos = cos(y);
+    float zSin = sin(z);
+    float zCos = cos(z);
+    matrix_3d rotX = { .arr = {
+        1, 0,    0,     0,
+        0, xCos, -xSin, 0,
+        0, xSin,  xCos, 0
+    }};
+    matrix_3d rotY = { .arr = {
+         yCos, 0, ySin, 0,
+        0,     1, 0,    0,
+        -ySin, 0, yCos, 0
+    }};
+    matrix_3d rotZ = { .arr = {
+        zCos, -zSin, 0, 0,
+        zSin,  zCos, 0, 0,
+        0,    0,     1, 0
+    }};
+    // Z * Y * X
+    return matrix_3d_multiply(matrix_3d_multiply(rotZ, rotY), rotX);
+}
 
 //creates a 3D matrix representing the given translation
 matrix_3d matrix_3d_translate(float x, float y, float z) {
