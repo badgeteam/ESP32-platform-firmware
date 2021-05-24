@@ -1291,6 +1291,7 @@ static mp_obj_t framebuffer_getMatrix(mp_uint_t n_args, const mp_obj_t *args)
 		}
 	}
 	
+	#ifdef CONFIG_LIB3D_ENABLE
 	if (is_3d) {
 		matrix_3d current = stack_3d->current;
 		mp_obj_t out[12] = {
@@ -1308,7 +1309,10 @@ static mp_obj_t framebuffer_getMatrix(mp_uint_t n_args, const mp_obj_t *args)
 			mp_obj_new_float(current.arr[11])
 		};
 		return mp_obj_new_list(12, out);
-	} else {
+	}
+	else
+	#endif
+	{
 		matrix_2d current = stack_2d->current;
 		mp_obj_t out[6] = {
 			mp_obj_new_float(current.arr[0]),
@@ -1540,6 +1544,12 @@ static mp_obj_t framebuffer_rotate(mp_uint_t n_args, const mp_obj_t *args)
 	bool is_3d = 0;
 	
 	if (MP_OBJ_IS_STR(args[0])) {
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
 		#ifdef CONFIG_LIB3D_ENABLE
 		if (window->is_3d) {
 			is_3d = 1;
@@ -1554,12 +1564,6 @@ static mp_obj_t framebuffer_rotate(mp_uint_t n_args, const mp_obj_t *args)
 			mp_raise_ValueError("Expected: window, angle");
 			return mp_const_none;
 		}
-		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
-		if (!window) {
-			mp_raise_ValueError("Window not found");
-			return mp_const_none;
-		}
-		paramOffset++;
 		#ifdef CONFIG_LIB3D_ENABLE
 		if (is_3d) {
 			stack_3d = &stack_3d_global;
