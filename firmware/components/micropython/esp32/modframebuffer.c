@@ -566,6 +566,11 @@ static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 	bool is_3d = 0;
 	int paramOffset = 0;
 	if (MP_OBJ_IS_STR(args[0])) {
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
 		paramOffset = 1;
 		stack_2d = window->stack_2d;
 		stack_3d = window->stack_3d;
@@ -579,11 +584,6 @@ static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 		#endif
 		if (n_args != 10) {
 			mp_raise_ValueError("Expected 9 or 10 arguments: (window), x0, y0, x1, y1, x2, y2, x3, y3, color");
-			return mp_const_none;
-		}
-		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
-		if (!window) {
-			mp_raise_ValueError("Window not found");
 			return mp_const_none;
 		}
 	}
@@ -1267,8 +1267,8 @@ static mp_obj_t framebuffer_getMatrix(mp_uint_t n_args, const mp_obj_t *args)
 		}
 		paramOffset++;
 		#ifdef CONFIG_LIB3D_ENABLE
-		is_3d = is_3d_global;
-		if (window->is_3d) {
+		is_3d = window->is_3d;
+		if (is_3d) {
 			stack_3d = window->stack_3d;
 		}
 		else
@@ -1462,6 +1462,12 @@ static mp_obj_t framebuffer_translate(mp_uint_t n_args, const mp_obj_t *args)
 	bool is_3d = 0;
 	
 	if (MP_OBJ_IS_STR(args[0])) {
+		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
+		if (!window) {
+			mp_raise_ValueError("Window not found");
+			return mp_const_none;
+		}
+		paramOffset++;
 		#ifdef CONFIG_LIB3D_ENABLE
 		if (window->is_3d) {
 			is_3d = 1;
@@ -1476,12 +1482,6 @@ static mp_obj_t framebuffer_translate(mp_uint_t n_args, const mp_obj_t *args)
 			mp_raise_ValueError("Expected: window, x, y");
 			return mp_const_none;
 		}
-		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
-		if (!window) {
-			mp_raise_ValueError("Window not found");
-			return mp_const_none;
-		}
-		paramOffset++;
 		#ifdef CONFIG_LIB3D_ENABLE
 		if (is_3d) {
 			stack_3d = window->stack_3d;
