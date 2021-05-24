@@ -29,6 +29,7 @@
 #define FB_FLAG_LUT_NORMAL     8
 #define FB_FLAG_LUT_FAST      16
 #define FB_FLAG_LUT_FASTEST   32
+#define FB_FLAG_CLEAR_DEPTH   64
 
 /* Colors */
 #define COLOR_BLACK   0x000000
@@ -46,6 +47,7 @@ extern "C" {
 
 extern matrix_stack_2d stack_2d_global;
 extern matrix_stack_3d stack_3d_global;
+extern depth_buffer_3d depth_buffer_global;
 extern bool is_3d_global;
 
 esp_err_t driver_framebuffer_init();

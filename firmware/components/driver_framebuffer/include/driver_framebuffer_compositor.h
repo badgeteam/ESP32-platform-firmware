@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-typedef float depth_buffer_type_t;
+typedef uint16_t depth_buffer_type_t;
 
 #define RENDERMODE_LINE 0x00			// (uint32_t color) Renders a colored line accoring to the first two points.
 #define RENDERMODE_SOLID 0x01			// (uint32_t color) Renders a colored triangle.
@@ -29,7 +29,7 @@ typedef struct triangle_3d_buffered_t {
 
 typedef struct triangle_buffer_3d_t {
 	triangle_3d_buffered *triangles;   // Circular buffer of triangles.
-	int providedIndex;                 // The index of the provided triangles.
+	int providedIndex;                 // The index of the provided triangles; more triangles can be given if (providedIndex + 1) % CONFIG_LIB3D_TRI_BUFFER_SIZE != usedIndex.
 	int usedIndex;                     // The index of the used triangles.
 } triangle_buffer_3d;
 
@@ -60,7 +60,7 @@ typedef struct Window_t {
 	
 	/* Buffer */
 	uint8_t* buffer;
-	depth_buffer_3d *depth_buffer;  // 3D depth buffer
+	depth_buffer_3d* depth_buffer;  // 3D depth buffer
 
 	/* Graphics */
 	bool is_3d;
