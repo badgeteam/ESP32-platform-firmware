@@ -100,8 +100,17 @@ void driver_framebuffer_window_remove(Window* window)
 {
 	if (window->buffer) free(window->buffer);
 	#ifdef CONFIG_G_MATRIX_ENABLE
-	free(window->stack_2d->matrices);
-	free(window->stack_2d);
+	if (window->is_3d) {
+		matrix_stack_3d_clear(window->stack_3d);
+		free(window->stack_3d);
+		free(window->depth_buffer->buffer);
+		free(window->depth_buffer);
+	}
+	else
+	{
+		matrix_stack_2d_clear(window->stack_2d);
+		free(window->stack_2d);
+	}
 	#endif
 	_remove_window_from_linked_list(window);
 	free(window);

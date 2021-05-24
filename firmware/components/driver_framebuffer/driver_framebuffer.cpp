@@ -18,7 +18,16 @@ uint8_t* framebuffer2;
 
 uint8_t* framebuffer;
 
+// Matrix stack for 2D; describes the current transformation and the stack of other transformations.
 matrix_stack_2d stack_2d_global;
+// Matrix stack for 3D.
+matrix_stack_3d stack_3d_global;
+// Triangle buffer; used for 3D drawing for some more asynchronicity.
+triangle_buffer_3d tri_buffer_3d_global;
+// Depth buffer; used to make triangles occlude each other properly.
+depth_buffer_3d depth_buffer_global;
+// Nonzero if the global context is in 3D.
+bool is_3d_global;
 
 /* Color space conversions */
 
@@ -121,6 +130,8 @@ esp_err_t driver_framebuffer_init()
 	#endif
 	
 	#ifdef CONFIG_G_MATRIX_ENABLE
+	//Set to 2D: default for the global canvas.
+	is_3d_global = 0;
 	//Initialise the global matrix stack.
 	matrix_stack_2d_init(&stack_2d_global);
 	#endif

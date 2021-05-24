@@ -8,6 +8,7 @@
                 "${workspaceFolder}/firmware/main/**",
                 "${workspaceFolder}/esp-idf/components/freertos/**",
                 "${workspaceFolder}/esp-idf/components/**",
+                "${workspaceFolder}/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/5.2.0/**",
                 "${default}"
             ],
             "browse": {
@@ -18,6 +19,7 @@
                     "${workspaceFolder}/firmware/main/**",
                     "${workspaceFolder}/esp-idf/components/freertos/**",
                     "${workspaceFolder}/esp-idf/components/**",
+                    "${workspaceFolder}/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/5.2.0/**",
                     "${default}"
                 ]
             },
