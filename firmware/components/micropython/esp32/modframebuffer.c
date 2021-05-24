@@ -563,7 +563,7 @@ static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 	Window* window = NULL;
 	matrix_stack_2d* stack_2d;
 	matrix_stack_3d* stack_3d;
-	bool is_3d = 0;
+	bool is_3d;
 	int paramOffset = 0;
 	if (MP_OBJ_IS_STR(args[0])) {
 		window = driver_framebuffer_window_find(mp_obj_str_get_str(args[0]));
@@ -573,9 +573,9 @@ static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 		}
 		paramOffset = 1;
 		stack_2d = window->stack_2d;
+		#ifdef CONFIG_LIB3D_ENABLE
 		stack_3d = window->stack_3d;
 		is_3d = window->is_3d;
-		#ifdef CONFIG_LIB3D_ENABLE
 		if (is_3d && n_args != 14) {
 			mp_raise_ValueError("Expected 14 arguments: (window), x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, color");
 			return mp_const_none;
@@ -590,9 +590,9 @@ static mp_obj_t framebuffer_draw_quad(mp_uint_t n_args, const mp_obj_t *args)
 	else
 	{
 		stack_2d = &stack_2d_global;
+		#ifdef CONFIG_LIB3D_ENABLE
 		stack_3d = &stack_3d_global;
 		is_3d = is_3d_global;
-		#ifdef CONFIG_LIB3D_ENABLE
 		if (is_3d) {
 			if (n_args != 13) {
 				mp_raise_ValueError("Expected 9 to 14 arguments: (window), x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, color");
