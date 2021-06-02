@@ -49,7 +49,7 @@
 #include "extmod/vfs_native.h"
 #include "modnetwork.h"
 
-#include "letsencrypt.h"
+#include "pinned_certs.h"
 
 #define MAX_HTTP_RECV_BUFFER 512
 static const char *TAG = "[REQUESTS]";
