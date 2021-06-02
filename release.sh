@@ -18,7 +18,7 @@ fi
 old_version=$(grep "CONFIG_INFO_FIRMWARE_BUILD=" "${config_file}" | sed "s/=/ /" | awk '{print $2}')
 old_build=$(echo "${old_version}" | cut -c 7-)
 
-new_version="$(date +"%y%m%d")$((old_build+1))"
+new_version="$(date +"%y%m%d")$((10#${old_build}+1))"
 echo "Suggested bump from version ${old_version} > ${new_version}"
 
 read -p "Continue and modify defconfig + run build? (Y/n)?" choice
