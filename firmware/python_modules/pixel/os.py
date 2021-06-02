@@ -16,7 +16,11 @@ def _absolute_path(filepath='.'):
 
 def listdir(dir='.'):
     dir = _absolute_path(dir)
-    return _os.listdir(dir)
+    contents = _os.listdir(dir)
+    # Known bug: in some badges after a while files with null bytes in their name are
+    # randomly returned by _os.listdir(). We filter those out here.
+    contents = [f for f in contents if 0 not in [ord(x) for x in f]] if contents else []
+    return contents
 
 
 def stat(filepath='.'):
