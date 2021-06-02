@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 export PATH="$PATH:$(pwd)/xtensa-esp32-elf/bin"
 
 # Load config variables so we know about the currently selected badge
