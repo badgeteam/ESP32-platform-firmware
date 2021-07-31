@@ -289,6 +289,7 @@ extern const struct _mp_obj_module_t esp_module;
 extern const struct _mp_obj_module_t espnow_module;
 extern const struct _mp_obj_module_t consts_module;
 extern const struct _mp_obj_module_t loopback_module;
+extern const struct _mp_obj_module_t onewire_module;
 
 #ifdef CONFIG_DRIVER_MPU6050_ENABLE
 extern const struct _mp_obj_module_t mpu6050_module;
@@ -479,6 +480,13 @@ extern const struct _mp_obj_module_t am2320_module;
 #define BUILTIN_MODULE_AM2320
 #endif
 
+#ifdef CONFIG_DRIVER_PCA9555_ENABLE
+extern const struct _mp_obj_module_t pca9555_module;
+#define BUILTIN_MODULE_PCA9555 { MP_OBJ_NEW_QSTR(MP_QSTR_pca9555), (mp_obj_t)&pca9555_module },
+#else
+#define BUILTIN_MODULE_PCA9555
+#endif
+
 #if MICROPY_PY_UCRYPTOLIB
 #define BUILTIN_MODULE_UCRYPTOLIB { MP_OBJ_NEW_QSTR(MP_QSTR_ucryptolib), (mp_obj_t)&mp_module_ucryptolib },
 #else
@@ -497,6 +505,7 @@ extern const struct _mp_obj_module_t am2320_module;
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_consts),   (mp_obj_t)&consts_module }, \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_loopback), (mp_obj_t)&loopback_module }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR__onewire), (mp_obj_t)&onewire_module }, \
 	BUILTIN_MODULE_UCRYPTOLIB \
 	BUILTIN_MODULE_SNDMIXER \
 	BUILTIN_MODULE_MICROPHONE \
@@ -516,6 +525,7 @@ extern const struct _mp_obj_module_t am2320_module;
 	BUILTIN_MODULE_DISOBEY_SAMD \
 	BUILTIN_MODULE_MPU6050 \
 	BUILTIN_MODULE_AM2320 \
+	BUILTIN_MODULE_PCA9555 \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \

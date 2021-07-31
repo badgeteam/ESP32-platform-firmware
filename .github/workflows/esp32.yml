@@ -1,0 +1,25 @@
+name: firmware-ESP32 build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Git submodule update 
+      run: git submodule update --init --recursive
+    - name: Install Linux packages
+      run: sudo apt update && sudo apt install -y --no-install-recommends gperf python python-serial libffi-dev libsdl2-dev gcc-4.8-plugin-dev libncurses5-dev libncursesw5-dev flex bison
+    - name: Unzip toolchain
+      run: unzip -p toolchain/xtensa-esp32-elf-linux64.zip xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar | tar xvf -
+    - name: Install Python (2) requirements
+      run: pip2 install --user -r esp-idf/requirements.txt
+    - name: Build
+      run: ./build.sh

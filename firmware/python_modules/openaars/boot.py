@@ -46,7 +46,7 @@ os.mountsd()
 #Application starting
 app = rtc.read_string()
 if not app:
-	if not machine.nvs_getint("system", 'factory_checked') == 2:
+	if not machine.nvs_getint("system", 'factory_checked') >= 2:
 		app = "factory_checks"
 	else:
 		app = machine.nvs_getstr("system", 'default_app')

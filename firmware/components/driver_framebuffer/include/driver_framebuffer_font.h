@@ -1,5 +1,5 @@
-#ifndef _GFXFONT_H_
-#define _GFXFONT_H_
+#pragma once
+
 /// Font data stored PER GLYPH
 typedef struct {
 	uint16_t bitmapOffset;     ///< Pointer into GFXfont->bitmap
@@ -18,5 +18,3 @@ typedef struct {
 	uint8_t   last;        ///< ASCII extents (last char)
 	uint8_t   yAdvance;    ///< Newline distance (y axis)
 } GFXfont;
-
-#endif

@@ -1,1 +1,0 @@
-../disobey2020/installer_term.py

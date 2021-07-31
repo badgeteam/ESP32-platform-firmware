@@ -1,10 +1,13 @@
-#ifndef _DRIVER_FRAMEBUFFER_ORIENTATION_H_
-#define _DRIVER_FRAMEBUFFER_ORIENTATION_H_
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "driver_framebuffer_compositor.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum Orientation driver_framebuffer_get_orientation(Window *window);
 /* Get the orientation of the window */
@@ -30,4 +33,6 @@ void driver_framebuffer_orientation_revert_square(Window *window, int16_t* x0, i
 void driver_framebuffer_get_orientation_size(Window* window, int16_t* width, int16_t* height);
 /* Get the width and height of the framebuffer or a window, orientation corrected */
 
+#ifdef __cplusplus
+}
 #endif

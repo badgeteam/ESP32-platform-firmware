@@ -16,11 +16,21 @@ menu "Driver: ST7789V LCD display"
 	config PIN_NUM_ST7789V_CS
 		depends on DRIVER_ST7789V_ENABLE
 		int "GPIO pin used for CS"
+    
+    config DRIVER_ST7789V_SPI_SPEED
+        depends on DRIVER_ST7789V_ENABLE
+        int "SPI bus speed"
+        default 4000000
 	
 	config PIN_NUM_ST7789V_BACKLIGHT
 		depends on DRIVER_ST7789V_ENABLE
 		int "GPIO pin used for backlight (or -1)"
 		default -1
+    
+    config DRIVER_ST7789V_BACKLIGHT_AT_BOOT
+		depends on DRIVER_ST7789V_ENABLE
+		bool "Turn backlight on at boot"
+		default y
 		
 	config DRIVER_ST7789V_BACKLIGHT_INVERT
 		depends on DRIVER_ST7789V_ENABLE
@@ -30,6 +40,11 @@ menu "Driver: ST7789V LCD display"
 	config DRIVER_ST7789V_8C
 		depends on DRIVER_ST7789V_ENABLE
 		bool "Reduce color depth to 256 colors"
+    
+    config DRIVER_ST7789V_COLOR_INVERT
+		depends on DRIVER_ST7789V_ENABLE
+		bool "Invert display colors"
+		default y
 	
 	config DRIVER_ST7789V_WIDTH
 		depends on DRIVER_ST7789V_ENABLE
