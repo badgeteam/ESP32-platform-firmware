@@ -5,7 +5,7 @@
 #include <time.h>
 
 #include "sdkconfig.h"
-#include "apps/sntp/sntp.h"
+#include "lwip/apps/sntp.h"
 #include "driver/rtc_io.h"
 #include "esp_log.h"
 #include "rom/crc.h"

@@ -1,0 +1,197 @@
+menu "Driver: LED matrix"
+	config DRIVER_LEDMATRIX_ENABLE
+		bool "Enable the LED matrix driver"
+		default n
+	config DRIVER_LEDMATRIX_PIN_ROW_0
+		depends on DRIVER_LEDMATRIX_ENABLE
+		int "GPIO used for row 0"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_1
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_0>=0)
+		int "GPIO used for row 1"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_2
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_1>=0)
+		int "GPIO used for row 2"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_3
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_2>=0)
+		int "GPIO used for row 3"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_4
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_3>=0)
+		int "GPIO used for row 4"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_5
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_4>=0)
+		int "GPIO used for row 5"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_6
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_5>=0)
+		int "GPIO used for row 6"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_7
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_6>=0)
+		int "GPIO used for row 7"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_8
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_7>=0)
+		int "GPIO used for row 8"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_9
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_8>=0)
+		int "GPIO used for row 9"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_10
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_9>=0)
+		int "GPIO used for row 10"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_11
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_10>=0)
+		int "GPIO used for row 11"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_12
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_11>=0)
+		int "GPIO used for row 12"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_13
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_12>=0)
+		int "GPIO used for row 13"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_14
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_13>=0)
+		int "GPIO used for row 14"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_ROW_15
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_ROW_14>=0)
+		int "GPIO used for row 15"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_0
+		depends on DRIVER_LEDMATRIX_ENABLE
+		int "GPIO used for column 0"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_1
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_0>=0)
+		int "GPIO used for column 1"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_2
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_1>=0)
+		int "GPIO used for column 2"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_3
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_2>=0)
+		int "GPIO used for column 3"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_4
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_3>=0)
+		int "GPIO used for column 4"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_5
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_4>=0)
+		int "GPIO used for column 5"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_6
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_5>=0)
+		int "GPIO used for column 6"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_7
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_6>=0)
+		int "GPIO used for column 7"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_8
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_7>=0)
+		int "GPIO used for column 8"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_9
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_8>=0)
+		int "GPIO used for column 9"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_10
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_9>=0)
+		int "GPIO used for column 10"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_11
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_10>=0)
+		int "GPIO used for column 11"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_12
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_11>=0)
+		int "GPIO used for column 12"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_13
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_12>=0)
+		int "GPIO used for column 13"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_14
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_13>=0)
+		int "GPIO used for column 14"
+		default -1
+		help
+			Set to -1 if when not used
+	config DRIVER_LEDMATRIX_PIN_COLUMN_15
+		depends on DRIVER_LEDMATRIX_ENABLE && (DRIVER_LEDMATRIX_PIN_COLUMN_14>=0)
+		int "GPIO used for column 15"
+		default -1
+		help
+			Set to -1 if when not used
+endmenu

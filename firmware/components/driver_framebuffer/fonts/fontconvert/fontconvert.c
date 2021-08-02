@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 	if(!ptr) ptr = &fontName[strlen(fontName)]; // If none, append
 	// Insert font size and 7/8 bit.  fontName was alloc'd w/extra
 	// space to allow this, we're not sprintfing into Forbidden Zone.
-	sprintf(ptr, "%dpt%db", size, (last > 127) ? 8 : 7);
+	sprintf(ptr, "_%dpt%db", size, (last > 127) ? 8 : 7);
 	// Space and punctuation chars in name replaced w/ underscores.  
 	for(i=0; (c=fontName[i]); i++) {
 		if(isspace(c) || ispunct(c)) fontName[i] = '_';

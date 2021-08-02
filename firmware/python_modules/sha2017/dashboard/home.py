@@ -205,16 +205,9 @@ def drawLogo(offset = 0, max_height = display.height(), center = True):
 		return 0
 	width = info[0]
 	height = info[1]
-	if width > display.width():
-		print("Image too large (x)")
-		return
-	if height > display.height():
-		print("Image too large (y)")
 	x = int((display.width() - width) / 2)
 	if center:
 		if max_height - height < 0:
-			#print("Not enough space for logo",max_height,height)
-			#return 0
 			y = 0
 		else:
 			y = int((max_height - height) / 2) + offset

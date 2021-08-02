@@ -1,9 +1,12 @@
-#ifndef COMPOSITOR_H
-#define COMPOSITOR_H
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "color.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct renderTask {
     struct renderTask *next;
@@ -51,4 +54,6 @@ void compositor_disable();
 bool compositor_status();
 void display_crash();
 
+#ifdef __cplusplus
+}
 #endif

@@ -272,7 +272,7 @@ esp_err_t driver_ili9341_init(void)
 	if (res != ESP_OK) return res;
 	
 	static const spi_device_interface_config_t devcfg = {
-		.clock_speed_hz = 40 * 1000 * 1000,
+		.clock_speed_hz = CONFIG_DRIVER_ILI9341_SPI_SPEED,
 		.mode           = 0,  // SPI mode 0
 		.spics_io_num   = CONFIG_PIN_NUM_ILI9341_CS,
 		.queue_size     = 1,

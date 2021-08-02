@@ -38,7 +38,9 @@ static void driver_st7789v_spi_pre_transfer_callback(spi_transaction_t *t)
 const uint8_t st7789v_init_data[] = {
     ST7789V_COLMOD,   1, 0x55,                               // 16-bit color mode, 65K
     ST7789V_MADCTL,   1, 0b01100000,                         // 
+#ifdef CONFIG_DRIVER_ST7789V_COLOR_INVERT
 	ST7789V_INVON,    0,                                     // Enable inversion (Adafruit does this)
+#endif
 	0x00
 };
 
@@ -186,7 +188,7 @@ esp_err_t driver_st7789v_init(void)
 	if (res != ESP_OK) return res;
 	
 	static const spi_device_interface_config_t devcfg = {
-		.clock_speed_hz = 4 * 1000 * 1000,
+		.clock_speed_hz = CONFIG_DRIVER_ST7789V_SPI_SPEED,
 		.mode           = 0,  // SPI mode 0
 		.spics_io_num   = CONFIG_PIN_NUM_ST7789V_CS,
 		.queue_size     = 1,
@@ -222,8 +224,12 @@ esp_err_t driver_st7789v_init(void)
 	res = driver_st7789v_send_command(ST7789V_NORON);
 	if (res != ESP_OK) return res;
 	
-	//Turn on backlight
+	//Backlight
+#ifdef CONFIG_DRIVER_ST7789V_BACKLIGHT_AT_BOOT
 	res = driver_st7789v_set_backlight(true);
+#else
+	res = driver_st7789v_set_backlight(false);
+#endif
 	if (res != ESP_OK) return res;
 
 	driver_st7789v_init_done = true;
@@ -258,8 +264,7 @@ esp_err_t driver_st7789v_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 	
 	uint16_t w = x1-x0+1;
 	uint16_t h = y1-y0+1;
-	
-	printf("Driver ST7789V write @ %d, %d with width %d and height %d\n", x0, y0, w, h);
+    
 #if CONFIG_DRIVER_ST7789V_8C
 	while (w > 0) {
 		uint16_t transactionWidth = w;
@@ -284,18 +289,6 @@ esp_err_t driver_st7789v_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 		x0 += transactionWidth;
 	}
 #else
-	//Old code
-	/*while (h > 0) {
-		uint16_t lines = h;
-		if (lines > 1) lines = 1;
-		esp_err_t res = driver_st7789v_set_addr_window(ST7789V_OFFSET_X, y0+ST7789V_OFFSET_Y, ST7789V_WIDTH, lines);
-		if (res != ESP_OK) break;
-		res = driver_st7789v_send(frameBuffer+(y0*ST7789V_WIDTH)*2, ST7789V_WIDTH*lines*2, true);
-		if (res != ESP_OK) break;
-		y0 += lines;
-		h -= lines;
-	}*/
-	//New (untested) code
 	while (w > 0) {
 		uint16_t transactionWidth = w;
 		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {

@@ -1,23 +1,37 @@
-#ifndef _DRIVER_FRAMEBUFFER_TEXT_H_
-#define _DRIVER_FRAMEBUFFER_TEXT_H_
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
 
 /* Fonts */
 
-extern const GFXfont fairlight8pt7b;
-extern const GFXfont fairlight12pt7b;
-extern const GFXfont org_018pt7b;
-extern const GFXfont dejavusans20pt7b;
-extern const GFXfont permanentmarker22pt7b;
-extern const GFXfont permanentmarker36pt7b;
-extern const GFXfont robotoblack22pt7b;
-extern const GFXfont robotoblackitalic24pt7b;
-extern const GFXfont roboto12pt7b;
-extern const GFXfont roboto18pt7b;
-extern const GFXfont roboto22pt7b;
-extern const GFXfont weather42pt8b;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern const GFXfont fairlight_8pt7b;
+extern const GFXfont fairlight_12pt7b;
+extern const GFXfont org_01_8pt7b;
+extern const GFXfont dejavusans_20pt7b;
+extern const GFXfont permanentmarker_22pt7b;
+extern const GFXfont permanentmarker_36pt7b;
+extern const GFXfont roboto_Black_22pt7b;
+extern const GFXfont roboto_BlackItalic_24pt7b;
+extern const GFXfont roboto_12pt7b;
+extern const GFXfont roboto_18pt7b;
+extern const GFXfont roboto_22pt7b;
+extern const GFXfont weather_42pt8b;
+extern const GFXfont ocra_16pt7b;
+extern const GFXfont ocra_22pt7b;
+extern const GFXfont Exo2_Regular_22pt7b;
+extern const GFXfont Exo2_Thin_22pt7b;
+extern const GFXfont Exo2_Bold_22pt7b;
+extern const GFXfont Exo2_Regular_18pt7b;
+extern const GFXfont Exo2_Thin_18pt7b;
+extern const GFXfont Exo2_Bold_18pt7b;
+extern const GFXfont Exo2_Regular_12pt7b;
+extern const GFXfont Exo2_Thin_12pt7b;
+extern const GFXfont Exo2_Bold_12pt7b;
 extern const GFXfont ipane7x5;
 
 /* Functions */
@@ -28,4 +42,6 @@ uint16_t driver_framebuffer_print_len(Window* window, const char* str, int16_t l
 uint16_t driver_framebuffer_get_string_width(const char* str, const GFXfont *font);
 uint16_t driver_framebuffer_get_string_height(const char* str, const GFXfont *font);
 
+#ifdef __cplusplus
+}
 #endif
