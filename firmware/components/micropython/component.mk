@@ -112,6 +112,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_flipdotter/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_framebuffer/png
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_neopixel/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_led_apa102/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_eink/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7735/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_display_st7789v/include
@@ -125,6 +126,7 @@ MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_rtcmem/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_radio_lora/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_pca9555/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_fpga_ice40/include
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/driver_io_mch2021_stm32/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/libopus/include
 MP_EXTRA_INC += -I$(PROJECT_PATH)/components/png
 MP_EXTRA_INC += -I$(IDF_PATH)/components/esp_ringbuf/include
@@ -209,6 +211,7 @@ SRC_C =  $(addprefix esp32/,\
 	modmpr121.c \
 	moderc12864.c \
 	modneopixel.c \
+	modapa102.c \
 	modloopback.c \
 	modssd1306.c \
 	modeink.c \
@@ -222,6 +225,7 @@ SRC_C =  $(addprefix esp32/,\
 	modlora.c \
 	modpca9555.c \
 	modice40.c \
+	modmch2021stm32.c \
 	)
 
 ifdef CONFIG_DRIVER_I2C_ENABLE

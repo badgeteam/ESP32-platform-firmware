@@ -1,6 +1,6 @@
 menu "Driver: PCA9555 I/O port expander"
 	config DRIVER_PCA9555_ENABLE
-		depends on DRIVER_I2C_ENABLE
+		depends on BUS_I2C0_ENABLE || BUS_I2C1_ENABLE
 		bool "Enable the PCA9555 driver"
 		default n
 	
@@ -8,6 +8,12 @@ menu "Driver: PCA9555 I/O port expander"
 		depends on DRIVER_PCA9555_ENABLE
 		int "PCA9555 I2C address"
 		default 32
+		
+	config DRIVER_PCA9555_I2C_BUS
+		depends on DRIVER_PCA9555_ENABLE
+		int"PCA9555 I2C bus"
+		default 0
+		range 0 1
 
 	config PIN_NUM_PCA9555_INT
 		depends on DRIVER_PCA9555_ENABLE

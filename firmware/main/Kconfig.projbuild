@@ -72,7 +72,3 @@ menu "Firmware & device configuration"
 		bool "Enable partition table upgrade function for SHA2017 and Disobey 2019 badges"
 		default n
 endmenu
-
-#menu "Drivers"
-#    source "../components/driver_*/Kconfig"
-#endmenu

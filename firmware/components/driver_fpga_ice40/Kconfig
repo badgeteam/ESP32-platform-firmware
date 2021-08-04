@@ -1,6 +1,6 @@
 menu "Driver: ICE40 FPGA"
 	config DRIVER_ICE40_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable ICE40 driver"
 		default n
 		
@@ -30,7 +30,7 @@ menu "Driver: ICE40 FPGA"
 		
     config PIN_NUM_ICE40_INT
 		depends on DRIVER_ICE40_ENABLE
-		int "GPIo pin used for interrupt"
+		int "GPIO pin used for interrupt"
 		
 	config PIN_NUM_ICE40_CS
 		depends on DRIVER_ICE40_ENABLE

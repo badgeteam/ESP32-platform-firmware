@@ -258,7 +258,7 @@ esp_err_t driver_ili9341_init(void)
 	if (res != ESP_OK) return res;
 
 	//Allocate partial update buffer
-	internalBuffer = heap_caps_malloc(CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
+	internalBuffer = heap_caps_malloc(CONFIG_BUS_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
 	if (!internalBuffer) return ESP_FAIL;
 	
 	//Initialize reset GPIO pin
@@ -352,8 +352,8 @@ esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 #if CONFIG_DRIVER_ILI9341_8C
 	while (w > 0) {
 		uint16_t transactionWidth = w;
-		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
-			transactionWidth = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/2;
+		if (transactionWidth*2 > CONFIG_BUS_VSPI_MAX_TRANSFERSIZE) {
+			transactionWidth = CONFIG_BUS_VSPI_MAX_TRANSFERSIZE/2;
 		}
 		res = driver_ili9341_set_addr_window(x0, y0, transactionWidth, h);
 		if (res != ESP_OK) return res;
@@ -387,8 +387,8 @@ esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 	//New (untested) code
 	while (w > 0) {
 		uint16_t transactionWidth = w;
-		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
-			transactionWidth = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/2;
+		if (transactionWidth*2 > CONFIG_BUS_VSPI_MAX_TRANSFERSIZE) {
+			transactionWidth = CONFIG_BUS_VSPI_MAX_TRANSFERSIZE/2;
 		}
 		res = driver_ili9341_set_addr_window(x0, y0, transactionWidth, h);
 		if (res != ESP_OK) return res;

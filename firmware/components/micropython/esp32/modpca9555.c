@@ -22,7 +22,6 @@ static mp_obj_t button_callbacks[16] = {
 
 static void pca9555_event_handler(uint8_t pin, bool state)
 {
-    printf("pca9555 event handler in uPython %u %u\n", pin, state);
     if (pin >= sizeof(button_callbacks)) return;
     if(button_callbacks[pin] != mp_const_none) {
         if ((MP_OBJ_IS_FUN(button_callbacks[pin])) || (MP_OBJ_IS_METH(button_callbacks[pin]))) {

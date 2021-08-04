@@ -1,4 +1,4 @@
-import ugfx, woezel, easywifi, easydraw, system, time, os
+import ugfx, woezel, easydraw, system, time, os, wifi
 
 def stop():
     time.sleep(2)
@@ -6,10 +6,9 @@ def stop():
 
 easydraw.msg("Welcome!","Updating apps...",True)
 
-
-if not easywifi.status():
-    if not easywifi.enable():
-        stop()
+wifi.connect()
+if not wifi.wait():
+	stop()
 
 try:
     apps = os.listdir('lib')

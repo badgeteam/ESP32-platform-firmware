@@ -1,12 +1,17 @@
 menu "Driver: MPU6050 accelerometer"
 	config DRIVER_MPU6050_ENABLE
-		depends on DRIVER_I2C_ENABLE
+		depends on BUS_I2C0_ENABLE || BUS_I2C1_ENABLE
 		bool "Enable the MPU6050 driver"
 		default n
 	config I2C_ADDR_MPU6050
 		depends on DRIVER_MPU6050_ENABLE
 		int "I2C address"
 		default 104
+	config DRIVER_MPU6050_I2C_BUS
+		depends on DRIVER_MPU6050_ENABLE
+		int"MPU6050 I2C bus"
+		default 0
+		range 0 1
 	config DRIVER_MPU6050_IGNORE_FAILED
 		depends on DRIVER_MPU6050_ENABLE
 		bool "Ignore initialisation failure"

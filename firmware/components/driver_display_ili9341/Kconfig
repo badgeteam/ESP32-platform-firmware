@@ -1,6 +1,6 @@
 menu "Driver: ILI9341 LCD display"
 	config DRIVER_ILI9341_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable the ILI9341 display driver"
 		default n
 		

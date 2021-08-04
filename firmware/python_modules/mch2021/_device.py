@@ -1,18 +1,48 @@
-# Device specific system functions
+import os, machine, display, mascot, easydraw, time
+
+PIN_PWR_SDCARD  = 5
+PIN_IRQ_BUTTONS = 34
+PIN_IRQ_ACCEL   = 36
+PIN_IRQ_FPGA    = 39
+
+sdcardPower = machine.Pin(PIN_PWR_SDCARD, machine.Pin.OUT)
+
 
 def configureWakeupSource():
-	#machine.RTC().wake_on_ext0(pin = machine.Pin(34), level = 0)
-	#machine.RTC().wake_on_ext1([machine.Pin(5, machine.Pin.IN, machine.Pin.PULL_UP)], 0)
-	return False # Not supported
+    machine.RTC().wake_on_ext0(
+        pin = machine.Pin(PIN_IRQ_BUTTONS),
+        level = 0
+    )
+    machine.RTC().wake_on_ext1([
+        machine.Pin(PIN_IRQ_ACCEL, machine.Pin.IN),
+        machine.Pin(PIN_IRQ_FPGA,  machine.Pin.IN)
+    ], 0)
+    return True
 
 def prepareForSleep():
-	pass
+    try:
+        os.umountsd()
+    except:
+        pass
+    sdcardPower.value(False)
+    configureWakeupSource()
 
 def prepareForWakeup():
-	pass
+    sdcardPower.value(True)
+    time.sleep(0.05) # Give the SD card time to initialize itself
+    os.mountsd()
 
 def showLoadingScreen(app=""):
-	pass # Not supported
+    try:
+        display.drawFill(0x000000)
+        display.drawPng(85, 13, mascot.logo)
+        display.drawText(0, display.height() - 18, app, 0xFFFF00, "ocra16")
+        display.flush()
+    except:
+        pass
 
 def showMessage(message="", icon=None):
-	pass # Not supported
+    easydraw.messageCentered(message, False, icon)
+
+def setLedPower(state):
+    pass

@@ -10,7 +10,7 @@
 #include <nvs_flash.h>
 #include <nvs.h>
 #include <driver/gpio.h>
-#include <driver_i2c.h>
+#include <buses.h>
 #include "include/driver_mpr121.h"
 
 #ifdef CONFIG_DRIVER_MPR121_ENABLE
@@ -29,7 +29,7 @@ void *driver_mpr121_arg[12]                     = {NULL, NULL, NULL, NULL, NULL,
 
 static inline int driver_mpr121_read_reg(uint8_t reg) {
   uint8_t value;
-  esp_err_t res = driver_i2c_read_reg(CONFIG_I2C_ADDR_MPR121, reg, &value, 1);
+  esp_err_t res = driver_i2c_read_reg(CONFIG_DRIVER_MPR121_I2C_BUS, CONFIG_I2C_ADDR_MPR121, reg, &value, 1);
   if (res != ESP_OK) {
     ESP_LOGE(TAG, "i2c read reg(0x%02x): error %d", reg, res);
     return -1;
@@ -39,7 +39,7 @@ static inline int driver_mpr121_read_reg(uint8_t reg) {
 }
 
 static inline esp_err_t driver_mpr121_read_regs(uint8_t reg, uint8_t *data, size_t data_len) {
-  esp_err_t res = driver_i2c_read_reg(CONFIG_I2C_ADDR_MPR121, reg, data, data_len);
+  esp_err_t res = driver_i2c_read_reg(CONFIG_DRIVER_MPR121_I2C_BUS, CONFIG_I2C_ADDR_MPR121, reg, data, data_len);
 
   if (res != ESP_OK) {
     ESP_LOGE(TAG, "i2c read regs(0x%02x, %d): error %d", reg, data_len, res);
@@ -49,7 +49,7 @@ static inline esp_err_t driver_mpr121_read_regs(uint8_t reg, uint8_t *data, size
 }
 
 static inline esp_err_t driver_mpr121_write_reg(uint8_t reg, uint8_t value) {
-  esp_err_t res = driver_i2c_write_reg(CONFIG_I2C_ADDR_MPR121, reg, value);
+  esp_err_t res = driver_i2c_write_reg(CONFIG_DRIVER_MPR121_I2C_BUS, CONFIG_I2C_ADDR_MPR121, reg, value);
   if (res != ESP_OK) {
     ESP_LOGE(TAG, "i2c write reg(0x%02x, 0x%02x): error %d", reg, value, res);
     return res;
@@ -487,22 +487,12 @@ static esp_err_t nvs_baseline_helper(uint8_t idx, uint32_t *value) {
 }
 
 esp_err_t driver_mpr121_init(void) {
-  static bool driver_mpr121_init_done = false;
-  if (driver_mpr121_init_done)
-    return ESP_OK;
-  ESP_LOGD(TAG, "init called");
-  esp_err_t res = driver_i2c_init();
-  if (res != ESP_OK)
-    return res;
   driver_mpr121_mux = xSemaphoreCreateMutex();
-  if (driver_mpr121_mux == NULL)
-    return ESP_ERR_NO_MEM;
+  if (driver_mpr121_mux == NULL) return ESP_ERR_NO_MEM;
   driver_mpr121_intr_trigger = xSemaphoreCreateBinary();
-  if (driver_mpr121_intr_trigger == NULL)
-    return ESP_ERR_NO_MEM;
-  res = gpio_isr_handler_add(CONFIG_PIN_NUM_MPR121_INT, driver_mpr121_intr_handler, NULL);
-  if (res != ESP_OK)
-    return res;
+  if (driver_mpr121_intr_trigger == NULL) return ESP_ERR_NO_MEM;
+  esp_err_t res = gpio_isr_handler_add(CONFIG_PIN_NUM_MPR121_INT, driver_mpr121_intr_handler, NULL);
+  if (res != ESP_OK) return res;
 
   gpio_config_t io_conf = {
       .intr_type    = GPIO_INTR_ANYEDGE,
@@ -548,8 +538,6 @@ esp_err_t driver_mpr121_init(void) {
     return err;
   }
 
-  driver_mpr121_init_done = true;
-  ESP_LOGD(TAG, "init done");
   return ESP_OK;
 }
 

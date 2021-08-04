@@ -1,11 +1,11 @@
 menu "Driver: E-ink display"
 	config DRIVER_EINK_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable the e-ink display driver"
 		default n
 	
 	choice
-		depends on DRIVER_VSPI_ENABLE
+		depends on DRIVER_EINK_ENABLE
 		prompt "E-ink default type"
 		default DRIVER_EINK_TYPE_DEPG0290B1
 	config DRIVER_EINK_TYPE_NONE

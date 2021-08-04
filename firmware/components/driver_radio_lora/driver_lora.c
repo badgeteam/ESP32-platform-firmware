@@ -501,6 +501,6 @@ esp_err_t driver_lora_init(void)
 	return ESP_OK;
 }
 
-#else // CONFIG_DRIVER_VSPI_ENABLE
+#else
 esp_err_t driver_lora_init(void) { return ESP_OK; } // Dummy function, leave empty!
 #endif

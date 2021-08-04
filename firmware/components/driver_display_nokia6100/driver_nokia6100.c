@@ -136,7 +136,7 @@ esp_err_t driver_nokia6100_init(void)
 	if (res != ESP_OK) return res;
 	
 	//Allocate partial update buffer
-	internalBuffer = heap_caps_malloc(CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
+	internalBuffer = heap_caps_malloc(CONFIG_BUS_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
 	if (!internalBuffer) return ESP_FAIL;
 	
 	//Initialize reset GPIO pin

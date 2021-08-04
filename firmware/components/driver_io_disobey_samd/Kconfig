@@ -7,6 +7,12 @@ menu "Driver: Disobey 2019 SAMD I/O"
 		depends on DRIVER_DISOBEY_SAMD_ENABLE
 		int "SAMD I2C address"
 		default 48
+		
+	config DRIVER_DISOBEY_SAMD_I2C_BUS
+		depends on DRIVER_DISOBEY_SAMD_ENABLE
+		int"SAMD I2C bus"
+		default 0
+		range 0 1
 
 	config PIN_NUM_DISOBEY_SAMD_INT
 		depends on DRIVER_DISOBEY_SAMD_ENABLE

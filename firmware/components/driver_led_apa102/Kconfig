@@ -1,0 +1,12 @@
+menu "Driver: APA102 LEDs"
+    config DRIVER_APA102_ENABLE
+        depends on BUS_VSPI_ENABLE
+        bool "Enable APA102 LED driver"
+        default n
+
+    config DRIVER_APA102_SPI_SPEED
+        depends on DRIVER_APA102_ENABLE
+        int "SPI clock speed"
+        default 12000000
+        range 100000 40000000
+endmenu
