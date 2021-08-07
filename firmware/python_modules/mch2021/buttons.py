@@ -28,6 +28,14 @@ def __cbReboot(pressed):
     if pressed:
         system.launcher()
 
+def __cbHome(pressed):
+    if pressed:
+        system.home()
+
+def __cbMenu(pressed):
+    if pressed:
+        system.launcher()
+
 def __cb_btn_a(arg):
     if __cb[-1][BTN_A]:
         __cb[-1][BTN_A](arg)
@@ -166,7 +174,8 @@ def pushMapping(newMapping=None):
     if newMapping == None:
         newMapping = { BTN_UP: None, BTN_DOWN: None, BTN_LEFT: None, BTN_RIGHT: None, BTN_A: None, BTN_B: None, BTN_SELECT: None, BTN_START: None, BTN_HOME: None, BTN_MENU: None, BTN_JOY: None, PIN_CHARGING: None }
         if machine.nvs_getint("system", 'factory_checked'):
-            newMapping[BTN_HOME] = __cbReboot
+            newMapping[BTN_HOME] = __cbHome
+            newMapping[BTN_MENU] = __cbMenu
     __cb.append(newMapping)
 
 def popMapping():

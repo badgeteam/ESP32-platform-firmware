@@ -28,18 +28,25 @@ static mp_obj_t ice40_load_bitstream(mp_uint_t n_args, const mp_obj_t *args) {
 }
 
 static mp_obj_t ice40_disable() {
-    ice40_disable();
+    driver_ice40_register_device(false);
+    return mp_const_none;
+}
+
+static mp_obj_t ice40_reset() {
+    driver_ice40_disable();
     return mp_const_none;
 }
 
 static MP_DEFINE_CONST_FUN_OBJ_0          ( ice40_get_done_obj,             ice40_get_done       );
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( ice40_load_bitstream_obj, 1, 1, ice40_load_bitstream );
 static MP_DEFINE_CONST_FUN_OBJ_0          ( ice40_disable_obj,              ice40_disable        );
+static MP_DEFINE_CONST_FUN_OBJ_0          ( ice40_reset_obj,                ice40_reset          );
 
 static const mp_rom_map_elem_t ice40_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_done),    MP_ROM_PTR(&ice40_get_done_obj)},       //ice40.done()
     {MP_ROM_QSTR(MP_QSTR_load),    MP_ROM_PTR(&ice40_load_bitstream_obj)}, //ice40.load(bitstream)
     {MP_ROM_QSTR(MP_QSTR_disable), MP_ROM_PTR(&ice40_disable_obj)},        //ice40.disable()
+    {MP_ROM_QSTR(MP_QSTR_reset),   MP_ROM_PTR(&ice40_reset_obj)},          //ice40.reset()
 };
 
 static MP_DEFINE_CONST_DICT(ice40_module_globals, ice40_module_globals_table);

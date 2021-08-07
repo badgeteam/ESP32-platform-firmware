@@ -6,8 +6,8 @@ import easydraw, rtc, consts, mascot
 neopixel = None
 samd = None
 
-COLOR_BG = 0x0078D7
-COLOR_FG = 0xFFFFFF
+COLOR_BG = 0x491D88
+COLOR_FG = 0xFEC859
 
 LOGO = mascot.logo
 
@@ -40,7 +40,7 @@ cfg_led_animation = machine.nvs_getstr('splash', 'ledApp') # Application which s
 
 cfg_nick_text = machine.nvs_getstr("owner", "name")
 if not cfg_nick_text:
-	cfg_nick_text = "Welcome to MCH2021 prototype 1!"
+	cfg_nick_text = "Welcome to MCH2022!"
 
 # Button callbacks
 def cbStartLauncher(pressed):
@@ -324,10 +324,17 @@ def drawTask(onSleep=False):
 			if(owner):
 				display.drawFill(0x000000)
 				for font in fontlist:
+					text_width = display.getTextWidth(owner, font)
+					text_height = display.getTextHeight(owner, font)
 					if font == fontlist[-1]:
 						display.drawText(0, 0,owner, 0xFFFFFF, font)
-					elif display.getTextWidth(owner, font)<=display.width():
-						display.drawText((display.width()-display.getTextWidth(owner, font))//2, 0,owner, 0xFFFFFF, font)
+					elif text_width<=display.width():
+						scale = 3
+						while text_width*scale > display.width() and scale > 1:
+							scale -= 1
+						text_width = text_width * scale
+						text_height = text_height * scale
+						display.drawText((display.width()-text_width)//2, (display.height()-text_height)//2, owner, 0xFFFFFF, font, scale, scale)
 						break
 		#elif not rtc.isSet():
 		#	info = "RTC not available"

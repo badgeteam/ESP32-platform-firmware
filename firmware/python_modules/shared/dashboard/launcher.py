@@ -1,4 +1,5 @@
-import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os, time, _device as device, listbox
+import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os, time, _device as device, listbox, consts, virtualtimers
+import tasks.powermanagement as pm
 
 # Detect SD card
 haveSD = False
@@ -8,10 +9,25 @@ try:
 except:
     pass
 
-# Detect display size
+# Styling
 extended_menu = True
-if display.width() < 129 or display.height() < 65:
+menu_title = "LAUNCHER"
+menu_color = 0xFFFF00
+menu_text_color = 0xFFFFFF
+text_color = 0xFFFFFF
+scale = 1
+if consts.INFO_HARDWARE_NAME == "MCH2021":
     extended_menu = False
+    scale = 2
+    menu_title = consts.INFO_HARDWARE_NAME
+    menu_color = 0x491D88
+    menu_text_color = 0xFEC859
+    orientation.default()
+elif display.width() < 129 or display.height() < 65:
+    extended_menu = False
+    orientation.landscape()
+else:
+    orientation.landscape()
 
 default_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x00\x00\x00\x00[\x01GY\x00\x00\x00nIDAT\x08\xd7U\xce\xb1\r\x800\x0c\x05\xd1\x1fQ\xa4\xcc\x02\x88\xacAEVb\x02\xcchH\x14\xac\x01b\x00R\xa6\xb0l\x1cRq\xc5\xab\x0f\xf8\n\xd9 \x01\x9c\xf8\x15]q\x1b|\xc6\x89p\x97\x19\xf1\x90\x11\xf11\x92j\xdf \xd5\xe1\x87L\x06W\xf2b\\b\xec\x15_\x89\x82$\x89\x91\x98\x18\x91\xa94\x82j\x86g:\xd11mpLk\xdbhC\xd6\x0b\xf2 ER-k\xcb\xc6\x00\x00\x00\x00IEND\xaeB`\x82'
 
@@ -30,24 +46,24 @@ nickname_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \
 def drawMessageBox(text):
     global extended_menu
     oneFourthWidth = display.width()//4
-    width = display.getTextWidth(text, "org18")
-    height = display.getTextHeight(text, "org18")
+    width = display.getTextWidth(text, "org18")*scale
+    height = display.getTextHeight(text, "org18")*scale
     display.drawRect((oneFourthWidth*(3 if extended_menu else 2)) - ((width-4)//2), (display.height()-height-4)//2, width+2, height+2, True, 0xFF5050)
-    display.drawText((oneFourthWidth*(3 if extended_menu else 2)) - ((width-4)//2), (display.height()-height)//2-2, text, 0x000000, "org18")
+    display.drawText((oneFourthWidth*(3 if extended_menu else 2)) - ((width-4)//2), (display.height()-height)//2-2, text, 0x000000, "org18", scale, scale)
 
 def drawApp(app, position, amount):
     global extended_menu, appList
     oneFourthWidth = display.width()//4
     display.drawFill(0x000000)
-    display.drawRect(0,0,display.width()//(2 if extended_menu else 1), 10, True, 0xFFFF00)
-    display.drawText(2, 0, "LAUNCHER", 0x000000, "org18")
+    display.drawRect(0,0,display.width()//(2 if extended_menu else 1), 10*scale, True, menu_color)
+    display.drawText(2, 0, menu_title, menu_text_color, "org18", scale, scale)
     positionText = "{}/{}".format(position+1, amount)
     if app["path"].startswith("/sd"):
         positionText  = "SD "+positionText
-    positionWidth = display.getTextWidth(positionText, "org18")
-    display.drawText(display.width()//(2 if extended_menu else 1)-positionWidth-2, 0, positionText, 0x000000, "org18")
-    titleWidth = display.getTextWidth(app["name"], "7x5")
-    display.drawText((oneFourthWidth*(3 if extended_menu else 2)-titleWidth//2),display.height()-10, app["name"], 0xFFFFFF, "7x5")
+    positionWidth = display.getTextWidth(positionText, "org18")*scale
+    display.drawText(display.width()//(2 if extended_menu else 1)-positionWidth-2, 0, positionText, menu_text_color, "org18", scale, scale)
+    titleWidth = display.getTextWidth(app["name"], "7x5")*scale
+    display.drawText((oneFourthWidth*(3 if extended_menu else 2)-titleWidth//2),display.height()-10*scale, app["name"], text_color, "7x5", scale, scale)
     try:
         icon_data = None
         if app["icon"]:
@@ -73,9 +89,9 @@ def drawApp(app, position, amount):
     
     if not extended_menu:
         if not position < 1:
-            display.drawText(0, display.height()//2-12, "<", 0xFFFFFF, "roboto_regular18")	
+            display.drawText(0, display.height()//2-12, "<", text_color, "roboto_regular18")
         if not position >= (amount-1):
-            display.drawText(display.width()-10, display.height()//2-12, ">", 0xFFFFFF, "roboto_regular18")
+            display.drawText(display.width()-10, display.height()//2-12, ">", text_color, "roboto_regular18")
     
     if appList:
         appList.draw()
@@ -117,7 +133,6 @@ def listApps():
     return apps
 
 # Launcher
-orientation.landscape()
 #display.drawFill(0x000000)
 #drawMessageBox("Loading...")
 #display.flush()
@@ -139,7 +154,8 @@ apps.append({"path":"dashboard.other.about",           "name":"About",          
 currentApp = 0
 
 def onLeft(pressed):
-    global currentApp, apps, appList
+    global currentApp, apps, appList, pm
+    pm.feed()
     if pressed:
         currentApp -= 1
         if currentApp < 0:
@@ -149,7 +165,8 @@ def onLeft(pressed):
         drawApp(apps[currentApp], currentApp, len(apps))
 
 def onRight(pressed):
-    global currentApp, apps, appList
+    global currentApp, apps, appList, pm
+    pm.feed()
     if pressed:
         currentApp += 1
         if currentApp >= len(apps):
@@ -159,12 +176,15 @@ def onRight(pressed):
         drawApp(apps[currentApp], currentApp, len(apps))
 
 def onA(pressed):
-    global currentApp, apps
+    global currentApp, apps, pm
+    pm.feed()
     if pressed:
         device.showLoadingScreen(apps[currentApp]["name"])
         system.start(apps[currentApp]["path"])
 
 def onB(pressed):
+    global pm
+    pm.feed()
     if pressed:
         device.showLoadingScreen("Homescreen")
         system.home()
@@ -191,6 +211,17 @@ else:
 
 drawApp(apps[0],0,len(apps))
 
+# Scheduler
+virtualtimers.activate(25)
+
+# Power management
+def cbSleep(idleTime=None):
+    system.home()
+
+pm.callback(cbSleep)
+pm.enable()
+pm.feed()
+
 # Terminal menu
 labels = []
 
@@ -205,9 +236,12 @@ for app in apps:
     #else:
     #	label += " [Built-in]"
     labels.append(label)
+labels.append("Python shell")
 labels.append("< Back")
 
 start = term.menu("Launcher", labels, 0, "")
-if start >= len(apps):
+if start == len(apps):
+    import shell
+if start > len(apps):
     system.home()
 system.start(apps[start]["path"], True)
