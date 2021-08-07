@@ -53,7 +53,7 @@
 #include "mbedtls/debug.h"
 #endif
 
-#include "letsencrypt.h"
+#include "pinned_certs.h"
 
 #define TAG "modussl_mbedtls.c"
 
@@ -239,11 +239,16 @@ STATIC mp_obj_ssl_socket_t *socket_new(mp_obj_t sock, struct ssl_args *args) {
         mbedtls_ssl_conf_authmode(&o->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
     } else if (global_load_letsencrypt_root) {
         // Client mode with Letsencrypt certificate verification enabled
-        ret = mbedtls_x509_crt_parse_der(&o->cacert, letsencrypt, LETSENCRYPT_LENGTH); //(the DER encoding is a binary encoding)
-        if(ret < 0) {
-            printf("Unable to parse the built-in Letsencrypt certificate!\nmbedtls_x509_crt_parse_der(): error 0x%d!\n", ret);
-            mp_raise_OSError(MP_EIO);
-            goto cleanup;
+
+        // Pinned certificates (letsencrypt and digicert, see pinned_certs.h)
+        for(int i = 0; i < NUM_PINNED_CERTS; i++) {
+            cert_t certificate = pinned_certificates[i];
+            ret = mbedtls_x509_crt_parse_der(&o->cacert, certificate.data, certificate.data_len);
+            if(ret != 0) {
+                ESP_LOGE(TAG, "mbedtls_x509_crt_parse_der(): error %d!", -ret);
+                mp_raise_OSError(MP_EIO);
+                goto cleanup;
+            }
         }
         mbedtls_ssl_conf_ca_chain(&o->conf, &o->cacert, NULL);
         mbedtls_ssl_conf_authmode(&o->conf, MBEDTLS_SSL_VERIFY_REQUIRED);

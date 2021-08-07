@@ -45,7 +45,7 @@ FROZEN_MPY_DIR =  $(PROJECT_PATH)/python_modules/$(patsubst "%",%,$(CONFIG_INFO_
 ESPCOMP = $(IDF_PATH)/components
 MP_EXTRA_INC += -I.
 MP_EXTRA_INC += -I$(COMPONENT_PATH)
-MP_EXTRA_INC += -I$(PROJECT_PATH)/components/resource_ssl_letsencrypt
+MP_EXTRA_INC += -I$(PROJECT_PATH)/components/resource_ssl_certs
 MP_EXTRA_INC += -I$(COMPONENT_PATH)/py
 MP_EXTRA_INC += -I$(COMPONENT_PATH)/lib/mp-readline
 MP_EXTRA_INC += -I$(COMPONENT_PATH)/lib/netutils
@@ -293,6 +293,7 @@ endif
 
 EXTMOD_SRC_C = $(addprefix extmod/,\
 	modbtree.c \
+	modonewire.c \
 	moducryptolib.c \
 	machine_spi.c \
 	)

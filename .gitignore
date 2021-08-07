@@ -11,3 +11,4 @@ __pycache__
 xtensa-esp32-elf
 monitor
 flash
+build

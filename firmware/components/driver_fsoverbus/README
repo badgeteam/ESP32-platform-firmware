@@ -1,0 +1,35 @@
+The FS over uart module provides a way to access the underlying FS of the badge.
+
+
+The uart needs to be connected to an external device which would provide the interfacing.
+In the Campzone2020 badge this is done by a stm32 which translates the uart to a webusb site.
+The uart CTS might be necessary for stable operation. Due to the slow write speed of the esp32 spi flash there is a high chance the uart buffer will overflow without CTS. 
+
+
+The driver itself uses packet based format. The packet header consists of 12 bytes.
+The first 2 bytes is to indicate command id. The next 4 bytes provide the length of the data field.
+The next 2 bytes are always 0xDEAD. After the packet header the data field is provided.
+The last 4 bytes is the message id send. The master can generate any message id. The esp32 will respond with the same message id.
+
+
+The command id can be grouped in 4 different categories:
+1. Special function (0-4095) : these ids are designated for starting apps/restarting the esp/etc. These are technically not FS functions but are quite convenient
+2. File functions (4096-8191) : normal fs operations. del/save/list files
+3. Badge specific functions (8192-12287) : functions used for a specific badge.
+4. Intermediate specific functions (12288-16383) : handled by the intermediate layer. For example sending commands to stm32 in badge campzone2020. These command should never be send towards the esp32.
+
+
+Note all filename access used in the file functions are absolute paths. The system is designed to be stateless so no chdir is provided.
+All functions return OK or ER in the datafield except for functions that expect a response.
+
+
+File functions overview:
+getdir (4096): reads the content of the directory, datafield consists of the directory to read. rootdir is "/". Respone is newline seperated list of files/directories. The first entry will be the requested directory contents. Where the first character indicates if it is a directory (d) or a file (f).
+readfile (4097): reads the content of the file. Datafield specifies the filename.
+writefile (4098): write contents to disk. Datafield first specifies the filename which is null terminated to indicate EOF. Afterwhich the data that needs to written follows.
+delfile (4099): delete file. Datafield specifies the filename
+duplfile (4100): duplicate file. Datafield specifies first the filename to copy and null terminated to indicate end of file. Afterwhich the targer directory ended with a "/" or a filename is directory.
+mvfile (4101): move file. Similar as duplicate but the source file is deleted
+makedir (4102): make dir. Datafield specifies which directory to create.
+
+

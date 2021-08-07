@@ -69,6 +69,16 @@ menu "Driver: Audio mixer"
 	config DRIVER_SNDMIXER_I2S_CHANNEL_FORMAT_OR
 		bool "Only Right"
 	endchoice
+
+	choice DRIVER_SNDMIXER_DATA_FORMAT
+    		prompt "I2S data format"
+    		default DRIVER_SNDMIXER_DATA_FORMAT_UNSIGNED
+    		depends on DRIVER_SNDMIXER_ENABLE
+    	config DRIVER_SNDMIXER_I2S_DATA_FORMAT_UNSIGNED
+    		bool "Unsigned integers (e.g. internal DAC)"
+    	config DRIVER_SNDMIXER_I2S_DATA_FORMAT_SIGNED
+    		bool "(2's compliment) signed integers (most i2s DACs)"
+    	endchoice
 	
 	config DRIVER_SNDMIXER_SAMPLE_RATE
 		depends on DRIVER_SNDMIXER_ENABLE
@@ -82,4 +92,9 @@ menu "Driver: Audio mixer"
 	config DRIVER_SNDMIXER_BUFFZIE
 		depends on DRIVER_SNDMIXER_ENABLE
 		int "Buffer size"
+
+	config DRIVER_SNDMIXER_DEBUG
+		depends on DRIVER_SNDMIXER_ENABLE
+		bool "Enable verbose debug messages"
+		default n
 endmenu

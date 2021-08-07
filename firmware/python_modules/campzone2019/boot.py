@@ -1,1 +1,0 @@
-../shared/boot.py

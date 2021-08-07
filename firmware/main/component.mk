@@ -1,5 +1,5 @@
 COMPONENT_ADD_INCLUDEDIRS := . \
-	$(PROJECT_PATH)/components/resource_ssl_letsencrypt \
+	$(PROJECT_PATH)/components/resource_ssl_certs \
  
 COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/buses/include \
                             $(PROJECT_PATH)/components/driver_rtcmem/include \

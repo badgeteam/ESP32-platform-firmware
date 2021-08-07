@@ -58,12 +58,14 @@ def wait(duration=_DEFAULT_TIMEOUT):
 	Wait until connection has been made to a network using the station interface
 	:return: boolean, connected
 	'''
-	t = int(duration*10)
+	t = duration
 	while not status():
 		if t <= 0:
 			break
+		# if t % 2 == 0:
+		# 	connect()
 		t -= 1
-		time.sleep(0.1)
+		time.sleep(1)
 	return status()
 
 def scan():
