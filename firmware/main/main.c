@@ -36,6 +36,7 @@ void app_main()
 	bool is_first_boot = nvs_init();
 	platform_init();
 
+/*
 	if (is_first_boot) {
 		#ifdef CONFIG_DRIVER_FRAMEBUFFER_ENABLE
 			driver_framebuffer_fill(NULL, COLOR_BLACK);
@@ -56,6 +57,7 @@ void app_main()
 		}
 		esp_restart();
 	}
+*/
 
 	int magic = get_magic();
 	

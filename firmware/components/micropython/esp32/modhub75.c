@@ -28,6 +28,7 @@ STATIC mp_obj_t hub75_background(mp_obj_t r_obj, mp_obj_t g_obj, mp_obj_t b_obj)
     k.RGB[3] = r;
     k.RGB[2] = g;
     k.RGB[1] = b;
+    k.RGB[0] = 255; // alpha
     compositor_setBackground(k);
     return mp_const_none;
 }
@@ -69,47 +70,50 @@ STATIC mp_obj_t hub75_enablecomp() {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(hub75_enablecomp_obj, hub75_enablecomp);
 
-
 STATIC mp_obj_t hub75_text(size_t n_args, const mp_obj_t *args) {
     char *test = (char*)mp_obj_str_get_str(args[0]);
 
     uint8_t r = mp_obj_get_int(args[1]);
     uint8_t g = mp_obj_get_int(args[2]);
     uint8_t b = mp_obj_get_int(args[3]);
+    uint8_t a = mp_obj_get_int(args[4]);
     Color k;
     k.RGB[3] = r;
     k.RGB[2] = g;
     k.RGB[1] = b;
+    k.RGB[0] = a;
 
-    int x = mp_obj_get_int(args[4]);
-    int y = mp_obj_get_int(args[5]);
+    int x = mp_obj_get_int(args[5]);
+    int y = mp_obj_get_int(args[6]);
 
     compositor_addText(test, k, x, y);
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_text_obj, 6, 6, hub75_text);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_text_obj, 7, 7, hub75_text);
 
 
 STATIC mp_obj_t hub75_scrolltext(size_t n_args, const mp_obj_t *args) {
-     char *test = (char*)mp_obj_str_get_str(args[0]);
+     char *text = (char*)mp_obj_str_get_str(args[0]);
 
     uint8_t r = mp_obj_get_int(args[1]);
     uint8_t g = mp_obj_get_int(args[2]);
     uint8_t b = mp_obj_get_int(args[3]);
+    uint8_t a = mp_obj_get_int(args[4]);
     Color k;
     k.RGB[3] = r;
     k.RGB[2] = g;
     k.RGB[1] = b;
+    k.RGB[0] = a;
 
-    int x = mp_obj_get_int(args[4]);
-    int y = mp_obj_get_int(args[5]);
-    int sizex = mp_obj_get_int(args[6]);
+    int x = mp_obj_get_int(args[5]);
+    int y = mp_obj_get_int(args[6]);
+    int sizex = mp_obj_get_int(args[7]);
 
-    compositor_addScrollText(test, k, x, y, sizex);
+    compositor_addScrollText(text, k, x, y, sizex);
 
     return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_scrolltext_obj, 7, 7, hub75_scrolltext);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_scrolltext_obj, 8, 8, hub75_scrolltext);
 
 STATIC mp_obj_t hub75_image(size_t n_args, const mp_obj_t *args) {
     mp_obj_t *mp_arr;
@@ -142,22 +146,27 @@ STATIC mp_obj_t hub75_pixel(size_t n_args, const mp_obj_t *args) {
      int r = mp_obj_get_int(args[0]);
      int g = mp_obj_get_int(args[1]);
      int b = mp_obj_get_int(args[2]);
-     int x = mp_obj_get_int(args[3]);
-     int y = mp_obj_get_int(args[4]);
+     int a = mp_obj_get_int(args[3]);
+     int x = mp_obj_get_int(args[4]);
+     int y = mp_obj_get_int(args[5]);
 
-     uint32_t *image = malloc(4);
+    uint32_t *image = malloc(4);
 
      Color k;
      k.RGB[3] = r;
      k.RGB[2] = g;
      k.RGB[1] = b;
+     k.RGB[0] = a;
 
      image[0] = k.value;
+
+     // We call addImage instead of setPixel here because setPixel
+     // gets overridden by the compositor's render function.
      compositor_addImage((uint8_t *) image, x, y, 1, 1);
 
      return mp_const_none;
  }
- STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_pixel_obj, 5, 5, hub75_pixel);
+ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(hub75_pixel_obj, 6, 6, hub75_pixel);
 
 
 STATIC mp_obj_t hub75_gif(size_t n_args, const mp_obj_t *args) {

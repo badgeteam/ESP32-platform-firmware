@@ -1,7 +1,12 @@
 #include <sdkconfig.h>
+#include <esp_log.h>
 #include "driver_i2s.h"
 
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
+
+#ifdef CONFIG_DRIVER_SNDMIXER_DEBUG
+int min_val=0, max_val=0;
+#endif
 
 struct Config {
   uint8_t volume;
@@ -84,7 +89,7 @@ void driver_i2s_sound_stop() {
 
 #define SND_CHUNKSZ 32
 void driver_i2s_sound_push(int16_t *buf, int len, int stereo_input) {
-  uint16_t tmpb[SND_CHUNKSZ * 2];
+  int16_t tmpb[SND_CHUNKSZ * 2];
   int i = 0;
   while (i < len) {
     int plen = len - i;
@@ -99,11 +104,27 @@ void driver_i2s_sound_push(int16_t *buf, int len, int stereo_input) {
       } else {
         s[0] = s[1] = buf[i + sample];
       }
-      // Multiply with volume/volume_max, then offset to [0:UINT16_MAX]
-      s[0]                       = s[0] * config.volume / (256 * 2) - INT16_MIN;
-      s[1]                       = s[1] * config.volume / (256 * 2) - INT16_MIN;
+
+      // Multiply with volume/volume_max, resulting in signed integers with range [INT16_MIN:INT16_MAX]
+      s[0]                       = (s[0] * config.volume / 255);
+      s[1]                       = (s[1] * config.volume / 255);
+
+#ifdef CONFIG_DRIVER_SNDMIXER_I2S_DATA_FORMAT_UNSIGNED
+      // Offset to [0:UINT16_MAX] store as unsigned integers
+      s[0] -= INT16_MIN;
+      s[1] -= INT16_MIN;
+#endif
       tmpb[(i + sample) * 2 + 0] = s[0];
       tmpb[(i + sample) * 2 + 1] = s[1];
+
+#ifdef CONFIG_DRIVER_SNDMIXER_DEBUG
+      min_val = s[0] < min_val ? s[0] : min_val;
+      max_val = s[0] > max_val ? s[0] : max_val;
+
+      if (i == 0 && sample == 0 && rand() < (RAND_MAX/100)) {
+          ESP_LOGW("Sndmixer","[global vol %d]: min %d max %d", config.volume, min_val, max_val);
+      }
+#endif
     }
 
     i2s_write_bytes(g_i2s_port, (char *)tmpb, plen * 2 * sizeof(tmpb[0]), portMAX_DELAY);

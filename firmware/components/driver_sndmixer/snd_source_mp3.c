@@ -15,10 +15,10 @@
 #ifdef CONFIG_DRIVER_SNDMIXER_ENABLE
 
 #define MAX_SAMPLES_PER_FRAME (1152 * 2)
-#define CHUNK_SIZE            32
-#define INTERNAL_BUFFER_SIZE  1024 * 40
+#define CHUNK_SIZE            16
+#define INTERNAL_BUFFER_SIZE  8192
 #define INTERNAL_BUFFER_FETCH_WHEN \
-  8192  // new data will be fetched when there is less than this amount of data
+  4096  // new data will be fetched when there is less than this amount of data
 
 #define TAG "snd_source_mp3"
 
@@ -35,6 +35,7 @@ typedef struct {
 
   unsigned char *dataPtr;  // Pointer to internal buffer (if applicable)
   stream_read_type stream_read;
+  stream_seek_type seek_func;
   void *stream;  // Pointer to stream
 } mp3_ctx_t;
 
@@ -120,6 +121,7 @@ int mp3_init_source(const void *data_start, const void *data_end, int req_sample
   // Fill the struct with info
   mp3->dataStart    = (unsigned char *)data_start;  // Start of data
   mp3->dataCurr     = (unsigned char *)data_start;  // Current position
+  mp3->seek_func    = NULL;
   mp3->dataEnd      = (unsigned char *)data_end;    // End of data
   mp3->lastRate     = 0;
   mp3->lastChannels = 0;
@@ -147,7 +149,7 @@ err:
 }
 
 int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int req_sample_rate,
-                           void **ctx, int *stereo) {
+                           void **ctx, int *stereo, const void *seek_func) {
   // Allocate space for the information struct
   mp3_ctx_t *mp3 = calloc(sizeof(mp3_ctx_t), 1);
   if (!mp3)
@@ -168,6 +170,7 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   mp3->bufferOffset = 0;
 
   mp3->stream_read = (stream_read_type)stream_read_fn;
+  mp3->seek_func   = (stream_seek_type)seek_func;
   mp3->stream      = (void *)stream;
   ESP_LOGD(TAG, "stream read fn @ %p and stream at %p\n", mp3->stream_read, mp3->stream);
   mp3->dataPtr   = malloc(INTERNAL_BUFFER_SIZE);
@@ -182,7 +185,7 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   *ctx      = (void *)mp3;
   int tries = 5;
   do {
-    printf("Beep boop I'm a loop\r\n");
+    ESP_LOGI(TAG, "Finding chunk of mp3 data\r\n");
     _readData(mp3);
   } while (!mp3_decode(*ctx) && --tries);
   if (!tries) {
@@ -240,14 +243,31 @@ void mp3_deinit_source(void *ctx) {
   }
 }
 
+int mp3_reset_buffer(void *ctx) {
+  mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
+  mp3->dataCurr = mp3->dataStart;
+  mp3->bufferValid  = 0;
+  mp3->bufferOffset = 0;
+  return 0;
+}
+
+int mp3_stream_reset_buffer(void *ctx) {
+  mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
+  mp3->seek_func(mp3->stream,0,0);
+  return 0;
+}
+
+
 const sndmixer_source_t sndmixer_source_mp3 = {.init_source     = mp3_init_source,
                                                .get_sample_rate = mp3_get_sample_rate,
                                                .fill_buffer     = mp3_fill_buffer,
+                                               .reset_buffer    = mp3_reset_buffer,
                                                .deinit_source   = mp3_deinit_source};
 
 const sndmixer_source_t sndmixer_source_mp3_stream = {.init_source     = mp3_init_source_stream,
                                                       .get_sample_rate = mp3_get_sample_rate,
                                                       .fill_buffer     = mp3_fill_buffer,
+                                                      .reset_buffer    = mp3_stream_reset_buffer,
                                                       .deinit_source   = mp3_deinit_source};
 
 #endif
