@@ -1,1 +1,3 @@
 COMPONENT_ADD_INCLUDEDIRS := .
+
+COMPONENT_EXTRA_INCLUDES := $(PROJECT_PATH)/components/driver_io_mch2021_stm32/include

@@ -60,6 +60,7 @@ esp_err_t driver_ice40_register_device(bool enableChipSelect) {
     esp_err_t res = ESP_FAIL;
     if (spiDevice != NULL) {
         res = spi_bus_remove_device(spiDevice);
+        spiDevice = NULL;
         if (res != ESP_OK) return res;
     }
     if (enableChipSelect) {
@@ -186,7 +187,7 @@ esp_err_t driver_ice40_init(void) {
     res = gpio_set_direction(CONFIG_PIN_NUM_ICE40_CS, GPIO_MODE_OUTPUT);
     if (res != ESP_OK) return res;
         
-    if (!driver_ice40_get_done()) {
+    /*if (!driver_ice40_get_done()) {
         printf("ICE40: No bitstream loaded, putting FPGA in RESET state.\n");
         res = driver_ice40_disable();
         if (res != ESP_OK) return res;
@@ -196,7 +197,9 @@ esp_err_t driver_ice40_init(void) {
         if (res != ESP_OK) return res;
     }
     
-    return ESP_OK;
+    return ESP_OK;*/
+    
+    return driver_ice40_disable(); // Always disable the FPGA on boot
 }
 
 #else

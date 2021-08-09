@@ -1,4 +1,4 @@
-menu "Driver: MCH2021 STM32 co-processor"
+menu "Driver: MCH2022 STM32 co-processor"
 	config DRIVER_MCH2021_STM32_ENABLE
 		depends on BUS_VSPI_ENABLE
 		bool "Enable MCH2021 STM32 driver"

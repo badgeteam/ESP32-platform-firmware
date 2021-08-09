@@ -27,6 +27,7 @@
 #define MESSAGE_SIZE 18
 
 static spi_device_handle_t spiDevice = NULL;
+static uint8_t receive_buffer[MESSAGE_SIZE];
 
 esp_err_t driver_mch2021_stm32_transaction(const uint8_t* out, uint8_t* in) {
     spi_transaction_t t = {
@@ -106,6 +107,27 @@ esp_err_t driver_mch2021_stm32_init(void) {
     res = spi_bus_add_device(VSPI_HOST, &devcfg, &spiDevice);
     
     return res;
+}
+
+esp_err_t driver_mch2021_stm32_send_command(uint16_t command, uint8_t* parameters, uint8_t num_parameters) {
+    if (num_parameters > MESSAGE_SIZE - 2) return ESP_FAIL;
+    uint8_t transmit_buffer[MESSAGE_SIZE];
+    memset(transmit_buffer, 0, sizeof(transmit_buffer));
+    transmit_buffer[0] = command & 0xFF;
+    transmit_buffer[1] = (command >> 8) & 0xFF;
+    for (uint8_t i = 0; i < num_parameters; i++) {
+        transmit_buffer[i + 2] = parameters[i];
+    }
+    return driver_mch2021_stm32_transaction(transmit_buffer, receive_buffer);
+}
+
+esp_err_t driver_mch2021_stm32_lcd_set_mode(bool mode) {
+    uint8_t mode_byte = mode;
+    return driver_mch2021_stm32_send_command(1, &mode_byte, 1);
+}
+
+esp_err_t driver_mch2021_stm32_lcd_set_backlight(uint8_t brightness) {
+    return driver_mch2021_stm32_send_command(2, &brightness, 1);
 }
 
 #else

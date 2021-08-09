@@ -86,7 +86,7 @@
 	#endif
 	#define FB_ALPHA_ENABLED
 	#define FB_FLUSH(buffer,eink_flags,x0,y0,x1,y1) driver_ili9341_write_partial(buffer, x0, y0, x1, y1)
-	#define FB_SET_BACKLIGHT(brightness) driver_ili9341_set_backlight(brightness > 127)
+	#define FB_SET_BACKLIGHT(brightness) driver_ili9341_set_backlight(brightness)
 	#define COLOR_FILL_DEFAULT 0x000000
 	#define COLOR_TEXT_DEFAULT 0xFFFFFF
 	
