@@ -27,8 +27,9 @@
 static spi_device_handle_t spiDevice = NULL;
 static bool spiDeviceHasChipSelect = false;
 
-esp_err_t driver_ice40_send(const uint8_t *data, int len) {
+esp_err_t driver_ice40_send(const uint8_t* data, int len) {
     if (len == 0) return ESP_OK;
+    if (spiDevice == NULL) return ESP_FAIL;
     spi_transaction_t t = {
         .length = len * 8,  // transaction length is in bits
         .tx_buffer = data,
@@ -37,13 +38,26 @@ esp_err_t driver_ice40_send(const uint8_t *data, int len) {
     return spi_device_transmit(spiDevice, &t);
 }
 
-esp_err_t driver_ice40_receive(uint8_t *data, int len) {
+esp_err_t driver_ice40_receive(uint8_t* data, int len) {
     if (len == 0) return ESP_OK;
+    if (spiDevice == NULL) return ESP_FAIL;
     spi_transaction_t t = {
         .length = len * 8,  // transaction length is in bits
         .rxlength = len * 8,
         .tx_buffer = NULL,
         .rx_buffer = data
+    };
+    return spi_device_transmit(spiDevice, &t);
+}
+
+esp_err_t driver_ice40_transaction(const uint8_t* tx_data, uint8_t* rx_data, int len) {
+    if (len == 0) return ESP_OK;
+    if (spiDevice == NULL) return ESP_FAIL;
+    spi_transaction_t t = {
+        .length = len * 8,  // transaction length is in bits
+        .rxlength = len * 8,
+        .tx_buffer = tx_data,
+        .rx_buffer = rx_data
     };
     return spi_device_transmit(spiDevice, &t);
 }
@@ -65,11 +79,11 @@ esp_err_t driver_ice40_register_device(bool enableChipSelect) {
     }
     if (enableChipSelect) {
         static const spi_device_interface_config_t devcfg = {
-            .clock_speed_hz = CONFIG_DRIVER_ICE40_SPI_SPEED,
+            .clock_speed_hz = CONFIG_DRIVER_ICE40_SPI_SPEED_USER,
             .mode           = 0,  // SPI mode 0
             .spics_io_num   = CONFIG_PIN_NUM_ICE40_CS,
             .queue_size     = 1,
-            .flags          = SPI_DEVICE_HALFDUPLEX
+            .flags          = 0
         };
         res = spi_bus_add_device(VSPI_HOST, &devcfg, &spiDevice);
         spiDeviceHasChipSelect = true;

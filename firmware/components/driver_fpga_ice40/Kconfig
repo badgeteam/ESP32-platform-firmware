@@ -38,7 +38,13 @@ menu "Driver: ICE40 FPGA"
 		
 	config DRIVER_ICE40_SPI_SPEED
 		depends on DRIVER_ICE40_ENABLE
-		int "SPI clock speed"
+		int "SPI clock speed for programming"
 		default 40000000
 		range 100000 40000000
+
+	config DRIVER_ICE40_SPI_SPEED_USER
+		depends on DRIVER_ICE40_ENABLE
+		int "SPI clock speed for user transactions"
+		default 26000000
+		range 100000 26000000
 endmenu

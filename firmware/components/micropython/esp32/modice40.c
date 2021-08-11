@@ -37,16 +37,45 @@ static mp_obj_t ice40_reset() {
     return mp_const_none;
 }
 
+static mp_obj_t ice40_transaction(mp_uint_t n_args, const mp_obj_t *args) {
+    if (!MP_OBJ_IS_TYPE(args[0], &mp_type_bytes)) {
+        mp_raise_ValueError("Expected a bytestring like object");
+        return mp_const_none;
+    }
+
+    mp_uint_t length;
+    uint8_t* data_out = (uint8_t*) mp_obj_str_get_data(args[0], &length);
+
+    uint8_t* data_in = malloc(length);
+    if (data_in == NULL) {
+        mp_raise_ValueError("Out of memory");
+        return mp_const_none;
+    }
+
+    esp_err_t res = driver_ice40_transaction(data_out, data_in, length);
+    if (res != ESP_OK) {
+        free(data_in);
+        mp_raise_ValueError("Failed to execute transaction");
+        return mp_const_none;
+    }
+
+    mp_obj_t data_in_obj = mp_obj_new_bytes(data_in, length);
+    free(data_in);
+    return data_in_obj;
+}
+
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( ice40_transaction_obj,    1, 1, ice40_transaction    );
 static MP_DEFINE_CONST_FUN_OBJ_0          ( ice40_get_done_obj,             ice40_get_done       );
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( ice40_load_bitstream_obj, 1, 1, ice40_load_bitstream );
 static MP_DEFINE_CONST_FUN_OBJ_0          ( ice40_disable_obj,              ice40_disable        );
 static MP_DEFINE_CONST_FUN_OBJ_0          ( ice40_reset_obj,                ice40_reset          );
 
 static const mp_rom_map_elem_t ice40_module_globals_table[] = {
-    {MP_ROM_QSTR(MP_QSTR_done),    MP_ROM_PTR(&ice40_get_done_obj)},       //ice40.done()
-    {MP_ROM_QSTR(MP_QSTR_load),    MP_ROM_PTR(&ice40_load_bitstream_obj)}, //ice40.load(bitstream)
-    {MP_ROM_QSTR(MP_QSTR_disable), MP_ROM_PTR(&ice40_disable_obj)},        //ice40.disable()
-    {MP_ROM_QSTR(MP_QSTR_reset),   MP_ROM_PTR(&ice40_reset_obj)},          //ice40.reset()
+    {MP_ROM_QSTR(MP_QSTR_transaction), MP_ROM_PTR(&ice40_transaction_obj)},
+    {MP_ROM_QSTR(MP_QSTR_done),        MP_ROM_PTR(&ice40_get_done_obj)},       //ice40.done()
+    {MP_ROM_QSTR(MP_QSTR_load),        MP_ROM_PTR(&ice40_load_bitstream_obj)}, //ice40.load(bitstream)
+    {MP_ROM_QSTR(MP_QSTR_disable),     MP_ROM_PTR(&ice40_disable_obj)},        //ice40.disable()
+    {MP_ROM_QSTR(MP_QSTR_reset),       MP_ROM_PTR(&ice40_reset_obj)},          //ice40.reset()
 };
 
 static MP_DEFINE_CONST_DICT(ice40_module_globals, ice40_module_globals_table);
