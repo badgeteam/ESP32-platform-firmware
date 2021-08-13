@@ -65,6 +65,11 @@ elif display.width() < 129 or display.height() < 65:
     orientation.landscape()
     extended_menu = False
     use_listbox = False
+    background_color = 0x000000
+    menu_color = 0xFFFFFF
+    menu_text_color = 0x000000
+    text_color = 0xFFFFFF
+    
 else:
     orientation.landscape()
 
