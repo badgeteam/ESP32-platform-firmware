@@ -135,6 +135,12 @@ Window* driver_framebuffer_window_first()
 	return windows;
 }
 
+Window* driver_framebuffer_window_next(Window* currentWindow)
+{
+    if (currentWindow == NULL) return NULL;
+    return currentWindow->_nextWindow;
+}
+
 Window* driver_framebuffer_window_last()
 {
 	Window* lastWindow = windows;
@@ -142,6 +148,17 @@ Window* driver_framebuffer_window_last()
 		lastWindow = lastWindow->_nextWindow;
 	}
 	return lastWindow;
+}
+
+bool driver_framebuffer_window_rename(Window* window, const char* newName) {
+	if (!window) return false;
+	char* newNameBuffer = (char*) malloc(strlen(newName) + 1);
+	if (newNameBuffer == NULL) return false;
+    memset(newNameBuffer, 0, strlen(newName) + 1);
+	strncpy(newNameBuffer, newName, strlen(newName));
+	free(window->name);
+	window->name = newNameBuffer;
+    return true;
 }
 
 void driver_framebuffer_window_focus(Window* window)
