@@ -369,7 +369,7 @@ if not rtc.isSet() and cfg_wifi:
 # Text scroller
 display.windowCreate("scroller", 512, 32) #Workaround!!! windows get corrupted when size is not in units of 8
 display.windowShow("scroller")
-display.windowMove("scroller", 65, display.height()-22) # Move out of visible screen
+display.windowMove("scroller", display.width(), display.height()-22) # Move out of visible screen
 display.drawFill("scroller", COLOR_BG)
 display.drawText("scroller", 0, 0, cfg_nick_text, COLOR_FG, "permanentmarker22")
 

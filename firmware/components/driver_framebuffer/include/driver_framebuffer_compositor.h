@@ -76,11 +76,17 @@ Window* driver_framebuffer_window_create(const char* name, uint16_t width, uint1
 void driver_framebuffer_window_remove(Window* window);
 /* Delete a window */
 
+bool driver_framebuffer_window_rename(Window* window, const char* newName);
+/* Rename a window */
+
 Window* driver_framebuffer_window_find(const char* name);
 /* Find an existing window by name */
 
 Window* driver_framebuffer_window_first();
 /* Find the first window */
+
+Window* driver_framebuffer_window_next(Window* currentWindow);
+/* Find the next window */
 
 Window* driver_framebuffer_window_last();
 /* Find the last window */
