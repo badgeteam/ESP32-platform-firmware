@@ -7,7 +7,11 @@
 #include "py/runtime.h"
 #include "py/obj.h"
 
+#include <freertos/semphr.h>
+
 #include <driver_ice40.h>
+
+#include <esp_heap_caps.h>
 
 #ifdef CONFIG_DRIVER_ICE40_ENABLE
 
@@ -45,22 +49,22 @@ static mp_obj_t ice40_transaction(mp_uint_t n_args, const mp_obj_t *args) {
 
     mp_uint_t length;
     uint8_t* data_out = (uint8_t*) mp_obj_str_get_data(args[0], &length);
-
-    uint8_t* data_in = malloc(length);
+    uint8_t* data_in = heap_caps_malloc(length + 4, MALLOC_CAP_DMA);
     if (data_in == NULL) {
         mp_raise_ValueError("Out of memory");
         return mp_const_none;
     }
 
     esp_err_t res = driver_ice40_transaction(data_out, data_in, length);
+
     if (res != ESP_OK) {
-        free(data_in);
+        heap_caps_free(data_in);
         mp_raise_ValueError("Failed to execute transaction");
         return mp_const_none;
     }
 
     mp_obj_t data_in_obj = mp_obj_new_bytes(data_in, length);
-    free(data_in);
+    heap_caps_free(data_in);
     return data_in_obj;
 }
 
