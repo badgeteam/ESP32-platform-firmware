@@ -274,18 +274,15 @@ esp_err_t driver_ili9341_init(void)
 	#endif
 	
 	#ifdef CONFIG_DRIVER_MCH2021_STM32_ENABLE
-		printf("STM32 LCD MODE SPI\n");
 		res = driver_mch2021_stm32_lcd_set_mode(false);
 		if (res != ESP_OK) return res;
 	#endif
 
 	//Initialize data/clock select GPIO pin
-	printf("ILI9341 DCX OUTPUT\n");
 	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_DCX, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK) return res;
 	
 	if (spi_device == NULL) {
-		printf("ILI9341 SPI ATTACH\n");
 		static const spi_device_interface_config_t devcfg = {
 			.clock_speed_hz = CONFIG_DRIVER_ILI9341_SPI_SPEED,
 			.mode           = 0,  // SPI mode 0
@@ -333,34 +330,28 @@ esp_err_t driver_ili9341_deinit(void)
 {
 	esp_err_t res;
 	if (spi_device != NULL) {
-		printf("ILI9341 SPI DETACH\n");
 		res = spi_bus_remove_device(spi_device);
 		spi_device = NULL;
 		if (res != ESP_OK) return res;
 	}
-	printf("ILI9341 DCX INPUT\n");
 	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_DCX, GPIO_MODE_INPUT);
 	if (res != ESP_OK) return res;
-	printf("ILI9341 CS OUTPUT\n");
 	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_CS, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK) return res;
 	res = driver_ili9341_select(false);
 	if (res != ESP_OK) return res;
 	#ifdef CONFIG_DRIVER_MCH2021_STM32_ENABLE
-		printf("STM32 LCD MODE FPGA\n");
 		res = driver_mch2021_stm32_lcd_set_mode(true);
 		if (res != ESP_OK) return res;
 	#endif
 	res = driver_ili9341_select(true);
 	if (res != ESP_OK) return res;
-	printf("ILI9341 de-init completed\n");
 	return res;
 }
 
 esp_err_t driver_ili9341_select(bool state)
 {
 	if (spi_device != NULL) return ESP_FAIL;
-	printf("ILI9341 %s\n", state ? "SELECTED" : "IDLE");
 	return gpio_set_level(CONFIG_PIN_NUM_ILI9341_CS, !state);
 }
 
