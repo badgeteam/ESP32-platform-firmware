@@ -15,8 +15,9 @@ def download_tts(app):
         ugTTS.text_to_mp3(tts_text, ('/cache/appnames/%s.mp3' % app['slug']).lower())
         print("TTS: Success")
         return True
-    except:
-        return False
+    except BaseException as e:
+        sys.print_exception(e)
+        system.crashedWarning()
 
 
 def update_mp3_cache():

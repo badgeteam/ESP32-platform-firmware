@@ -51,7 +51,14 @@ def request(method, url, data=None, json=None, headers={}, stream=None, timeout=
         host, port = host.split(":", 1)
         port = int(port)
 
-    ai = usocket.getaddrinfo(host, port)
+    # Retry a few times as DNS lookup seems to be somewhat unstable
+    for _ in range(3):
+        ai = usocket.getaddrinfo(host, port)
+        if len(ai) > 0:
+            break
+    if len(ai) == 0:
+        raise ValueError("Unable to query DNS record for %s" % host)
+
     addr = ai[0][-1]
     s = usocket.socket()
     if timeout:
