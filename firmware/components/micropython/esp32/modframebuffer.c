@@ -26,14 +26,14 @@ uint32_t defaultTextColor = COLOR_TEXT_DEFAULT;
 uint32_t defaultFillColor = COLOR_FILL_DEFAULT;
 
 static uint8_t *mp_obj_to_u8_ptr(mp_obj_t obj, size_t *len) {
-  if (MP_OBJ_IS_TYPE(obj, &mp_type_bytes)) {
-    return (uint8_t *)mp_obj_str_get_data(obj, len);
-  } else if(MP_OBJ_IS_TYPE(obj, &mp_type_bytearray)) {
-    mp_obj_array_t *array = MP_OBJ_TO_PTR(obj);
-    *len = array->len;
-    return array->items;
-  }
-  return NULL;
+if (MP_OBJ_IS_TYPE(obj, &mp_type_bytes)) {
+	return (uint8_t *)mp_obj_str_get_data(obj, len);
+} else if(MP_OBJ_IS_TYPE(obj, &mp_type_bytearray)) {
+	mp_obj_array_t *array = MP_OBJ_TO_PTR(obj);
+	*len = array->len;
+	return array->items;
+}
+return NULL;
 }
 
 static mp_obj_t framebuffer_flush(mp_uint_t n_args, const mp_obj_t *args)
@@ -269,26 +269,39 @@ static mp_obj_t framebuffer_window_focus(mp_uint_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 
-static mp_obj_t framebuffer_window_resize(mp_uint_t n_args, const mp_obj_t *args)
-{
-	printf("FIXME\n");
-	/*
-	* Approach:
-	*  - Create new window
-	*  - Copy old window to new window
-	*  - Delete old window
-	*  - Rename new window to match old window
-	*/
-	return mp_const_none;
-}
-
 static mp_obj_t framebuffer_window_list(mp_uint_t n_args, const mp_obj_t *args)
 {
-	printf("FIXME\n");
-	return mp_const_none;
+	uint32_t amountOfWindows = 0;
+	Window* currentWindow = driver_framebuffer_window_first();
+	while (currentWindow != NULL) {
+		amountOfWindows++;
+		currentWindow = driver_framebuffer_window_next(currentWindow);
+	}
+	mp_obj_t windowNames[amountOfWindows];
+	currentWindow = driver_framebuffer_window_first();
+	uint32_t position = 0;
+	while (currentWindow != NULL) {
+		windowNames[position] = mp_obj_new_str(currentWindow->name, strlen(currentWindow->name));
+		position++;
+		currentWindow = driver_framebuffer_window_next(currentWindow);
+	}
+	return mp_obj_new_list(amountOfWindows, windowNames);
 }
 
-//Fixme: add window rename function
+static mp_obj_t framebuffer_window_rename(mp_uint_t n_args, const mp_obj_t *args)
+{
+	const char* oldName = mp_obj_str_get_str(args[0]);
+	const char* newName = mp_obj_str_get_str(args[1]);
+	Window* window = driver_framebuffer_window_find(oldName);
+	if (!window) {
+		mp_raise_ValueError("Window not found");
+		return mp_const_none;
+	}
+	if (!driver_framebuffer_window_rename(window, newName)) {
+		mp_raise_ValueError("Unable to rename the window");
+	}
+	return mp_const_none;
+}
 
 static mp_obj_t framebuffer_window_transparency(mp_uint_t n_args, const mp_obj_t *args)
 {
@@ -1892,11 +1905,11 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_visiblity_obj,   
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_focus_obj,         1, 1, framebuffer_window_focus);
 /* Focus a window. Arguments: window name */
 
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_resize_obj,        3, 3, framebuffer_window_resize);
-/* Resize a window. Arguments: window name, width, height */
-
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_list_obj,          0, 0, framebuffer_window_list);
 /* Query a list of all window names */
+
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_rename_obj,        2, 2, framebuffer_window_rename);
+/* Rename a window */
 
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN( framebuffer_window_transparency_obj,  1, 3, framebuffer_window_transparency);
 /* Query or configure transparency for a window. Arguments: window, enable (optional), color (optional) */
@@ -2036,7 +2049,7 @@ static const mp_rom_map_elem_t framebuffer_module_globals_table[] = {
 	{MP_ROM_QSTR( MP_QSTR_windowShow                    ), MP_ROM_PTR( &framebuffer_window_show_obj          )}, //Show a window
 	{MP_ROM_QSTR( MP_QSTR_windowVisibility              ), MP_ROM_PTR( &framebuffer_window_visiblity_obj     )}, //Get or set the visibility of a window
 	{MP_ROM_QSTR( MP_QSTR_windowFocus                   ), MP_ROM_PTR( &framebuffer_window_focus_obj         )}, //Bring a window to the front
-	{MP_ROM_QSTR( MP_QSTR_windowResize                  ), MP_ROM_PTR( &framebuffer_window_resize_obj        )}, //Resize a window
+	{MP_ROM_QSTR( MP_QSTR_windowRename                  ), MP_ROM_PTR( &framebuffer_window_rename_obj        )}, //Rename a window
 	{MP_ROM_QSTR( MP_QSTR_windowList                    ), MP_ROM_PTR( &framebuffer_window_list_obj          )}, //List all windows
 
 #ifdef CONFIG_G_MATRIX_ENABLE

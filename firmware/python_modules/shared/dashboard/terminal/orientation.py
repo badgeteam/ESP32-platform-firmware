@@ -1,4 +1,4 @@
-import term, orientation, system, time
+import term, orientation, system, time, consts
 
 system.serialWarning()
 
@@ -14,8 +14,8 @@ def getOrientationString(currentValue):
 		orientationString = "Portrait inverted"
 	return orientationString
 
-items = ["Landscape", "Portrait", "Landscape inverted", "Portrait inverted", "< Back"]
-options = [0, 90, 180, 270, -1, -1]
+items = ["Default", "Landscape", "Portrait", "Landscape inverted", "Portrait inverted", "< Back"]
+options = [consts.DEFAULT_ORIENTATION, 0, 90, 180, 270, -1, -1]
 currentValue = orientation.getDefault()
 orientationString = getOrientationString(currentValue)
 message = "Current orientation: "+orientationString+"\n"
