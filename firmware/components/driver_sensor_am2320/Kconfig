@@ -1,9 +1,13 @@
 menu "Driver: AM2320 I2C temp/hum sensor"
 	config DRIVER_AM2320_ENABLE
 		depends on DRIVER_I2C_ENABLE
-		bool "Enable the AM2320 I2C driver (You will need to set the I2C clock to 100Khz)"
+		bool "Enable the AM2320 I2C driver"
 		default n		
-
+    config DRIVER_AM2320_I2C_BUS
+		depends on DRIVER_AM2320_ENABLE
+		int"AM2320 I2C bus"
+		default 0
+		range 0 1
 	config DRIVER_AM2320_I2C_ADDRESS
 		depends on DRIVER_AM2320_ENABLE
 		hex "I2c address for the AM2320 sensor"

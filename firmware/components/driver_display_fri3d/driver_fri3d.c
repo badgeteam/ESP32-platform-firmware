@@ -19,7 +19,6 @@
 #include <esp_log.h>
 #include <driver/gpio.h>
 
-#include <driver_vspi.h>
 #include "include/driver_fri3d.h"
 
 #define BRIGHTNESS_STEPS 32

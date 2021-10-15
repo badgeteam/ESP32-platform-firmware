@@ -1,6 +1,6 @@
 menu "Driver: Flipdot display (Otter)"
 	config DRIVER_FLIPDOTTER_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable the otter flipdot driver"
 		default n
 	

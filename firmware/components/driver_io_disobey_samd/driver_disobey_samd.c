@@ -10,7 +10,7 @@
 #include <esp_log.h>
 #include <driver/gpio.h>
 
-#include "driver_i2c.h"
+#include <buses.h>
 #include "include/driver_disobey_samd.h"
 
 #ifdef CONFIG_DRIVER_DISOBEY_SAMD_ENABLE
@@ -28,7 +28,7 @@ driver_disobey_samd_intr_t driver_disobey_samd_handler = NULL;
 int driver_disobey_samd_read_state()
 {
 	uint8_t state[2];
-	esp_err_t res = driver_i2c_read_reg(CONFIG_I2C_ADDR_DISOBEY_SAMD, 0, state, 2);
+	esp_err_t res = driver_i2c_read_reg(CONFIG_DRIVER_DISOBEY_SAMD_I2C_BUS, CONFIG_I2C_ADDR_DISOBEY_SAMD, 0, state, 2);
 
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c read state error %d", res);
@@ -61,7 +61,7 @@ int driver_disobey_samd_read_battery()
 
 static inline esp_err_t driver_disobey_samd_write_reg(uint8_t reg, uint8_t value)
 {
-	esp_err_t res = driver_i2c_write_reg(CONFIG_I2C_ADDR_DISOBEY_SAMD, reg, value);
+	esp_err_t res = driver_i2c_write_reg(CONFIG_DRIVER_DISOBEY_SAMD_I2C_BUS, CONFIG_I2C_ADDR_DISOBEY_SAMD, reg, value);
 
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c write reg(0x%02x, 0x%02x): error %d", reg, value, res);
@@ -75,7 +75,7 @@ static inline esp_err_t driver_disobey_samd_write_reg(uint8_t reg, uint8_t value
 
 static inline esp_err_t driver_disobey_samd_write_reg32(uint8_t reg, uint32_t value)
 {
-	esp_err_t res = driver_i2c_write_reg32(CONFIG_I2C_ADDR_DISOBEY_SAMD, reg, value);
+	esp_err_t res = driver_i2c_write_reg32(CONFIG_DRIVER_DISOBEY_SAMD_I2C_BUS, CONFIG_I2C_ADDR_DISOBEY_SAMD, reg, value);
 
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c write reg32(0x%08x, 0x%02x): error %d", reg, value, res);
@@ -157,15 +157,6 @@ void driver_disobey_samd_intr_handler(void *arg)
 { /* in interrupt handler */
 	int gpio_state = gpio_get_level(CONFIG_PIN_NUM_DISOBEY_SAMD_INT);
 
-#ifdef CONFIG_DRIVER_DISOBEY_SAMD_DEBUG
-	static int gpio_last_state = -1;
-	if (gpio_state != -1 && gpio_last_state != gpio_state)
-	{
-		ets_printf("driver_disobey_samd: I2C Int %s\n", gpio_state == 0 ? "up" : "down");
-	}
-	gpio_last_state = gpio_state;
-#endif // CONFIG_SHA_DRIVER_disobey_samd_DEBUG
-
 	if (gpio_state == 0) {
 		xSemaphoreGiveFromISR(driver_disobey_samd_intr_trigger, NULL);
 	}
@@ -173,13 +164,6 @@ void driver_disobey_samd_intr_handler(void *arg)
 
 esp_err_t driver_disobey_samd_init(void)
 {
-	static bool driver_disobey_samd_init_done = false;
-	if (driver_disobey_samd_init_done)return ESP_OK;
-	ESP_LOGD(TAG, "init called");
-
-	esp_err_t res = driver_i2c_init();
-	if (res != ESP_OK) return res;
-
 	driver_disobey_samd_mux = xSemaphoreCreateMutex();
 	if (driver_disobey_samd_mux == NULL) return ESP_ERR_NO_MEM;
 
@@ -200,8 +184,6 @@ esp_err_t driver_disobey_samd_init(void)
 	if (res != ESP_OK) return res;
 	xTaskCreate(&driver_disobey_samd_intr_task, "disobey_samd interrupt task", 4096, NULL, 10, NULL);
 	xSemaphoreGive(driver_disobey_samd_intr_trigger);
-	driver_disobey_samd_init_done = true;
-	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
 }
 
@@ -231,4 +213,4 @@ esp_err_t driver_disobey_samd_init(void) {
     return ESP_OK;
 }
 
-#endif // CONFIG_DRIVER_DISOBEY_SAMD_ENABLE
+#endif

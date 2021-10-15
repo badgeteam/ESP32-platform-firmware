@@ -20,16 +20,15 @@
 #include <driver/gpio.h>
 
 #include "include/driver_ili9341.h"
+#include "include/driver_mch2021_stm32.h"
 
 #ifdef CONFIG_DRIVER_ILI9341_ENABLE
 
 #define ILI9341_MAX_LINES 8
 
-static const char *TAG = "ili9341";
+uint8_t *internalBuffer = NULL; //Internal transfer buffer for doing partial updates
 
-uint8_t *internalBuffer; //Internal transfer buffer for doing partial updates
-
-static spi_device_handle_t spi_bus = NULL;
+static spi_device_handle_t spi_device = NULL;
 
 static void driver_ili9341_spi_pre_transfer_callback(spi_transaction_t *t)
 {
@@ -63,38 +62,44 @@ const uint8_t ili9341_init_data[] = {
 esp_err_t driver_ili9341_send(const uint8_t *data, int len, const uint8_t dc_level)
 {
 	if (len == 0) return ESP_OK;
+	if (spi_device == NULL) return ESP_FAIL;
 	spi_transaction_t t = {
 		.length = len * 8,  // transaction length is in bits
 		.tx_buffer = data,
 		.user = (void *) &dc_level,
 	};
-	return spi_device_transmit(spi_bus, &t);
+	return spi_device_transmit(spi_device, &t);
 }
 
 esp_err_t driver_ili9341_receive(uint8_t *data, int len, const uint8_t dc_level)
 {
 	if (len == 0) return ESP_OK;
+	if (spi_device == NULL) return ESP_FAIL;
 	spi_transaction_t t = {
 		.length = len * 8,  // transaction length is in bits
 		.rxlength = len * 8,
 		.rx_buffer = data,
 		.user = (void *) &dc_level,
 	};
-	return spi_device_transmit(spi_bus, &t);
+	return spi_device_transmit(spi_device, &t);
 }
 
 esp_err_t driver_ili9341_write_initData(const uint8_t * data)
 {
+	if (spi_device == NULL) return ESP_FAIL;
+	esp_err_t res = ESP_OK;
 	uint8_t cmd, len;
 	while(true) {
 		cmd = *data++;
 		if(!cmd) return ESP_OK; //END
 		len = *data++;
-		driver_ili9341_send(&cmd, 1, false);
-		driver_ili9341_send(data, len, true);
+		res = driver_ili9341_send(&cmd, 1, false);
+		if (res != ESP_OK) break;
+		res = driver_ili9341_send(data, len, true);
+		if (res != ESP_OK) break;
 		data+=len;
 	}
-	return ESP_OK;
+	return res;
 }
 
 esp_err_t driver_ili9341_send_command(uint8_t cmd)
@@ -143,18 +148,18 @@ esp_err_t driver_ili9341_set_cfg(uint8_t rotation, bool colorMode)
 	uint8_t m = 0;
 
 	switch (rotation) {
-	        case 0:
-	            m |= MADCTL_MX;
-	            break;
-	        case 1:
-	            m |= MADCTL_MV;
-	            break;
-	        case 2:
-	            m |= MADCTL_MY;
-	            break;
-	        case 3:
-	            m |= (MADCTL_MX | MADCTL_MY | MADCTL_MV);
-	            break;
+			case 0:
+				m |= MADCTL_MX;
+				break;
+			case 1:
+				m |= MADCTL_MV;
+				break;
+			case 2:
+				m |= MADCTL_MY;
+				break;
+			case 3:
+				m |= (MADCTL_MX | MADCTL_MY | MADCTL_MV);
+				break;
 	}
 
 	if (colorMode) {
@@ -193,13 +198,16 @@ esp_err_t driver_ili9341_reset(void) {
 	return ESP_OK;
 }
 
-esp_err_t driver_ili9341_set_backlight(bool state)
+esp_err_t driver_ili9341_set_backlight(uint8_t brightness)
 {
 	#if CONFIG_PIN_NUM_ILI9341_BACKLIGHT >= 0
-		return gpio_set_level(CONFIG_PIN_NUM_ILI9341_BACKLIGHT, !state);
+		return gpio_set_level(CONFIG_PIN_NUM_ILI9341_BACKLIGHT, (brightness <= 127));
 	#else
-		return ESP_OK;
+		#ifdef CONFIG_DRIVER_ILI9341_STM32_MCH_BACKLIGHT
+			return driver_mch2021_stm32_lcd_set_backlight(brightness);
+		#endif
 	#endif
+	return ESP_OK;
 }
 
 esp_err_t driver_ili9341_set_sleep(bool state)
@@ -241,12 +249,8 @@ esp_err_t driver_ili9341_set_invert(bool state)
 
 esp_err_t driver_ili9341_init(void)
 {
-	static bool driver_ili9341_init_done = false;
-	if (driver_ili9341_init_done) return ESP_OK;
-	ESP_LOGD(TAG, "init called");
-	
 	esp_err_t res;
-	
+		
 	//Initialize backlight GPIO pin
 	#if CONFIG_PIN_NUM_ILI9341_BACKLIGHT>=0
 		res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_BACKLIGHT, GPIO_MODE_OUTPUT);
@@ -254,33 +258,42 @@ esp_err_t driver_ili9341_init(void)
 	#endif
 
 	//Turn off backlight
-	res = driver_ili9341_set_backlight(false);
+	res = driver_ili9341_set_backlight(0);
 	if (res != ESP_OK) return res;
 
 	//Allocate partial update buffer
-	internalBuffer = heap_caps_malloc(CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
-	if (!internalBuffer) return ESP_FAIL;
+	if (internalBuffer == NULL) {
+		internalBuffer = heap_caps_malloc(CONFIG_BUS_VSPI_MAX_TRANSFERSIZE, MALLOC_CAP_8BIT);
+		if (!internalBuffer) return ESP_FAIL;
+	}
 	
 	//Initialize reset GPIO pin
 	#if CONFIG_PIN_NUM_ILI9341_RESET >= 0
-	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_RESET, GPIO_MODE_OUTPUT);
-	if (res != ESP_OK) return res;
+		res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_RESET, GPIO_MODE_OUTPUT);
+		if (res != ESP_OK) return res;
+	#endif
+	
+	#ifdef CONFIG_DRIVER_MCH2021_STM32_ENABLE
+		res = driver_mch2021_stm32_lcd_set_mode(false);
+		if (res != ESP_OK) return res;
 	#endif
 
 	//Initialize data/clock select GPIO pin
 	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_DCX, GPIO_MODE_OUTPUT);
 	if (res != ESP_OK) return res;
 	
-	static const spi_device_interface_config_t devcfg = {
-		.clock_speed_hz = CONFIG_DRIVER_ILI9341_SPI_SPEED,
-		.mode           = 0,  // SPI mode 0
-		.spics_io_num   = CONFIG_PIN_NUM_ILI9341_CS,
-		.queue_size     = 1,
-		.flags          = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),//SPI_DEVICE_HALFDUPLEX,
-		.pre_cb         = driver_ili9341_spi_pre_transfer_callback, // Specify pre-transfer callback to handle D/C line
-	};
-	res = spi_bus_add_device(VSPI_HOST, &devcfg, &spi_bus);
-	if (res != ESP_OK) return res;
+	if (spi_device == NULL) {
+		static const spi_device_interface_config_t devcfg = {
+			.clock_speed_hz = CONFIG_DRIVER_ILI9341_SPI_SPEED,
+			.mode           = 0,  // SPI mode 0
+			.spics_io_num   = CONFIG_PIN_NUM_ILI9341_CS,
+			.queue_size     = 1,
+			.flags          = (SPI_DEVICE_HALFDUPLEX | SPI_DEVICE_3WIRE),//SPI_DEVICE_HALFDUPLEX,
+			.pre_cb         = driver_ili9341_spi_pre_transfer_callback, // Specify pre-transfer callback to handle D/C line
+		};
+		res = spi_bus_add_device(VSPI_HOST, &devcfg, &spi_device);
+		if (res != ESP_OK) return res;
+	}
 
 	//Reset the LCD display
 	res = driver_ili9341_reset();
@@ -307,12 +320,39 @@ esp_err_t driver_ili9341_init(void)
 	if (res != ESP_OK) return res;
 	
 	//Turn on backlight
-	res = driver_ili9341_set_backlight(true);
+	res = driver_ili9341_set_backlight(255);
 	if (res != ESP_OK) return res;
 
-	driver_ili9341_init_done = true;
-	ESP_LOGD(TAG, "init done");
 	return ESP_OK;
+}
+
+esp_err_t driver_ili9341_deinit(void)
+{
+	esp_err_t res;
+	if (spi_device != NULL) {
+		res = spi_bus_remove_device(spi_device);
+		spi_device = NULL;
+		if (res != ESP_OK) return res;
+	}
+	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_DCX, GPIO_MODE_INPUT);
+	if (res != ESP_OK) return res;
+	res = gpio_set_direction(CONFIG_PIN_NUM_ILI9341_CS, GPIO_MODE_OUTPUT);
+	if (res != ESP_OK) return res;
+	res = driver_ili9341_select(false);
+	if (res != ESP_OK) return res;
+	#ifdef CONFIG_DRIVER_MCH2021_STM32_ENABLE
+		res = driver_mch2021_stm32_lcd_set_mode(true);
+		if (res != ESP_OK) return res;
+	#endif
+	res = driver_ili9341_select(true);
+	if (res != ESP_OK) return res;
+	return res;
+}
+
+esp_err_t driver_ili9341_select(bool state)
+{
+	if (spi_device != NULL) return ESP_FAIL;
+	return gpio_set_level(CONFIG_PIN_NUM_ILI9341_CS, !state);
 }
 
 esp_err_t driver_ili9341_write(const uint8_t *buffer)
@@ -322,6 +362,7 @@ esp_err_t driver_ili9341_write(const uint8_t *buffer)
 
 esp_err_t driver_ili9341_write_partial_direct(const uint8_t *buffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 { //Without conversion
+	if (spi_device == NULL || internalBuffer == NULL) return ESP_FAIL;
 	if (x0 > x1) return ESP_FAIL;
 	if (y0 > y1) return ESP_FAIL;
 	uint16_t w = x1-x0;
@@ -334,6 +375,7 @@ esp_err_t driver_ili9341_write_partial_direct(const uint8_t *buffer, uint16_t x0
 
 esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 { //With conversion from framebuffer
+	if (spi_device == NULL || internalBuffer == NULL) return ESP_FAIL;
 	esp_err_t res = ESP_OK;
 	if (x0 > x1) {
 		printf("X0 %u > X1 %u\n", x0, x1);
@@ -352,8 +394,8 @@ esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 #if CONFIG_DRIVER_ILI9341_8C
 	while (w > 0) {
 		uint16_t transactionWidth = w;
-		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
-			transactionWidth = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/2;
+		if (transactionWidth*2 > CONFIG_BUS_VSPI_MAX_TRANSFERSIZE) {
+			transactionWidth = CONFIG_BUS_VSPI_MAX_TRANSFERSIZE/2;
 		}
 		res = driver_ili9341_set_addr_window(x0, y0, transactionWidth, h);
 		if (res != ESP_OK) return res;
@@ -373,22 +415,10 @@ esp_err_t driver_ili9341_write_partial(const uint8_t *frameBuffer, uint16_t x0, 
 		x0 += transactionWidth;
 	}
 #else
-	//Old code
-	/*while (h > 0) {
-		uint16_t lines = h;
-		if (lines > 1) lines = 1;
-		esp_err_t res = driver_ili9341_set_addr_window(0, y0+ILI9341_OFFSET_Y, ILI9341_WIDTH, lines);
-		if (res != ESP_OK) break;
-		res = driver_ili9341_send(frameBuffer+(y0*ILI9341_WIDTH)*2, ILI9341_WIDTH*lines*2, true);
-		if (res != ESP_OK) break;
-		y0 += lines;
-		h -= lines;
-	}*/
-	//New (untested) code
 	while (w > 0) {
 		uint16_t transactionWidth = w;
-		if (transactionWidth*2 > CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE) {
-			transactionWidth = CONFIG_DRIVER_VSPI_MAX_TRANSFERSIZE/2;
+		if (transactionWidth*2 > CONFIG_BUS_VSPI_MAX_TRANSFERSIZE) {
+			transactionWidth = CONFIG_BUS_VSPI_MAX_TRANSFERSIZE/2;
 		}
 		res = driver_ili9341_set_addr_window(x0, y0, transactionWidth, h);
 		if (res != ESP_OK) return res;

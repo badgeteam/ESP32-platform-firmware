@@ -1,6 +1,6 @@
 menu "Driver: gxgde0213b1 E-ink display"
 	config DRIVER_GXGDE0213B1_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable the GXGDE0213B1 E-ink display driver"
 		default n
 	

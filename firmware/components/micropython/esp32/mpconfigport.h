@@ -343,6 +343,10 @@ extern const struct _mp_obj_module_t eink_module;
 extern const struct _mp_obj_module_t neopixel_module;
 #endif
 
+#ifdef CONFIG_DRIVER_APA102_ENABLE
+extern const struct _mp_obj_module_t apa102_module;
+#endif
+
 #ifdef CONFIG_DRIVER_LORA_ENABLE
 extern const struct _mp_obj_module_t lora_module;
 #endif
@@ -437,6 +441,12 @@ extern const struct _mp_obj_module_t mp_module_bluetooth;
 #define BUILTIN_MODULE_NEOPIXEL
 #endif
 
+#ifdef CONFIG_DRIVER_APA102_ENABLE
+#define BUILTIN_MODULE_APA102 { MP_OBJ_NEW_QSTR(MP_QSTR_apa102), (mp_obj_t)&apa102_module },
+#else
+#define BUILTIN_MODULE_APA102
+#endif
+
 #ifdef CONFIG_DRIVER_LORA_ENABLE
 #define BUILTIN_MODULE_LORA { MP_OBJ_NEW_QSTR(MP_QSTR_lora), (mp_obj_t)&lora_module },
 #else
@@ -487,6 +497,20 @@ extern const struct _mp_obj_module_t pca9555_module;
 #define BUILTIN_MODULE_PCA9555
 #endif
 
+#ifdef CONFIG_DRIVER_ICE40_ENABLE
+extern const struct _mp_obj_module_t ice40_module;
+#define BUILTIN_MODULE_ICE40 { MP_OBJ_NEW_QSTR(MP_QSTR_ice40), (mp_obj_t)&ice40_module },
+#else
+#define BUILTIN_MODULE_ICE40
+#endif
+
+#ifdef CONFIG_DRIVER_MCH2021_STM32_ENABLE
+extern const struct _mp_obj_module_t mch2021_stm32_module;
+#define BUILTIN_MODULE_MCH2021_STM32 { MP_OBJ_NEW_QSTR(MP_QSTR_stm32), (mp_obj_t)&mch2021_stm32_module },
+#else
+#define BUILTIN_MODULE_MCH2021_STM32
+#endif
+
 #if MICROPY_PY_UCRYPTOLIB
 #define BUILTIN_MODULE_UCRYPTOLIB { MP_OBJ_NEW_QSTR(MP_QSTR_ucryptolib), (mp_obj_t)&mp_module_ucryptolib },
 #else
@@ -505,6 +529,7 @@ extern const struct _mp_obj_module_t pca9555_module;
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_consts),   (mp_obj_t)&consts_module }, \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_loopback), (mp_obj_t)&loopback_module }, \
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_espnow),   (mp_obj_t)&espnow_module }, \
 	{ MP_OBJ_NEW_QSTR(MP_QSTR__onewire), (mp_obj_t)&onewire_module }, \
 	BUILTIN_MODULE_UCRYPTOLIB \
 	BUILTIN_MODULE_SNDMIXER \
@@ -519,6 +544,7 @@ extern const struct _mp_obj_module_t pca9555_module;
 	BUILTIN_MODULE_SSD1306 \
 	BUILTIN_MODULE_FRAMEBUFFER \
 	BUILTIN_MODULE_NEOPIXEL \
+	BUILTIN_MODULE_APA102 \
 	BUILTIN_MODULE_LORA \
 	BUILTIN_MODULE_HUB75 \
 	BUILTIN_MODULE_EINK \
@@ -526,7 +552,8 @@ extern const struct _mp_obj_module_t pca9555_module;
 	BUILTIN_MODULE_MPU6050 \
 	BUILTIN_MODULE_AM2320 \
 	BUILTIN_MODULE_PCA9555 \
-	{ MP_OBJ_NEW_QSTR(MP_QSTR_espnow), (mp_obj_t)&espnow_module }, \
+	BUILTIN_MODULE_ICE40 \
+	BUILTIN_MODULE_MCH2021_STM32 \
 
 #define MICROPY_PORT_BUILTIN_MODULE_WEAK_LINKS \
     { MP_OBJ_NEW_QSTR(MP_QSTR_binascii), (mp_obj_t)&mp_module_ubinascii }, \

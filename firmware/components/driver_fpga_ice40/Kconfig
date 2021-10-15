@@ -1,0 +1,50 @@
+menu "Driver: ICE40 FPGA"
+	config DRIVER_ICE40_ENABLE
+		depends on BUS_VSPI_ENABLE
+		bool "Enable ICE40 driver"
+		default n
+		
+    config DRIVER_ICE40_USE_PCA9555_FOR_RESET
+        depends on DRIVER_ICE40_ENABLE && DRIVER_PCA9555_ENABLE
+        bool "Use PCA9555 for RESET pin"
+		
+	config PIN_NUM_ICE40_RESET
+		depends on DRIVER_ICE40_ENABLE && (!DRIVER_ICE40_USE_PCA9555_FOR_RESET)
+		int "GPIO pin used for RESET"
+		
+	config PIN_NUM_ICE40_RESET_PCA9555
+		depends on DRIVER_ICE40_ENABLE && DRIVER_ICE40_USE_PCA9555_FOR_RESET
+		int "PCA9555 pin used for RESET"
+		
+    config DRIVER_ICE40_USE_PCA9555_FOR_DONE
+        depends on DRIVER_ICE40_ENABLE && DRIVER_PCA9555_ENABLE
+        bool "Use PCA9555 for DONE pin"
+        
+	config PIN_NUM_ICE40_DONE
+		depends on DRIVER_ICE40_ENABLE && (!DRIVER_ICE40_USE_PCA9555_FOR_DONE)
+		int "GPIO pin used for DONE"
+		
+	config PIN_NUM_ICE40_DONE_PCA9555
+		depends on DRIVER_ICE40_ENABLE && DRIVER_ICE40_USE_PCA9555_FOR_DONE
+		int "PCA9555 pin used for DONE"
+		
+    config PIN_NUM_ICE40_INT
+		depends on DRIVER_ICE40_ENABLE
+		int "GPIO pin used for interrupt"
+		
+	config PIN_NUM_ICE40_CS
+		depends on DRIVER_ICE40_ENABLE
+		int "GPIO pin used for CS"
+		
+	config DRIVER_ICE40_SPI_SPEED
+		depends on DRIVER_ICE40_ENABLE
+		int "SPI clock speed for programming"
+		default 40000000
+		range 100000 40000000
+
+	config DRIVER_ICE40_SPI_SPEED_USER
+		depends on DRIVER_ICE40_ENABLE
+		int "SPI clock speed for user transactions"
+		default 26000000
+		range 100000 26000000
+endmenu

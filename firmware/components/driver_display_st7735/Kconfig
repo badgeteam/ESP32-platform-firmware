@@ -1,6 +1,6 @@
 menu "Driver: ST7735 LCD display"
 	config DRIVER_ST7735_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable the ST7735 display driver"
 		default n
 		

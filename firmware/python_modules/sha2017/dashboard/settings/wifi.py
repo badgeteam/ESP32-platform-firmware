@@ -9,7 +9,7 @@ for AP in scanResults:
 	ssidList.append(AP[0])
 ssidSet = set(ssidList)
 
-options = ugfx.List(0,0,ugfx.width(),ugfx.height())
+options = ugfx.List(0,0,ugfx.width()-1,ugfx.height()-1)
 
 for ssid in ssidSet:
 	try:

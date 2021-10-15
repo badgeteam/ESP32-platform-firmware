@@ -1,6 +1,34 @@
 import display, orientation, term, term_menu, sys, ujson, system, buttons, machine, os, time, _device as device, listbox, consts, virtualtimers
 import tasks.powermanagement as pm
 
+# Detect SD card
+haveSD = False
+try:
+    os.listdir("/sd")
+    haveSD = True
+except:
+    pass
+
+# Styling
+extended_menu = True
+menu_title = "LAUNCHER"
+menu_color = 0xFFFF00
+menu_text_color = 0xFFFFFF
+text_color = 0xFFFFFF
+scale = 1
+if consts.INFO_HARDWARE_NAME == "MCH2021":
+    extended_menu = False
+    scale = 2
+    menu_title = consts.INFO_HARDWARE_NAME
+    menu_color = 0x491D88
+    menu_text_color = 0xFEC859
+    orientation.default()
+elif display.width() < 129 or display.height() < 65:
+    extended_menu = False
+    orientation.landscape()
+else:
+    orientation.landscape()
+
 default_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x00\x00\x00\x00[\x01GY\x00\x00\x00nIDAT\x08\xd7U\xce\xb1\r\x800\x0c\x05\xd1\x1fQ\xa4\xcc\x02\x88\xacAEVb\x02\xcchH\x14\xac\x01b\x00R\xa6\xb0l\x1cRq\xc5\xab\x0f\xf8\n\xd9 \x01\x9c\xf8\x15]q\x1b|\xc6\x89p\x97\x19\xf1\x90\x11\xf11\x92j\xdf \xd5\xe1\x87L\x06W\xf2b\\b\xec\x15_\x89\x82$\x89\x91\x98\x18\x91\xa94\x82j\x86g:\xd11mpLk\xdbhC\xd6\x0b\xf2 ER-k\xcb\xc6\x00\x00\x00\x00IEND\xaeB`\x82'
 
 home_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x03\x00\x00\x00I\xb4\xe8\xb7\x00\x00\x00\x06PLTE\xff\xff\xff\x00\x00\x00U\xc2\xd3~\x00\x00\x00\tpHYs\x00\x00\x13\xaf\x00\x00\x13\xaf\x01c\xe6\x8e\xc3\x00\x00\x00\x19tEXtSoftware\x00www.inkscape.org\x9b\xee<\x1a\x00\x00\x00[IDAT\x08\x99\x8d\xce!\x0e\xc5 \x00\x04\xd1qH\x8e\xc0Q8Ze\xcf\xd5Tp\r\x1a\x04\x16\x89 \xddn\x93~\xffG<=\xc8\xa1{3+\x9b\x99L\r\xe68\xcd~\x998\xc4J33\xb7;1\xa4\xc8%\xed4\xa9\xd0\xa5\xfeQ\xc3\x8fV\x8c\xfb\x9b\xd6{\xa1B`@dA\xe6]{\x00\xb4\x17e\x0cD\xcab!\x00\x00\x00\x00IEND\xaeB`\x82'
@@ -15,64 +43,6 @@ about_icon = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01
 
 nickname_icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00 \x00\x00\x00 \x01\x03\x00\x00\x00I\xb4\xe8\xb7\x00\x00\x00\x06PLTE\x00\x00\x00\xff\xff\xff\xa5\xd9\x9f\xdd\x00\x00\x00\tpHYs\x00\x00\x16%\x00\x00\x16%\x01IR$\xf0\x00\x00\x00\x19tEXtSoftware\x00www.inkscape.org\x9b\xee<\x1a\x00\x00\x00FIDAT\x08\x99c`@\x03\xec\x0f\x80\x84\xfc\x0f !c\x01$,d\x80\x84\x01\x0f\x0e\x02\xac\x04\xac\x98\xff\x03L/\x1a\xf8\xff\x1f(\xfe\xff\xff\x03\x06\xf6\x06\xc6\x07\x0c\xfc\x0c\x0c\x1f\x18\xf8\x18\x18\n\xb0\x12@#\r\xd0\xb4\x03\x00\xfe}\x11 \x01G-\xe6\x00\x00\x00\x00IEND\xaeB`\x82'
 
-# Detect eink display
-haveEink = False
-try:
-    import eink
-    haveEink = True
-except:
-    pass
-
-# Detect SD card
-haveSD = False
-try:
-    os.listdir("/sd")
-    haveSD = True
-except:
-    pass
-
-# Styling
-use_listbox = True
-extended_menu = True
-static_sidebar = False
-listbox_full_width = False
-menu_title = consts.INFO_HARDWARE_NAME
-background_color = 0x000000
-menu_color = 0xFFFF00
-menu_text_color = 0xFFFFFF
-text_color = 0xFFFFFF
-use_start_button_to_start_app = True
-scale = 1
-if haveEink:
-    orientation.default()
-    use_start_button_to_start_app = False
-    extended_menu = False
-    menu_color = 0xFFFFFF
-    menu_text_color = 0x000000
-    text_color = 0x000000
-    background_color = 0xFFFFFF
-    listbox_full_width = True
-    static_sidebar = True
-elif consts.INFO_HARDWARE_NAME == "MCH2021":
-    orientation.default()
-    extended_menu = False
-    use_listbox = False
-    scale = 2
-    menu_title = consts.INFO_HARDWARE_NAME
-    menu_color = 0x491D88
-    menu_text_color = 0xFEC859
-elif display.width() < 129 or display.height() < 65:
-    orientation.landscape()
-    extended_menu = False
-    use_listbox = False
-    background_color = 0x000000
-    menu_color = 0xFFFFFF
-    menu_text_color = 0x000000
-    text_color = 0xFFFFFF
-    
-else:
-    orientation.landscape()
-
 def drawMessageBox(text):
     global extended_menu
     oneFourthWidth = display.width()//4
@@ -82,43 +52,42 @@ def drawMessageBox(text):
     display.drawText((oneFourthWidth*(3 if extended_menu else 2)) - ((width-4)//2), (display.height()-height)//2-2, text, 0x000000, "org18", scale, scale)
 
 def drawApp(app, position, amount):
-    global extended_menu, appList, static_sidebar
+    global extended_menu, appList
     oneFourthWidth = display.width()//4
-    display.drawFill(background_color)
+    display.drawFill(0x000000)
     display.drawRect(0,0,display.width()//(2 if extended_menu else 1), 10*scale, True, menu_color)
     display.drawText(2, 0, menu_title, menu_text_color, "org18", scale, scale)
     positionText = "{}/{}".format(position+1, amount)
     if app["path"].startswith("/sd"):
         positionText  = "SD "+positionText
-    if not static_sidebar:
-        positionWidth = display.getTextWidth(positionText, "org18")*scale
-        display.drawText(display.width()//(2 if extended_menu else 1)-positionWidth-2, 0, positionText, menu_text_color, "org18", scale, scale)
-        titleWidth = display.getTextWidth(app["name"], "7x5")*scale
-        display.drawText((oneFourthWidth*(3 if extended_menu else 2)-titleWidth//2),display.height()-10*scale, app["name"], text_color, "7x5", scale, scale)
-        try:
-            icon_data = None
-            if app["icon"]:
-                if not app["icon"].startswith(b"\x89PNG"):
-                    with open(app["path"]+"/"+app["icon"], "rb") as icon_file:
-                        icon_data = icon_file.read()
-                else:
-                    icon_data = app["icon"]
-            if not icon_data:
-                try:
-                    with open(app["path"]+"/icon.png", "rb") as icon_file:
-                        icon_data = icon_file.read()
-                except:
-                    pass
-            if not icon_data:
-                display.drawPng(oneFourthWidth*(3 if extended_menu else 2)-16,display.height()//2-16,default_icon)
+    positionWidth = display.getTextWidth(positionText, "org18")*scale
+    display.drawText(display.width()//(2 if extended_menu else 1)-positionWidth-2, 0, positionText, menu_text_color, "org18", scale, scale)
+    titleWidth = display.getTextWidth(app["name"], "7x5")*scale
+    display.drawText((oneFourthWidth*(3 if extended_menu else 2)-titleWidth//2),display.height()-10*scale, app["name"], text_color, "7x5", scale, scale)
+    try:
+        icon_data = None
+        if app["icon"]:
+            if not app["icon"].startswith(b"\x89PNG"):
+                with open(app["path"]+"/"+app["icon"], "rb") as icon_file:
+                    icon_data = icon_file.read()
             else:
-                info = display.pngInfo(icon_data)
-                display.drawPng(oneFourthWidth*(3 if extended_menu else 2)-(info[0]//2),(display.height()//2)-(info[1]//2),icon_data)
-        except BaseException as e:
-            sys.print_exception(e)
-            drawMessageBox("ICON\nPARSING ERROR")
+                icon_data = app["icon"]
+        if not icon_data:
+            try:
+                with open(app["path"]+"/icon.png", "rb") as icon_file:
+                    icon_data = icon_file.read()
+            except:
+                pass
+        if not icon_data:
+            display.drawPng(oneFourthWidth*(3 if extended_menu else 2)-16,display.height()//2-16,default_icon)
+        else:
+            info = display.pngInfo(icon_data)
+            display.drawPng(oneFourthWidth*(3 if extended_menu else 2)-(info[0]//2),(display.height()//2)-(info[1]//2),icon_data)
+    except BaseException as e:
+        sys.print_exception(e)
+        drawMessageBox("ICON\nPARSING ERROR")
     
-    if not extended_menu and not listbox_full_width:
+    if not extended_menu:
         if not position < 1:
             display.drawText(0, display.height()//2-12, "<", text_color, "roboto_regular18")
         if not position >= (amount-1):
@@ -126,7 +95,7 @@ def drawApp(app, position, amount):
     
     if appList:
         appList.draw()
-    display.flush(display.FLAG_LUT_FAST)
+    display.flush(display.FLAG_LUT_FASTEST)
 
 def loadInfo(folder, name):
     try:
@@ -220,7 +189,7 @@ def onB(pressed):
         device.showLoadingScreen("Homescreen")
         system.home()
 
-if use_listbox:
+if extended_menu:
     buttons.attach(buttons.BTN_UP, onLeft)
     buttons.attach(buttons.BTN_DOWN, onRight)
 else:
@@ -228,16 +197,13 @@ else:
     buttons.attach(buttons.BTN_RIGHT, onRight)
 buttons.attach(buttons.BTN_A,     onA)
 try:
-    if use_start_button_to_start_app:
-        buttons.attach(buttons.BTN_START, onA)
-    else:
-        buttons.attach(buttons.BTN_START, onB)
+    buttons.attach(buttons.BTN_START, onA)
 except:
     pass
 buttons.attach(buttons.BTN_B,     onB)
 
-if use_listbox:
-    appList = listbox.List(0, 10, (display.width()-1) if listbox_full_width else (display.width()//2), display.height()-11)
+if extended_menu:
+    appList = listbox.List(0, 10, display.width()//2, display.height()-10)
     for app in apps:
         appList.add_item(app["name"])
 else:

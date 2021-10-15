@@ -10,7 +10,7 @@
 #include <nvs_flash.h>
 #include <nvs.h>
 #include <driver/gpio.h>
-#include <driver_i2c.h>
+#include <buses.h>
 #include "include/driver_pca9555.h"
 
 #ifdef CONFIG_DRIVER_PCA9555_ENABLE
@@ -29,20 +29,20 @@ uint8_t reg_output[2]   = {0xFF, 0xFF};
 
 static inline esp_err_t driver_pca9555_read_reg(uint8_t reg, uint8_t *data, size_t data_len)
 {
-	esp_err_t res = driver_i2c_read_reg(CONFIG_I2C_ADDR_PCA9555, reg, data, data_len);
-	if (res != ESP_OK) {
-		ESP_LOGE(TAG, "i2c pca9555 read reg error %d", res);
-	}
-	return res;
+    esp_err_t res = driver_i2c_read_reg(CONFIG_DRIVER_PCA9555_I2C_BUS, CONFIG_I2C_ADDR_PCA9555, reg, data, data_len);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "i2c pca9555 read reg error %d", res);
+    }
+    return res;
 }
 
 static inline esp_err_t driver_pca9555_write_reg(uint8_t reg, uint8_t *data, size_t data_len)
 {
-	esp_err_t res = driver_i2c_write_reg_n(CONFIG_I2C_ADDR_PCA9555, reg, data, data_len);
-	if (res != ESP_OK) {
-		ESP_LOGE(TAG, "i2c pca9555 write reg error %d", res);
-	}
-	return res;
+    esp_err_t res = driver_i2c_write_reg_n(CONFIG_DRIVER_PCA9555_I2C_BUS, CONFIG_I2C_ADDR_PCA9555, reg, data, data_len);
+    if (res != ESP_OK) {
+        ESP_LOGE(TAG, "i2c pca9555 write reg error %d", res);
+    }
+    return res;
 }
 
 /* Interrupt handling */
@@ -60,7 +60,7 @@ void driver_pca9555_intr_task(void *arg)
 				ESP_LOGE(TAG, "pca9555: failed to read input state");
 			}
 			uint16_t current_state = data[0] + (data[1]<<8);
-			for (int i = 0; i < 15; i++) {
+			for (int i = 0; i < 16; i++) {
 				if ((current_state & (1 << i)) != (previous_state & (1 << i))) {
 					bool value = (current_state & (1 << i)) > 0;
 					xSemaphoreTake(driver_pca9555_mux, portMAX_DELAY);
@@ -324,7 +324,7 @@ int driver_pca9555_set_gpio_value(int pin, bool value)
 		reg_output[port] &= ~(1 << bit);
 	}
 	uint8_t reg = port ? PCA9555_REG_OUTPUT_1 : PCA9555_REG_OUTPUT_0;
-	esp_err_t res = driver_pca9555_write_reg(reg, &reg_output[port], 1); 
+	esp_err_t res = driver_pca9555_write_reg(reg, &reg_output[port], 1);
 	if (res != ESP_OK) return -1;
 	return 0;
 }

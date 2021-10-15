@@ -11,27 +11,18 @@
 #include <sdkconfig.h>
 #include <driver/gpio.h>
 
-#include <include/driver_i2c.h>
+#include <include/buses.h>
 #include "include/driver_am2320.h"
 
 #ifdef CONFIG_DRIVER_AM2320_ENABLE
 
 static const char *TAG              = "driver_am2320";
-static bool driver_am2320_init_done = false;
 
 static float cached_temperature = 0;
 static float cached_humidity    = 0;
 static uint64_t cache_time      = 0;
 
 esp_err_t driver_am2320_init(void) {
-  if (driver_am2320_init_done)
-    return ESP_OK;
-
-  ESP_LOGD(TAG, "init called");
-
-  driver_am2320_init_done = true;
-
-  ESP_LOGD(TAG, "init done");
   return ESP_OK;
 }
 
@@ -77,14 +68,14 @@ float driver_am2320_get_humidity() {
 // running it to often can cause internal heating in the sensor. Please use the get_temperature() or
 // get_humidity() unless you always want the most recent data.
 esp_err_t driver_am2320_read_sensor(float *temperature, float *humidity) {
-  driver_i2c_write_byte(CONFIG_DRIVER_AM2320_I2C_ADDRESS, 0x00);  // Wakeup sensor
+  driver_i2c_write_byte(CONFIG_DRIVER_AM2320_I2C_BUS, CONFIG_DRIVER_AM2320_I2C_ADDRESS, 0x00);  // Wakeup sensor
   vTaskDelay(2 / portTICK_RATE_MS);
 
   uint8_t read_config[3];
   read_config[0] = 0x03;  // Function
   read_config[1] = 0x00;  // Full register
   read_config[2] = 4;     // Number of registers to read
-  driver_i2c_write_buffer(CONFIG_DRIVER_AM2320_I2C_ADDRESS, read_config, 3);
+  driver_i2c_write_buffer(CONFIG_DRIVER_AM2320_I2C_BUS, CONFIG_DRIVER_AM2320_I2C_ADDRESS, read_config, 3);
   vTaskDelay(2000 / portTICK_RATE_MS);  // Delay to allow sensor to measure (takes almost 2 seconds)
 
   // 0: 0x03 Modbus byte
@@ -93,7 +84,7 @@ esp_err_t driver_am2320_read_sensor(float *temperature, float *humidity) {
   // 4+5: Temperature
   // 6+7: CRC
   uint8_t result[8] = {0};
-  driver_i2c_read_bytes(CONFIG_DRIVER_AM2320_I2C_ADDRESS, result, 8);
+  driver_i2c_read_bytes(CONFIG_DRIVER_AM2320_I2C_BUS, CONFIG_DRIVER_AM2320_I2C_ADDRESS, result, 8);
 
   // Check if we get expected data, if not return NAN
   if (result[0] != 0x03 || (result[2] == 0xFF && result[3] == 0xFF)) {

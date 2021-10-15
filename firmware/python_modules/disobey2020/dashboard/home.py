@@ -377,6 +377,8 @@ def scrollerThread():
 	scrollerStartPos = 129
 	scrollerEndPos = -display.getTextWidth(cfg_nick_text, "permanentmarker22") - 128
 	scrollerPos = scrollerStartPos
+	display.windowMove("scroller", scrollerPos, display.height()-22) 
+	display.windowShow("scroller")
 	global stopThreads
 	while not stopThreads:
 		display.windowMove("scroller", scrollerPos, display.height()-22) 

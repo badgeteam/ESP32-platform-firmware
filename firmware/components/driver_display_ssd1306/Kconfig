@@ -1,6 +1,6 @@
 menu "Driver: SSD1306 OLED display"
 	config DRIVER_SSD1306_ENABLE
-		depends on DRIVER_I2C_ENABLE
+		depends on BUS_I2C0_ENABLE || BUS_I2C1_ENABLE
 		bool "Enable the SSD1306 display driver"
 		default n
 	
@@ -8,6 +8,12 @@ menu "Driver: SSD1306 OLED display"
 		depends on DRIVER_SSD1306_ENABLE
 		int "SSD1306 I2C address"
 		default 60
+		
+	config DRIVER_SSD1306_I2C_BUS
+		depends on DRIVER_SSD1306_ENABLE
+		int"SSD1306 I2C bus"
+		default 0
+		range 0 1
 	
 	config PIN_NUM_SSD1306_RESET
 		depends on DRIVER_SSD1306_ENABLE

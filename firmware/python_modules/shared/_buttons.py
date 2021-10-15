@@ -9,54 +9,57 @@ _callbacks = []
 _states    = []
 
 def _cb(pin):
-	global _pins, _gpios, _callbacks, _states
-	position = _pins.index(pin)
-	gpio = _gpios[position]
-	callback = _callbacks[position]
-	prevState = _states[position]
-	if callable(callback) and (prevState != pin.value()):
-		_states[position] = pin.value()
-		callback(not pin.value())
-	
-def register(gpio, action=None):
-	global _pins, _gpios, _callbacks, _states
-	if gpio in _gpios:
-		return False
-	pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=100)
-	_gpios.append(gpio)
-	_pins.append(pin)
-	_callbacks.append(action)
-	_states.append(pin.value())
-	return True
+    global _pins, _gpios, _callbacks, _states
+    position = _pins.index(pin)
+    gpio = _gpios[position]
+    callback = _callbacks[position]
+    prevState = _states[position]
+    if callable(callback) and (prevState != pin.value()):
+        _states[position] = pin.value()
+        callback(not pin.value())
+    
+def register(gpio, action=None, pullUp=False):
+    global _pins, _gpios, _callbacks, _states
+    if gpio in _gpios:
+        return False
+    if pullUp:
+        pin = machine.Pin(gpio, machine.Pin.IN, machine.Pin.PULL_UP, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=100)
+    else:
+        pin = machine.Pin(gpio, machine.Pin.IN, handler=_cb, trigger=machine.Pin.IRQ_ANYEDGE, debounce=200, acttime=100)
+    _gpios.append(gpio)
+    _pins.append(pin)
+    _callbacks.append(action)
+    _states.append(pin.value())
+    return True
 
 def attach(gpio, action):
-	global _pins, _gpios, _callbacks
-	if not gpio in _gpios:
-		return False
-	position = _gpios.index(gpio)
-	_callbacks[position] = action
-	return True
-	
+    global _pins, _gpios, _callbacks
+    if not gpio in _gpios:
+        return False
+    position = _gpios.index(gpio)
+    _callbacks[position] = action
+    return True
+    
 def detach(gpio):
-	return assign(gpio, None)
+    return assign(gpio, None)
 
 def pin(gpio):
-	global _pins, _gpios, _callbacks
-	if not gpio in _gpios:
-		return None
-	position = _gpios.index(gpio)
-	return _pins[position]
+    global _pins, _gpios, _callbacks
+    if not gpio in _gpios:
+        return None
+    position = _gpios.index(gpio)
+    return _pins[position]
 
 def value(gpio):
-	pin = pin(gpio)
-	if not pin:
-		return None
-	return pin.value()
+    pin = pin(gpio)
+    if not pin:
+        return None
+    return pin.value()
 
 def getCallback(gpio):
-	global _pins, _gpios, _callbacks
-	if not gpio in _gpios:
-		return None
-	position = _pins.index(pin)
-	callback = _callbacks[position]
-	return callback
+    global _pins, _gpios, _callbacks
+    if not gpio in _gpios:
+        return None
+    position = _pins.index(pin)
+    callback = _callbacks[position]
+    return callback

@@ -1,6 +1,6 @@
 menu "Driver: ST7789V LCD display"
 	config DRIVER_ST7789V_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable the ST7789V display driver"
 		default n
 		

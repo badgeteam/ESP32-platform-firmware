@@ -178,7 +178,7 @@ CONFIG_DRIVER_I2C_ENABLE=
 #
 # Driver: VSPI bus
 #
-CONFIG_DRIVER_VSPI_ENABLE=
+CONFIG_BUS_VSPI_ENABLE=
 
 #
 # Driver: E-ink display

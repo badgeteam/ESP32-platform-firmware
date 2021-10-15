@@ -1,6 +1,6 @@
 menu "Driver: ILI9341 LCD display"
 	config DRIVER_ILI9341_ENABLE
-		depends on DRIVER_VSPI_ENABLE
+		depends on BUS_VSPI_ENABLE
 		bool "Enable the ILI9341 display driver"
 		default n
 		
@@ -40,4 +40,8 @@ menu "Driver: ILI9341 LCD display"
 	config DRIVER_ILI9341_8C
 		depends on DRIVER_ILI9341_ENABLE
 		bool "Reduce color depth to 256 colors"
+
+	config DRIVER_ILI9341_STM32_MCH_BACKLIGHT
+		depends on DRIVER_ILI9341_ENABLE && DRIVER_MCH2021_STM32_ENABLE
+		bool "Use MCH2022 STM32 for backlight control"
 endmenu
