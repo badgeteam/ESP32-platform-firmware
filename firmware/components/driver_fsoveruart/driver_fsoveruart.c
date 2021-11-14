@@ -223,88 +223,12 @@ void fsoveruartTask(void *pvParameter) {
                 xTimerStop(timeout, 1);
             }
             fixcts(false);
-       
-            uint32_t bytes_read = 0;
-            FILE *read_loopback;
-            read_loopback = fopen("/dev/fsou/1","r");
-            if(read_loopback) {
-                do {
-                    uint8_t strbuf[128];
-                    bytes_read = fread(strbuf, 1, 128, read_loopback);
-                    if(bytes_read > 0) {
-                        uint8_t header[12];
-                        createMessageHeader(header, 3, bytes_read, 0);
-                        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) header, 12);
-                        uart_write_bytes(CONFIG_DRIVER_FSOVERUART_UART_NUM, (const char*) strbuf, bytes_read);
-                    } 
-                } while (bytes_read > 0);
-                fclose(read_loopback);
-            }
         }
     }
     free(dtmp);
     dtmp = NULL;
     vTaskDelete(NULL);
 }
-
-static ssize_t bypass_write(int fd, const void * data, size_t size)
-{  
-    if(fd > 1) {
-        ESP_LOGW(TAG, "Wrong fd %d", fd);
-        return 0;
-    }
-    return xRingbufferSend(buf_handle[fd], data, size, pdMS_TO_TICKS(1))*size;
-}
-
-static int bypass_open(const char * path, int flags, int mode) {
-    if(strcmp("/1", path) == 0) {
-        return 0;
-    } else if(strcmp("/2", path) == 0) {
-        return 1;
-    }
-    ESP_LOGW(TAG, "wrond mountpoint %s", path);
-    return 2;
-}
-
-static int bypass_fstat(int fd, struct stat * st) {
-    return 0;
-}
-
-static int bypass_close(int fd) {
-    return 0;
-}
-
-static ssize_t bypass_read(int fd, void* data, size_t size) {
-        //Receive data from byte buffer
-    if(fd > 1) {
-        ESP_LOGW(TAG, "Wrong fd %d", fd);
-        return 0;
-    }
-    size_t item_size;
-    if(fd == 1) size = 1;   //Bit of an hack. Read seem to always be of length 128, this forces stdin of mp to only read 1ch
-    char *item = (char *)xRingbufferReceiveUpTo(buf_handle[fd], &item_size, pdMS_TO_TICKS(1), size);
-    
-    //Check received data
-    if (item != NULL) {
-        //Print item
-        memcpy(data, item, item_size);
-        //Return Item
-        vRingbufferReturnItem(buf_handle[fd], (void *)item);
-        return item_size;
-    } else {
-        //Failed to receive item
-        return 0;
-    }
-}
-
-esp_vfs_t myfs = {
-.flags = ESP_VFS_FLAG_DEFAULT,
-.write = &bypass_write,
-.open = &bypass_open,
-.fstat = &bypass_fstat,
-.close = &bypass_close,
-.read = &bypass_read,
-};
 
 esp_err_t driver_fsoveruart_init(void) { 
    
@@ -328,10 +252,6 @@ esp_err_t driver_fsoveruart_init(void) {
 
     buf_handle[0] = xRingbufferCreate(2048, RINGBUF_TYPE_BYTEBUF);
     buf_handle[1] = xRingbufferCreate(2048, RINGBUF_TYPE_BYTEBUF);
-
-    ESP_ERROR_CHECK(esp_vfs_register("/dev/fsou", &myfs, NULL));
-    
-
 
     ESP_LOGI(TAG, "fs over uart registered.");
     xTaskCreatePinnedToCore(fsoveruartTask, "fsoveruart", 16000, NULL, 100, NULL, 0);

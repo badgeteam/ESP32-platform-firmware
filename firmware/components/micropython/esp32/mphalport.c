@@ -133,18 +133,6 @@ int mp_hal_stdin_rx_chr(uint32_t timeout)
 		
 		if (loopback_rx_any()) return loopback_rx_char();
 
-#ifdef CONFIG_DRIVER_STDINOUT_HOOK_ENABLE
-                char read_buf;
-                FILE *fd = fopen(CONFIG_DRIVER_STDIN_VFS_NAME, "r");
-                  if(fd) {
-                      int read = fread(&read_buf, 1, 1, fd);
-                      fclose(fd);
-                      if(read == 1){
-                        return (int)read_buf;
-                      }
-                  }
-#endif
-
 		c = ringbuf_get(&stdin_ringbuf);
     	if (c < 0) {
     		// no character in ring buffer
@@ -229,14 +217,6 @@ static void telnet_stdout_tx_str(const char *str, uint32_t len)
 //-------------------------------
 void mp_hal_stdout_tx_newline() {
 	loopback_stdout_put("\n", 1);
-
-#ifdef CONFIG_DRIVER_STDINOUT_HOOK_ENABLE
-        FILE *fd = fopen(CONFIG_DRIVER_STDOUT_VFS_NAME, "w");
-        if(fd) {
-            fwrite("\n", 1, 1, fd);
-            fclose(fd);
-        }
-#endif
 	#ifdef CONFIG_MICROPY_USE_TELNET
    	if (telnet_loggedin()) telnet_tx_strn("\r\n", 2);
    	else {
@@ -252,15 +232,6 @@ void mp_hal_stdout_tx_newline() {
 void mp_hal_stdout_tx_str(const char *str) {
 	if (str == NULL) return;
 	loopback_stdout_put(str, strlen(str));
-
-#ifdef CONFIG_DRIVER_STDINOUT_HOOK_ENABLE
-        FILE *fd = fopen(CONFIG_DRIVER_STDOUT_VFS_NAME, "w");
-        if(fd) {
-            fwrite(str, 1, strlen(str), fd);
-            fclose(fd);
-        }
-#endif
-
 	#ifdef CONFIG_MICROPY_USE_TELNET
    	if (telnet_loggedin()) telnet_tx_strn(str, strlen(str));
    	else {
@@ -284,15 +255,6 @@ void mp_hal_stdout_tx_str(const char *str) {
 void mp_hal_stdout_tx_strn(const char *str, uint32_t len) {
 	if (str == NULL) return;
 	loopback_stdout_put(str, len);
-
-	#ifdef CONFIG_DRIVER_STDINOUT_HOOK_ENABLE
-        FILE *fd = fopen(CONFIG_DRIVER_STDOUT_VFS_NAME, "w");
-        if(fd) {
-            fwrite(str, 1, len, fd);
-            fclose(fd);
-        }
-	#endif
-
 	#ifdef CONFIG_MICROPY_USE_TELNET
    	if (telnet_loggedin()) telnet_tx_strn(str, len);
    	else {
@@ -316,15 +278,6 @@ void mp_hal_stdout_tx_strn(const char *str, uint32_t len) {
 void mp_hal_stdout_tx_strn_cooked(const char *str, uint32_t len) {
 	if (str == NULL) return;
 	loopback_stdout_put(str, len);
-
-	#ifdef CONFIG_DRIVER_STDINOUT_HOOK_ENABLE
-	FILE *fd = fopen(CONFIG_DRIVER_STDOUT_VFS_NAME, "w");
-	if(fd) {
-		fwrite(str, 1, len, fd);
-		fclose(fd);
-	}
-	#endif
-
 	#ifdef CONFIG_MICROPY_USE_TELNET
    	if (telnet_loggedin()) telnet_stdout_tx_str(str, len);
    	else {
