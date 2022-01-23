@@ -8,6 +8,8 @@
 #include <stdbool.h>
 
 #include <esp_log.h>
+#include <esp_attr.h>
+#include <esp_heap_caps.h>
 
 #include "sndmixer.h"
 #include "libhelix-mp3/mp3dec.h"
@@ -16,9 +18,9 @@
 
 #define MAX_SAMPLES_PER_FRAME (1152 * 2)
 #define CHUNK_SIZE            32
-#define INTERNAL_BUFFER_SIZE  1024 * 20
+#define INTERNAL_BUFFER_SIZE  1024 * 10
 #define INTERNAL_BUFFER_FETCH_WHEN \
-  8192  // new data will be fetched when there is less than this amount of data
+  4096  // new data will be fetched when there is less than this amount of data
 
 #define TAG "snd_source_mp3"
 
@@ -65,7 +67,7 @@ inline void _readData(mp3_ctx_t *mp3) {
   // printf("_readData: %d, %d, %d\n", dataAvailable, bufferAvailable, amountFetched);
 }
 
-int mp3_decode(void *ctx) {
+int IRAM_ATTR mp3_decode(void *ctx) {
   mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
 
   if (mp3->stream)
@@ -104,7 +106,7 @@ int mp3_decode(void *ctx) {
   }
 }
 
-int mp3_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
+int IRAM_ATTR mp3_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
                     int *stereo) {
   // Allocate space for the information struct
   mp3_ctx_t *mp3 = calloc(sizeof(mp3_ctx_t), 1);
@@ -148,7 +150,7 @@ err:
   return -1;
 }
 
-int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int req_sample_rate,
+int IRAM_ATTR mp3_init_source_stream(const void *stream_read_fn, const void *stream, int req_sample_rate,
                            void **ctx, int *stereo, const void *seek_func) {
   // Allocate space for the information struct
   mp3_ctx_t *mp3 = calloc(sizeof(mp3_ctx_t), 1);
@@ -173,7 +175,7 @@ int mp3_init_source_stream(const void *stream_read_fn, const void *stream, int r
   mp3->seek_func   = (stream_seek_type)seek_func;
   mp3->stream      = (void *)stream;
   ESP_LOGD(TAG, "stream read fn @ %p and stream at %p\n", mp3->stream_read, mp3->stream);
-  mp3->dataPtr   = malloc(INTERNAL_BUFFER_SIZE);
+  mp3->dataPtr   = heap_caps_malloc(INTERNAL_BUFFER_SIZE, MALLOC_CAP_DMA);
   mp3->dataStart = mp3->dataPtr;
   mp3->dataCurr  = mp3->dataPtr;
   mp3->dataEnd   = mp3->dataPtr;
@@ -202,12 +204,12 @@ err:
   return -1;
 }
 
-int mp3_get_sample_rate(void *ctx) {
+int IRAM_ATTR mp3_get_sample_rate(void *ctx) {
   mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
   return mp3->lastRate;
 }
 
-int mp3_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
+int IRAM_ATTR mp3_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
   mp3_ctx_t *mp3 = (mp3_ctx_t *)ctx;
   if (mp3->bufferValid <= 0)
     mp3_decode(ctx);

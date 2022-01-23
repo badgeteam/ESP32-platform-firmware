@@ -322,7 +322,7 @@ static void handle_cmd(sndmixer_cmd_t *cmd) {
 #define CHUNK_SIZE 32
 
 // Sound mixer main loop.
-static void sndmixer_task(void *arg) {
+IRAM_ATTR static void sndmixer_task(void *arg) {
   int16_t mixbuf[CHUNK_SIZE * (use_stereo ? 2 : 1)];
   ESP_LOGI(TAG, "Sndmixer task up.\n");
 

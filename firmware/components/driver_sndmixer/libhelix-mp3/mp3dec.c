@@ -45,6 +45,7 @@
 //#include "hlxclib/string.h"		/* for memmove, memcpy (can replace with different implementations if desired) */
 #include "mp3common.h"	/* includes mp3dec.h (public API) and internal, platform-independent API */
 
+#include <esp_attr.h>
 
 //#define PROFILE
 #ifdef PROFILE
@@ -107,7 +108,7 @@ void MP3FreeDecoder(HMP3Decoder hMP3Decoder)
  * Return:      offset to first sync word (bytes from start of buf)
  *              -1 if sync not found after searching nBytes
  **************************************************************************************/
-int MP3FindSyncWord(unsigned char *buf, int nBytes)
+int IRAM_ATTR MP3FindSyncWord(unsigned char *buf, int nBytes)
 {
 	int i;
 
@@ -144,7 +145,7 @@ int MP3FindSyncWord(unsigned char *buf, int nBytes)
  *                this function once (first frame) then store the result (nSlots)
  *                and just use it from then on
  **************************************************************************************/
-static int MP3FindFreeSync(unsigned char *buf, unsigned char firstFH[4], int nBytes)
+static int IRAM_ATTR MP3FindFreeSync(unsigned char *buf, unsigned char firstFH[4], int nBytes)
 {
 	int offset = 0;
 	unsigned char *bufPtr = buf;
@@ -187,7 +188,7 @@ static int MP3FindFreeSync(unsigned char *buf, unsigned char firstFH[4], int nBy
  *
  * Notes:       call this right after calling MP3Decode
  **************************************************************************************/
-void MP3GetLastFrameInfo(HMP3Decoder hMP3Decoder, MP3FrameInfo *mp3FrameInfo)
+void IRAM_ATTR MP3GetLastFrameInfo(HMP3Decoder hMP3Decoder, MP3FrameInfo *mp3FrameInfo)
 {
 	MP3DecInfo *mp3DecInfo = (MP3DecInfo *)hMP3Decoder;
 
@@ -224,7 +225,7 @@ void MP3GetLastFrameInfo(HMP3Decoder hMP3Decoder, MP3FrameInfo *mp3FrameInfo)
  *
  * Return:      error code, defined in mp3dec.h (0 means no error, < 0 means error)
  **************************************************************************************/
-int MP3GetNextFrameInfo(HMP3Decoder hMP3Decoder, MP3FrameInfo *mp3FrameInfo, unsigned char *buf)
+int IRAM_ATTR MP3GetNextFrameInfo(HMP3Decoder hMP3Decoder, MP3FrameInfo *mp3FrameInfo, unsigned char *buf)
 {
 	MP3DecInfo *mp3DecInfo = (MP3DecInfo *)hMP3Decoder;
 
@@ -251,7 +252,7 @@ int MP3GetNextFrameInfo(HMP3Decoder hMP3Decoder, MP3FrameInfo *mp3FrameInfo, uns
  *
  * Return:      none
  **************************************************************************************/
-static void MP3ClearBadFrame(MP3DecInfo *mp3DecInfo, short *outbuf)
+static void IRAM_ATTR MP3ClearBadFrame(MP3DecInfo *mp3DecInfo, short *outbuf)
 {
 	int i;
 
@@ -283,7 +284,7 @@ static void MP3ClearBadFrame(MP3DecInfo *mp3DecInfo, short *outbuf)
  * Notes:       switching useSize on and off between frames in the same stream 
  *                is not supported (bit reservoir is not maintained if useSize on)
  **************************************************************************************/
-int MP3Decode(HMP3Decoder hMP3Decoder, unsigned char **inbuf, int *bytesLeft, short *outbuf, int useSize)
+int IRAM_ATTR MP3Decode(HMP3Decoder hMP3Decoder, unsigned char **inbuf, int *bytesLeft, short *outbuf, int useSize)
 {
 	int offset, bitOffset, mainBits, gr, ch, fhBytes, siBytes, freeFrameBytes;
 	int prevBitOffset, sfBlockBits, huffBlockBits;
