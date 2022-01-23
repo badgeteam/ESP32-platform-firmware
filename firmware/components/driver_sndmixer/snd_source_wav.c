@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <esp_log.h>
+#include <esp_attr.h>
+#include <esp_heap_caps.h>
 
 #include "sndmixer.h"
 #include "snd_source_wav.h"
@@ -54,11 +56,11 @@ typedef struct __attribute__((packed)) {
   };
 } chunk_hdr_t;
 
-int wav_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
+int IRAM_ATTR wav_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
                     int *stereo) {
   // Check sanity first
   char *p        = (char *)data_start;
-  wav_ctx_t *wav = calloc(sizeof(wav_ctx_t), 1);
+  wav_ctx_t *wav = heap_caps_calloc(sizeof(wav_ctx_t), 1, MALLOC_CAP_DMA);
   if (!wav)
     goto err;
   riff_hdr_t *riff = (riff_hdr_t *)p;
@@ -102,10 +104,10 @@ err:
   return -1;
 }
 
-int wav_init_source_stream(void *stream_read_fn, void *stream, int req_sample_rate,
+int IRAM_ATTR wav_init_source_stream(void *stream_read_fn, void *stream, int req_sample_rate,
                            void **ctx, int *stereo, void *seek_func) {
   ESP_LOGI(TAG, "init wav");
-  wav_ctx_t *wav = calloc(sizeof(wav_ctx_t), 1);
+  wav_ctx_t *wav = heap_caps_calloc(sizeof(wav_ctx_t), 1, MALLOC_CAP_DMA);
   if (!wav) {
     ESP_LOGE(TAG, "Failed to allocate wave file context");
     return -1;
@@ -176,7 +178,7 @@ int wav_init_source_stream(void *stream_read_fn, void *stream, int req_sample_ra
   return CHUNK_SIZE;
 }
 
-int wav_get_sample_rate(void *ctx) {
+int IRAM_ATTR wav_get_sample_rate(void *ctx) {
   wav_ctx_t *wav = (wav_ctx_t *)ctx;
   return wav->rate;
 }
@@ -193,7 +195,7 @@ inline int8_t get_sample_byte(wav_ctx_t *wav) {
   return rv;
 }
 
-int16_t get_sample(wav_ctx_t *wav) {
+int16_t IRAM_ATTR get_sample(wav_ctx_t *wav) {
   int16_t rv = 0;
   if (wav->bits == 8) {
     rv = (get_sample_byte(wav) - 128) << 8;
@@ -203,7 +205,7 @@ int16_t get_sample(wav_ctx_t *wav) {
   return rv;
 }
 
-int wav_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
+int IRAM_ATTR wav_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
   wav_ctx_t *wav = (wav_ctx_t *)ctx;
   int channels   = 1;
   if (wav->channels == 2 && stereo) {

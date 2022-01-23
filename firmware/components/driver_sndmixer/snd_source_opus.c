@@ -6,6 +6,8 @@
 #include <stdbool.h>
 
 #include <esp_log.h>
+#include <esp_attr.h>
+#include <esp_heap_caps.h>
 
 #include "sndmixer.h"
 #include "opus.h"
@@ -55,7 +57,7 @@ static inline void read_data(opus_ctx_t *ctx) {
   }
 }
 
-static int ctx_decode(void *_ctx) {
+static int IRAM_ATTR ctx_decode(void *_ctx) {
   opus_ctx_t *ctx = (opus_ctx_t *)_ctx;
 
   if (ctx->stream)
@@ -99,7 +101,7 @@ static int ctx_decode(void *_ctx) {
   return 1;
 }
 
-int opus_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **_ctx,
+int IRAM_ATTR opus_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **_ctx,
                      int *stereo) {
   // Allocate space for the information struct
   opus_ctx_t *ctx = calloc(sizeof(opus_ctx_t), 1);
@@ -141,10 +143,10 @@ err:
   return -1;
 }
 
-int opus_init_source_stream(const void *stream_read_fn, const void *stream, int req_sample_rate,
+int IRAM_ATTR opus_init_source_stream(const void *stream_read_fn, const void *stream, int req_sample_rate,
                             void **_ctx, int *stereo) {
   // Allocate space for the information struct
-  opus_ctx_t *ctx = calloc(sizeof(opus_ctx_t), 1);
+  opus_ctx_t *ctx = heap_caps_calloc(sizeof(opus_ctx_t), 1, MALLOC_CAP_DMA);
   if (!ctx)
     goto err;
 
@@ -156,12 +158,12 @@ int opus_init_source_stream(const void *stream_read_fn, const void *stream, int 
     goto err;
   }
 
-  ctx->input_start  = (unsigned char *)malloc(INPUT_BUFFER_SIZE);
+  ctx->input_start  = (unsigned char *)heap_caps_malloc(INPUT_BUFFER_SIZE, MALLOC_CAP_DMA);
   ctx->input_curr   = ctx->input_start;  // Current position
   ctx->input_end    = ctx->input_start;  // End of data
   ctx->rate         = 0;
   ctx->channels     = 0;
-  ctx->output_start = calloc(OUTPUT_BUFFER_SIZE, sizeof(int16_t));
+  ctx->output_start = heap_caps_calloc(OUTPUT_BUFFER_SIZE, sizeof(int16_t), MALLOC_CAP_DMA);
   ctx->output_end   = ctx->output_start;
   ctx->output_curr  = ctx->output_start;
   ctx->stream_read  = (stream_read_type)stream_read_fn;
@@ -187,12 +189,12 @@ err:
   return -1;
 }
 
-int opus_get_sample_rate(void *_ctx) {
+int IRAM_ATTR opus_get_sample_rate(void *_ctx) {
   opus_ctx_t *ctx = (opus_ctx_t *)_ctx;
   return ctx->rate;
 }
 
-int opus_fill_buffer(void *_ctx, int16_t *buffer, int stereo) {
+int IRAM_ATTR opus_fill_buffer(void *_ctx, int16_t *buffer, int stereo) {
   opus_ctx_t *ctx = (opus_ctx_t *)_ctx;
   if (ctx->output_curr == ctx->output_end) {
     ctx_decode(ctx);

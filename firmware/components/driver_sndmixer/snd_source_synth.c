@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <esp_attr.h>
+#include <esp_heap_caps.h>
 
 #include "sndmixer.h"
 
@@ -105,7 +107,7 @@ const uint8_t noise[] = {
     0x9f, 0x9c, 0xaf, 0xf9, 0xe8, 0x48, 0x6b, 0x5c, 0x46, 0x2d, 0x8c, 0x2c, 0xb6, 0x51, 0xfb, 0x9c,
     0x72, 0xe5, 0x6f, 0x3e, 0x79, 0xa6, 0xbc, 0x6f, 0x67, 0x8f, 0xe5, 0xc8, 0x7a, 0x6c, 0xde, 0x8e};
 
-int synth_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
+int IRAM_ATTR synth_init_source(const void *data_start, const void *data_end, int req_sample_rate, void **ctx,
                       int *stereo) {
   synth_ctx_t *synth = calloc(sizeof(synth_ctx_t), 1);
   if (!synth)
@@ -122,12 +124,12 @@ int synth_init_source(const void *data_start, const void *data_end, int req_samp
   return CHUNK_SIZE;  // Chunk size
 }
 
-int synth_get_sample_rate(void *ctx) {
+int IRAM_ATTR synth_get_sample_rate(void *ctx) {
   synth_ctx_t *synth = (synth_ctx_t *)ctx;
   return synth->sampleRate;
 }
 
-int synth_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
+int IRAM_ATTR synth_fill_buffer(void *ctx, int16_t *buffer, int stereo) {
   synth_ctx_t *synth = (synth_ctx_t *)ctx;
 
   (void)stereo;
@@ -187,12 +189,12 @@ void synth_deinit_source(void *ctx) {
   free(synth);
 }
 
-void synth_set_frequency(void *ctx, uint16_t frequency) {
+void IRAM_ATTR synth_set_frequency(void *ctx, uint16_t frequency) {
   synth_ctx_t *synth = (synth_ctx_t *)ctx;
   synth->frequency   = frequency;
 }
 
-void synth_set_waveform(void *ctx, uint8_t waveform) {
+void IRAM_ATTR synth_set_waveform(void *ctx, uint8_t waveform) {
   synth_ctx_t *synth = (synth_ctx_t *)ctx;
   synth->waveform    = waveform;
 }
