@@ -7,6 +7,7 @@
 #include "esp_log.h"
 #include "esp_vfs.h"
 #include "esp_vfs_fat.h"
+#include "esp_heap_caps.h"
 
 #include "py/mperrno.h"
 #include "py/mphal.h"
@@ -130,7 +131,7 @@ STATIC mp_obj_t hub75_image(size_t n_args, const mp_obj_t *args) {
         return mp_const_none;
     }
 
-    uint32_t *image = malloc(width*height*4);
+    uint32_t *image = heap_caps_malloc(width*height*4, MALLOC_CAP_32BIT);
 
     for(int i = 0; i < width*height; i++) {
         image[i] = mp_obj_get_int64(mp_arr[i]);
@@ -150,7 +151,7 @@ STATIC mp_obj_t hub75_pixel(size_t n_args, const mp_obj_t *args) {
      int x = mp_obj_get_int(args[4]);
      int y = mp_obj_get_int(args[5]);
 
-    uint32_t *image = malloc(4);
+    uint32_t *image = heap_caps_malloc(4, MALLOC_CAP_32BIT);
 
      Color k;
      k.RGB[3] = r;
@@ -185,7 +186,7 @@ STATIC mp_obj_t hub75_gif(size_t n_args, const mp_obj_t *args) {
         return mp_const_none;
     }
 
-    uint32_t *image = malloc(width*height*4*numframes);
+    uint32_t *image = heap_caps_malloc(width*height*4*numframes, MALLOC_CAP_32BIT);
 
     for(int i = 0; i < width*height*numframes; i++) {
         image[i] = mp_obj_get_int64(mp_arr[i]);
