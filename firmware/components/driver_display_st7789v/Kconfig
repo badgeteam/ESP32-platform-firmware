@@ -65,4 +65,26 @@ menu "Driver: ST7789V LCD display"
 		depends on DRIVER_ST7789V_ENABLE
 		int "Screen window offset Y"
 		default 0
+
+	choice
+		prompt "Display mode"
+		default DRIVER_ST7789V_DD_NORMAL
+		depends on DRIVER_ST7789V_ENABLE
+	config DRIVER_ST7789V_DD_NORMAL
+		bool "Normal"
+    config DRIVER_ST7789V_DD_XMIRROR
+		bool "Mirror X axis"
+    config DRIVER_ST7789V_DD_YMIRROR
+		bool "Mirror Y axis"
+    config DRIVER_ST7789V_DD_XYMIRROR
+		bool "Mirror X and Y axis"
+    config DRIVER_ST7789V_DD_XYE
+		bool "Exchange X and Y axis"
+    config DRIVER_ST7789V_DD_XYEXMIRROR
+		bool "Exchange X and Y axis, mirror X axis"
+    config DRIVER_ST7789V_DD_XYEYMIRROR
+		bool "Exchange X and Y axis, mirror Y axis"
+    config DRIVER_ST7789V_DD_XYEXYMIRROR
+		bool "Exchange X and Y axis, mirror X and Y axis"
+	endchoice
 endmenu
