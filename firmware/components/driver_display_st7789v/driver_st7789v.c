@@ -37,12 +37,36 @@ static void driver_st7789v_spi_pre_transfer_callback(spi_transaction_t *t)
 
 const uint8_t st7789v_init_data[] = {
     ST7789V_COLMOD,   1, 0x55,                               // 16-bit color mode, 65K
-    ST7789V_MADCTL,   1, 0b01100000,                         // 
+#ifdef CONFIG_DRIVER_ST7789V_DD_YMIRROR
+    ST7789V_MADCTL,   1, 0b10000000,
+#endif
+#ifdef CONFIG_DRIVER_ST7789V_DD_XMIRROR
+    ST7789V_MADCTL,   1, 0b01000000,
+#endif
+#ifdef CONFIG_DRIVER_ST7789V_DD_XYMIRROR
+    ST7789V_MADCTL,   1, 0b11000000,
+#endif
+#ifdef CONFIG_DRIVER_ST7789V_DD_XYE
+    ST7789V_MADCTL,   1, 0b00100000,
+#endif
+#ifdef CONFIG_DRIVER_ST7789V_DD_XYEXMIRROR
+    ST7789V_MADCTL,   1, 0b10100000,
+#endif
+#ifdef CONFIG_DRIVER_ST7789V_DD_XYEYMIRROR
+    ST7789V_MADCTL,   1, 0b01100000,
+#endif
+#ifdef CONFIG_DRIVER_ST7789V_DD_XYEXYMIRROR
+    ST7789V_MADCTL,   1, 0b11100000,
+#endif
+#ifdef CONFIG_DRIVER_ST7789V_DD_NORMAL
+    ST7789V_MADCTL,   1, 0b00000000,
+#endif
 #ifdef CONFIG_DRIVER_ST7789V_COLOR_INVERT
 	ST7789V_INVON,    0,                                     // Enable inversion (Adafruit does this)
 #endif
 	0x00
 };
+
 
 esp_err_t driver_st7789v_send(const uint8_t *data, int len, const uint8_t dc_level)
 {
