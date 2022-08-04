@@ -35,8 +35,8 @@ struct lib_deflate_reader {
 
 	bool is_last_block;
 	enum lib_deflate_state_t state;
-	uint8_t look_behind[32768];
 	int lb_size;
+	int lb_capacity;
 	int lb_pos;
 
 	int copy_dist;
@@ -44,9 +44,11 @@ struct lib_deflate_reader {
 
 	uint16_t huffman_lc_tree[288+15];
 	uint16_t huffman_dc_tree[32+15];
+
+	uint8_t look_behind[];
 };
 
-extern struct lib_deflate_reader * lib_deflate_new(lib_reader_read_t read, void *read_p);
+extern struct lib_deflate_reader * lib_deflate_new(lib_reader_read_t read, void *read_p, int lb_capacity);
 extern void lib_deflate_init(struct lib_deflate_reader *dr, lib_reader_read_t read, void *read_p);
 extern ssize_t lib_deflate_read(struct lib_deflate_reader *dr, uint8_t *buf, size_t buf_len);
 extern void lib_deflate_destroy(struct lib_deflate_reader *dr);
