@@ -566,7 +566,7 @@ int lib_png_load_image(Window* window, struct lib_png_reader *pr, uint16_t offse
 	if (res < 2)
 		return -LIB_PNG_ERROR_UNEXPECTED_END_OF_CHUNK;
 
-    int windowsize = 1<<(((rfc1950_hdr[0] & 0xf0)>>4)+8);
+	int windowsize = 1<<(((rfc1950_hdr[0] & 0xf0)>>4)+8);
 	if ((rfc1950_hdr[0] & 0x0f) != 0x08) // should be deflate algorithm
 		return -LIB_PNG_ERROR_INVALID_DEFLATE_HEADER;
 	if (windowsize > 32768) // max window size is 32 KB

@@ -173,7 +173,7 @@ lib_deflate_new(lib_reader_read_t read, void *read_p, int lb_capacity)
 		return NULL;
 
 	lib_deflate_init(dr, read, read_p);
-    dr->lb_capacity = lb_capacity;
+	dr->lb_capacity = lb_capacity;
 
 	return dr;
 }
