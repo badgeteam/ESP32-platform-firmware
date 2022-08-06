@@ -566,16 +566,18 @@ int lib_png_load_image(Window* window, struct lib_png_reader *pr, uint16_t offse
 	if (res < 2)
 		return -LIB_PNG_ERROR_UNEXPECTED_END_OF_CHUNK;
 
+	int windowsize = 1<<(((rfc1950_hdr[0] & 0xf0)>>4)+8);
 	if ((rfc1950_hdr[0] & 0x0f) != 0x08) // should be deflate algorithm
 		return -LIB_PNG_ERROR_INVALID_DEFLATE_HEADER;
-	if (rfc1950_hdr[0] > 0x78) // max window size is 32 KB
+	if (windowsize > 32768) // max window size is 32 KB
 		return -LIB_PNG_ERROR_INVALID_DEFLATE_HEADER;
 	if (rfc1950_hdr[1] & 0x20) // preset dictionary not allowed
 		return -LIB_PNG_ERROR_INVALID_DEFLATE_HEADER;
 	if (((rfc1950_hdr[0] << 8) + rfc1950_hdr[1]) % 31 != 0) // check checksum
 		return -LIB_PNG_ERROR_INVALID_DEFLATE_HEADER;
 
-	pr->dr = lib_deflate_new((lib_reader_read_t) &lib_png_chunk_read_idat, pr);
+	pr->dr = lib_deflate_new((lib_reader_read_t) &lib_png_chunk_read_idat, pr, windowsize);
+    //printf("allocated deflate with header: %d\n", windowsize);
 	if (pr->dr == NULL)
 		return -LIB_PNG_ERROR_OUT_OF_MEMORY;
 

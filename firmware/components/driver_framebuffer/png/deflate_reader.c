@@ -166,13 +166,14 @@ lib_deflate_init(struct lib_deflate_reader *dr, lib_reader_read_t read, void *re
 }
 
 struct lib_deflate_reader *
-lib_deflate_new(lib_reader_read_t read, void *read_p)
+lib_deflate_new(lib_reader_read_t read, void *read_p, int lb_capacity)
 {
-	struct lib_deflate_reader *dr = (struct lib_deflate_reader *) malloc(sizeof(struct lib_deflate_reader));
+	struct lib_deflate_reader *dr = (struct lib_deflate_reader *) malloc(sizeof(struct lib_deflate_reader)+lb_capacity);
 	if (unlikely(dr == NULL))
 		return NULL;
 
 	lib_deflate_init(dr, read, read_p);
+	dr->lb_capacity = lb_capacity;
 
 	return dr;
 }
@@ -401,8 +402,8 @@ lib_deflate_read(struct lib_deflate_reader *dr, uint8_t *buf, size_t buf_len)
 				size_t copylen = dr->copy_len;
 				if (copylen > buf_len - buf_pos)
 					copylen = buf_len - buf_pos;
-				if (copylen > 32768 - dr->lb_pos)
-					copylen = 32768 - dr->lb_pos;
+				if (copylen > dr->lb_capacity - dr->lb_pos)
+					copylen = dr->lb_capacity - dr->lb_pos;
 
 				uint8_t *rd_buf = &dr->look_behind[ dr->lb_pos ];
 				ssize_t res = dr->read(dr->read_p, rd_buf, copylen);
@@ -419,8 +420,8 @@ lib_deflate_read(struct lib_deflate_reader *dr, uint8_t *buf, size_t buf_len)
 				dr->copy_len -= copylen;
 
 				dr->lb_pos += copylen;
-				dr->lb_pos &= 32767;
-				if (dr->lb_size < 32768)
+				dr->lb_pos &= (dr->lb_capacity-1);
+				if (dr->lb_size < dr->lb_capacity)
 					dr->lb_size += copylen;
 			}
 			dr->state = LIB_DEFLATE_STATE_NEW_BLOCK;
@@ -437,8 +438,8 @@ lib_deflate_read(struct lib_deflate_reader *dr, uint8_t *buf, size_t buf_len)
 
 				dr->look_behind[ dr->lb_pos ] = token;
 				dr->lb_pos++;
-				dr->lb_pos &= 32767;
-				if (dr->lb_size < 32768)
+				dr->lb_pos &= (dr->lb_capacity-1);
+				if (dr->lb_size < dr->lb_capacity)
 					dr->lb_size++;
 			}
 			else if (token == 256)
@@ -502,18 +503,18 @@ lib_deflate_read(struct lib_deflate_reader *dr, uint8_t *buf, size_t buf_len)
 				// int copylen = dr->copy_len;
 				// copylen = buf_len - buf_pos if copylen > buf_len - buf_pos
 				// copylen = dr->copy_dist if copylen > dr->copy_dist
-				// copylen = 32768 - dr->lb_pos if copylen > 32768 - dr->lb_pos
-				// copylen = 32768 - pos if copylen > 32768 - pos
+				// copylen = dr->lb_capacity - dr->lb_pos if copylen > dr->lb_capacity - dr->lb_pos
+				// copylen = dr->lb_capacity - pos if copylen > dr->lb_capacity - pos
 				dr->copy_len--;
-				int pos = (dr->lb_pos - dr->copy_dist) & 32767;
+				int pos = (dr->lb_pos - dr->copy_dist) & (dr->lb_capacity-1);
 				int token = dr->look_behind[ pos ];
 
 				buf[buf_pos++] = token;
 
 				dr->look_behind[ dr->lb_pos ] = token;
 				dr->lb_pos++;
-				dr->lb_pos &= 32767;
-				if (dr->lb_size < 32768)
+				dr->lb_pos &= (dr->lb_capacity-1);
+				if (dr->lb_size < dr->lb_capacity)
 					dr->lb_size++;
 			}
 			dr->state = LIB_DEFLATE_STATE_HUFFMAN;
