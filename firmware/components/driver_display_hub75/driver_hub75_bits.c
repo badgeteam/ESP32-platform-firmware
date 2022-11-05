@@ -73,7 +73,8 @@ void i2sparallel_flipBuffer(int bufid) { }
  */
 
 #define ON_TIME_SLOT (N_COLUMNS)         /* must be multiple of 4 */
-#define OFF_TIME_SLOT (2*N_COLUMNS)        /* must be multiple of 4 */
+#define OFF_PREV_TIME_SLOT (1*N_COLUMNS)        /* must be multiple of 4 */
+#define OFF_CUR_TIME_SLOT (1*N_COLUMNS)        /* must be multiple of 4 */
 #define BITBANG_SLOT (N_COLUMNS)         /* must be multiple of 4 */
 #define BITBANG_ON_TIME (BITBANG_SLOT-4)
 #define PADD4(x) ( (x+3) & ~3 )
@@ -95,7 +96,8 @@ void i2sparallel_flipBuffer(int bufid) { }
 typedef struct __attribute__((packed))
 {
 	/* common part: */
-	uint8_t off_prev_row[PADD4(OFF_TIME_SLOT)];
+	uint8_t off_prev_row[PADD4(OFF_PREV_TIME_SLOT)];
+	uint8_t off_cur_row[PADD4(OFF_CUR_TIME_SLOT)];
 	uint8_t bit15[BITBANG_SLOT];
 	uint8_t on_time_bit15[PADD4(ON_TIME_BIT15)];
 	uint8_t bit14[BITBANG_SLOT];
@@ -191,6 +193,7 @@ static void init_row_data(row_data_t *data, int addr)
 
 	memset(data, 0xff, sizeof(row_data_t));
 	memset(data->off_prev_row, prev_addr_bits | BIT_NOT_OUTPUT_ENABLE, sizeof(data->off_prev_row));
+	memset(data->off_cur_row, addr_bits | BIT_NOT_OUTPUT_ENABLE, sizeof(data->off_cur_row));
 
 	init_on_time(data->on_time_bit15,  sizeof(data->on_time_bit15),  ON_TIME_BIT15,  addr_bits);
 	init_on_time(data->on_time_bit14,  sizeof(data->on_time_bit14),  ON_TIME_BIT14,  addr_bits);
@@ -206,7 +209,7 @@ static void init_row_data(row_data_t *data, int addr)
 	init_on_time(data->on_time_bit5,   sizeof(data->on_time_bit5),   ON_TIME_BIT5,   addr_bits);
 	init_on_time(data->on_time_bit4,   sizeof(data->on_time_bit4),   ON_TIME_BIT4,   addr_bits);
 
-	init_bits(data->bit15, sizeof(data->bit15), prev_addr_bits|BIT_NOT_OUTPUT_ENABLE, addr_bits);
+	init_bits(data->bit15, sizeof(data->bit15), addr_bits|BIT_NOT_OUTPUT_ENABLE, addr_bits);
 	init_bits(data->bit14, sizeof(data->bit14), addr_bits, addr_bits);
 	init_bits(data->bit13, sizeof(data->bit13), addr_bits, addr_bits);
 	init_bits(data->bit12, sizeof(data->bit12), addr_bits, addr_bits);
