@@ -556,6 +556,17 @@ void do_test_old(i2s_parallel_buffer_desc_t desc[], frame_t *frame)
 		}
 }
 
+void do_test_count(i2s_parallel_buffer_desc_t desc[])
+{
+	int i;
+
+	unsigned int sum = 0;
+	for(i=0; desc[i].memory; i++)
+		sum += desc[i].size;
+
+	printf("net. duty cycle: %u/%u = %lf\n", 4095*8, sum, (double)(4095*8)/(double)sum);
+}
+
 #endif // DRIVER_HUB75_DMA_DATA_TEST
 
 void driver_hub75_init_bits(void)
@@ -570,6 +581,7 @@ void driver_hub75_init_bits(void)
 
 #ifdef DRIVER_HUB75_DMA_DATA_TEST
 	do_test(dma_desc_0, frames[0]);
+	do_test_count(dma_desc_0);
 #endif // DRIVER_HUB75_DMA_DATA_TEST
 
 	free(dma_desc_0);
