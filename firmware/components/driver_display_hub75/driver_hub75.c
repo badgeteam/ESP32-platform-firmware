@@ -80,19 +80,8 @@ void displayTask(void *pvParameter)
                 }
 
                 if (usb_connected) {
-                    uint32_t intensity        = total_intensity;
-                    uint8_t milliamps_per_led = 35;
-                    deduced_current =
-                        (uint32_t)((intensity / 255.0) * milliamps_per_led *
-                                   ((brightness - 2) / 32.0) / 8);  // in milliamps
-
-                    // Correct for blank frames. Example: 1 data frame + 3 blank frames, of
-                    // which 1 blanks the row, actual current is <deduced> * 3/4.
-//                    if (NULLFRAMES) {
-//                      deduced_current *= NULLFRAMES;
-//                      deduced_current /= NULLFRAMES+1;
-//                      deduced_current /= 3; // this silly heuristic works
-//                    }
+                    uint32_t max_current = 32*3 * 35; /* max LEDs on at the same time & mA per LED */;
+                    deduced_current = max_current*total_intensity/(5012*8*3); // in milliamps
 
                     if (deduced_current <= LOWER) {
                       duty = PCT_MIN;
