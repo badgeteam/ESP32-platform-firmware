@@ -102,7 +102,7 @@ const uint32_t lumConvTab[]={
 };
 
 
-uint16_t valToPwm16(int val, int brightness) {
+uint16_t valToPwm12(int val, int brightness) {
     if (val<0) val=0;
     if (val>255) val=255;
     return ((uint32_t)brightness*lumConvTab[val])>>20;
