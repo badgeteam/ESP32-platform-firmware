@@ -241,8 +241,8 @@ uint32_t driver_hub75_render(int brightness, Color* fb)
 	uint32_t total_intensity = 0;
 	if (brightness < 0)
 		brightness = 0;
-	else if (brightness > 30)
-		brightness = 30;
+	else if (brightness > 65535)
+		brightness = 65535;
 
  	cur_frame ^= 1;
 	frame_t *f = frames[cur_frame];

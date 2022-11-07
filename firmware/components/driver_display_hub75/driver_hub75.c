@@ -157,7 +157,7 @@ esp_err_t driver_hub75_init(void)
 
 void driver_hub75_set_brightness(int brightness_val)
 {
-	brightness = min(max(2, brightness_val), 30);
+	brightness = min(max(255, brightness_val), 65535);
 }
 
 void driver_hub75_set_framerate(int framerate_val)
