@@ -258,9 +258,9 @@ uint32_t driver_hub75_render(int brightness, Color* fb)
 			 * and this is faster */
 			Color *c = &fb[i*CONFIG_HUB75_WIDTH+31-DMA_ORDER(k)];
 
-			uint32_t r = valToPwm16(c->RGB[3], brightness),
-			         g = valToPwm16(c->RGB[2], brightness),
-			         b = valToPwm16(c->RGB[1], brightness);
+			uint32_t r = valToPwm12(c->RGB[3], brightness),
+			         g = valToPwm12(c->RGB[2], brightness),
+			         b = valToPwm12(c->RGB[1], brightness);
 
 			total_intensity += r+b+g;
 
