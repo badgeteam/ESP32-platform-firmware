@@ -80,8 +80,7 @@ void displayTask(void *pvParameter)
                 }
 
                 if (usb_connected) {
-                    uint32_t max_current = 32*3 * 35; /* max LEDs on at the same time & mA per LED */;
-                    deduced_current = max_current*total_intensity/(5012*8*3); // in milliamps
+                    deduced_current = 35 * total_intensity/(5012*8); // in milliamps
 
                     if (deduced_current <= LOWER) {
                       duty = PCT_MIN;
