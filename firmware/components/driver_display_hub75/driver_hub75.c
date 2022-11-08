@@ -65,11 +65,10 @@ void displayTask(void *pvParameter)
         bool usb_connected = true;
         TickType_t lastUsbCheck = 0;
         uint8_t duty = 255;
-        uint32_t deduced_current = 0;
 
 	while(driver_hub75_active) {
 		if(compositor_status()) composite();
-		uint32_t total_intensity = driver_hub75_render(brightness, hub75_framebuffer);
+		uint32_t deduced_current = driver_hub75_render(brightness, hub75_framebuffer, 35, 35, 35);
 
 #ifdef CONFIG_HUB75_REGULATE_VLED
                 if (xTaskGetTickCount() - lastUsbCheck > 1000/portTICK_PERIOD_MS) {
@@ -80,7 +79,6 @@ void displayTask(void *pvParameter)
                 }
 
                 if (usb_connected) {
-                    deduced_current = 35 * total_intensity/(5012*8); // in milliamps
 
                     if (deduced_current <= LOWER) {
                       duty = PCT_MIN;

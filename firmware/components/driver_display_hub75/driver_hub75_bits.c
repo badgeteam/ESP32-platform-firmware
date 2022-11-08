@@ -17,9 +17,6 @@
 #include "esp_heap_caps.h"
 #endif
 
-
-
-
 #ifdef DRIVER_HUB75_DMA_DATA_TEST
 #define CONFIG_HUB75_WIDTH 32
 #define MALLOC_CAP_DMA (-1)
@@ -69,12 +66,16 @@ void i2sparallel_flipBuffer(int bufid) { }
  * try to pack them such that we don't need many dma descriptors
  * off_prev_row[W] contains address line data for the previously displayed row
  * in order to prevent ghosting.
- * off_prev_row & bit15 have not output enable
+ * off_prev_row, off_cur_row & bit15 have not output enable
  */
 
-#define ON_TIME_SLOT (N_COLUMNS)         /* must be multiple of 4 */
+/* Downtime before switching rows: */
 #define OFF_PREV_TIME_SLOT (1*N_COLUMNS)        /* must be multiple of 4 */
+
+/* Downtime after switching rows: */
 #define OFF_CUR_TIME_SLOT (1*N_COLUMNS)        /* must be multiple of 4 */
+
+#define ON_TIME_SLOT (N_COLUMNS)         /* must be multiple of 4 */
 #define BITBANG_SLOT (N_COLUMNS)         /* must be multiple of 4 */
 #define BITBANG_ON_TIME (BITBANG_SLOT-4)
 #define PADD4(x) ( (x+3) & ~3 )
@@ -144,6 +145,7 @@ typedef struct
 
 static int cur_frame = 0;
 static frame_t *frames[2];
+static size_t dma_loop_size = 0;
 
 static int row_bits(int row)
 {
@@ -236,9 +238,12 @@ static void clear_frame(frame_t *frame)
 }
 
 /* returns total intensity */
-uint32_t driver_hub75_render(int brightness, Color* fb)
+uint32_t driver_hub75_render(int brightness, Color* fb, uint32_t red_mA, uint32_t green_mA, uint32_t blue_mA)
 {
-	uint32_t total_intensity = 0;
+	uint64_t red_intensity = 0;
+	uint64_t green_intensity = 0;
+	uint64_t blue_intensity = 0;
+
 	if (brightness < 0)
 		brightness = 0;
 	else if (brightness > 65535)
@@ -262,7 +267,9 @@ uint32_t driver_hub75_render(int brightness, Color* fb)
 			         g = valToPwm12(c->RGB[2], brightness),
 			         b = valToPwm12(c->RGB[1], brightness);
 
-			total_intensity += r+b+g;
+			red_intensity += r;
+			green_intensity += g;
+			blue_intensity += b;
 
 			for (j=0; j<BIT_DEPTH; j++)
 			{
@@ -280,7 +287,10 @@ uint32_t driver_hub75_render(int brightness, Color* fb)
 	}
 
 	i2sparallel_flipBuffer(cur_frame);
-	return total_intensity;
+
+	return (uint32_t) ( (red_intensity   * red_mA   +
+	                     green_intensity * green_mA +
+	                     blue_intensity  * blue_mA  ) / dma_loop_size );
 }
 
 static frame_t *create_frame_data(void)
@@ -315,7 +325,7 @@ static frame_t *create_frame_data(void)
 
 #define N_DMA_DESCRIPTORS ( N_ROWS * 14 + 1 )
 
-i2s_parallel_buffer_desc_t *create_dma_descriptors(frame_t *frame)
+static i2s_parallel_buffer_desc_t *create_dma_descriptors(frame_t *frame)
 {
 	i2s_parallel_buffer_desc_t *desc = malloc( sizeof(i2s_parallel_buffer_desc_t) * N_DMA_DESCRIPTORS );
 
@@ -371,6 +381,17 @@ i2s_parallel_buffer_desc_t *create_dma_descriptors(frame_t *frame)
 	assert(cur == N_DMA_DESCRIPTORS);
 
 	return desc;
+}
+
+static size_t get_dma_loop_size(i2s_parallel_buffer_desc_t desc[])
+{
+	int i;
+	size_t sum = 0;
+
+	for(i=0; desc[i].memory; i++)
+		sum += desc[i].size;
+
+	return sum;
 }
 
 #ifdef DRIVER_HUB75_DMA_DATA_TEST
@@ -556,17 +577,6 @@ void do_test_old(i2s_parallel_buffer_desc_t desc[], frame_t *frame)
 		}
 }
 
-void do_test_count(i2s_parallel_buffer_desc_t desc[])
-{
-	int i;
-
-	unsigned int sum = 0;
-	for(i=0; desc[i].memory; i++)
-		sum += desc[i].size;
-
-	printf("net. duty cycle: %u/%u = %lf\n", 4095*8, sum, (double)(4095*8)/(double)sum);
-}
-
 #endif // DRIVER_HUB75_DMA_DATA_TEST
 
 void driver_hub75_init_bits(void)
@@ -579,9 +589,10 @@ void driver_hub75_init_bits(void)
 
 	i2sparallel_init(dma_desc_0, dma_desc_1);
 
+	dma_loop_size = get_dma_loop_size(dma_desc_0);
+
 #ifdef DRIVER_HUB75_DMA_DATA_TEST
 	do_test(dma_desc_0, frames[0]);
-	do_test_count(dma_desc_0);
 #endif // DRIVER_HUB75_DMA_DATA_TEST
 
 	free(dma_desc_0);
