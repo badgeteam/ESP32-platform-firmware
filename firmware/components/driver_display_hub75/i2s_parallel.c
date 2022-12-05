@@ -139,6 +139,17 @@ void i2sparallel_init(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_desc
     gpio_setup_out(gpio_clk, sig_clk);
     gpio_matrix_out(gpio_clk, sig_clk, true, false);
 
+    // Max drive strength is needed for signal integrity, otherwise display has glitches
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_R0, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_G0, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_B0, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_OE, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_LAT, GPIO_DRIVE_CAP_3);
+
+    // Enables LED power
+//    gpio_set_direction(GPIO_NUM_12, GPIO_MODE_OUTPUT);
+//    gpio_set_level(GPIO_NUM_12, 0);
+
     //Power on dev
     if (&hw==&I2S0) {
         periph_module_enable(PERIPH_I2S0_MODULE);
