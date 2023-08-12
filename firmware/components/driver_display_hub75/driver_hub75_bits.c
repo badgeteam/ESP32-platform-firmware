@@ -13,14 +13,9 @@
 #include "include/driver_hub75_bits.h"
 #include "include/i2s_parallel.h"
 
-#ifndef DRIVER_HUB75_DMA_DATA_TEST
-#include "esp_heap_caps.h"
-#endif
-
-
-
 
 #ifdef DRIVER_HUB75_DMA_DATA_TEST
+#define CONFIG_DRIVER_HUB75_ENABLE
 #define CONFIG_HUB75_WIDTH 32
 #define MALLOC_CAP_DMA (-1)
 #include <stdlib.h>
@@ -28,7 +23,11 @@
 void *heap_caps_calloc(size_t nmemb, size_t size, int cap) { return calloc(nmemb, size); }
 void i2sparallel_init(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_desc_t *bufb) { }
 void i2sparallel_flipBuffer(int bufid) { }
+#else
+#include "esp_heap_caps.h"
 #endif
+
+#ifdef CONFIG_DRIVER_HUB75_ENABLE
 
 #define BIT_RED   (1<<0)   //connected to GPIO2 here
 #define BIT_GREEN (1<<1)   //connected to GPIO15 here
@@ -596,3 +595,6 @@ int main(int argc, char *argv[])
 }
 
 #endif // DRIVER_HUB75_DMA_DATA_TEST
+
+
+#endif // CONFIG_DRIVER_HUB75_ENABLE
