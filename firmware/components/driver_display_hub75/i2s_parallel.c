@@ -50,8 +50,7 @@ int gpio_bus[32] = {CONFIG_PIN_NUM_HUB75_R0,
                     CONFIG_PIN_NUM_HUB75_LAT,
                     CONFIG_PIN_NUM_HUB75_OE, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 int gpio_clk = CONFIG_PIN_NUM_HUB75_CLK;
-//int clkspeed_hz = CONFIG_HUB75_CLOCK_SPEED;
-int clkspeed_hz = 20000000;
+int clkspeed_hz = CONFIG_HUB75_CLOCK_SPEED;
 i2s_parallel_cfg_bits_t bits = I2S_PARALLEL_BITS_8;
 
 #define DMA_MAX (4096-4)
@@ -138,6 +137,13 @@ void i2sparallel_init(i2s_parallel_buffer_desc_t *bufa, i2s_parallel_buffer_desc
     //ToDo: Clk/WS may need inversion?
     gpio_setup_out(gpio_clk, sig_clk);
     gpio_matrix_out(gpio_clk, sig_clk, true, false);
+
+    // Max drive strength is needed for signal integrity, otherwise display has glitches
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_R0, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_G0, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_B0, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_OE, GPIO_DRIVE_CAP_3);
+    gpio_set_drive_capability(CONFIG_PIN_NUM_HUB75_LAT, GPIO_DRIVE_CAP_3);
 
     //Power on dev
     if (&hw==&I2S0) {

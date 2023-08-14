@@ -39,6 +39,7 @@ try:
     if app:
         __import__(app)
 except BaseException as e:
+    import sys
     sys.print_exception(e)
     if not machine.nvs_get_u8("system", "ignore_crash"):
         print("Fatal exception in the running app!")

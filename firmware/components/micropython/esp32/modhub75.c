@@ -35,13 +35,36 @@ STATIC mp_obj_t hub75_background(mp_obj_t r_obj, mp_obj_t g_obj, mp_obj_t b_obj)
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(hub75_background_obj, hub75_background);
 
 STATIC mp_obj_t hub75_brightness(mp_obj_t bright_obj) {
-    int brightness = mp_obj_get_int(bright_obj);
+    mp_float_t f_brightness = .5+(65535.*mp_obj_get_float(bright_obj)/30.);
+
+	int brightness;
+
+	if (f_brightness < 0.)
+		brightness = 0;
+	else if (f_brightness > 65535.)
+		brightness = 65535;
+	else
+		brightness = (int)f_brightness;
 
     driver_hub75_set_brightness(brightness);
 
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_brightness_obj, hub75_brightness);
+
+STATIC mp_obj_t hub75_brightness16(mp_obj_t bright_obj) {
+    int brightness = mp_obj_get_int(bright_obj);
+
+	if (brightness < 0)
+		brightness = 0;
+	else if (brightness > 65535)
+		brightness = 65535;
+
+    driver_hub75_set_brightness(brightness);
+
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(hub75_brightness16_obj, hub75_brightness16);
 
 STATIC mp_obj_t hub75_framerate(mp_obj_t bright_obj) {
     int framerate = mp_obj_get_int(bright_obj);
@@ -237,6 +260,7 @@ STATIC const mp_rom_map_elem_t hub75_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_scrolltext), MP_ROM_PTR(&hub75_scrolltext_obj)},
     {MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&hub75_clear_obj)},
     {MP_ROM_QSTR(MP_QSTR_brightness), MP_ROM_PTR(&hub75_brightness_obj)},
+    {MP_ROM_QSTR(MP_QSTR_brightness16), MP_ROM_PTR(&hub75_brightness16_obj)},
     {MP_ROM_QSTR(MP_QSTR_framerate), MP_ROM_PTR(&hub75_framerate_obj)},
     {MP_ROM_QSTR(MP_QSTR_disablecomp), MP_ROM_PTR(&hub75_disablecomp_obj)},
     {MP_ROM_QSTR(MP_QSTR_enablecomp), MP_ROM_PTR(&hub75_enablecomp_obj)},
