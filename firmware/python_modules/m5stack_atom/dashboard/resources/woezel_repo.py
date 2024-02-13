@@ -33,7 +33,7 @@ def update():
 			return False
 	_showProgress("Downloading categories...")
 	try:
-		request = urequests.get("https://badge.team/eggs/categories/json", timeout=30)
+		request = urequests.get("https://%s/eggs/categories/json" % consts.WOEZEL_WEB_SERVER, timeout=30)
 		_showProgress("Saving categories...")
 		categories_file = open(path+'/categories.json', 'w')
 		categories_file.write(request.text)
@@ -44,7 +44,7 @@ def update():
 			gc.collect()
 			slug = category["slug"]
 			_showProgress("Downloading '"+category["name"]+"'...")
-			f = urequests.get("https://badge.team/basket/"+consts.INFO_HARDWARE_WOEZEL_NAME+"/category/%s/json" % slug, timeout=30)
+			f = urequests.get("https://%s/basket/%s/category/%s/json" % (consts.WOEZEL_WEB_SERVER, consts.INFO_HARDWARE_WOEZEL_NAME, slug), timeout=30)
 			f_file = open(path+'/'+slug+'.json', 'w')
 			f_file.write(f.text)
 			f_file.close()
