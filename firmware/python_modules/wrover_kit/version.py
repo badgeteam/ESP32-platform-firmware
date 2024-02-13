@@ -1,4 +1,4 @@
-import ugfx, badge
+import ugfx, badge, consts
 
 build                  = 0
 name                   = "FIXME"
@@ -19,5 +19,5 @@ nick_height_small      = 22
 btn_ok = ugfx.BTN_START
 btn_cancel = ugfx.BTN_B
 
-hatcheryurl             = "https://badge.team"
-otacheckurl             = "https://badge.team/version-hackerhotel2019"
+hatcheryurl             = "https://"+consts.WOEZEL_WEB_SERVER
+otacheckurl             = consts.OTA_WEB_PROTOCOL+"://"+consts.OTA_WEB_SERVER+":"+consts.OTA_WEB_PORT+consts.OTA_WEB_VERSION_PATH
