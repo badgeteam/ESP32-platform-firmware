@@ -1,4 +1,4 @@
-import defines,consts
+import defines, consts
 
 build                  = 1
 name                   = "Harry Potter"
