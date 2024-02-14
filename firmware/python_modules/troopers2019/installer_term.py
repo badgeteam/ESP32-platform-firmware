@@ -1,4 +1,4 @@
-import network, term, appglue, sys, badge, version, time,json, gc, urequests, easydraw
+import network, term, appglue, sys, badge, version, time,json, gc, urequests, easydraw, consts
 
 easydraw.msg("This app can only be controlled using the USB-serial connection.", "Notice", True)
 

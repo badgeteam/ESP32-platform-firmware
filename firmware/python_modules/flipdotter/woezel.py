@@ -5,6 +5,8 @@ import uerrno as errno
 import ujson as json
 import uzlib
 import upip_utarfile as tarfile
+import consts
+
 gc.collect()
 
 debug = False
@@ -147,21 +149,21 @@ def url_open(url):
 
 
 def get_pkg_metadata(name):
-    f = url_open("https://badge.team/eggs/get/%s/json" % name)
+    f = url_open("https://%s/eggs/get/%s/json" % (consts.WOEZEL_WEB_SERVER, name))
     try:
         return json.load(f)
     finally:
         f.close()
 
 def get_pkg_list():
-    f = url_open("https://badge.team/basket/hackerhotel2019/list/json")
+    f = url_open("https://%s/basket/hackerhotel2019/list/json" % (consts.WOEZEL_WEB_SERVER))
     try:
         return json.load(f)
     finally:
         f.close()
 
 def search_pkg_list(query):
-    f = url_open("https://badge.team/basket/hackerhotel2019/search/%s/json" % query)
+    f = url_open("https://%s/basket/hackerhotel2019/search/%s/json" % (consts.WOEZEL_WEB_SERVER, query))
     try:
         return json.load(f)
     finally:
