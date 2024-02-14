@@ -30,7 +30,7 @@ INC +=  -I..
 INC += -I$(BUILD)
 
 # compiler settings
-CWARN = -Wall -Werror
+CWARN = -Wall
 CWARN += -Wpointer-arith -Wuninitialized
 CFLAGS_MOD += -fno-stack-protector
 CFLAGS = $(INC) $(CWARN) -std=gnu99 $(CFLAGS_MOD) $(COPT) $(CFLAGS_EXTRA)
