@@ -52,7 +52,7 @@ esp_err_t driver_erc12864_set_contrast(uint8_t contrast)
 
 esp_err_t driver_erc12864_init(void)
 {
-	driver_i2c_write_byte(CONFIG_DRIVER_ERC12864_I2C_BUS, CONFIG_I2C_ADDR_ERC12864, 0x2f);
+	esp_err_t res = driver_i2c_write_byte(CONFIG_DRIVER_ERC12864_I2C_BUS, CONFIG_I2C_ADDR_ERC12864, 0x2f);
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c write init: error %d", res);
 		return res;
