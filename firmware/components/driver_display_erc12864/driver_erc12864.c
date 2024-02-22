@@ -127,7 +127,7 @@ esp_err_t driver_erc12864_write(const uint8_t *buffer)
 			res = set_column(num*0x20);
 			if (res != ESP_OK) break;
 			uint16_t offset = 128*page + 32*num;
-			res = driver_i2c_write_buffer(CONFIG_I2C_ADDR_ERC12864+1, buffer+offset, 32);
+			res = driver_i2c_write_buffer(CONFIG_DRIVER_ERC12864_I2C_BUS, CONFIG_I2C_ADDR_ERC12864+1, buffer+offset, 32);
 			if (res != ESP_OK) break;
 		}
 	}
@@ -159,7 +159,7 @@ esp_err_t driver_erc12864_write_part(const uint8_t *buffer, int16_t x0, int16_t 
 			res = set_column(num*0x20);
 			if (res != ESP_OK) break;
 			uint16_t offset = 128*page + 32*num;
-			res = driver_i2c_write_buffer(CONFIG_I2C_ADDR_ERC12864+1, buffer+offset, 32);
+			res = driver_i2c_write_buffer(CONFIG_DRIVER_ERC12864_I2C_BUS, CONFIG_I2C_ADDR_ERC12864+1, buffer+offset, 32);
 			if (res != ESP_OK) break;
 		}
 	}
