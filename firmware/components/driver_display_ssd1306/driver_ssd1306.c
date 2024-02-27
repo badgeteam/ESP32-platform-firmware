@@ -50,6 +50,7 @@ esp_err_t driver_ssd1306_reset(void)
 
 esp_err_t driver_ssd1306_init(void)
 {
+	esp_err_t res;
 #if CONFIG_PIN_NUM_SSD1306_RESET >= 0
 	gpio_set_direction(CONFIG_PIN_NUM_SSD1306_RESET, GPIO_MODE_OUTPUT);
 	driver_ssd1306_reset();
@@ -60,105 +61,105 @@ esp_err_t driver_ssd1306_init(void)
 	if (res != ESP_OK) return res;
 	res=i2c_command(0xd5); // SSD1306_SETDISPLAYCLOCKDIV
 	if (res != ESP_OK) return res;
-	i2c_command(0xf0); // Sets frequency to highest value and divider to 1 for less flicker
+	res=i2c_command(0xf0); // Sets frequency to highest value and divider to 1 for less flicker
 	if (res != ESP_OK) return res;
-	i2c_command(0xa8); // SSD1306_SETMULTIPLEX
+	res=i2c_command(0xa8); // SSD1306_SETMULTIPLEX
 	if (res != ESP_OK) return res;
-	i2c_command(0x1f); // 1/32
+	res=i2c_command(0x1f); // 1/32
 	if (res != ESP_OK) return res;
-	i2c_command(0xd3); // SSD1306_SETDISPLAYOFFSET
+	res=i2c_command(0xd3); // SSD1306_SETDISPLAYOFFSET
 	if (res != ESP_OK) return res;
-	i2c_command(0x00); // 0 no offset
+	res=i2c_command(0x00); // 0 no offset
 	if (res != ESP_OK) return res;
-	i2c_command(0x40); // SSD1306_SETSTARTLINE line #0
+	res=i2c_command(0x40); // SSD1306_SETSTARTLINE line #0
 	if (res != ESP_OK) return res;
-	i2c_command(0x8d); // SSD1306_CHARGEPUMP
+	res=i2c_command(0x8d); // SSD1306_CHARGEPUMP
 	if (res != ESP_OK) return res;
-	i2c_command(0x14); // Charge pump on
+	res=i2c_command(0x14); // Charge pump on
 	if (res != ESP_OK) return res;
-	i2c_command(0x20); // SSD1306_MEMORYMODE
+	res=i2c_command(0x20); // SSD1306_MEMORYMODE
 	if (res != ESP_OK) return res;
-	i2c_command(0x00); // 0x0 act like ks0108
+	res=i2c_command(0x00); // 0x0 act like ks0108
 	if (res != ESP_OK) return res;
-	i2c_command(0xa1); // SSD1306_SEGREMAP | 1
+	res=i2c_command(0xa1); // SSD1306_SEGREMAP | 1
 	if (res != ESP_OK) return res;
-	i2c_command(0xc8); // SSD1306_COMSCANDEC
+	res=i2c_command(0xc8); // SSD1306_COMSCANDEC
 	if (res != ESP_OK) return res;
-	i2c_command(0xda); // SSD1306_SETCOMPINS
+	res=i2c_command(0xda); // SSD1306_SETCOMPINS
 	if (res != ESP_OK) return res;
-	i2c_command(0x02);
+	res=i2c_command(0x02);
 	if (res != ESP_OK) return res;
-	i2c_command(0x81); // SSD1306_SETCONTRAST
+	res=i2c_command(0x81); // SSD1306_SETCONTRAST
 	if (res != ESP_OK) return res;
-	i2c_command(0x2f);
+	res=i2c_command(0x2f);
 	if (res != ESP_OK) return res;
-	i2c_command(0xd9); // SSD1306_SETPRECHARGE
+	res=i2c_command(0xd9); // SSD1306_SETPRECHARGE
 	if (res != ESP_OK) return res;
-	i2c_command(0xf1);
+	res=i2c_command(0xf1);
 	if (res != ESP_OK) return res;
-	i2c_command(0xdb); // SSD1306_SETVCOMDETECT
+	res=i2c_command(0xdb); // SSD1306_SETVCOMDETECT
 	if (res != ESP_OK) return res;
-	i2c_command(0x40);
+	res=i2c_command(0x40);
 	if (res != ESP_OK) return res;
-	i2c_command(0x2e); // SSD1306_DEACTIVATE_SCROLL
+	res=i2c_command(0x2e); // SSD1306_DEACTIVATE_SCROLL
 	if (res != ESP_OK) return res;
-	i2c_command(0xa4); // SSD1306_DISPLAYALLON_RESUME
+	res=i2c_command(0xa4); // SSD1306_DISPLAYALLON_RESUME
 	if (res != ESP_OK) return res;
-	i2c_command(0xa6); // SSD1306_NORMALDISPLAY
+	res=i2c_command(0xa6); // SSD1306_NORMALDISPLAY
 	if (res != ESP_OK) return res;
 #else
-	i2c_command(0xae); // SSD1306_DISPLAYOFF
+	res=i2c_command(0xae); // SSD1306_DISPLAYOFF
 	if (res != ESP_OK) return res;
-	i2c_command(0xd5); // SSD1306_SETDISPLAYCLOCKDIV
+	res=i2c_command(0xd5); // SSD1306_SETDISPLAYCLOCKDIV
 	if (res != ESP_OK) return res;
-	i2c_command(0x80); // Suggested value 0x80
+	res=i2c_command(0x80); // Suggested value 0x80
 	if (res != ESP_OK) return res;
-	i2c_command(0xa8); // SSD1306_SETMULTIPLEX
+	res=i2c_command(0xa8); // SSD1306_SETMULTIPLEX
 	if (res != ESP_OK) return res;
-	i2c_command(0x3f); // 1/64
+	res=i2c_command(0x3f); // 1/64
 	if (res != ESP_OK) return res;
-	i2c_command(0xd3); // SSD1306_SETDISPLAYOFFSET
+	res=i2c_command(0xd3); // SSD1306_SETDISPLAYOFFSET
 	if (res != ESP_OK) return res;
-	i2c_command(0x00); // 0 no offset
+	res=i2c_command(0x00); // 0 no offset
 	if (res != ESP_OK) return res;
-	i2c_command(0x40); // SSD1306_SETSTARTLINE line #0
+	res=i2c_command(0x40); // SSD1306_SETSTARTLINE line #0
 	if (res != ESP_OK) return res;
-	i2c_command(0x20); // SSD1306_MEMORYMODE
+	res=i2c_command(0x20); // SSD1306_MEMORYMODE
 	if (res != ESP_OK) return res;
-	i2c_command(0x01); // 0x0 act like ks0108 / 0x01 vertical addressing mode
+	res=i2c_command(0x01); // 0x0 act like ks0108 / 0x01 vertical addressing mode
 	if (res != ESP_OK) return res;
-	i2c_command(0xa1); // SSD1306_SEGREMAP | 1
+	res=i2c_command(0xa1); // SSD1306_SEGREMAP | 1
 	if (res != ESP_OK) return res;
-	i2c_command(0xc8); // SSD1306_COMSCANDEC
+	res=i2c_command(0xc8); // SSD1306_COMSCANDEC
 	if (res != ESP_OK) return res;
-	i2c_command(0xda); // SSD1306_SETCOMPINS
+	res=i2c_command(0xda); // SSD1306_SETCOMPINS
 	if (res != ESP_OK) return res;
-	i2c_command(0x12);
+	res=i2c_command(0x12);
 	if (res != ESP_OK) return res;
-	i2c_command(0x81); // SSD1306_SETCONTRAST
+	res=i2c_command(0x81); // SSD1306_SETCONTRAST
 	if (res != ESP_OK) return res;
-	i2c_command(0xcf);
+	res=i2c_command(0xcf);
 	if (res != ESP_OK) return res;
-	i2c_command(0xd9); // SSD1306_SETPRECHARGE
+	res=i2c_command(0xd9); // SSD1306_SETPRECHARGE
 	if (res != ESP_OK) return res;
-	i2c_command(0xf1);
+	res=i2c_command(0xf1);
 	if (res != ESP_OK) return res;
-	i2c_command(0xdb); // SSD1306_SETVCOMDETECT
+	res=i2c_command(0xdb); // SSD1306_SETVCOMDETECT
 	if (res != ESP_OK) return res;
-	i2c_command(0x30);
+	res=i2c_command(0x30);
 	if (res != ESP_OK) return res;
-	i2c_command(0x8d); // SSD1306_CHARGEPUMP
+	res=i2c_command(0x8d); // SSD1306_CHARGEPUMP
 	if (res != ESP_OK) return res;
-	i2c_command(0x14); // Charge pump on
+	res=i2c_command(0x14); // Charge pump on
 	if (res != ESP_OK) return res;
-	i2c_command(0x2e); // SSD1306_DEACTIVATE_SCROLL
+	res=i2c_command(0x2e); // SSD1306_DEACTIVATE_SCROLL
 	if (res != ESP_OK) return res;
-	i2c_command(0xa4); // SSD1306_DISPLAYALLON_RESUME
+	res=i2c_command(0xa4); // SSD1306_DISPLAYALLON_RESUME
 	if (res != ESP_OK) return res;
-	i2c_command(0xa6); // SSD1306_NORMALDISPLAY
+	res=i2c_command(0xa6); // SSD1306_NORMALDISPLAY
 	if (res != ESP_OK) return res;
 #endif
-	i2c_command(0xaf); // SSD1306_DISPLAYON
+	res=i2c_command(0xaf); // SSD1306_DISPLAYON
 	if (res != ESP_OK) return res;
 	
 	uint8_t buffer[1024] = {0};
