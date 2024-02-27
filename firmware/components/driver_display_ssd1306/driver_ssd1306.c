@@ -29,7 +29,7 @@ static inline esp_err_t i2c_command(uint8_t value)
 
 static inline esp_err_t i2c_data(const uint8_t* buffer, uint16_t len)
 {
-	esp_err_t res = driver_i2c_write_buffer_reg(CONFIG_DRIVER_SSD1306_I2C_BUS, , CONFIG_I2C_ADDR_SSD1306, 0x40, buffer, len);
+	esp_err_t res = driver_i2c_write_buffer_reg(CONFIG_DRIVER_SSD1306_I2C_BUS, CONFIG_I2C_ADDR_SSD1306, 0x40, buffer, len);
 	if (res != ESP_OK) {
 		ESP_LOGE(TAG, "i2c write data: error %d", res);
 		return res;
