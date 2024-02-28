@@ -170,7 +170,7 @@ esp_err_t driver_disobey_samd_init(void)
 	driver_disobey_samd_intr_trigger = xSemaphoreCreateBinary();
 	if (driver_disobey_samd_intr_trigger == NULL) return ESP_ERR_NO_MEM;
 
-	res = gpio_isr_handler_add(CONFIG_PIN_NUM_DISOBEY_SAMD_INT, driver_disobey_samd_intr_handler, NULL);
+	esp_err_t res = gpio_isr_handler_add(CONFIG_PIN_NUM_DISOBEY_SAMD_INT, driver_disobey_samd_intr_handler, NULL);
 	if (res != ESP_OK) return res;
 
 	gpio_config_t io_conf = {

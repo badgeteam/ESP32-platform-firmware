@@ -137,7 +137,7 @@ static mp_obj_t modsndmixer_wav(mp_obj_t _data) {
   uint8_t *data = (uint8_t *)mp_obj_str_get_data(_data, &len);
 
   int id = sndmixer_queue_wav(data, data + len - 1, 1);
-//  sndmixer_play(id);
+  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -147,7 +147,7 @@ static mp_obj_t modsndmixer_wav_stream(mp_obj_t _stream) {
     return mp_const_none;
   }
   int id = sndmixer_queue_wav_stream(mp_stream_posix_read, mp_stream_posix_lseek, (void *)_stream);
-//  sndmixer_play(id);
+  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -164,7 +164,7 @@ static mp_obj_t modsndmixer_mod(mp_obj_t _data) {
   uint8_t *data = (uint8_t *)mp_obj_str_get_data(_data, &len);
 
   int id = sndmixer_queue_mod(data, data + len - 1);
-//  sndmixer_play(id);
+  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -176,7 +176,7 @@ static mp_obj_t modsndmixer_mp3(mp_obj_t _data) {
   size_t len;
   uint8_t *data = mp_obj_to_u8_ptr(_data, &len);
   int id = sndmixer_queue_mp3(data, data + len - 1);
-//  sndmixer_play(id);
+  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -186,7 +186,7 @@ static mp_obj_t modsndmixer_mp3_stream(mp_obj_t _stream) {
     return mp_const_none;
   }
   int id = sndmixer_queue_mp3_stream(mp_stream_posix_read, mp_stream_posix_lseek, (void *)_stream);
-//  sndmixer_play(id);
+  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -198,7 +198,7 @@ static mp_obj_t modsndmixer_opus(mp_obj_t _data) {
   mp_uint_t len;
   uint8_t *data = mp_obj_to_u8_ptr(_data, &len);
   int id = sndmixer_queue_opus(data, data + len);
-//  sndmixer_play(id);
+  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -208,7 +208,7 @@ static mp_obj_t modsndmixer_opus_stream(mp_obj_t _stream) {
     return mp_const_none;
   }
   int id = sndmixer_queue_opus_stream(mp_stream_posix_read, (void *)_stream);
-//  sndmixer_play(id);
+  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
@@ -218,7 +218,7 @@ static mp_obj_t modsndmixer_synth() {
     return mp_const_none;
   }
   int id = sndmixer_queue_synth();
-//  sndmixer_play(id);
+  sndmixer_play(id);
   return mp_obj_new_int(id);
 }
 
