@@ -1,7 +1,7 @@
 #ifndef WILDCARD_CERT_H
 #define WILDCARD_CERT_H
 
-#define NUM_PINNED_CERTS 4
+#define NUM_PINNED_CERTS 2
 
 typedef struct {
   const unsigned int data_len;
